@@ -23,7 +23,7 @@ To get started with Benita, follow these steps:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/benita-compiler.git
+   git clone https://github.com/yourusername/benita.git
    ```
 
 2. Navigate to the project directory:
