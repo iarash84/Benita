@@ -1,3 +1,4 @@
+![Benita Logo](./Logo.jpg)
 
 # Benita Compiler
 
