@@ -1,4 +1,6 @@
-![Benita Logo](./Logo.jpg)
+<p align="center">
+<img src="Logo.jpg" alt="Benita Logo" width="150" height="150">
+</p> 
 
 # Benita Compiler
 
@@ -24,12 +26,12 @@ To get started with Benita, follow these steps:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/iarash84/benita.git
+   git clone https://github.com/iarash84/Benita.git
    ```
 
 2. Navigate to the project directory:
    ```bash
-   cd benita-compiler
+   cd Benita
    ```
 
 3. Build and run the compiler:
