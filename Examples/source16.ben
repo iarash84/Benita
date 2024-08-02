@@ -1,0 +1,10 @@
+_main_() {
+    // Declare an array of numbers
+    number[] arr = [10, 20, 30, 40, 50];
+    number i = 0;
+    arr[2] = 5;
+    while (i < array_len(arr)) {
+        print("Element at index " + i + ": " + arr[i]);
+        i++;
+    }                     
+}

@@ -1,0 +1,8 @@
+_main_() {
+    number num = 12;           
+    if (num == 12 || num > 15 && num == 10) {
+        print("YES");
+    } else {
+        print("NO");
+    }   
+}

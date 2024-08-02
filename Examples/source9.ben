@@ -1,0 +1,37 @@
+func add(number a, number b) -> number {
+    return a + b;
+}
+
+func concatenate(string a, string b) -> string {
+    return a + b;
+}
+
+func is_even(number a) -> bool {
+    return a % 2 == 0;
+}
+
+_main_() {
+    number x = 10;
+    number y = 20;
+    number sum = add(x, y);
+    string hello = "Hello, ";
+    string world = "world!";
+    string message = concatenate(hello, world);
+
+    print(message);
+
+    bool check = is_even(sum);
+    if (check) {
+        print("Sum is even.");
+    } else {
+        print("Sum is odd.");
+    }
+    number i = 0;
+    while ( i < 5 ) {
+        sum += i;
+        i++;
+    }
+
+    string userInput = input();
+    print("You entered: " + userInput);    
+}

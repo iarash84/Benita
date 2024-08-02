@@ -1,0 +1,14 @@
+func test(number i) -> void
+{
+	print("yess");
+	if(i == 5){
+		print("five");
+		return;
+	}
+	print("Nop");
+	return;
+}
+
+_main_(){
+	test(5);
+}

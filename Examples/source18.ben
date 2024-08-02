@@ -1,0 +1,16 @@
+_main_() {
+    print("Enter The Number Of Terms:");
+    number n = to_number(input());
+    number f = 0; 
+    number f1=-1; 
+    number f2=1;
+    print("The Fibonacci Series is:");
+    while(n>0)
+    {
+        f=f1+f2;
+        f1=f2;
+        f2=f;
+        print(f);
+        n--;
+    }                
+}

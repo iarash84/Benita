@@ -1,0 +1,22 @@
+func fib(number x) -> number 
+{
+	//return x;
+   if (x == 1 || x == 0) {
+      return x;
+   } 
+   return fib(x - 1) + fib(x - 2);                                     
+}
+
+
+func chap(number content) -> void
+{
+	print(content);
+}
+
+
+_main_() {
+   for(number i =0; i <= 20; i++;) {
+      chap(fib(i));
+	  //print(fib(i));
+   }
+}

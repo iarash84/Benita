@@ -1,0 +1,8 @@
+func add(number a, number b) -> number {
+    return a + b;
+}
+
+_main_() {
+    number result = add(2, 3);
+    print(result);
+}

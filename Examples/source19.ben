@@ -1,0 +1,19 @@
+func fib(number x) -> number 
+{
+   number result; 
+   if (x == 1 || x == 0) {
+      result = x;
+   } else {
+      result = fib(x - 1) + fib(x - 2);
+   }
+   return result;                                      
+}
+
+_main_() {
+   number x = 20; 
+   number i = 0;
+   while(i <= x) {
+      print(fib(i));
+      i++;
+   }
+}

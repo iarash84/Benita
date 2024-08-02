@@ -1,0 +1,4 @@
+_main_()  {
+    number result = 2 + 3;
+    print(result);
+}

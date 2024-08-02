@@ -1,0 +1,13 @@
+number x = 10;
+func add(number a, number b) -> number {
+    number c = a + b;
+    return a + b;
+}
+
+_main_() {
+    number y = 20;
+    number sum = add(x, y);
+    print(sum);
+    string message = "Hello, World!";
+    print(message);
+}

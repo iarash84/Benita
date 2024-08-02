@@ -1,0 +1,15 @@
+func myFunction(number a, number b) -> number {
+    return a + b;
+}
+// this is a comment
+_main_() {
+    number x = 10;
+    number y = 20;
+    print(x + y);
+    number i = 0;
+    while ( i < 5 ) {
+        x++;
+        i++;
+    }
+    print(x);
+}

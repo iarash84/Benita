@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34902.65
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benita", "Benita\Benita.csproj", "{FAD606D6-9AE8-4915-820D-083CFAB5DD6B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenitaTestProject", "BenitaTestProject\BenitaTestProject.csproj", "{A68AF3B2-4FDD-4A2F-B648-58F2157FA291}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FAD606D6-9AE8-4915-820D-083CFAB5DD6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAD606D6-9AE8-4915-820D-083CFAB5DD6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAD606D6-9AE8-4915-820D-083CFAB5DD6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAD606D6-9AE8-4915-820D-083CFAB5DD6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A68AF3B2-4FDD-4A2F-B648-58F2157FA291}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A68AF3B2-4FDD-4A2F-B648-58F2157FA291}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A68AF3B2-4FDD-4A2F-B648-58F2157FA291}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A68AF3B2-4FDD-4A2F-B648-58F2157FA291}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {118F59C2-D6C5-49FB-9613-42EEDFF9C06B}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,30 @@
+/*
+
+func add(number a, number b) -> number {
+    return a + b;
+}
+
+func concatenate(string a, string b) -> string {
+    return a + b;
+}
+
+_main_() {
+    number x = 10;
+    number y = 20;
+    number sum = add(x, y);              
+    string message = concatenate("hello", " world");    
+    print(message);
+}
+*/
+_main_() {
+    print("YES");
+}
+
+string a = 20;
+
+number a = 50;
+/*
+_main_() {
+    print("No");
+}
+*/

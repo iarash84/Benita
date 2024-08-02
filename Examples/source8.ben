@@ -1,0 +1,6 @@
+_main_() {
+    print("Enter your name ");
+    string message = input();
+    print("your name is ");
+    print(message);
+}

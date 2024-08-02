@@ -1,0 +1,11 @@
+_main_() {                                        
+    number[] arr = [10, 20, 30, 40, 50];
+    arr = array_remove(arr , 2);
+    arr = array_add(arr, 60);
+    arr = array_add(arr, 70);
+    number i = 0;            
+    while (i < array_len(arr)) {
+        print("Element at index " + i + ": " + arr[i]);
+        i++;
+    }                     
+}

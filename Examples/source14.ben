@@ -1,0 +1,9 @@
+_main_() {
+    string file_path = "test.txt";
+    if (file_exist(file_path)) {
+        file_delete(file_path);
+        print("file deleted sucessfully");
+    } else {
+        print("File does not exist.");
+    }
+}

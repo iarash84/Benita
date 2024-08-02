@@ -1,0 +1,3 @@
+_main_() {
+    print("This is a test" + " => "  + 1);
+}

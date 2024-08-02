@@ -1,0 +1,7 @@
+number[] arr = [10, 20, 30];  // Example array declaration with initializer
+
+_main_() {
+    number[] anotherArr;  // Example array declaration without initializer
+    anotherArr = [5, 10, 15];
+    print(anotherArr[1]);
+}

@@ -1,0 +1,5 @@
+_main_()
+{
+	print("This is a test");
+	return 1;
+}
