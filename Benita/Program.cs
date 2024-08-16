@@ -106,7 +106,7 @@
             Console.WriteLine(" |______  /\\___  >___|  /__||__| (____  / |_______ (____  /___|  /\\___  / ");
             Console.WriteLine("        \\/     \\/     \\/              \\/          \\/    \\/     \\//_____/ ");
             Console.WriteLine("  (c) Adm, 2024");
-            Console.WriteLine("  Version 0.1.8");
+            Console.WriteLine("  Version 0.2.2");
             Console.WriteLine("Usage: Program <action> [filePath] [outputFilePath] [-a] [-t] [-s]");
             Console.WriteLine("Actions:");
             Console.WriteLine("  exc        - Execute the code in the file.");

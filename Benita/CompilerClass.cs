@@ -9,7 +9,7 @@
             List<Token> tokens = TokenizeCode(sourceCode, lexerPrint, sourcePrint);
 
             // 2. Parse the tokens to create an AST
-            ProgramNode programAst = ParseCode(tokens, parserPrint);
+            ProgramNode? programAst = ParseCode(tokens, parserPrint);
 
             // 3. Analyze the AST using SemanticAnalyzer
             SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
@@ -25,7 +25,7 @@
             List<Token> tokens = TokenizeCode(sourceCode, lexerPrint, sourcePrint);
 
             // 2. Parse the tokens to create an AST
-            ProgramNode programAst = ParseCode(tokens, parserPrint);
+            ProgramNode? programAst = ParseCode(tokens, parserPrint);
 
             // 3. Analyze the AST using SemanticAnalyzer
             SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
@@ -38,9 +38,9 @@
         }
 
 
-        private List<Token> TokenizeCode(string sourceCode, bool resultPrint = false, bool SourcePrint = false)
+        private List<Token> TokenizeCode(string sourceCode, bool resultPrint = false, bool sourcePrint = false)
         {
-            Lexer lexer = new Lexer(sourceCode, SourcePrint);
+            Lexer lexer = new Lexer(sourceCode, sourcePrint);
             List<Token> tokens = lexer.Tokenize();
             if (resultPrint)
                 foreach (Token token in tokens)
@@ -50,7 +50,7 @@
             return tokens;
         }
 
-        private ProgramNode ParseCode(List<Token> tokens, bool resultPrint = false)
+        private ProgramNode? ParseCode(List<Token> tokens, bool resultPrint = false)
         {
             // 2. Parse the tokens to create an AST
             Parser parser = new Parser(tokens);
@@ -60,7 +60,7 @@
             return programAst;
         }
 
-        private void PrintAst(ASTNode node, string indent = "")
+        private void PrintAst(AstNode? node, string indent = "")
         {
             if (node == null) return;
 
@@ -89,11 +89,8 @@
                             PrintAst(param, indent + "  ");
                         }
                         PrintAst(functionNode.Body, indent + "  ");
-                        if (functionNode.ReturnStatement != null)
-                        {
-                            Console.WriteLine($"{indent}  ReturnExpression");
-                            PrintAst(functionNode.ReturnStatement.ReturnExpression, indent + "  " + "  ");
-                        }
+                        Console.WriteLine($"{indent}  ReturnExpression");
+                        PrintAst(functionNode.ReturnStatement.ReturnExpression, indent + "  " + "  ");
                         break;
                     }
 

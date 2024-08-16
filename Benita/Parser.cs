@@ -7,6 +7,7 @@
     {
         private readonly List<Token> _tokens; ///< The list of tokens to be parsed.
         private int _current = 0; ///< The index of the current token being processed.
+        readonly List<FunctionNode?> _functions;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Parser"/> class.
@@ -15,6 +16,7 @@
         public Parser(List<Token> tokens)
         {
             _tokens = tokens;
+            _functions = new List<FunctionNode?>();
         }
 
         /// <summary>
@@ -24,9 +26,11 @@
         /// <exception cref="Exception">Thrown if multiple main functions are defined or no main function is found.</exception>
         public ProgramNode Parse()
         {
-            List<VariableDeclarationNode> globalVariables = new List<VariableDeclarationNode>();
-            List<FunctionNode> functions = new List<FunctionNode>();
-            FunctionNode mainFunction = null;
+            List<VariableDeclarationNode?> globalVariables = new List<VariableDeclarationNode?>();
+
+            List<StatementNode?> statements = new List<StatementNode?>();
+            List<PackageNode?> packages = new List<PackageNode?>();
+            FunctionNode? mainFunction = null;
 
             while (!IsAtEnd())
             {
@@ -37,32 +41,115 @@
 
                     mainFunction = ParseMainFunction();
                 }
+                else if (Match(TokenType.PACKAGE))
+                {
+                    packages.Add(ParsePackage());
+                }
                 else if (Match(TokenType.FUNC))
                 {
-                    functions.Add(ParseFunction());
+                    _functions.Add(ParseFunction());
+                }
+                else if (Check(TokenType.LET) &&
+                    NextToken().Type == TokenType.IDENTIFIER &&
+                    NextToken(2).Type == TokenType.EQUAL &&
+                    NextToken(3).Type == TokenType.NEW)
+                {
+                    statements.Add(ParseStatement());
+                }
+                else if (Match(TokenType.VOID, TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
+                {
+                    globalVariables.Add(ParseVariableDeclaration());
                 }
                 else
                 {
-                    globalVariables.Add(ParseGlobalVariableDeclaration());
+                    statements.Add(ParseStatement());
                 }
             }
 
-            if (mainFunction == null)
+            if (mainFunction == null && statements.Count == 0)
             {
                 throw new Exception("No main function defined.");
             }
-            return new ProgramNode(globalVariables, functions, mainFunction);
+
+            return new ProgramNode(globalVariables, packages, _functions, mainFunction, statements);
+        }
+
+        private PackageNode? ParsePackage()
+        {
+            string packageName = Consume(TokenType.IDENTIFIER, "Expected package name").Lexeme;
+            Consume(TokenType.LBRACE, "Expected '{' after package name.");
+
+            List<PackageMemberNode> members = new List<PackageMemberNode>();
+            while (!Check(TokenType.RBRACE) && !IsAtEnd())
+            {
+                if (Match(TokenType.FUNC))
+                {
+                    var function = ParseFunction();
+                    members.Add(new PackageFunctionNode(function.Name, function.Parameters, function.ReturnType,
+                        function.Body, function.ReturnStatement));
+                }
+                else if (Match(TokenType.NUMBER, TokenType.STRING, TokenType.BOOL, TokenType.LET))
+                {
+                    var type = PreviousToken().Lexeme;
+                    if (Match(TokenType.IDENTIFIER))
+                    {
+                        var name = PreviousToken().Lexeme;
+                        ExpressionNode? initializer = null;
+
+                        if (Match(TokenType.EQUAL))
+                        {
+                            initializer = ParseExpression();
+                        }
+                        #region 'initilize Implicitly-typed variables'
+                        if (type == "let")
+                        {
+                            if (initializer != null)
+                            {
+                                if (initializer is LiteralNode literalNode)
+                                    type = ParseTokenType(literalNode.Type);
+                                else if (initializer is FunctionCallNode functionCallNode)
+                                {
+                                    foreach (var function in _functions)
+                                    {
+                                        if (function.Name == functionCallNode.FunctionName)
+                                            type = function.ReturnType;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                throw new Exception("Implicitly-typed variables must be initialized");
+                            }
+                        }
+                        #endregion
+                        Consume(TokenType.SEMICOLON, "Expected ';' after variable declaration");
+                        members.Add(new PackageVariableDeclarationNode(type, name, initializer));
+                    }
+                    else
+                    {
+                        throw new Exception("Expected variable or function declaration.");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Unexpected token inside package.");
+                }
+            }
+            Consume(TokenType.RBRACE, "Expected '}' after package body.");
+
+            return new PackageNode(packageName, members);
         }
 
         /// <summary>
-        /// Parses a global variable declaration, which could be a regular variable or an array.
+        /// Parses a  variable declaration, which could be a regular variable or an array.
         /// </summary>
         /// <returns>A <see cref="VariableDeclarationNode"/> representing the global variable declaration.</returns>
         /// <exception cref="Exception">Thrown if the declaration is malformed.</exception>
-        private VariableDeclarationNode ParseGlobalVariableDeclaration()
+        private VariableDeclarationNode? ParseVariableDeclaration()
         {
-            string? type = ParseType(); ///< The type of the variable (e.g., "number[]").
-            string? name;
+            //string type = ParseType(); ///< The type of the variable (e.g., "number[]").
+            string? type = PreviousToken().Lexeme;
+            string name;
             if (Check(TokenType.LBRACE))
             {
                 // Array declaration
@@ -80,7 +167,7 @@
 
                 name = Consume(TokenType.IDENTIFIER, "Expected variable name").Lexeme;
 
-                ExpressionNode initializer = null;
+                ExpressionNode? initializer = null;
 
                 if (Match(TokenType.EQUAL))
                 {
@@ -91,25 +178,44 @@
 
                 return new VariableDeclarationNode(type + "[]", name, initializer);
             }
-            else if (Check(TokenType.IDENTIFIER))
+
+            if (Check(TokenType.IDENTIFIER))
             {
                 // Regular variable declaration
                 name = Consume(TokenType.IDENTIFIER, "Expected variable name").Lexeme;
-                ExpressionNode initializer = null;
+                ExpressionNode? initializer = null;
 
                 if (Match(TokenType.EQUAL))
                 {
                     initializer = ParseExpression();
                 }
 
+                if (type == "let")
+                {
+                    if (initializer != null)
+                    {
+                        if (initializer is LiteralNode literalNode)
+                            type = ParseTokenType(literalNode.Type);
+                        else if (initializer is FunctionCallNode functionCallNode)
+                        {
+                            foreach (var function in _functions)
+                            {
+                                if (function.Name == functionCallNode.FunctionName)
+                                    type = function.ReturnType;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("Implicitly-typed variables must be initialized");
+                    }
+                }
+
                 Consume(TokenType.SEMICOLON, "Expected ';' after variable declaration");
 
                 return new VariableDeclarationNode(type, name, initializer);
             }
-            else
-            {
-                throw new Exception("Expected array or variable declaration");
-            }
+            throw new Exception("Expected array or variable declaration");
         }
 
         /// <summary>
@@ -117,7 +223,7 @@
         /// </summary>
         /// <returns>A <see cref="FunctionNode"/> representing the main function.</returns>
         /// <exception cref="Exception">Thrown if the syntax of the main function is incorrect.</exception>
-        private FunctionNode ParseMainFunction()
+        private FunctionNode? ParseMainFunction()
         {
             Consume(TokenType.MAIN, "Expected 'main'");
             Consume(TokenType.LPAREN, "Expected '(' after 'main'");
@@ -125,7 +231,7 @@
             Consume(TokenType.RPAREN, "Expected ')' after parameters");
             Consume(TokenType.LBRACE, "Expected '{' before main function body");
 
-            List<StatementNode> statements = new List<StatementNode>();
+            List<StatementNode?> statements = new List<StatementNode?>();
 
             while (!IsAtEnd() && !Match(TokenType.RBRACE))
             {
@@ -139,9 +245,9 @@
         /// Parses a function declaration.
         /// </summary>
         /// <returns>A <see cref="FunctionNode"/> representing the function declaration.</returns>
-        private FunctionNode ParseFunction()
+        private FunctionNode? ParseFunction()
         {
-            string? name = Consume(TokenType.IDENTIFIER, "Expected function name").Lexeme;
+            string name = Consume(TokenType.IDENTIFIER, "Expected function name").Lexeme;
             Consume(TokenType.LPAREN, "Expected '(' after function name");
             List<ParameterNode> parameters = ParseParameters();
             Consume(TokenType.RPAREN, "Expected ')' after parameters");
@@ -149,8 +255,8 @@
             string? returnType = ParseType();
             Consume(TokenType.LBRACE, "Expected '{' before function body");
 
-            List<StatementNode> statements = new List<StatementNode>();
-            ReturnStatementNode returnExpression = null;
+            List<StatementNode?> statements = new List<StatementNode?>();
+            ReturnStatementNode? returnExpression = null;
 
             while (!IsAtEnd() && !Check(TokenType.RBRACE))
             {
@@ -173,9 +279,9 @@
         /// <param name="returnType">The return type of the function.</param>
         /// <param name="statements">The list of statements in the function.</param>
         /// <returns>A <see cref="ReturnStatementNode"/> representing the return statement.</returns>
-        private ReturnStatementNode ParseReturnStatement(string? returnType, ref List<StatementNode> statements)
+        private ReturnStatementNode? ParseReturnStatement(string? returnType, ref List<StatementNode?> statements)
         {
-            ReturnStatementNode returnStatement = null;
+            ReturnStatementNode? returnStatement = null;
             if (returnType != "void")
             {
                 Consume(TokenType.RETURN, "Expected 'return' statement in function");
@@ -198,9 +304,9 @@
         /// Parses a return statement without considering the return type.
         /// </summary>
         /// <returns>A <see cref="ReturnStatementNode"/> representing the return statement.</returns>
-        private ReturnStatementNode ParseReturnStatement()
+        private ReturnStatementNode? ParseReturnStatement()
         {
-            ExpressionNode returnExpression = null;
+            ExpressionNode? returnExpression = null;
             if (!Check(TokenType.SEMICOLON))
             {
                 returnExpression = ParseExpression();
@@ -236,7 +342,7 @@
                 do
                 {
                     string? type = ParseType();
-                    string? name = Consume(TokenType.IDENTIFIER, "Expected parameter name").Lexeme;
+                    string name = Consume(TokenType.IDENTIFIER, "Expected parameter name").Lexeme;
                     parameters.Add(new ParameterNode(type, name));
                 } while (Match(TokenType.COMMA));
             }
@@ -254,6 +360,16 @@
             if (Match(TokenType.STRING)) return "string";
             if (Match(TokenType.BOOL)) return "bool";
             if (Match(TokenType.VOID)) return "void";
+            throw new Exception("Expected type");
+        }
+
+
+        private string? ParseTokenType(TokenType token)
+        {
+            if (token is TokenType.NUMBER or TokenType.NUMBER_LITERAL) return "number";
+            if (token is TokenType.STRING or TokenType.STRING_LITERAL) return "string";
+            if (token == TokenType.BOOL) return "bool";
+            if (token == TokenType.VOID) return "void";
 
             throw new Exception("Expected type");
         }
@@ -263,7 +379,7 @@
         /// </summary>
         /// <returns>A <see cref="StatementNode"/> representing the parsed statement.</returns>
         /// <exception cref="Exception">Thrown if an unexpected token is encountered.</exception>
-        private StatementNode ParseStatement()
+        private StatementNode? ParseStatement()
         {
             if (Match(TokenType.IF))
             {
@@ -281,12 +397,28 @@
             {
                 return ParseBlockStatement();
             }
-            if (Match(TokenType.VOID, TokenType.BOOL, TokenType.NUMBER, TokenType.STRING))
+
+            if (Check(TokenType.LET) &&
+                NextToken().Type == TokenType.IDENTIFIER &&
+                NextToken(2).Type == TokenType.EQUAL &&
+                NextToken(3).Type == TokenType.NEW)
+            {
+                Consume(TokenType.LET, "Object Instantiation checked");
+                if (Match(TokenType.IDENTIFIER) && Check(TokenType.EQUAL))
+                    return ParseObjectInstantiationOrAssignment();
+            }
+
+
+            if (Match(TokenType.VOID, TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
             {
                 return ParseVariableDeclaration();
             }
             if (Match(TokenType.IDENTIFIER))
             {
+                if (Match(TokenType.IDENTIFIER) && Check(TokenType.EQUAL))
+                {
+                    return ParseObjectInstantiationOrAssignment();
+                }
                 return ParseExpressionStatementOrAssignment();
             }
             if (Match(TokenType.RETURN))
@@ -297,17 +429,53 @@
             throw new Exception($"Unexpected token: {CurrentToken().Type}");
         }
 
+        private StatementNode? ParseObjectInstantiationOrAssignment()
+        {
+            string initialPackageName = PreviousToken(2).Lexeme;
+            string name = PreviousToken().Lexeme;
+
+            Consume(TokenType.EQUAL, "Expected '=' after identifier");
+
+            if (Match(TokenType.NEW))
+            {
+                // Object instantiation
+                string packageName = Consume(TokenType.IDENTIFIER, "Expected package name").Lexeme;
+                Consume(TokenType.LPAREN, "Expected '(' after package name");
+                List<ExpressionNode?> arguments = new List<ExpressionNode?>();
+                if (!Check(TokenType.RPAREN))
+                {
+                    do
+                    {
+                        arguments.Add(ParseExpression());
+                    } while (Match(TokenType.COMMA));
+                }
+
+                Consume(TokenType.RPAREN, "Expected ')' after arguments");
+                Consume(TokenType.SEMICOLON, "Expected ';' after object instantiation");
+
+                if (initialPackageName != packageName && initialPackageName != "let")
+                    throw new Exception($"Cannot implicitly convert type '{packageName}' to '{initialPackageName}'");
+
+                return new ObjectInstantiationNode(name, packageName, arguments);
+            }
+
+            // Assignment
+            ExpressionNode? value = ParseExpression();
+            Consume(TokenType.SEMICOLON, "Expected ';' after assignment");
+            return new AssignmentNode(name, value);
+        }
+
         /// <summary>
         /// Parses an if statement.
         /// </summary>
         /// <returns>A <see cref="IfStatementNode"/> representing the if statement.</returns>
-        private StatementNode ParseIfStatement()
+        private StatementNode? ParseIfStatement()
         {
             Consume(TokenType.LPAREN, "Expected '(' after 'if'");
-            ExpressionNode condition = ParseExpression();
+            ExpressionNode? condition = ParseExpression();
             Consume(TokenType.RPAREN, "Expected ')' after if condition");
-            StatementNode thenBranch = ParseStatement();
-            StatementNode elseBranch = null;
+            StatementNode? thenBranch = ParseStatement();
+            StatementNode? elseBranch = null;
             if (Match(TokenType.ELSE))
             {
                 elseBranch = ParseStatement();
@@ -320,12 +488,12 @@
         /// Parses a while statement.
         /// </summary>
         /// <returns>A <see cref="WhileStatementNode"/> representing the while statement.</returns>
-        private StatementNode ParseWhileStatement()
+        private StatementNode? ParseWhileStatement()
         {
             Consume(TokenType.LPAREN, "Expected '(' after 'while'");
-            ExpressionNode condition = ParseExpression();
+            ExpressionNode? condition = ParseExpression();
             Consume(TokenType.RPAREN, "Expected ')' after while condition");
-            StatementNode body = ParseStatement();
+            StatementNode? body = ParseStatement();
             return new WhileStatementNode(condition, body);
         }
 
@@ -333,22 +501,22 @@
         /// Parses a for statement.
         /// </summary>
         /// <returns>A <see cref="ForStatementNode"/> representing the for statement.</returns>
-        private StatementNode ParseForStatement()
+        private StatementNode? ParseForStatement()
         {
             Consume(TokenType.LPAREN, "Expected '(' after 'for'");
 
             // Regular variable declaration
             var initializer = ParseStatement();
-            ExpressionNode condition = ParseExpression();
+            ExpressionNode? condition = ParseExpression();
             Consume(TokenType.SEMICOLON, "Expected ';' after condition in 'for'");
-            StatementNode increment = null;
+            StatementNode? increment = null;
             if (Match(TokenType.IDENTIFIER))
             {
                 increment = ParseExpressionStatementOrAssignment();
             }
 
             Consume(TokenType.RPAREN, "Expected ')' after for increment");
-            StatementNode body = ParseStatement();
+            StatementNode? body = ParseStatement();
             return new ForStatementNode(initializer, condition, increment, body);
         }
 
@@ -356,9 +524,9 @@
         /// Parses a block statement enclosed in braces.
         /// </summary>
         /// <returns>A <see cref="BlockNode"/> representing the block statement.</returns>
-        private StatementNode ParseBlockStatement()
+        private StatementNode? ParseBlockStatement()
         {
-            List<StatementNode> statements = new List<StatementNode>();
+            List<StatementNode?> statements = new List<StatementNode?>();
             while (!Check(TokenType.RBRACE) && !IsAtEnd())
             {
                 statements.Add(ParseStatement());
@@ -368,71 +536,12 @@
         }
 
         /// <summary>
-        /// Parses a variable declaration, which can be an array or a regular variable.
-        /// </summary>
-        /// <returns>A <see cref="VariableDeclarationNode"/> representing the variable declaration.</returns>
-        /// <exception cref="Exception">Thrown if the declaration is malformed.</exception>
-        private StatementNode ParseVariableDeclaration()
-        {
-            string? type = PreviousToken().Lexeme;
-            string? name;
-
-            if (Check(TokenType.LBRACE))
-            {
-                // Array declaration
-                Advance(); // Consume '['
-
-                if (Check(TokenType.RBRACE))
-                {
-                    // Array declaration without size
-                    Advance(); // Consume ']'
-                }
-                else
-                {
-                    throw new Exception("Expected ']' after '[' for array declaration.");
-                }
-
-                name = Consume(TokenType.IDENTIFIER, "Expected variable name").Lexeme;
-
-                ExpressionNode initializer = null;
-
-                if (Match(TokenType.EQUAL))
-                {
-                    initializer = ParseArrayInitializer();
-                }
-
-                Consume(TokenType.SEMICOLON, "Expected ';' after variable declaration");
-
-                return new VariableDeclarationNode(type + "[]", name, initializer);
-            }
-            else if (Check(TokenType.IDENTIFIER))
-            {
-                // Regular variable declaration
-                name = Consume(TokenType.IDENTIFIER, "Expected variable name").Lexeme;
-                ExpressionNode initializer = null;
-
-                if (Match(TokenType.EQUAL))
-                {
-                    initializer = ParseExpression();
-                }
-
-                Consume(TokenType.SEMICOLON, "Expected ';' after variable declaration");
-
-                return new VariableDeclarationNode(type, name, initializer);
-            }
-            else
-            {
-                throw new Exception("Expected array or variable declaration");
-            }
-        }
-
-        /// <summary>
         /// Parses an array initializer, which includes a list of expressions enclosed in braces.
         /// </summary>
         /// <returns>A <see cref="ArrayInitializerNode"/> representing the array initializer.</returns>
-        private ExpressionNode ParseArrayInitializer()
+        private ExpressionNode? ParseArrayInitializer()
         {
-            List<ExpressionNode> elements = new List<ExpressionNode>();
+            List<ExpressionNode?> elements = new List<ExpressionNode?>();
             if (Check(TokenType.LBRACE))
             {
                 Consume(TokenType.LBRACE, "Expected '[' to start array initializer");
@@ -456,21 +565,22 @@
         /// </summary>
         /// <returns>A <see cref="StatementNode"/> representing the expression or assignment.</returns>
         /// <exception cref="Exception">Thrown if the syntax is incorrect.</exception>
-        private StatementNode ParseExpressionStatementOrAssignment()
+        private StatementNode? ParseExpressionStatementOrAssignment(bool isExpression = false)
         {
-            string? name = PreviousToken().Lexeme;
+            string name = PreviousToken().Lexeme;
 
             if (Match(TokenType.LBRACE)) // Check for array access
             {
                 // Parse the array index expression
-                ExpressionNode index = ParseExpression();
+                ExpressionNode? index = ParseExpression();
                 Consume(TokenType.RBRACE, "Expected ']' after array index");
 
                 // Check for assignment to array element
                 if (Match(TokenType.EQUAL))
                 {
-                    ExpressionNode value = ParseExpression();
-                    Consume(TokenType.SEMICOLON, "Expected ';' after assignment");
+                    ExpressionNode? value = ParseExpression();
+                    if (!isExpression)
+                        Consume(TokenType.SEMICOLON, "Expected ';' after assignment");
                     return new ArrayAssignmentNode(name, index, value);
                 }
 
@@ -479,29 +589,33 @@
 
             if (Match(TokenType.PLUS_PLUS, TokenType.MINUS_MINUS))
             {
-                string? operation = PreviousToken().Lexeme;
-                Consume(TokenType.SEMICOLON, "Expected ';' after increment/decrement");
+                string operation = PreviousToken().Lexeme;
+                if (!isExpression)
+                    Consume(TokenType.SEMICOLON, "Expected ';' after increment/decrement");
                 return new IncrementDecrementNode(name, operation);
             }
 
-            ExpressionNode expression;
+            ExpressionNode? expression;
             if (Match(TokenType.EQUAL)) // Regular variable assignment
             {
                 expression = ParseExpression();
-                Consume(TokenType.SEMICOLON, "Expected ';' after assignment");
+                if (!isExpression)
+                    Consume(TokenType.SEMICOLON, "Expected ';' after assignment");
                 return new AssignmentNode(name, expression);
             }
 
             if (Match(TokenType.PLUS_EQUAL, TokenType.MINUS_EQUAL, TokenType.STAR_EQUAL, TokenType.SLASH_EQUAL))
             {
-                string? operation = PreviousToken().Lexeme;
+                string operation = PreviousToken().Lexeme;
                 expression = ParseExpression();
-                Consume(TokenType.SEMICOLON, "Expected ';' after compound assignment");
+                if (!isExpression)
+                    Consume(TokenType.SEMICOLON, "Expected ';' after compound assignment");
                 return new CompoundAssignmentNode(name, operation, expression);
             }
 
             expression = ParseExpression();
-            Consume(TokenType.SEMICOLON, "Expected ';' after expression");
+            if (Check(TokenType.SEMICOLON))
+                Consume(TokenType.SEMICOLON, "Expected ';' after expression");
             return new ExpressionStatementNode(expression);
         }
 
@@ -509,7 +623,7 @@
         /// Parses an expression starting with logical OR operations.
         /// </summary>
         /// <returns>An <see cref="ExpressionNode"/> representing the parsed expression.</returns>
-        private ExpressionNode ParseExpression()
+        private ExpressionNode? ParseExpression()
         {
             return ParseLogicalOr();
         }
@@ -518,14 +632,14 @@
         /// Parses logical OR operations in expressions.
         /// </summary>
         /// <returns>An <see cref="ExpressionNode"/> representing the logical OR expression.</returns>
-        private ExpressionNode ParseLogicalOr()
+        private ExpressionNode? ParseLogicalOr()
         {
-            ExpressionNode expr = ParseLogicalAnd();
+            ExpressionNode? expr = ParseLogicalAnd();
 
             while (Match(TokenType.OR_OR))
             {
-                string? op = PreviousToken().Lexeme;
-                ExpressionNode right = ParseLogicalAnd();
+                string op = PreviousToken().Lexeme;
+                ExpressionNode? right = ParseLogicalAnd();
                 expr = new LogicalExpressionNode(expr, op, right);
             }
 
@@ -536,14 +650,14 @@
         /// Parses logical AND operations in expressions.
         /// </summary>
         /// <returns>An <see cref="ExpressionNode"/> representing the logical AND expression.</returns>
-        private ExpressionNode ParseLogicalAnd()
+        private ExpressionNode? ParseLogicalAnd()
         {
-            ExpressionNode expr = ParseEquality();
+            ExpressionNode? expr = ParseEquality();
 
             while (Match(TokenType.AND_AND))
             {
-                string? op = PreviousToken().Lexeme;
-                ExpressionNode right = ParseEquality();
+                string op = PreviousToken().Lexeme;
+                ExpressionNode? right = ParseEquality();
                 expr = new LogicalExpressionNode(expr, op, right);
             }
 
@@ -554,14 +668,14 @@
         /// Parses equality operations in expressions.
         /// </summary>
         /// <returns>An <see cref="ExpressionNode"/> representing the equality expression.</returns>
-        private ExpressionNode ParseEquality()
+        private ExpressionNode? ParseEquality()
         {
-            ExpressionNode expr = ParseComparison();
+            ExpressionNode? expr = ParseComparison();
 
             while (Match(TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL))
             {
-                string? op = PreviousToken().Lexeme;
-                ExpressionNode right = ParseComparison();
+                string op = PreviousToken().Lexeme;
+                ExpressionNode? right = ParseComparison();
                 expr = new BinaryExpressionNode(expr, op, right);
             }
 
@@ -572,14 +686,14 @@
         /// Parses comparison operations in expressions.
         /// </summary>
         /// <returns>An <see cref="ExpressionNode"/> representing the comparison expression.</returns>
-        private ExpressionNode ParseComparison()
+        private ExpressionNode? ParseComparison()
         {
-            ExpressionNode expr = ParseTerm();
+            ExpressionNode? expr = ParseTerm();
 
             while (Match(TokenType.GT, TokenType.GTE, TokenType.LT, TokenType.LTE))
             {
-                string? op = PreviousToken().Lexeme;
-                ExpressionNode right = ParseTerm();
+                string op = PreviousToken().Lexeme;
+                ExpressionNode? right = ParseTerm();
                 expr = new BinaryExpressionNode(expr, op, right);
             }
 
@@ -590,14 +704,14 @@
         /// Parses term operations in expressions (e.g., addition, subtraction).
         /// </summary>
         /// <returns>An <see cref="ExpressionNode"/> representing the term expression.</returns>
-        private ExpressionNode ParseTerm()
+        private ExpressionNode? ParseTerm()
         {
-            ExpressionNode expr = ParseFactor();
+            ExpressionNode? expr = ParseFactor();
 
             while (Match(TokenType.PLUS, TokenType.MINUS))
             {
-                string? op = PreviousToken().Lexeme;
-                ExpressionNode right = ParseFactor();
+                string op = PreviousToken().Lexeme;
+                ExpressionNode? right = ParseFactor();
                 expr = new BinaryExpressionNode(expr, op, right);
             }
 
@@ -608,14 +722,14 @@
         /// Parses factor operations in expressions (e.g., multiplication, division).
         /// </summary>
         /// <returns>An <see cref="ExpressionNode"/> representing the factor expression.</returns>
-        private ExpressionNode ParseFactor()
+        private ExpressionNode? ParseFactor()
         {
-            ExpressionNode expr = ParseUnary();
+            ExpressionNode? expr = ParseUnary();
 
             while (Match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT))
             {
-                string? op = PreviousToken().Lexeme;
-                ExpressionNode right = ParseUnary();
+                string op = PreviousToken().Lexeme;
+                ExpressionNode? right = ParseUnary();
                 expr = new BinaryExpressionNode(expr, op, right);
             }
 
@@ -626,12 +740,12 @@
         /// Parses unary operations in expressions (e.g., negation).
         /// </summary>
         /// <returns>An <see cref="ExpressionNode"/> representing the unary expression.</returns>
-        private ExpressionNode ParseUnary()
+        private ExpressionNode? ParseUnary()
         {
             if (Match(TokenType.BANG, TokenType.MINUS))
             {
-                string? op = PreviousToken().Lexeme;
-                ExpressionNode right = ParseUnary();
+                string op = PreviousToken().Lexeme;
+                ExpressionNode? right = ParseUnary();
                 return new UnaryExpressionNode(op, right);
             }
             return ParsePrimary();
@@ -641,16 +755,52 @@
         /// Parses primary expressions, including literals, identifiers, and function calls.
         /// </summary>
         /// <returns>An <see cref="ExpressionNode"/> representing the primary expression.</returns>
-        private ExpressionNode ParsePrimary()
+        private ExpressionNode? ParsePrimary()
         {
             if (Match(TokenType.NUMBER_LITERAL, TokenType.STRING_LITERAL, TokenType.TRUE_LITERAL, TokenType.FALSE_LITERAL))
             {
                 return new LiteralNode(PreviousToken().Lexeme, PreviousToken().Type);
             }
 
-            if (Match(TokenType.IDENTIFIER))
+            if (Match(TokenType.IDENTIFIER) && !Check(TokenType.DOT))
             {
                 return ParseIdentifier();
+            }
+
+            if (Check(TokenType.DOT))
+            {
+                string objectName = PreviousToken().Lexeme;
+                Consume(TokenType.DOT, "Expected dot separator");
+                if (NextToken().Type == TokenType.LPAREN)
+                {
+                    var expressionNode = ParseExpression();
+                    return new MemberAccessNode(objectName, expressionNode);
+                }
+
+                Consume(TokenType.IDENTIFIER, "Expected member name");
+                if (NextToken().Type == TokenType.SEMICOLON || NextToken().Type == TokenType.RPAREN)
+                {
+                    var state = ParseIdentifier();
+                    return new MemberAccessNode(objectName, state);
+                }
+                else
+                {
+                    var expression = ParseIdentifier();
+                    if (Match(TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH, TokenType.PERCENT))
+                    {
+                        do
+                        {
+                            string op = PreviousToken().Lexeme;
+                            ExpressionNode? right = ParseFactor();
+                            expression = new BinaryExpressionNode(expression, op, right);
+                        } while (Match(TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH, TokenType.PERCENT));
+
+                        return new MemberAccessNode(objectName, new ExpressionStatementNode(expression));
+                    }
+
+                    var state = ParseExpressionStatementOrAssignment(true);
+                    return new MemberAccessNode(objectName, state);
+                }
             }
 
             if (Match(TokenType.LBRACE))
@@ -660,9 +810,9 @@
 
             if (Check(TokenType.LPAREN))
             {
-                string? name = PreviousToken().Lexeme;
+                string name = PreviousToken().Lexeme;
                 Consume(TokenType.LPAREN, "Expected '(' before arguments");
-                List<ExpressionNode> arguments = new List<ExpressionNode>();
+                List<ExpressionNode?> arguments = new List<ExpressionNode?>();
                 if (!Check(TokenType.RPAREN))
                 {
                     do
@@ -681,19 +831,21 @@
         /// Parses identifiers, including array access and function calls.
         /// </summary>
         /// <returns>An <see cref="ExpressionNode"/> representing the identifier expression.</returns>
-        private ExpressionNode ParseIdentifier()
+        private ExpressionNode? ParseIdentifier()
         {
-            string? name = PreviousToken().Lexeme;
+            string name = PreviousToken().Lexeme;
+
             if (Match(TokenType.LBRACE))
             {
                 // Array access case
-                ExpressionNode index = ParseExpression();
+                ExpressionNode? index = ParseExpression();
                 Consume(TokenType.RBRACE, "Expected ']' after array index.");
                 return new ArrayAccessNode(name, index);
             }
-            else if (Match(TokenType.LPAREN))
+
+            if (Match(TokenType.LPAREN))
             {
-                List<ExpressionNode> arguments = new List<ExpressionNode>();
+                List<ExpressionNode?> arguments = new List<ExpressionNode?>();
                 if (!Check(TokenType.RPAREN))
                 {
                     do
@@ -768,18 +920,18 @@
         /// Retrieves the previous token before the current one.
         /// </summary>
         /// <returns>The previous token.</returns>
-        private Token PreviousToken()
+        private Token PreviousToken(int i = 1)
         {
-            return _tokens[_current - 1];
+            return _tokens[_current - i];
         }
 
         /// <summary>
         /// Retrieves the next token after the current one.
         /// </summary>
         /// <returns>The next token.</returns>
-        private Token NextToken()
+        private Token NextToken(int i = 1)
         {
-            return _tokens[_current + 1];
+            return _tokens[_current + i];
         }
 
         /// <summary>

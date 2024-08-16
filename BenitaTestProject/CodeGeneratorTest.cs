@@ -3,7 +3,7 @@
 namespace BenitaTestProject
 {
     [TestClass]
-    public class CodeGeneratorTest
+    public class CodeGenratorTest
     {
 
         private CodeGenerator _codeGenerator;
@@ -19,8 +19,9 @@ namespace BenitaTestProject
         {
             // Arrange
             var program = new ProgramNode(
-                new List<VariableDeclarationNode>(), // GlobalVariables
-                new List<FunctionNode>
+                new List<VariableDeclarationNode?>(), // GlobalVariables
+                new List<PackageNode?>(),
+                new List<FunctionNode?>
                 {
                     new FunctionNode(
                         "Factorial",
@@ -103,7 +104,9 @@ namespace BenitaTestProject
                         }
                     ),
                     null
-                )
+
+                ),
+                statements: null
             );
 
             string expectedCode = @"
@@ -115,21 +118,20 @@ namespace BenitaTestProject
 
 double Factorial(double n)
 {
-double result = 1;
-if (n > 1)
-{
-result = n * Factorial(n - 1);
-}
-return result;
+  double result = 1;
+  if (n > 1)
+  {
+    result = n * Factorial(n - 1);
+  }
+  return result;
 }
 
 int main()
 {
-double a = 5;
-std::cout << Factorial(a) << std::endl;
-return 0;
-}
-".Trim();
+  double a = 5;
+  std::cout << Factorial(a) << std::endl;
+  return 0;
+}".Trim();
 
             // Act
             var generatedCode = _codeGenerator.GenerateCode(program);
@@ -143,18 +145,20 @@ return 0;
         {
             // Arrange
             var program = new ProgramNode(
-                new List<VariableDeclarationNode>
+                new List<VariableDeclarationNode?>
                 {
-            new VariableDeclarationNode("number", "globalVar", new LiteralNode("42", TokenType.NUMBER_LITERAL))
+                    new VariableDeclarationNode("number", "globalVar", new LiteralNode("42", TokenType.NUMBER_LITERAL))
                 },
-                new List<FunctionNode>(),
+                new List<PackageNode?>(),
+                new List<FunctionNode?>(),
                 new FunctionNode(
                     "_main_",
                     new List<ParameterNode>(),
                     "void",
                     new BlockNode(new List<StatementNode>()),
                     null
-                )
+                ),
+                statements: null
             );
 
             string expectedCode = @"
@@ -167,9 +171,8 @@ return 0;
 double globalVar = 42;
 int main()
 {
-return 0;
-}
-".Trim();
+  return 0;
+}".Trim();
 
             // Act
             var generatedCode = _codeGenerator.GenerateCode(program);
@@ -183,24 +186,25 @@ return 0;
         {
             // Arrange
             var program = new ProgramNode(
-                new List<VariableDeclarationNode>(),
-                new List<FunctionNode>
+                new List<VariableDeclarationNode?>(),
+                new List<PackageNode?>(),
+                new List<FunctionNode?>
                 {
-            new FunctionNode(
-                "Add",
-                new List<ParameterNode>
-                {
-                    new ParameterNode("number", "a"),
-                    new ParameterNode("number", "b")
-                },
-                "number",
-                new BlockNode(new List<StatementNode>()),
-                    new ReturnStatementNode(new BinaryExpressionNode(
-                    new IdentifierNode("a"),
-                    "+",
-                    new IdentifierNode("b"))
-                )
-            )
+                    new FunctionNode(
+                        "Add",
+                        new List<ParameterNode>
+                        {
+                            new ParameterNode("number", "a"),
+                            new ParameterNode("number", "b")
+                        },
+                        "number",
+                        new BlockNode(new List<StatementNode>()),
+                        new ReturnStatementNode(new BinaryExpressionNode(
+                            new IdentifierNode("a"),
+                            "+",
+                            new IdentifierNode("b"))
+                        )
+                    )
                 },
                 new FunctionNode(
                     "_main_",
@@ -208,7 +212,8 @@ return 0;
                     "void",
                     new BlockNode(new List<StatementNode>()),
                     null
-                )
+                ),
+                statements: null
             );
 
             string expectedCode = @"
@@ -220,14 +225,13 @@ return 0;
 
 double Add(double a, double b)
 {
-return a + b;
+  return a + b;
 }
 
 int main()
 {
-return 0;
-}
-".Trim();
+  return 0;
+}".Trim();
 
             // Act
             var generatedCode = _codeGenerator.GenerateCode(program);
@@ -241,8 +245,9 @@ return 0;
         {
             // Arrange
             var program = new ProgramNode(
-                new List<VariableDeclarationNode>(), // No global variables
-                new List<FunctionNode>
+                new List<VariableDeclarationNode?>(), // No global variables
+                new List<PackageNode?>(),
+                new List<FunctionNode?>
                 {
                     new FunctionNode(
                         "CheckNumber",
@@ -300,7 +305,8 @@ return 0;
                         )
                     }),
                     null // No return expression
-                )
+                ),
+                statements: null
             );
 
             string expectedCode = @"
@@ -312,24 +318,23 @@ return 0;
 
 std::string CheckNumber(double n)
 {
-std::string result = """";
-if (n > 0)
-{
-result = ""Positive"";
-}
-else
-{
-result = ""Non-Positive"";
-}
-return result;
+  std::string result = """";
+  if (n > 0)
+  {
+    result = ""Positive"";
+  }
+  else
+  {
+    result = ""Non-Positive"";
+  }
+  return result;
 }
 
 int main()
 {
-std::cout << CheckNumber(5) << std::endl;
-return 0;
-}
-".Trim();
+  std::cout << CheckNumber(5) << std::endl;
+  return 0;
+}".Trim();
 
             // Act
             var generatedCode = _codeGenerator.GenerateCode(program);
@@ -343,53 +348,54 @@ return 0;
         {
             // Arrange
             var program = new ProgramNode(
-                new List<VariableDeclarationNode>(),
-                new List<FunctionNode>
+                new List<VariableDeclarationNode?>(),
+                new List<PackageNode?>(),
+                new List<FunctionNode?>
                 {
-            new FunctionNode(
-                "PrintNumbers",
-                new List<ParameterNode>
-                {
-                    new ParameterNode("number", "n")
-                },
-                "void",
-                new BlockNode(
-                    new List<StatementNode>
-                    {
-                        new VariableDeclarationNode(
-                            "number",
-                            "i",
-                            new LiteralNode("0", TokenType.NUMBER_LITERAL)
-                        ),
-                        new WhileStatementNode(
-                            new BinaryExpressionNode(
-                                new IdentifierNode("i"),
-                                "<",
-                                new IdentifierNode("n")
-                            ),
-                            new BlockNode(
-                                new List<StatementNode>
-                                {
-                                    new ExpressionStatementNode(
-                                        new FunctionCallNode(
-                                            "print",
-                                            new List<ExpressionNode>
-                                            {
-                                                new IdentifierNode("i")
-                                            }
-                                        )
+                    new FunctionNode(
+                        "PrintNumbers",
+                        new List<ParameterNode>
+                        {
+                            new ParameterNode("number", "n")
+                        },
+                        "void",
+                        new BlockNode(
+                            new List<StatementNode>
+                            {
+                                new VariableDeclarationNode(
+                                    "number",
+                                    "i",
+                                    new LiteralNode("0", TokenType.NUMBER_LITERAL)
+                                ),
+                                new WhileStatementNode(
+                                    new BinaryExpressionNode(
+                                        new IdentifierNode("i"),
+                                        "<",
+                                        new IdentifierNode("n")
                                     ),
-                                    new IncrementDecrementNode(
-                                        "i",
-                                        "++"
+                                    new BlockNode(
+                                        new List<StatementNode>
+                                        {
+                                            new ExpressionStatementNode(
+                                                new FunctionCallNode(
+                                                    "print",
+                                                    new List<ExpressionNode>
+                                                    {
+                                                        new IdentifierNode("i")
+                                                    }
+                                                )
+                                            ),
+                                            new IncrementDecrementNode(
+                                                "i",
+                                                "++"
+                                            )
+                                        }
                                     )
-                                }
-                            )
-                        )
-                    }
-                ),
-                null
-            )
+                                )
+                            }
+                        ),
+                        null
+                    )
                 },
                 new FunctionNode(
                     "_main_",
@@ -397,7 +403,8 @@ return 0;
                     "void",
                     new BlockNode(new List<StatementNode>()),
                     null
-                )
+                ),
+                statements: null
             );
 
             string expectedCode = @"
@@ -409,19 +416,18 @@ return 0;
 
 void PrintNumbers(double n)
 {
-double i = 0;
-while (i < n)
-{
-std::cout << i << std::endl;
-i++;
-}
+  double i = 0;
+  while (i < n)
+  {
+    std::cout << i << std::endl;
+    i++;
+  }
 }
 
 int main()
 {
-return 0;
-}
-".Trim();
+  return 0;
+}".Trim();
 
             // Act
             var generatedCode = _codeGenerator.GenerateCode(program);
@@ -429,6 +435,5 @@ return 0;
             // Assert
             Assert.AreEqual(expectedCode, generatedCode.Trim());
         }
-
     }
 }

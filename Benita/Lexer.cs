@@ -32,6 +32,8 @@
         /// </summary>
         private static readonly Dictionary<string, TokenType> Keywords = new Dictionary<string, TokenType>
         {
+            {"pkg", TokenType.PACKAGE},
+            {"new", TokenType.NEW},
             {"func", TokenType.FUNC},
             {"_main_", TokenType.MAIN},
             {"return", TokenType.RETURN},
@@ -41,6 +43,7 @@
             {"while", TokenType.WHILE},
             {"number", TokenType.NUMBER},
             {"string", TokenType.STRING},
+            {"let", TokenType.LET},
             {"bool", TokenType.BOOL},
             {"void", TokenType.VOID},
             {"true", TokenType.TRUE_LITERAL},
@@ -133,6 +136,7 @@
                 case '}': AddToken(TokenType.RBRACE); break;
                 case ';': AddToken(TokenType.SEMICOLON); break;
                 case ',': AddToken(TokenType.COMMA); break;
+                case '.': AddToken(TokenType.DOT); break;
                 case '+':
                     AddToken(Match('=') ? TokenType.PLUS_EQUAL : Match('+') ? TokenType.PLUS_PLUS : TokenType.PLUS);
                     break;
@@ -235,7 +239,7 @@
             Advance(); ///< The closing "
 
             ///< Trim the surrounding quotes.
-            string? value = _source.Substring(_start + 1, _current - _start - 2);
+            string value = _source.Substring(_start + 1, _current - _start - 2);
             AddToken(TokenType.STRING_LITERAL, value);
         }
 
@@ -324,7 +328,7 @@
         /// </summary>
         /// <param name="type">The type of the token.</param>
         /// <param name="lexeme">The lexeme of the token.</param>
-        private void AddToken(TokenType type, string? lexeme = null)
+        private void AddToken(TokenType type, string lexeme = null)
         {
             if (lexeme == null)
             {

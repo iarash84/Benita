@@ -1,531 +1,309 @@
 ﻿namespace Benita
 {
     /// <summary>
-    /// Base class for all AST nodes.
+    /// Represents the base class for all nodes in the Abstract Syntax Tree (AST).
     /// </summary>
-    public abstract class ASTNode
+    public abstract class AstNode
     {
     }
 
     /// <summary>
-    /// Base class for all expression nodes in the AST.
+    /// Represents the base class for all expression nodes in the AST.
     /// </summary>
-    public abstract class ExpressionNode : ASTNode
+    public abstract class ExpressionNode : AstNode
     {
     }
 
     /// <summary>
-    /// Node representing a literal value in the AST.
+    /// Represents a literal node with a value and a type.
     /// </summary>
-    public class LiteralNode : ExpressionNode
+    public class LiteralNode(string value, TokenType type) : ExpressionNode
     {
-        /// <summary>
-        /// Gets the literal value.
-        /// </summary>
-        public string? Value { get; }
-
-        /// <summary>
-        /// Gets the type of the literal.
-        /// </summary>
-        public TokenType Type { get; }
-        public LiteralNode(string? value, TokenType type)
-        {
-            Value = value;
-            Type = type;
-        }
+        public string Value { get; } = value;
+        public TokenType Type { get; } = type;
     }
 
     /// <summary>
-    /// Node representing an identifier in the AST.
+    /// Represents an identifier node with an optional name.
     /// </summary>
-    public class IdentifierNode : ExpressionNode
+    public class IdentifierNode(string name) : ExpressionNode
     {
-        /// <summary>
-        /// Gets the name of the identifier.
-        /// </summary>
-        public string? Name { get; }
-        public IdentifierNode(string? name)
-        {
-            Name = name;
-        }
+        public string Name { get; } = name;
     }
 
     /// <summary>
-    /// Node representing a binary expression in the AST.
+    /// Represents a binary expression node with left and right expressions and an operator.
     /// </summary>
-    public class BinaryExpressionNode : ExpressionNode
+    public class BinaryExpressionNode(ExpressionNode? left, string op, ExpressionNode? right) : ExpressionNode
     {
-        /// <summary>
-        /// Gets the left-hand side of the expression.
-        /// </summary>
-        public ExpressionNode Left { get; }
-
-        /// <summary>
-        /// Gets the operator (e.g., +, -, *).
-        /// </summary>
-        public string? Operator { get; }
-
-        /// <summary>
-        /// Gets the right-hand side of the expression.
-        /// </summary>
-        public ExpressionNode Right { get; }
-        public BinaryExpressionNode(ExpressionNode left, string? op, ExpressionNode right)
-        {
-            Left = left;
-            Operator = op;
-            Right = right;
-        }
+        public ExpressionNode? Left { get; } = left;
+        public string Operator { get; } = op;
+        public ExpressionNode? Right { get; } = right;
     }
 
     /// <summary>
-    /// Node representing a logical expression in the AST.
+    /// Represents a logical expression node with left and right expressions and an operator.
     /// </summary>
-    public class LogicalExpressionNode : ExpressionNode
+    public class LogicalExpressionNode(ExpressionNode? left, string op, ExpressionNode? right) : ExpressionNode
     {
-        /// <summary>
-        /// Gets the left-hand side of the expression.
-        /// </summary>
-        public ExpressionNode Left { get; }
-
-        /// <summary>
-        /// Gets the logical operator (e.g., &&, ||).
-        /// </summary>
-        public string? Operator { get; }
-
-        /// <summary>
-        /// Gets the right-hand side of the expression.
-        /// </summary>
-        public ExpressionNode Right { get; }
-        public LogicalExpressionNode(ExpressionNode left, string? op, ExpressionNode right)
-        {
-            Left = left;
-            Operator = op;
-            Right = right;
-        }
-
-        // Implement methods like Accept for visitor pattern, ToString, etc.
+        public ExpressionNode? Left { get; } = left;
+        public string Operator { get; } = op;
+        public ExpressionNode? Right { get; } = right;
     }
 
     /// <summary>
-    /// Node representing a unary expression in the AST.
+    /// Represents a unary expression node with an operator and an operand.
     /// </summary>
-    public class UnaryExpressionNode : ExpressionNode
+    public class UnaryExpressionNode(string? op, ExpressionNode? operand) : ExpressionNode
     {
-        /// <summary>
-        /// Gets the unary operator (e.g., -, !).
-        /// </summary>
-        public string? Operator { get; }
-
-        /// <summary>
-        /// Gets the operand of the unary expression.
-        /// </summary>
-        public ExpressionNode Operand { get; }
-        public UnaryExpressionNode(string? op, ExpressionNode operand)
-        {
-            Operator = op;
-            Operand = operand;
-        }
+        public string? Operator { get; } = op;
+        public ExpressionNode? Operand { get; } = operand;
     }
 
     /// <summary>
-    /// Node representing a function call in the AST.
+    /// Represents a function call node with a function name and arguments.
     /// </summary>
-    public class FunctionCallNode : ExpressionNode
+    public class FunctionCallNode(string? functionName, List<ExpressionNode?> arguments) : ExpressionNode
     {
-        /// <summary>
-        /// Gets the name of the function being called.
-        /// </summary>
-        public string? FunctionName { get; }
-
-        /// <summary>
-        /// Gets the list of arguments passed to the function.
-        /// </summary>
-        public List<ExpressionNode> Arguments { get; }
-        public FunctionCallNode(string? functionName, List<ExpressionNode> arguments)
-        {
-            FunctionName = functionName;
-            Arguments = arguments;
-        }
+        public string? FunctionName { get; } = functionName;
+        public List<ExpressionNode?> Arguments { get; } = arguments;
     }
 
     /// <summary>
-    /// Base class for all statement nodes in the AST.
+    /// Represents the base class for all statement nodes in the AST.
     /// </summary>
-    public abstract class StatementNode : ASTNode
+    public abstract class StatementNode : AstNode
     {
     }
 
     /// <summary>
-    /// Node representing a variable declaration statement in the AST.
+    /// Represents a variable declaration node with a type, optional name, and optional initializer.
     /// </summary>
-    public class VariableDeclarationNode : StatementNode
+    public class VariableDeclarationNode(string? type, string name, ExpressionNode? initializer) : StatementNode
     {
-        /// <summary>
-        /// Gets the type of the variable.
-        /// </summary>
-        public string? Type { get; }
-
-        /// <summary>
-        /// Gets the name of the variable.
-        /// </summary>
-        public string? Name { get; }
-
-        /// <summary>
-        /// Gets the initializer expression for the variable.
-        /// </summary>
-        public ExpressionNode Initializer { get; }
-        public VariableDeclarationNode(string? type, string? name, ExpressionNode initializer)
-        {
-            Type = type;
-            Name = name;
-            Initializer = initializer;
-        }
-    }
-    /// <summary>
-    /// Node representing an assignment statement in the AST.
-    /// </summary>
-    public class AssignmentNode : StatementNode
-    {
-        /// <summary>
-        /// Gets the name of the variable being assigned.
-        /// </summary>
-        public string? Name { get; }
-
-        /// <summary>
-        /// Gets the expression being assigned to the variable.
-        /// </summary>
-        public ExpressionNode Expression { get; }
-        public AssignmentNode(string? name, ExpressionNode expression)
-        {
-            Name = name;
-            Expression = expression;
-        }
+        public string? Type { get; } = type;
+        public string Name { get; } = name;
+        public ExpressionNode? Initializer { get; } = initializer;
     }
 
     /// <summary>
-    /// Node representing an array assignment statement in the AST.
+    /// Represents a member access node with an object name and an expression.
     /// </summary>
-    public class ArrayAssignmentNode : StatementNode
+    public class MemberAccessNode(string objectName, AstNode? expression) : ExpressionNode
     {
-        /// <summary>
-        /// Gets the name of the array.
-        /// </summary>
-        public string? Name { get; }
-
-        /// <summary>
-        /// Gets the index of the array element.
-        /// </summary>
-        public ExpressionNode Index { get; }
-
-        /// <summary>
-        /// Gets the value being assigned to the array element.
-        /// </summary>
-        public ExpressionNode Value { get; }
-        public ArrayAssignmentNode(string? name, ExpressionNode index, ExpressionNode value)
-        {
-            Name = name;
-            Index = index;
-            Value = value;
-        }
+        public AstNode? Expression { get; set; } = expression;
+        public string ObjectName { get; } = objectName;
     }
 
     /// <summary>
-    /// Node representing a compound assignment statement in the AST.
+    /// Represents an object instantiation node with a name, package name, and arguments.
     /// </summary>
-    public class CompoundAssignmentNode : StatementNode
+    public class ObjectInstantiationNode(string name, string? packageName, List<ExpressionNode?> arguments)
+        : StatementNode
     {
-        /// <summary>
-        /// Gets the name of the variable being assigned.
-        /// </summary>
-        public string? Name { get; }
-
-        /// <summary>
-        /// Gets the compound operator (e.g., +=, -=).
-        /// </summary>
-        public string? Operator { get; }
-
-        /// <summary>
-        /// Gets the expression being assigned to the variable.
-        /// </summary>
-        public ExpressionNode Expression { get; }
-        public CompoundAssignmentNode(string? name, string? op, ExpressionNode expression)
-        {
-            Name = name;
-            Operator = op;
-            Expression = expression;
-        }
+        public string Name { get; } = name;
+        public string? PackageName { get; } = packageName;
+        public List<ExpressionNode?> Arguments { get; } = arguments;
     }
 
     /// <summary>
-    /// Node representing an increment or decrement statement in the AST.
+    /// Represents an assignment node with a name and an expression.
     /// </summary>
-    public class IncrementDecrementNode : StatementNode
+    public class AssignmentNode(string name, ExpressionNode? expression) : StatementNode
     {
-        /// <summary>
-        /// Gets the name of the variable being incremented or decremented.
-        /// </summary>
-        public string? Name { get; }
-
-        /// <summary>
-        /// Gets the increment or decrement operator (e.g., ++, --).
-        /// </summary>
-        public string? Operator { get; }
-        public IncrementDecrementNode(string? name, string? op)
-        {
-            Name = name;
-            Operator = op;
-        }
+        public string Name { get; } = name;
+        public ExpressionNode? Expression { get; } = expression;
     }
 
     /// <summary>
-    /// Node representing an if statement in the AST.
+    /// Represents an array assignment node with a name, index, and value.
     /// </summary>
-    public class IfStatementNode : StatementNode
+    public class ArrayAssignmentNode(string name, ExpressionNode? index, ExpressionNode? value) : StatementNode
     {
-        /// <summary>
-        /// Gets the condition expression.
-        /// </summary>
-        public ExpressionNode Condition { get; }
-
-        /// <summary>
-        /// Gets the statement to execute if the condition is true.
-        /// </summary>
-        public StatementNode ThenBranch { get; }
-
-        /// <summary>
-        /// Gets the statement to execute if the condition is false.
-        /// </summary>
-        public StatementNode ElseBranch { get; }
-        public IfStatementNode(ExpressionNode condition, StatementNode thenBranch, StatementNode elseBranch)
-        {
-            Condition = condition;
-            ThenBranch = thenBranch;
-            ElseBranch = elseBranch;
-        }
+        public string Name { get; } = name;
+        public ExpressionNode? Index { get; } = index;
+        public ExpressionNode? Value { get; } = value;
     }
 
     /// <summary>
-    /// Node representing a while loop statement in the AST.
+    /// Represents a compound assignment node with a name, operator, and expression.
     /// </summary>
-    public class WhileStatementNode : StatementNode
+    public class CompoundAssignmentNode(string name, string op, ExpressionNode? expression) : StatementNode
     {
-        /// <summary>
-        /// Gets the condition expression for the while loop.
-        /// </summary>
-        public ExpressionNode Condition { get; }
-
-        /// <summary>
-        /// Gets the body of the while loop.
-        /// </summary>
-        public StatementNode Body { get; }
-        public WhileStatementNode(ExpressionNode condition, StatementNode body)
-        {
-            Condition = condition;
-            Body = body;
-        }
+        public string Name { get; } = name;
+        public string Operator { get; } = op;
+        public ExpressionNode? Expression { get; } = expression;
     }
 
     /// <summary>
-    /// Node representing a for loop statement in the AST.
+    /// Represents an increment or decrement node with a name and operator.
     /// </summary>
-    public class ForStatementNode : StatementNode
+    public class IncrementDecrementNode(string name, string op) : StatementNode
     {
-        /// <summary>
-        /// Gets the initializer statement of the for loop.
-        /// </summary>
-        public StatementNode Initializer { get; }
-
-        /// <summary>
-        /// Gets the condition expression of the for loop.
-        /// </summary>
-        public ExpressionNode Condition { get; }
-
-        /// <summary>
-        /// Gets the increment statement of the for loop.
-        /// </summary>
-        public StatementNode Increment { get; }
-
-        /// <summary>
-        /// Gets the body of the for loop.
-        /// </summary>
-        public StatementNode Body { get; }
-        public ForStatementNode(StatementNode initializer, ExpressionNode condition, StatementNode increment, StatementNode body)
-        {
-            Initializer = initializer;
-            Condition = condition;
-            Increment = increment;
-            Body = body;
-        }
-    }
-    /// <summary>
-    /// Node representing a block of statements in the AST.
-    /// </summary>
-    public class BlockNode : StatementNode
-    {
-        /// <summary>
-        /// Gets the list of statements in the block.
-        /// </summary>
-        public List<StatementNode> Statements { get; }
-        public BlockNode(List<StatementNode> statements)
-        {
-            Statements = statements;
-        }
+        public string Name { get; } = name;
+        public string Operator { get; } = op;
     }
 
     /// <summary>
-    /// Node representing an expression statement in the AST.
+    /// Represents an if statement node with a condition, then branch, and optional else branch.
     /// </summary>
-    public class ExpressionStatementNode : StatementNode
+    public class IfStatementNode(ExpressionNode? condition, StatementNode? thenBranch, StatementNode? elseBranch)
+        : StatementNode
     {
-        /// <summary>
-        /// Gets the expression of the statement.
-        /// </summary>
-        public ExpressionNode Expression { get; }
-        public ExpressionStatementNode(ExpressionNode expression)
-        {
-            Expression = expression;
-        }
+        public ExpressionNode? Condition { get; } = condition;
+        public StatementNode? ThenBranch { get; } = thenBranch;
+        public StatementNode? ElseBranch { get; } = elseBranch;
     }
 
     /// <summary>
-    /// Node representing a function declaration in the AST.
+    /// Represents a while statement node with a condition and body.
     /// </summary>
-    public class FunctionNode : ASTNode
+    public class WhileStatementNode(ExpressionNode? condition, StatementNode? body) : StatementNode
     {
-        /// <summary>
-        /// Gets the name of the function.
-        /// </summary>
-        public string? Name { get; }
-
-        /// <summary>
-        /// Gets the list of parameters for the function.
-        /// </summary>
-        public List<ParameterNode> Parameters { get; }
-
-        /// <summary>
-        /// Gets the return type of the function.
-        /// </summary>
-        public string? ReturnType { get; }
-
-        /// <summary>
-        /// Gets the body of the function.
-        /// </summary>
-        public BlockNode Body { get; }
-
-        /// <summary>
-        /// Gets the return statement of the function.
-        /// </summary>
-        public ReturnStatementNode ReturnStatement { get; }
-        public FunctionNode(string? name, List<ParameterNode> parameters, string? returnType, BlockNode body, ReturnStatementNode returnStatement)
-        {
-            Name = name;
-            Parameters = parameters;
-            ReturnType = returnType;
-            Body = body;
-            ReturnStatement = returnStatement;
-        }
+        public ExpressionNode? Condition { get; } = condition;
+        public StatementNode? Body { get; } = body;
     }
 
     /// <summary>
-    /// Node representing a return statement in the AST.
+    /// Represents a for statement node with an initializer, condition, increment, and body.
     /// </summary>
-    public class ReturnStatementNode : StatementNode
+    public class ForStatementNode(
+        StatementNode? initializer,
+        ExpressionNode? condition,
+        StatementNode? increment,
+        StatementNode? body) : StatementNode
     {
-        /// <summary>
-        /// Gets the expression to be returned.
-        /// </summary>
-        public ExpressionNode ReturnExpression { get; }
-        public ReturnStatementNode(ExpressionNode returnExpression)
-        {
-            ReturnExpression = returnExpression;
-        }
+        public StatementNode? Initializer { get; } = initializer;
+        public ExpressionNode? Condition { get; } = condition;
+        public StatementNode? Increment { get; } = increment;
+        public StatementNode? Body { get; } = body;
     }
 
     /// <summary>
-    /// Node representing a parameter in a function declaration.
+    /// Represents a block node containing a list of statements.
     /// </summary>
-    public class ParameterNode : ASTNode
+    public class BlockNode(List<StatementNode?> statements) : StatementNode
     {
-        /// <summary>
-        /// Gets the type of the parameter.
-        /// </summary>
-        public string? Type { get; }
-
-        /// <summary>
-        /// Gets the name of the parameter.
-        /// </summary>
-        public string? Name { get; }
-        public ParameterNode(string? type, string? name)
-        {
-            Type = type;
-            Name = name;
-        }
+        public List<StatementNode?> Statements { get; } = statements;
     }
 
     /// <summary>
-    /// Node representing the entire program in the AST.
+    /// Represents an expression statement node containing an expression.
     /// </summary>
-    public class ProgramNode : ASTNode
+    public class ExpressionStatementNode(ExpressionNode? expression) : StatementNode
     {
-        /// <summary>
-        /// Gets the list of global variable declarations.
-        /// </summary>
-        public List<VariableDeclarationNode> GlobalVariables { get; }
-
-        /// <summary>
-        /// Gets the list of functions declared in the program.
-        /// </summary>
-        public List<FunctionNode> Functions { get; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public FunctionNode MainFunction { get; }
-
-        public ProgramNode(List<VariableDeclarationNode> globalVariables, List<FunctionNode> functions, FunctionNode mainFunction)
-        {
-            GlobalVariables = globalVariables;
-            MainFunction = mainFunction;
-            Functions = functions;
-        }
+        public ExpressionNode? Expression { get; } = expression;
     }
 
     /// <summary>
-    /// Node representing an array access operation in the AST.
+    /// Represents a function node with a name, parameters, return type, body, and return statement.
     /// </summary>
-    public class ArrayAccessNode : ExpressionNode
+    public class FunctionNode(
+        string? name,
+        List<ParameterNode> parameters,
+        string? returnType,
+        BlockNode? body,
+        ReturnStatementNode? returnStatement) : AstNode
     {
-        /// <summary>
-        /// Gets the name of the array being accessed.
-        /// </summary>
-        public string? Name;
-
-        /// <summary>
-        /// Gets the index expression used to access an element in the array.
-        /// </summary>
-        public ExpressionNode Index;
-        public ArrayAccessNode(string? name, ExpressionNode index)
-        {
-            Name = name;
-            Index = index;
-        }
+        public string? Name { get; } = name;
+        public List<ParameterNode> Parameters { get; } = parameters;
+        public string? ReturnType { get; } = returnType;
+        public BlockNode? Body { get; } = body;
+        public ReturnStatementNode? ReturnStatement { get; } = returnStatement;
     }
 
     /// <summary>
-    /// Node representing an array initializer in the AST.
+    /// Represents a return statement node containing a return expression.
     /// </summary>
-    public class ArrayInitializerNode : ExpressionNode
+    public class ReturnStatementNode(ExpressionNode? returnExpression) : StatementNode
     {
-        /// <summary>
-        /// Gets the list of elements used to initialize the array.
-        /// </summary>
-        public List<ExpressionNode> Elements;
-        public ArrayInitializerNode(List<ExpressionNode> elements)
-        {
-            Elements = elements;
-        }
+        public ExpressionNode? ReturnExpression { get; } = returnExpression;
     }
 
+    /// <summary>
+    /// Represents a parameter node with a type and optional name.
+    /// </summary>
+    public class ParameterNode(string? type, string? name) : AstNode
+    {
+        public string? Type { get; } = type;
+        public string? Name { get; } = name;
+    }
 
+    /// <summary>
+    /// Represents a package node with a name and a list of members.
+    /// </summary>
+    public class PackageNode(string? name, List<PackageMemberNode> members) : AstNode
+    {
+        public string? Name { get; } = name;
+        public List<PackageMemberNode> Members { get; } = members;
+    }
 
+    /// <summary>
+    /// Represents the base class for all package member nodes.
+    /// </summary>
+    public abstract class PackageMemberNode : AstNode
+    {
+    }
+
+    /// <summary>
+    /// Represents a package variable declaration node with a type, optional name, and optional initializer.
+    /// </summary>
+    public class PackageVariableDeclarationNode(string? type, string name, ExpressionNode? initializer)
+        : PackageMemberNode
+    {
+        public string? Type { get; } = type;
+        public string Name { get; } = name;
+        public ExpressionNode? Initializer { get; } = initializer;
+    }
+
+    /// <summary>
+    /// Represents a package function node with a name, parameters, return type, body, and return statement.
+    /// </summary>
+    public class PackageFunctionNode(
+        string? name,
+        List<ParameterNode> parameters,
+        string? returnType,
+        BlockNode? body,
+        ReturnStatementNode? returnStatement) : PackageMemberNode
+    {
+        public string? Name { get; } = name;
+        public List<ParameterNode> Parameters { get; } = parameters;
+        public string? ReturnType { get; } = returnType;
+        public BlockNode? Body { get; } = body;
+        public ReturnStatementNode? ReturnStatement { get; } = returnStatement;
+    }
+
+    /// <summary>
+    /// Represents the program node containing global variables, packages, functions, main function, and statements.
+    /// </summary>
+    public class ProgramNode(
+        List<VariableDeclarationNode?> globalVariables,
+        List<PackageNode?> packages,
+        List<FunctionNode?> functions,
+        FunctionNode? mainFunction,
+        List<StatementNode?>? statements) : AstNode
+    {
+        public List<VariableDeclarationNode?> GlobalVariables { get; } = globalVariables;
+        public List<FunctionNode?> Functions { get; } = functions;
+        public List<PackageNode?> Packages { get; } = packages;
+        public FunctionNode? MainFunction { get; } = mainFunction;
+        public List<StatementNode?>? Statements { get; } = statements;
+    }
+
+    /// <summary>
+    /// Represents an array access node with a name and index.
+    /// </summary>
+    public class ArrayAccessNode(string name, ExpressionNode? index) : ExpressionNode
+    {
+        public string Name { get; } = name;
+        public ExpressionNode? Index { get; } = index;
+    }
+
+    /// <summary>
+    /// Represents an array initializer node with a list of elements.
+    /// </summary>
+    public class ArrayInitializerNode(List<ExpressionNode?> elements) : ExpressionNode
+    {
+        public List<ExpressionNode?> Elements { get; } = elements;
+    }
 }

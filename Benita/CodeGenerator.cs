@@ -32,8 +32,8 @@ namespace Benita
         /// <returns>The generated C++ code as a string.</returns>
         public string GenerateCode(ProgramNode program)
         {
-            StringBuilder _finalCode = new StringBuilder();
-            _finalCode.Clear();
+            StringBuilder finalCode = new StringBuilder();
+            finalCode.Clear();
             _code.Clear();
             _codeHeader.Clear();
             _defaultFunction.Clear();
@@ -46,6 +46,13 @@ namespace Benita
 
             _code.AppendLine();
             _defaultFunction.AppendLine();
+
+            //generate packages
+            foreach (var packageNode in program.Packages)
+            {
+                GeneratePackage(packageNode);
+            }
+
 
             // Generate global variable declarations
             foreach (var globalVar in program.GlobalVariables)
@@ -60,15 +67,39 @@ namespace Benita
             }
 
             // Generate main function
-            GenerateMainFunction(program.MainFunction);
+            GenerateMainFunction(program.MainFunction, program.Statements);
 
             _codeInclude.AppendLine();
-            _finalCode.Append(_codeInclude);
-            _finalCode.Append(_codeHeader);
-            _finalCode.Append(_code);
-            _finalCode.Append(_defaultFunction);
+            finalCode.Append(_codeInclude);
+            finalCode.Append(_codeHeader);
+            finalCode.Append(_code);
+            finalCode.Append(_defaultFunction);
 
-            return _finalCode.ToString();
+            return finalCode.ToString();
+        }
+
+        private void GeneratePackage(PackageNode? packageNode, string indent = "")
+        {
+            _code.Append($"class {packageNode.Name}");
+            _code.AppendLine("{");
+
+            foreach (var member in packageNode.Members)
+            {
+                if (member is PackageVariableDeclarationNode field)
+                {
+                    var packageVariableDeclarationNode =
+                        new VariableDeclarationNode(field.Type, field.Name, field.Initializer);
+                    GenerateGlobalVariable(packageVariableDeclarationNode, indent + "  ");
+                }
+                else if (member is PackageFunctionNode method)
+                {
+                    var functionNode = new FunctionNode(method.Name, method.Parameters, method.ReturnType, method.Body,
+                        method.ReturnStatement);
+                    GenerateFunction(functionNode, indent + "  ");
+                }
+            }
+            _code.AppendLine("}");
+            _code.AppendLine();
         }
 
         /// <summary>
@@ -92,9 +123,10 @@ namespace Benita
         /// Generates code for a global variable declaration.
         /// </summary>
         /// <param name="globalVar">The global variable node.</param>
-        private void GenerateGlobalVariable(VariableDeclarationNode globalVar)
+        /// <param name="indent"></param>
+        private void GenerateGlobalVariable(VariableDeclarationNode? globalVar, string indent = "")
         {
-            _code.Append($"{ConvertType(globalVar.Type)} {globalVar.Name}");
+            _code.Append(indent + $"{ConvertType(globalVar.Type)} {globalVar.Name}");
             if (globalVar.Initializer != null)
             {
                 _code.Append(" = ");
@@ -107,9 +139,10 @@ namespace Benita
         /// Generates code for a function definition.
         /// </summary>
         /// <param name="function">The function node.</param>
-        private void GenerateFunction(FunctionNode function)
+        /// <param name="indent"></param>
+        private void GenerateFunction(FunctionNode? function, string indent = "")
         {
-            _code.Append($"{ConvertType(function.ReturnType)} {function.Name}(");
+            _code.Append(indent + $"{ConvertType(function.ReturnType)} {function.Name}(");
             for (int i = 0; i < function.Parameters.Count; i++)
             {
                 _code.Append($"{ConvertType(function.Parameters[i].Type)} {function.Parameters[i].Name}");
@@ -120,15 +153,15 @@ namespace Benita
             }
 
             _code.AppendLine(")");
-            _code.AppendLine("{");
-            GenerateBlock(function.Body);
+            _code.AppendLine(indent + "{");
+            GenerateBlock(function.Body, indent + "  ");
             if (function.ReturnStatement != null)
             {
-                _code.Append("return ");
+                _code.Append(indent + "  " + "return ");
                 GenerateExpression(function.ReturnStatement.ReturnExpression);
                 _code.AppendLine(";");
             }
-            _code.AppendLine("}");
+            _code.AppendLine(indent + "}");
             _code.AppendLine();
         }
 
@@ -136,15 +169,16 @@ namespace Benita
         /// Generates code for a return expression.
         /// </summary>
         /// <param name="expressionNode">The expression node.</param>
-        private void GenerateReturnExpression(ExpressionNode expressionNode)
+        /// <param name="indent"></param>
+        private void GenerateReturnExpression(ExpressionNode expressionNode, string indent = "")
         {
             if (expressionNode != null)
             {
-                _code.Append("return ");
+                _code.Append(indent + "return ");
                 GenerateExpression(expressionNode);
             }
             else
-                _code.Append("return");
+                _code.Append(indent + "return");
 
             _code.AppendLine(";");
         }
@@ -153,12 +187,24 @@ namespace Benita
         /// Generates code for the main function.
         /// </summary>
         /// <param name="mainFunction">The main function node.</param>
-        private void GenerateMainFunction(FunctionNode mainFunction)
+        /// <param name="statements"></param>
+        /// <param name="indent"></param>
+        private void GenerateMainFunction(FunctionNode? mainFunction, List<StatementNode?>? statements, string indent = "")
         {
             _code.AppendLine("int main()");
             _code.AppendLine("{");
-            GenerateBlock(mainFunction.Body);
-            _code.AppendLine("return 0;");
+            if (mainFunction == null)
+            {
+                foreach (var statement in statements)
+                {
+                    GenerateStatement(statement, indent + "  ");
+                }
+            }
+            else
+            {
+                GenerateBlock(mainFunction.Body, indent + "  ");
+            }
+            _code.AppendLine(indent + "  return 0;");
             _code.AppendLine("}");
         }
 
@@ -166,11 +212,12 @@ namespace Benita
         /// Generates code for a block of statements.
         /// </summary>
         /// <param name="block">The block node.</param>
-        private void GenerateBlock(BlockNode block)
+        /// <param name="indent"></param>
+        private void GenerateBlock(BlockNode block, string indent = "")
         {
             foreach (var statement in block.Statements)
             {
-                GenerateStatement(statement);
+                GenerateStatement(statement, indent);
             }
         }
 
@@ -178,56 +225,108 @@ namespace Benita
         /// Generates code for a statement.
         /// </summary>
         /// <param name="statement">The statement node.</param>
-        private void GenerateStatement(StatementNode statement)
+        /// <param name="indent"></param>
+        private void GenerateStatement(StatementNode? statement, string indent = "")
         {
             switch (statement)
             {
                 case VariableDeclarationNode varDecl:
-                    GenerateLocalVariable(varDecl);
+                    GenerateLocalVariable(varDecl, indent);
                     break;
                 case AssignmentNode assign:
-                    GenerateAssignment(assign);
+                    GenerateAssignment(assign, indent);
                     break;
                 case CompoundAssignmentNode compAssign:
-                    GenerateCompoundAssignment(compAssign);
+                    GenerateCompoundAssignment(compAssign, indent);
                     break;
                 case IncrementDecrementNode incDec:
-                    GenerateIncrementDecrement(incDec);
+                    GenerateIncrementDecrement(incDec, indent);
                     break;
                 case IfStatementNode ifStatement:
-                    GenerateIfStatement(ifStatement);
+                    GenerateIfStatement(ifStatement, indent);
                     break;
                 case WhileStatementNode whileStatement:
-                    GenerateWhileStatement(whileStatement);
+                    GenerateWhileStatement(whileStatement, indent);
                     break;
                 case ForStatementNode forStatement:
-                    GenerateForStatement(forStatement);
+                    GenerateForStatement(forStatement, indent);
                     break;
                 case BlockNode block:
-                    GenerateBlock(block);
+                    GenerateBlock(block, indent);
                     break;
                 case ExpressionStatementNode exprStatement:
-                    GenerateExpression(exprStatement.Expression);
-                    _code.AppendLine(";");
+                    if (exprStatement.Expression is MemberAccessNode memberAccess)
+                    {
+                        GenerateMemberAccess(memberAccess, indent, true);
+                    }
+                    else
+                    {
+                        GenerateExpression(exprStatement.Expression, indent);
+                        _code.AppendLine(";");
+                    }
                     break;
                 case ArrayAssignmentNode arrayAssignmentNode:
-                    GenerateArrayAssignment(arrayAssignmentNode);
+                    GenerateArrayAssignment(arrayAssignmentNode, indent);
                     break;
                 case ReturnStatementNode returnAssignmentNode:
-                    GenerateReturnExpression(returnAssignmentNode.ReturnExpression);
+                    GenerateReturnExpression(returnAssignmentNode.ReturnExpression, indent);
+                    break;
+                case ObjectInstantiationNode objectInstantiationNode:
+                    GenerateObjectInstantiation(objectInstantiationNode, indent);
                     break;
                 default:
                     throw new Exception($"Unknown statement type: {statement.GetType().Name}");
             }
         }
 
+        private void GenerateMemberAccess(MemberAccessNode memberAccess, string indent = "", bool addSemicolon = false)
+        {
+            _code.Append(indent + $"{memberAccess.ObjectName}.");
+            if (memberAccess.Expression is FunctionCallNode functionCallNode)
+            {
+                GenerateExpression(functionCallNode);
+                if (addSemicolon)
+                    _code.AppendLine(";");
+            }
+            else if (memberAccess.Expression is IdentifierNode identifierNode)
+                GenerateExpression(identifierNode);
+            else if (memberAccess.Expression is CompoundAssignmentNode compoundAssignment)
+                GenerateStatement(compoundAssignment);
+            else if (memberAccess.Expression is AssignmentNode assignment)
+                GenerateStatement(assignment);
+            else if (memberAccess.Expression is BinaryExpressionNode binaryExpression)
+                GenerateExpression(binaryExpression);
+            else if (memberAccess.Expression is ExpressionStatementNode expressionStatement)
+                GenerateStatement(expressionStatement);
+            else
+                _code.Append($"{memberAccess.Expression.GetType().Name}");
+
+
+        }
+
+        private void GenerateObjectInstantiation(ObjectInstantiationNode objectInstantiation, string indent = "")
+        {
+            _code.Append(indent + $"{objectInstantiation.PackageName} {objectInstantiation.Name} = new {objectInstantiation.PackageName}(");
+            for (int i = 0; i < objectInstantiation.Arguments.Count; i++)
+            {
+                GenerateExpression(objectInstantiation.Arguments[i]);
+                if (i < objectInstantiation.Arguments.Count - 1)
+                {
+                    _code.Append(", ");
+                }
+            }
+            _code.Append(")");
+            _code.AppendLine(";");
+        }
+
         /// <summary>
         /// Generates code for a local variable declaration.
         /// </summary>
         /// <param name="varDecl">The variable declaration node.</param>
-        private void GenerateLocalVariable(VariableDeclarationNode varDecl)
+        /// <param name="indent"></param>
+        private void GenerateLocalVariable(VariableDeclarationNode varDecl, string indent = "")
         {
-            _code.Append($"{ConvertType(varDecl.Type)} {varDecl.Name}");
+            _code.Append(indent + $"{ConvertType(varDecl.Type)} {varDecl.Name}");
             if (varDecl.Initializer != null)
             {
                 _code.Append(" = ");
@@ -240,20 +339,43 @@ namespace Benita
         /// Generates code for an assignment statement.
         /// </summary>
         /// <param name="assign">The assignment node.</param>
-        private void GenerateAssignment(AssignmentNode assign)
+        /// <param name="indent"></param>
+        private void GenerateAssignment(AssignmentNode assign, string indent = "")
         {
-            _code.Append($"{assign.Name} = ");
+            _code.Append(indent + $"{assign.Name} = ");
             GenerateExpression(assign.Expression);
-            _code.AppendLine(";");
+
+            // If the last character is not semicolon  add it
+            TrimEndNewline(ref _code);
+            if (_code.Length > 0 && _code[_code.Length - 1] != ';')
+                _code.AppendLine(";");
+            else
+                _code.AppendLine();
+
+            //_code.AppendLine(";");
+        }
+
+        private static void TrimEndNewline(ref StringBuilder sb)
+        {
+            if (sb.Length >= 2)
+            {
+                // Check if the last two characters are \r\n
+                if (sb[sb.Length - 2] == '\r' && sb[sb.Length - 1] == '\n')
+                {
+                    // Remove the last two characters
+                    sb.Length -= 2;
+                }
+            }
         }
 
         /// <summary>
         /// Generates code for an array assignment statement.
         /// </summary>
         /// <param name="assign">The array assignment node.</param>
-        private void GenerateArrayAssignment(ArrayAssignmentNode assign)
+        /// <param name="indent"></param>
+        private void GenerateArrayAssignment(ArrayAssignmentNode assign, string indent = "")
         {
-            _code.Append($"{assign.Name}[");
+            _code.Append(indent + $"{assign.Name}[");
             GenerateExpression(assign.Index);
             _code.Append("] = ");
             GenerateExpression(assign.Value);
@@ -264,9 +386,10 @@ namespace Benita
         /// Generates code for a compound assignment statement.
         /// </summary>
         /// <param name="compAssign">The compound assignment node.</param>
-        private void GenerateCompoundAssignment(CompoundAssignmentNode compAssign)
+        /// <param name="indent"></param>
+        private void GenerateCompoundAssignment(CompoundAssignmentNode compAssign, string indent = "")
         {
-            _code.Append($"{compAssign.Name} {compAssign.Operator} ");
+            _code.Append(indent + $"{compAssign.Name} {compAssign.Operator} ");
             GenerateExpression(compAssign.Expression);
             _code.AppendLine(";");
         }
@@ -275,29 +398,31 @@ namespace Benita
         /// Generates code for an increment or decrement statement.
         /// </summary>
         /// <param name="incDec">The increment or decrement node.</param>
-        private void GenerateIncrementDecrement(IncrementDecrementNode incDec)
+        /// <param name="indent"></param>
+        private void GenerateIncrementDecrement(IncrementDecrementNode incDec, string indent = "")
         {
-            _code.AppendLine($"{incDec.Name}{incDec.Operator};");
+            _code.AppendLine(indent + $"{incDec.Name}{incDec.Operator};");
         }
 
         /// <summary>
         /// Generates code for an if statement.
         /// </summary>
         /// <param name="ifStatement">The if statement node.</param>
-        private void GenerateIfStatement(IfStatementNode ifStatement)
+        /// <param name="indent"></param>
+        private void GenerateIfStatement(IfStatementNode ifStatement, string indent = "")
         {
-            _code.Append("if (");
+            _code.Append(indent + "if (");
             GenerateExpression(ifStatement.Condition);
             _code.AppendLine(")");
-            _code.AppendLine("{");
-            GenerateStatement(ifStatement.ThenBranch);
-            _code.AppendLine("}");
+            _code.AppendLine(indent + "{");
+            GenerateStatement(ifStatement.ThenBranch, indent + "  ");
+            _code.AppendLine(indent + "}");
             if (ifStatement.ElseBranch != null)
             {
-                _code.AppendLine("else");
-                _code.AppendLine("{");
-                GenerateStatement(ifStatement.ElseBranch);
-                _code.AppendLine("}");
+                _code.AppendLine(indent + "else");
+                _code.AppendLine(indent + "{");
+                GenerateStatement(ifStatement.ElseBranch, indent + "  ");
+                _code.AppendLine(indent + "}");
             }
         }
 
@@ -305,23 +430,25 @@ namespace Benita
         /// Generates code for a while statement.
         /// </summary>
         /// <param name="whileStatement">The while statement node.</param>
-        private void GenerateWhileStatement(WhileStatementNode whileStatement)
+        /// <param name="indent"></param>
+        private void GenerateWhileStatement(WhileStatementNode whileStatement, string indent = "")
         {
-            _code.Append("while (");
+            _code.Append(indent + "while (");
             GenerateExpression(whileStatement.Condition);
             _code.AppendLine(")");
-            _code.AppendLine("{");
-            GenerateStatement(whileStatement.Body);
-            _code.AppendLine("}");
+            _code.AppendLine(indent + "{");
+            GenerateStatement(whileStatement.Body, indent + "  ");
+            _code.AppendLine(indent + "}");
         }
 
         /// <summary>
         /// Generates code for a for statement.
         /// </summary>
         /// <param name="forStatement">The for statement node.</param>
-        private void GenerateForStatement(ForStatementNode forStatement)
+        /// <param name="indent"></param>
+        private void GenerateForStatement(ForStatementNode forStatement, string indent = "")
         {
-            _code.Append("for (");
+            _code.Append(indent + "for (");
             GenerateStatement(forStatement.Initializer);
             RemoveTrailingCharacters(_code, new char[] { '\n' });
             GenerateExpression(forStatement.Condition);
@@ -330,9 +457,9 @@ namespace Benita
             RemoveTrailingCharacters(_code, new char[] { '\n', ';' });
 
             _code.AppendLine(")");
-            _code.AppendLine("{");
-            GenerateStatement(forStatement.Body);
-            _code.AppendLine("}");
+            _code.AppendLine(indent + "{");
+            GenerateStatement(forStatement.Body, indent + "  ");
+            _code.AppendLine(indent + "}");
         }
 
         /// <summary>
@@ -340,7 +467,8 @@ namespace Benita
         /// </summary>
         /// <param name="expression">The expression node.</param>
         /// <param name="isPrintFlag">Indicates if the expression is part of a print function.</param>
-        private void GenerateExpression(ExpressionNode expression, bool isPrintFlag = false)
+        /// <param name="indent"></param>
+        private void GenerateExpression(ExpressionNode expression, string indent = "", bool isPrintFlag = false)
         {
             switch (expression)
             {
@@ -348,10 +476,10 @@ namespace Benita
                     GenerateLiteral(literal);
                     break;
                 case IdentifierNode identifier:
-                    _code.Append(identifier.Name);
+                    _code.Append(indent + identifier.Name);
                     break;
                 case ArrayAccessNode arrayAccess:
-                    _code.Append($"{arrayAccess.Name}[");
+                    _code.Append(indent + $"{arrayAccess.Name}[");
                     GenerateExpression(arrayAccess.Index);
                     _code.Append("]");
                     break;
@@ -370,7 +498,7 @@ namespace Benita
                 case FunctionCallNode node:
                     if (node.FunctionName == "print")
                     {
-                        GeneratePrintFunctionCall(node);
+                        GeneratePrintFunctionCall(node, indent);
                     }
                     else
                     {
@@ -379,7 +507,7 @@ namespace Benita
                         {
                             functionManagementClass.HandleFunctionCall(node.FunctionName, ref _code, ref _defaultFunction, ref _codeHeader, ref _codeInclude);
                         }
-                        _code.Append($"{node.FunctionName}(");
+                        _code.Append(indent + $"{node.FunctionName}(");
                         GenerateFunctionCallArguments(node.Arguments);
                         _code.Append(")");
                     }
@@ -407,6 +535,9 @@ namespace Benita
                     GenerateExpression(logicalExpr.Left);
                     _code.Append($" {logicalExpr.Operator} ");
                     GenerateExpression(logicalExpr.Right);
+                    break;
+                case MemberAccessNode memberAccessExpr:
+                    GenerateMemberAccess(memberAccessExpr);
                     break;
                 default:
                     throw new Exception($"Unknown expression type: {expression.GetType().Name}");
@@ -449,10 +580,11 @@ namespace Benita
         /// Generates code for a print function call.
         /// </summary>
         /// <param name="funcCall">The function call node.</param>
-        private void GeneratePrintFunctionCall(FunctionCallNode funcCall)
+        /// <param name="indent"></param>
+        private void GeneratePrintFunctionCall(FunctionCallNode funcCall, string indent = "")
         {
-            _code.Append("std::cout << ");
-            GenerateExpression(funcCall.Arguments[0], true); // Assuming print has exactly one argument
+            _code.Append(indent + "std::cout << ");
+            GenerateExpression(funcCall.Arguments[0], "", true); // Assuming print has exactly one argument
             _code.Append(" << std::endl");
         }
 
@@ -479,6 +611,8 @@ namespace Benita
                     return "std::vector<bool>";
                 case "void":
                     return "void";
+                case "let":
+                    return "auto";
                 default:
                     throw new Exception($"Unknown type: {type}");
             }

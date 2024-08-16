@@ -3,16 +3,16 @@
     public enum TokenType
     {
         // Keywords
-        FUNC, MAIN, RETURN, IF, ELSE, WHILE, FOR,
+        FUNC, MAIN, RETURN, IF, ELSE, WHILE, FOR, PACKAGE, NEW,
 
         // Types
-        NUMBER, STRING, BOOL, VOID,
+        NUMBER, STRING, BOOL, VOID, LET,
 
         // Operators
         PLUS, MINUS, STAR, SLASH, PERCENT,
         LT, GT, LTE, GTE, EQUAL_EQUAL, BANG_EQUAL,
         AND_AND, OR_OR,
-        BANG, PLUS_PLUS, MINUS_MINUS, ARROW,
+        BANG, PLUS_PLUS, MINUS_MINUS, ARROW, DOT,
 
         // Assignment operators
         EQUAL, PLUS_EQUAL, MINUS_EQUAL, STAR_EQUAL, SLASH_EQUAL,
@@ -32,10 +32,10 @@
     public class Token
     {
         public TokenType Type { get; }
-        public string? Lexeme { get; }
+        public string Lexeme { get; }
         public int Line { get; }
 
-        public Token(TokenType type, string? lexeme, int line)
+        public Token(TokenType type, string lexeme, int line)
         {
             Type = type;
             Lexeme = lexeme;

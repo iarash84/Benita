@@ -5,15 +5,6 @@ namespace BenitaTestProject
     [TestClass]
     public class SemanticAnalyzerTests
     {
-        private SemanticAnalyzer _semanticAnalyzer;
-
-        [TestInitialize]
-        public void Setup()
-        {
-            _semanticAnalyzer = new SemanticAnalyzer();
-        }
-
-
         [TestMethod]
         public void TestAnalyze_GlobalVariables()
         {
@@ -36,57 +27,63 @@ namespace BenitaTestProject
         public void TestAnalyze_MainFunction()
         {
             // Arrange
-
+            var semanticAnalyzer = new SemanticAnalyzer();
             var mainFunction = new FunctionNode("main", new List<ParameterNode>(), "void", new BlockNode(new List<StatementNode>()), null);
             var program = new ProgramNode(
-                new List<VariableDeclarationNode>(),
-                new List<FunctionNode>(),
-                mainFunction
+                new List<VariableDeclarationNode?>(),
+                new List<PackageNode?>(),
+                new List<FunctionNode?>(),
+                mainFunction,
+                statements: null
             );
 
             // Act & Assert (no exception expected)
-            _semanticAnalyzer.Analyze(program);
+            semanticAnalyzer.Analyze(program);
         }
 
         [TestMethod]
         public void TestAnalyze_ReturnTypeMismatch()
         {
             // Arrange
-
+            var semanticAnalyzer = new SemanticAnalyzer();
             var program = new ProgramNode(
-                new List<VariableDeclarationNode>(),
-                new List<FunctionNode>
+                new List<VariableDeclarationNode?>(),
+                new List<PackageNode?>(),
+                new List<FunctionNode?>
                 {
                     new FunctionNode("foo", new List<ParameterNode>(), "number",
                     new BlockNode(new List<StatementNode>()),
                     new ReturnStatementNode(new LiteralNode("true", TokenType.TRUE_LITERAL)))
                 },
-                null
+                null,
+                statements: null
             );
 
             // Act & Assert (expecting an exception)
-            Assert.ThrowsException<Exception>(() => _semanticAnalyzer.Analyze(program));
+            Assert.ThrowsException<Exception>(() => semanticAnalyzer.Analyze(program));
         }
 
         [TestMethod]
         public void TestAnalyze_UndeclaredVariable()
         {
             // Arrange
-
+            var semanticAnalyzer = new SemanticAnalyzer();
             var program = new ProgramNode(
-                new List<VariableDeclarationNode>(),
-                new List<FunctionNode>
+                new List<VariableDeclarationNode?>(),
+                new List<PackageNode?>(),
+                new List<FunctionNode?>
                 {
-                    new FunctionNode("foo", new List<ParameterNode>(), "void", new BlockNode(new List<StatementNode>
+                    new FunctionNode("foo", new List<ParameterNode>(), "void", new BlockNode(new List<StatementNode?>
                     {
                         new AssignmentNode("x", new LiteralNode("10", TokenType.NUMBER_LITERAL))
                     }), null),
                 },
-                null
+                null,
+                statements: null
             );
 
             // Act & Assert (expecting an exception)
-            Assert.ThrowsException<Exception>(() => _semanticAnalyzer.Analyze(program));
+            Assert.ThrowsException<Exception>(() => semanticAnalyzer.Analyze(program));
         }
 
     }

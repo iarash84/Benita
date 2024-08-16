@@ -69,13 +69,13 @@ namespace BenitaTestProject
         [TestMethod]
         public void TestVisitFunctionCallNode()
         {
-            var functionBody = new BlockNode(new List<StatementNode>());
+            var functionBody = new BlockNode(new List<StatementNode?>());
             var returnExpression = new LiteralNode("10", TokenType.NUMBER_LITERAL);
             var returnStatement = new ReturnStatementNode(returnExpression);
-            var functionNode = new FunctionNode("foo", new List<ParameterNode>(), "number", functionBody, returnStatement);
+            var functionNode = new FunctionNode("foo", new List<ParameterNode?>(), "number", functionBody, returnStatement);
             _interpreter.Visit(functionNode);
 
-            var callNode = new FunctionCallNode("foo", new List<ExpressionNode>());
+            var callNode = new FunctionCallNode("foo", new List<ExpressionNode?>());
             var result = _interpreter.Visit(callNode);
 
             Assert.AreEqual(10, result);
@@ -159,7 +159,7 @@ namespace BenitaTestProject
         [TestMethod]
         public void TestVisitArrayAccessNode()
         {
-            _interpreter.Visit(new VariableDeclarationNode("number[]", "arr", new ArrayInitializerNode(new List<ExpressionNode>
+            _interpreter.Visit(new VariableDeclarationNode("number[]", "arr", new ArrayInitializerNode(new List<ExpressionNode?>
             {
                 new LiteralNode("1", TokenType.NUMBER_LITERAL),
                 new LiteralNode("2", TokenType.NUMBER_LITERAL),
@@ -175,7 +175,7 @@ namespace BenitaTestProject
         [TestMethod]
         public void TestVisitArrayAssignmentNode()
         {
-            _interpreter.Visit(new VariableDeclarationNode("number[]", "arr", new ArrayInitializerNode(new List<ExpressionNode>
+            _interpreter.Visit(new VariableDeclarationNode("number[]", "arr", new ArrayInitializerNode(new List<ExpressionNode?>
             {
                 new LiteralNode("1", TokenType.NUMBER_LITERAL),
                 new LiteralNode("2", TokenType.NUMBER_LITERAL),

@@ -8,19 +8,56 @@ namespace Benita
     /// </summary>
     public class Interpreter
     {
-        private Dictionary<string?, object?> _variables = new Dictionary<string?, object?>();
-        private readonly Dictionary<string?, FunctionNode> _functions = new Dictionary<string?, FunctionNode>();
+        private readonly Dictionary<string?, FunctionNode> _functions = [];
+        private Dictionary<string?, object> _variables = [];
+        private readonly Dictionary<string?, object> _outerScopeVariables;
+
         private bool _functionReturnFlag;
+        private readonly string _packageScope;
 
         /// <summary>
-        /// Visits the given AST node and dispatches to the appropriate visit method.
+        /// Initializes a new instance of the <see cref="Interpreter"/> class.
+        /// </summary>
+        /// <param name="packageScope">The scope of the package, default is "_main_".</param>
+        public Interpreter(string packageScope = "_main_")
+        {
+            _packageScope = packageScope;
+            _outerScopeVariables = new Dictionary<string?, object>();
+        }
+
+        /// <summary>
+        /// Sets the outer scope variables for the interpreter.
+        /// </summary>
+        /// <param name="outerScopeVariables">A dictionary of variables in the outer scope.</param>
+        public void SetOuterScopeVariables(Dictionary<string?, object> outerScopeVariables)
+        {
+            _outerScopeVariables.Clear();
+            foreach (var kvp in outerScopeVariables)
+                _outerScopeVariables.Add(kvp.Key, kvp.Value);
+        }
+
+        /// <summary>
+        /// Sets the global variables for the interpreter.
+        /// </summary>
+        public void SetGlobalVariable()
+        {
+            foreach (var kvp in Globals.GlobalVariable)
+                _variables.Add(kvp.Key, kvp.Value);
+        }
+
+        /// <summary>
+        /// Visits the specified AST node and executes the corresponding logic.
         /// </summary>
         /// <param name="node">The AST node to visit.</param>
-        /// <returns>The result of visiting the node.</returns>
-        public object? Visit(ASTNode node)
+        /// <returns>The result of the visit.</returns>
+        public object Visit(AstNode? node)
         {
             switch (node)
             {
+                case ProgramNode programNode:
+                    return VisitProgramNode(programNode);
+                case BlockNode blockNode:
+                    return VisitBlockNode(blockNode);
                 case LiteralNode literalNode:
                     return VisitLiteralNode(literalNode);
                 case IdentifierNode identifierNode:
@@ -43,8 +80,6 @@ namespace Benita
                     return VisitIncrementDecrementNode(incrementDecrementNode);
                 case ExpressionStatementNode expressionStatementNode:
                     return VisitExpressionStatementNode(expressionStatementNode);
-                case BlockNode blockNode:
-                    return VisitBlockNode(blockNode);
                 case IfStatementNode ifStatementNode:
                     return VisitIfStatementNode(ifStatementNode);
                 case WhileStatementNode whileStatementNode:
@@ -53,222 +88,174 @@ namespace Benita
                     return VisitForStatementNode(forStatementNode);
                 case FunctionNode functionNode:
                     return VisitFunctionNode(functionNode);
-                case ProgramNode programNode:
-                    return VisitProgramNode(programNode);
                 case ArrayInitializerNode arrayInitializerNode:
                     return VisitArrayInitializerNode(arrayInitializerNode);
-                case ArrayAccessNode arrayAccess:
-                    return VisitArrayAccessNode(arrayAccess);
-                case ArrayAssignmentNode arrayAssignment:
-                    return VisitArrayAssignmentNode(arrayAssignment);
+                case ArrayAccessNode arrayAccessNode:
+                    return VisitArrayAccessNode(arrayAccessNode);
+                case ArrayAssignmentNode arrayAssignmentNode:
+                    return VisitArrayAssignmentNode(arrayAssignmentNode);
                 case ReturnStatementNode returnStatementNode:
                     return VisitReturnStatementNode(returnStatementNode);
+                case PackageNode packageNode:
+                    return VisitPackageNode(packageNode);
+                case MemberAccessNode memberAccessNode:
+                    return VisitMemberAccessNode(memberAccessNode);
+                case ObjectInstantiationNode objectInstantiationNode:
+                    return VisitObjectInstantiationNode(objectInstantiationNode);
                 default:
                     throw new Exception($"Unknown node type: {node.GetType().Name}");
             }
         }
 
         /// <summary>
-        /// Visits an array access node.
+        /// Visits an object instantiation node and creates a new instance.
         /// </summary>
-        /// <param name="node">The array access node to visit.</param>
-        /// <returns>The value at the specified index in the array.</returns>
-        private object? VisitArrayAccessNode(ArrayAccessNode node)
+        /// <param name="node">The object instantiation node.</param>
+        /// <returns>The created package instance.</returns>
+        private object VisitObjectInstantiationNode(ObjectInstantiationNode node)
         {
-            var arrayName = node.Name;
-            var index = (int)Visit(node.Index);
-
-            if (_variables.TryGetValue(arrayName, out var value) && value is object[] array)
+            // Get the package definition from the list of packages
+            if (!Globals.PackageList.TryGetValue(node.PackageName, out var packageNode))
             {
-                if (index >= 0 && index < array.Length)
-                {
-                    return array[(int)index];
-                }
-                throw new Exception($"Index out of bounds for array '{arrayName}'");
+                throw new($"Package '{node.PackageName}' not found.");
             }
-            throw new Exception($"Variable '{arrayName}' is not an array");
+
+            // Create a new package instance
+            var packageInstance = new PackageInstance(node.Name, packageNode, node.Arguments);
+
+            // Optionally, you might handle constructor arguments here
+            // For simplicity, we assume no arguments or default constructor logic.
+
+            // Store the new instance in the variables dictionary
+            _variables[node.Name] = packageInstance;
+
+            return packageInstance;
         }
 
         /// <summary>
-        /// Visits an array initializer node.
+        /// Visits a literal node and returns its value.
         /// </summary>
-        /// <param name="arrayInitializerNode">The array initializer node to visit.</param>
-        /// <returns>An array initialized with the specified elements.</returns>
-        private object? VisitArrayInitializerNode(ArrayInitializerNode arrayInitializerNode)
+        /// <param name="node">The literal node.</param>
+        /// <returns>The value of the literal node.</returns>
+        private object VisitLiteralNode(LiteralNode node)
         {
-            List<object?> arrayValues = new List<object?>();
-            foreach (var element in arrayInitializerNode.Elements)
+            return node.Type switch
             {
-                arrayValues.Add(Visit(element));
-            }
-            return arrayValues.ToArray();
+                TokenType.NUMBER or TokenType.NUMBER_LITERAL => Convert.ToInt32(node.Value),
+                TokenType.STRING or TokenType.STRING_LITERAL => node.Value,
+                TokenType.TRUE_LITERAL => true,
+                TokenType.FALSE_LITERAL => false,
+                _ => throw new Exception($"Unknown literal type: {node.Type}")
+            };
         }
 
         /// <summary>
-        /// Visits an array assignment node.
+        /// Visits an identifier node and returns its value.
         /// </summary>
-        /// <param name="node">The array assignment node to visit.</param>
-        /// <returns>The new value assigned to the array at the specified index.</returns>
-        private object? VisitArrayAssignmentNode(ArrayAssignmentNode node)
+        /// <param name="node">The identifier node.</param>
+        /// <returns>The value of the identifier node.</returns>
+        private object VisitIdentifierNode(IdentifierNode node)
         {
-            var arrayName = node.Name;
-            var newValue = Visit(node.Value);
-            var index = Visit(node.Index);
-
-            if (!_variables.ContainsKey(arrayName))
-            {
-                throw new Exception($"Array '{arrayName}' not found in variables.");
-            }
-
-            object? arrayObj = _variables[arrayName];
-            if (arrayObj is object[] array)
-            {
-                array[Convert.ToInt32(index)] = newValue;
-                _variables[arrayName] = array;
-                return newValue;
-            }
-            throw new Exception($"Variable '{arrayName}' is not an array.");
-        }
-
-        /// <summary>
-        /// Visits a literal node.
-        /// </summary>
-        /// <param name="node">The literal node to visit.</param>
-        /// <returns>The value of the literal.</returns>
-        private object? VisitLiteralNode(LiteralNode node)
-        {
-            switch (node.Type)
-            {
-                case TokenType.NUMBER:
-                case TokenType.NUMBER_LITERAL:
-                    return Convert.ToInt32(node.Value);
-                case TokenType.STRING:
-                case TokenType.STRING_LITERAL:
-                    return node.Value;
-                case TokenType.TRUE_LITERAL:
-                    return true;
-                case TokenType.FALSE_LITERAL:
-                    return false;
-                default:
-                    throw new Exception($"Unknown literal type: {node.Type}");
-            }
-        }
-
-        /// <summary>
-        /// Visits an identifier node.
-        /// </summary>
-        /// <param name="node">The identifier node to visit.</param>
-        /// <returns>The value of the variable identified by the node.</returns>
-        private object? VisitIdentifierNode(IdentifierNode node)
-        {
-            if (_variables.TryGetValue(node.Name, out var value))
+            if (TryGetVariableValue(node.Name, out var value))
             {
                 return value;
             }
-            throw new Exception($"Undefined variable '{node.Name}'");
+
+            throw new($"Undefined variable '{node.Name}'");
         }
 
         /// <summary>
-        /// Visits a binary expression node.
+        /// Visits a binary expression node and evaluates the expression.
         /// </summary>
-        /// <param name="node">The binary expression node to visit.</param>
+        /// <param name="node">The binary expression node.</param>
         /// <returns>The result of the binary expression.</returns>
-        private object? VisitBinaryExpressionNode(BinaryExpressionNode node)
+        private object VisitBinaryExpressionNode(BinaryExpressionNode node)
         {
             var left = Visit(node.Left);
             var right = Visit(node.Right);
 
-            switch (node.Operator)
+            return node.Operator switch
             {
-                case "+":
-                    if (left is int && right is int)
-                    {
-                        return Convert.ToInt32(left) + Convert.ToInt32(right);
-                    }
-                    if (left is string || right is string)
-                    {
-                        return left.ToString() + right.ToString();
-                    }
-                    throw new Exception("Invalid operands for '+' operator");
-                case "-":
-                    return Convert.ToInt32(left) - Convert.ToInt32(right);
-                case "*":
-                    return Convert.ToInt32(left) * Convert.ToInt32(right);
-                case "/":
-                    return Convert.ToInt32(left) / Convert.ToInt32(right);
-                case "%":
-                    return Convert.ToInt32(left) % Convert.ToInt32(right);
-                case "&&":
-                    return Convert.ToBoolean(left) && Convert.ToBoolean(right);
-                case "||":
-                    return Convert.ToBoolean(left) || Convert.ToBoolean(right);
-                case "==":
-                    return Convert.ToInt32(left) == Convert.ToInt32(right);
-                case "!=":
-                    return Convert.ToInt32(left) != Convert.ToInt32(right);
-                case "<":
-                    return Convert.ToInt32(left) < Convert.ToInt32(right);
-                case ">":
-                    return Convert.ToInt32(left) > Convert.ToInt32(right);
-                case "<=":
-                    return Convert.ToInt32(left) <= Convert.ToInt32(right);
-                case ">=":
-                    return Convert.ToInt32(left) >= Convert.ToInt32(right);
-                default:
-                    throw new Exception($"Unknown operator '{node.Operator}'");
-            }
+                "+" => (left is int && right is int)
+                    ? Convert.ToInt32(left) + Convert.ToInt32(right)
+                    : left.ToString() + right.ToString(),
+                "-" => Convert.ToInt32(left) - Convert.ToInt32(right),
+                "*" => Convert.ToInt32(left) * Convert.ToInt32(right),
+                "/" => Convert.ToInt32(left) / Convert.ToInt32(right),
+                "%" => Convert.ToInt32(left) % Convert.ToInt32(right),
+                "&&" => Convert.ToBoolean(left) && Convert.ToBoolean(right),
+                "||" => Convert.ToBoolean(left) || Convert.ToBoolean(right),
+                "==" => Convert.ToInt32(left) == Convert.ToInt32(right),
+                "!=" => Convert.ToInt32(left) != Convert.ToInt32(right),
+                "<" => Convert.ToInt32(left) < Convert.ToInt32(right),
+                ">" => Convert.ToInt32(left) > Convert.ToInt32(right),
+                "<=" => Convert.ToInt32(left) <= Convert.ToInt32(right),
+                ">=" => Convert.ToInt32(left) >= Convert.ToInt32(right),
+                _ => throw new($"Unknown operator '{node.Operator}'")
+            };
         }
 
         /// <summary>
-        /// Visits a unary expression node.
+        /// Visits a unary expression node and evaluates the expression.
         /// </summary>
-        /// <param name="node">The unary expression node to visit.</param>
+        /// <param name="node">The unary expression node.</param>
         /// <returns>The result of the unary expression.</returns>
-        private object? VisitUnaryExpressionNode(UnaryExpressionNode node)
+        private object VisitUnaryExpressionNode(UnaryExpressionNode node)
         {
             var operand = Visit(node.Operand);
-            switch (node.Operator)
+            return node.Operator switch
             {
-                case "-":
-                    return -(int)operand;
-                case "!":
-                    return !(bool)operand;
-                default:
-                    throw new Exception($"Unknown operator '{node.Operator}'");
-            }
+                "-" => -(int)operand,
+                "!" => !(bool)operand,
+                _ => throw new($"Unknown operator '{node.Operator}'")
+            };
         }
 
         /// <summary>
-        /// Visits a logical expression node.
+        /// Visits a logical expression node and evaluates the expression.
         /// </summary>
-        /// <param name="node">The logical expression node to visit.</param>
+        /// <param name="node">The logical expression node.</param>
         /// <returns>The result of the logical expression.</returns>
-        private object? VisitLogicalExpressionNode(LogicalExpressionNode node)
+        private object VisitLogicalExpressionNode(LogicalExpressionNode node)
         {
             var left = Visit(node.Left);
             var right = Visit(node.Right);
 
-            switch (node.Operator)
+            return node.Operator switch
             {
-                case "&&":
-                    return Convert.ToBoolean(left) && Convert.ToBoolean(right);
-                case "||":
-                    return Convert.ToBoolean(left) || Convert.ToBoolean(right);
-                default:
-                    throw new Exception($"Unknown operator '{node.Operator}' for logical expression");
-            }
+                "&&" => Convert.ToBoolean(left) && Convert.ToBoolean(right),
+                "||" => Convert.ToBoolean(left) || Convert.ToBoolean(right),
+                _ => throw new($"Unknown operator '{node.Operator}' for logical expression")
+            };
         }
 
         /// <summary>
-        /// Visits a function call node.
+        /// Attempts to retrieve a function by name.
         /// </summary>
-        /// <param name="node">The function call node to visit.</param>
-        /// <returns>The result of the function call.</returns>
-        private object? VisitFunctionCallNode(FunctionCallNode node)
+        /// <param name="name">The name of the function.</param>
+        /// <param name="value">The retrieved function node.</param>
+        /// <returns>True if the function was found; otherwise, false.</returns>
+        public bool TryGetFunction(string? name, out FunctionNode value)
         {
-            if (_functions.TryGetValue(node.FunctionName, out var function))
+            if (_functions.TryGetValue(name, out value))
+                return true;
+
+            if (Globals.GlobalFunctions.TryGetValue(name, out value))
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Visits a function call node and executes the function.
+        /// </summary>
+        /// <param name="node">The function call node.</param>
+        /// <returns>The result of the function call.</returns>
+        private object VisitFunctionCallNode(FunctionCallNode node)
+        {
+            if (TryGetFunction(node.FunctionName, out var function))
             {
-                var newScope = new Dictionary<string?, object?>(_variables);
+                var newScope = new Dictionary<string?, object>(_variables);
 
                 for (int i = 0; i < function.Parameters.Count; i++)
                 {
@@ -298,90 +285,78 @@ namespace Benita
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception(ex.Message);
+                    throw new(ex.Message);
                 }
                 finally
                 {
                     _functionReturnFlag = false;
+                    originalVariables = SyncDictionaryValues(_variables, originalVariables);
                     _variables = originalVariables;
                 }
             }
-            else
+
+            var functionManagementClass = FactoryClass.GetInterpreterClass(node.FunctionName);
+            if (functionManagementClass != null)
             {
-                var functionManagementClass = FactoryClass.GetInterpreterClass(node.FunctionName);
-                if (functionManagementClass != null)
-                {
-                    List<object> arguments = (from argument in node.Arguments select Visit(argument)).ToList();
-                    return functionManagementClass.HandleFunctionCall(node.FunctionName, arguments);
-                }
-                else
-                {
-                    throw new Exception($"Unknown function '{node.FunctionName}'");
-                }
+                List<object> arguments = (from argument in node.Arguments select Visit(argument)).ToList();
+                return functionManagementClass.HandleFunctionCall(node.FunctionName, arguments);
             }
+
+            throw new($"Unknown function '{node.FunctionName}'");
         }
 
         /// <summary>
-        /// Visits a return statement node.
+        /// Synchronizes values between two dictionaries.
         /// </summary>
-        /// <param name="returnStatementNode">The return statement node to visit.</param>
-        /// <returns>The value to return from the function.</returns>
-        private object? VisitReturnStatementNode(ReturnStatementNode returnStatementNode)
+        /// <param name="variables">The current variable dictionary.</param>
+        /// <param name="originalVariables">The original variable dictionary.</param>
+        /// <returns>The synchronized dictionary.</returns>
+        private Dictionary<string?, object> SyncDictionaryValues(Dictionary<string?, object> variables, Dictionary<string?, object> originalVariables)
+        {
+            foreach (var key in variables.Keys.ToList())
+            {
+                if (originalVariables.ContainsKey(key) && _packageScope != "_main_")
+                {
+                    originalVariables[key] = variables[key];
+                }
+                else if (Globals.GlobalVariable.ContainsKey(key))
+                {
+                    Globals.GlobalVariable[key] = variables[key];
+                }
+            }
+
+            return originalVariables;
+        }
+
+        /// <summary>
+        /// Visits a return statement node and sets the function return flag.
+        /// </summary>
+        /// <param name="returnStatementNode">The return statement node.</param>
+        /// <returns>The result of the return expression.</returns>
+        private object VisitReturnStatementNode(ReturnStatementNode returnStatementNode)
         {
             _functionReturnFlag = true;
             return returnStatementNode.ReturnExpression == null ? null : Visit(returnStatementNode.ReturnExpression);
         }
 
         /// <summary>
-        /// Visits a variable declaration node.
+        /// Visits a variable declaration node and declares the variable.
         /// </summary>
-        /// <param name="node">The variable declaration node to visit.</param>
+        /// <param name="node">The variable declaration node.</param>
         /// <returns>Null.</returns>
-        private object? VisitVariableDeclarationNode(VariableDeclarationNode node)
+        private object VisitVariableDeclarationNode(VariableDeclarationNode node)
         {
-            object? value = null;
-
-            if (node.Initializer != null)
-            {
-                value = Visit(node.Initializer);
-            }
-            else
-            {
-                // Initialize to default values based on type
-                switch (node.Type)
-                {
-                    case "number":
-                        value = 0.0;
-                        break;
-                    case "string":
-                        value = string.Empty;
-                        break;
-                    case "bool":
-                        value = false;
-                        break;
-                    case "number[]":
-                        value = new int[0];
-                        break;
-                    case "string[]":
-                        value = new string[0];
-                        break;
-                    case "bool[]":
-                        value = new bool[0];
-                        break;
-                    default:
-                        throw new Exception($"Unknown variable type '{node.Type}'");
-                }
-            }
+            object value = node.Initializer != null ? Visit(node.Initializer) : GetDefaultValue(node.Type);
             _variables[node.Name] = value;
             return null;
         }
 
         /// <summary>
-        /// Visits an assignment node.
+        /// Visits an assignment node and assigns the value.
         /// </summary>
-        /// <param name="node">The assignment node to visit.</param>
+        /// <param name="node">The assignment node.</param>
         /// <returns>The assigned value.</returns>
-        private object? VisitAssignmentNode(AssignmentNode node)
+        private object VisitAssignmentNode(AssignmentNode node)
         {
             var value = Visit(node.Expression);
             _variables[node.Name] = value;
@@ -389,83 +364,71 @@ namespace Benita
         }
 
         /// <summary>
-        /// Visits a compound assignment node.
+        /// Visits a compound assignment node and performs the compound assignment.
         /// </summary>
-        /// <param name="node">The compound assignment node to visit.</param>
+        /// <param name="node">The compound assignment node.</param>
         /// <returns>The result of the compound assignment.</returns>
-        private object? VisitCompoundAssignmentNode(CompoundAssignmentNode node)
+        private object VisitCompoundAssignmentNode(CompoundAssignmentNode node)
         {
-            if (!_variables.TryGetValue(node.Name, out var variable))
+            if (!TryGetVariableValue(node.Name, out var variable))
             {
-                throw new Exception($"Undefined variable '{node.Name}'");
+                throw new($"Undefined variable '{node.Name}'");
             }
 
             var oldValue = (int)variable;
             var newValue = (int)Visit(node.Expression);
 
-            switch (node.Operator)
+            _variables[node.Name] = node.Operator switch
             {
-                case "+=":
-                    _variables[node.Name] = oldValue + newValue;
-                    break;
-                case "-=":
-                    _variables[node.Name] = oldValue - newValue;
-                    break;
-                case "*=":
-                    _variables[node.Name] = oldValue * newValue;
-                    break;
-                case "/=":
-                    _variables[node.Name] = oldValue / newValue;
-                    break;
-                default:
-                    throw new Exception($"Unknown compound assignment operator '{node.Operator}'");
-            }
+                "+=" => oldValue + newValue,
+                "-=" => oldValue - newValue,
+                "*=" => oldValue * newValue,
+                "/=" => oldValue / newValue,
+                _ => throw new($"Unknown compound assignment operator '{node.Operator}'")
+            };
 
             return _variables[node.Name];
         }
 
         /// <summary>
-        /// Visits an increment/decrement node.
+        /// Visits an increment/decrement node and performs the operation.
         /// </summary>
-        /// <param name="node">The increment/decrement node to visit.</param>
-        /// <returns>The result of the increment or decrement operation.</returns>
-        private object? VisitIncrementDecrementNode(IncrementDecrementNode node)
+        /// <param name="node">The increment/decrement node.</param>
+        /// <returns>The result of the increment/decrement operation.</returns>
+        private object VisitIncrementDecrementNode(IncrementDecrementNode node)
         {
-            if (!_variables.TryGetValue(node.Name, out var variable))
+            if (!TryGetVariableValue(node.Name, out var variable))
             {
-                throw new Exception($"Undefined variable '{node.Name}'");
+                throw new($"Undefined variable '{node.Name}'");
             }
+
             var oldValue = Convert.ToInt32(variable);
-            switch (node.Operator)
+            _variables[node.Name] = node.Operator switch
             {
-                case "++":
-                    _variables[node.Name] = oldValue + 1;
-                    break;
-                case "--":
-                    _variables[node.Name] = oldValue - 1;
-                    break;
-                default:
-                    throw new Exception($"Unknown increment/decrement operator '{node.Operator}'");
-            }
+                "++" => oldValue + 1,
+                "--" => oldValue - 1,
+                _ => throw new($"Unknown increment/decrement operator '{node.Operator}'")
+            };
+
             return _variables[node.Name];
         }
 
         /// <summary>
-        /// Visits an expression statement node.
+        /// Visits an expression statement node and evaluates the expression.
         /// </summary>
-        /// <param name="node">The expression statement node to visit.</param>
-        /// <returns>The result of visiting the expression.</returns>
-        private object? VisitExpressionStatementNode(ExpressionStatementNode node)
+        /// <param name="node">The expression statement node.</param>
+        /// <returns>The result of the expression.</returns>
+        private object VisitExpressionStatementNode(ExpressionStatementNode node)
         {
             return Visit(node.Expression);
         }
 
         /// <summary>
-        /// Visits a block node.
+        /// Visits a block node and evaluates the statements within the block.
         /// </summary>
-        /// <param name="node">The block node to visit.</param>
-        /// <returns>The result of visiting the block's statements.</returns>
-        private object? VisitBlockNode(BlockNode node)
+        /// <param name="node">The block node.</param>
+        /// <returns>The result of the block execution.</returns>
+        private object VisitBlockNode(BlockNode node)
         {
             foreach (var statement in node.Statements)
             {
@@ -476,15 +439,16 @@ namespace Benita
                 if (_functionReturnFlag)
                     return result;
             }
+
             return null;
         }
 
         /// <summary>
-        /// Visits an if statement node.
+        /// Visits an if statement node and evaluates the branches.
         /// </summary>
-        /// <param name="node">The if statement node to visit.</param>
+        /// <param name="node">The if statement node.</param>
         /// <returns>The result of the if statement execution.</returns>
-        private object? VisitIfStatementNode(IfStatementNode node)
+        private object VisitIfStatementNode(IfStatementNode node)
         {
             var condition = (bool)Visit(node.Condition);
             if (condition)
@@ -496,87 +460,235 @@ namespace Benita
             {
                 return Visit(node.ElseBranch);
             }
+
             return null;
         }
 
         /// <summary>
-        /// Visits a while statement node.
+        /// Visits a while statement node and evaluates the loop.
         /// </summary>
-        /// <param name="node">The while statement node to visit.</param>
+        /// <param name="node">The while statement node.</param>
         /// <returns>Null.</returns>
-        private object? VisitWhileStatementNode(WhileStatementNode node)
+        private object VisitWhileStatementNode(WhileStatementNode node)
         {
             while ((bool)Visit(node.Condition))
             {
                 Visit(node.Body);
             }
+
             return null;
         }
 
         /// <summary>
-        /// Visits a for statement node.
+        /// Visits a for statement node and evaluates the loop.
         /// </summary>
-        /// <param name="node">The for statement node to visit.</param>
+        /// <param name="node">The for statement node.</param>
         /// <returns>Null.</returns>
-        private object? VisitForStatementNode(ForStatementNode node)
+        private object VisitForStatementNode(ForStatementNode node)
         {
             Visit(node.Initializer);
             while ((bool)Visit(node.Condition))
             {
                 Visit(node.Body);
-
                 Visit(node.Increment);
             }
+
             return null;
         }
 
         /// <summary>
-        /// Visits a function node.
+        /// Visits a function node and registers the function.
         /// </summary>
-        /// <param name="node">The function node to visit.</param>
+        /// <param name="node">The function node.</param>
         /// <returns>Null.</returns>
-        private object? VisitFunctionNode(FunctionNode node)
+        private object VisitFunctionNode(FunctionNode node)
         {
             _functions[node.Name] = node;
             return null;
         }
 
         /// <summary>
-        /// Visits a program node.
+        /// Visits a program node and evaluates the program.
         /// </summary>
-        /// <param name="node">The program node to visit.</param>
+        /// <param name="node">The program node.</param>
         /// <returns>Null.</returns>
-        private object? VisitProgramNode(ProgramNode node)
+        private object VisitProgramNode(ProgramNode node)
         {
-            // Initialize global variables
+            foreach (var packageNode in node.Packages)
+            {
+                Visit(packageNode);
+            }
+
             foreach (var globalVar in node.GlobalVariables)
             {
                 Visit(globalVar);
             }
 
-            // Register functions
             foreach (var function in node.Functions)
             {
                 Visit(function);
             }
 
-            // Register the main function
+            Globals.GlobalFunctions = _functions;
+            Globals.GlobalVariable = _variables;
+
             if (node.MainFunction != null)
             {
                 _functions[node.MainFunction.Name] = node.MainFunction;
             }
 
-            // Execute the main function
             if (_functions.TryGetValue("_main_", out var mainFunction))
             {
-                VisitFunctionCallNode(new FunctionCallNode(mainFunction.Name, new List<ExpressionNode>()));
+                VisitFunctionCallNode(new(mainFunction.Name, new()));
+            }
+            else if (node.Statements.Count > 0)
+            {
+                foreach (var statement in node.Statements)
+                {
+                    if (statement == null)
+                        continue;
+
+                    var result = Visit(statement);
+                }
             }
             else
             {
-                throw new Exception("No entry point (_main_) defined.");
+                throw new("No entry point (_main_) defined.");
             }
 
             return null;
         }
+
+        /// <summary>
+        /// Visits a package node and registers the package.
+        /// </summary>
+        /// <param name="packageNode">The package node.</param>
+        /// <returns>Null.</returns>
+        private object VisitPackageNode(PackageNode packageNode)
+        {
+            Globals.PackageList[packageNode.Name] = packageNode;
+            return null;
+        }
+
+        /// <summary>
+        /// Visits a member access node and evaluates the member access.
+        /// </summary>
+        /// <param name="node">The member access node.</param>
+        /// <returns>The result of the member access.</returns>
+        private object VisitMemberAccessNode(MemberAccessNode node)
+        {
+            if (node.ObjectName == _packageScope)
+                return Visit(node.Expression);
+
+            if (TryGetVariableValue(node.ObjectName, out var instance) && instance is PackageInstance packageInstance)
+            {
+                return packageInstance.Visit(node.Expression, _variables);
+            }
+
+            throw new Exception($"Member access on non-package instance '{instance}'");
+        }
+
+        /// <summary>
+        /// Tries to get the value of a variable by its name.
+        /// </summary>
+        /// <param name="name">The name of the variable.</param>
+        /// <param name="value">The value of the variable.</param>
+        /// <returns>True if the variable is found, false otherwise.</returns>
+        public bool TryGetVariableValue(string? name, out object value)
+        {
+            if (_variables.TryGetValue(name, out value))
+                return true;
+
+            if (_outerScopeVariables.TryGetValue(name, out value))
+                return true;
+
+            throw new Exception($"Undefined variable '{name}'");
+        }
+
+        /// <summary>
+        /// Visits an array initializer node and initializes the array.
+        /// </summary>
+        /// <param name="arrayInitializerNode">The array initializer node.</param>
+        /// <returns>The initialized array.</returns>
+        private object VisitArrayInitializerNode(ArrayInitializerNode arrayInitializerNode)
+        {
+            List<object> arrayValues = new();
+            foreach (var element in arrayInitializerNode.Elements)
+            {
+                arrayValues.Add(Visit(element));
+            }
+
+            return arrayValues.ToArray();
+        }
+
+        /// <summary>
+        /// Visits an array access node and retrieves the array element.
+        /// </summary>
+        /// <param name="node">The array access node.</param>
+        /// <returns>The array element.</returns>
+        private object VisitArrayAccessNode(ArrayAccessNode node)
+        {
+            var arrayName = node.Name;
+            var index = (int)Visit(node.Index);
+
+            if (TryGetVariableValue(arrayName, out var value) && value is object[] array)
+            {
+                if (index >= 0 && index < array.Length)
+                {
+                    return array[(int)index];
+                }
+
+                throw new($"Index out of bounds for array '{arrayName}'");
+            }
+
+            throw new($"Variable '{arrayName}' is not an array");
+        }
+
+        /// <summary>
+        /// Visits an array assignment node and assigns the value to the array element.
+        /// </summary>
+        /// <param name="node">The array assignment node.</param>
+        /// <returns>The assigned value.</returns>
+        private object VisitArrayAssignmentNode(ArrayAssignmentNode node)
+        {
+            var arrayName = node.Name;
+            var newValue = Visit(node.Value);
+            var index = Visit(node.Index);
+
+            if (!_variables.ContainsKey(arrayName))
+            {
+                throw new($"Array '{arrayName}' not found in variables.");
+            }
+
+            object arrayObj = _variables[arrayName];
+            if (arrayObj is object[] array)
+            {
+                array[Convert.ToInt32(index)] = newValue;
+                _variables[arrayName] = array;
+                return newValue;
+            }
+
+            throw new($"Variable '{arrayName}' is not an array.");
+        }
+
+        /// <summary>
+        /// Gets the default value for a given type.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>The default value.</returns>
+        private object GetDefaultValue(string? type)
+        {
+            return type switch
+            {
+                "number" => 0,
+                "string" => string.Empty,
+                "bool" => false,
+                "number[]" => new List<object>(),
+                "string[]" => new List<object>(),
+                "bool[]" => new List<object>(),
+                _ => throw new($"Unknown type '{type}'")
+            };
+        }
     }
+
 }

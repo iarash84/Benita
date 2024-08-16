@@ -7,40 +7,48 @@
     public class SemanticAnalyzer
     {
         /// <summary>
+        /// Dictionary to store packages names and their associated PackageNode.
+        /// </summary>
+        private readonly Dictionary<string?, PackageNode?> _packages;
+
+
+        /// <summary>
         /// Dictionary to store global variables and their types.
         /// </summary>
-        private readonly Dictionary<string?, string> _globalVariables;
+        private readonly Dictionary<string, string?> _globalVariables;
 
         /// <summary>
         /// Dictionary to store function names and their associated FunctionNode.
         /// </summary>
-        private readonly Dictionary<string?, FunctionNode> _functions;
+        private readonly Dictionary<string?, FunctionNode?> _functions;
 
         /// <summary>
         /// Dictionary to store default functions with their return types and parameter types.
         /// </summary>
-        private readonly Dictionary<string?, (string ReturnType, List<string> ParameterTypes)> _defaultFunctions;
+        private readonly Dictionary<string, (string, List<string>)> _defaultFunctions;
+
 
         /// <summary>
         /// Initializes a new instance of the SemanticAnalyzer class.
         /// </summary>
         public SemanticAnalyzer()
         {
-            _globalVariables = new Dictionary<string?, string>();
-            _functions = new Dictionary<string?, FunctionNode>();
+            _globalVariables = new Dictionary<string, string?>();
+            _functions = new Dictionary<string?, FunctionNode?>();
+            _packages = new Dictionary<string?, PackageNode?>();
             _defaultFunctions = new Dictionary<string, (string, List<string>)>
             {
-                { "print", ("void", new List<string> { "string" }) },
-                { "input", ("string", new List<string>()) },
-                { "file_read", ("string", new List<string> { "string" }) },
-                { "file_write", ("void", new List<string> { "string", "string" }) },
-                { "file_exist", ("bool", new List<string> { "string" }) },
-                { "file_delete", ("bool", new List<string> { "string" }) },
-                { "array_len", ("number", new List<string> { "array" }) },
-                { "array_add", ("array", new List<string> { "array" ,"string" }) },
-                { "array_remove", ("array", new List<string> { "array", "number" }) },
-                { "to_string", ("string", new List<string> { "number" }) },
-                { "to_number", ("number", new List<string> { "string" }) },
+                { "print", ("void", ["string"]) },
+                { "input", ("string", []) },
+                { "file_read", ("string", ["string"]) },
+                { "file_write", ("void", ["string", "string"]) },
+                { "file_exist", ("bool", ["string"]) },
+                { "file_delete", ("bool", ["string"]) },
+                { "array_len", ("number", ["array"]) },
+                { "array_add", ("array", ["array", "string"]) },
+                { "array_remove", ("array", ["array", "number"]) },
+                { "to_string", ("string", ["number"]) },
+                { "to_number", ("number", ["string"]) },
             };
         }
 
@@ -50,6 +58,12 @@
         /// <param name="program">The ProgramNode to analyze.</param>
         public void Analyze(ProgramNode program)
         {
+
+            foreach (var packageNode in program.Packages)
+            {
+                DeclarePackage(packageNode);
+            }
+
             // Analyze global variables and ensure they are declared
             foreach (var globalVar in program.GlobalVariables)
             {
@@ -63,14 +77,95 @@
             }
 
             // Analyze the main function
-            AnalyzeFunction(program.MainFunction);
+            if (program.MainFunction != null)
+                AnalyzeFunction(program.MainFunction);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="packageNode"></param>
+        /// <exception cref="Exception"></exception>
+        private void DeclarePackage(PackageNode? packageNode)
+        {
+            if (_packages.ContainsKey(packageNode.Name))
+            {
+                throw new Exception($"Function '{packageNode.Name}' is already declared.");
+            }
+            _packages[packageNode.Name] = packageNode;
+            AnalyzePackage(packageNode);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="packageNode"></param>
+        private void AnalyzePackage(PackageNode? packageNode)
+        {
+            Dictionary<string, string?> variableScope = new Dictionary<string, string?>();
+            Dictionary<string?, PackageFunctionNode> packageFunctions = new Dictionary<string?, PackageFunctionNode>();
+
+            foreach (var packageMember in packageNode.Members)
+            {
+                switch (packageMember)
+                {
+                    case PackageVariableDeclarationNode variableDeclaration:
+                        if (variableScope.ContainsKey(variableDeclaration.Name))
+                        {
+                            throw new Exception($"Variable '{variableDeclaration.Name}' is already declared.");
+                        }
+                        variableScope[variableDeclaration.Name] = variableDeclaration.Type;
+                        break;
+
+                    case PackageFunctionNode functionNode:
+                        if (packageFunctions.ContainsKey(functionNode.Name))
+                        {
+                            throw new Exception($"Function '{functionNode.Name}' is already declared.");
+                        }
+
+                        packageFunctions[functionNode.Name] = functionNode;
+                        AnalyzePackageFunction(functionNode, variableScope);
+                        break;
+                    default:
+                        throw new Exception($"Unsupported statement type: {packageMember.GetType().Name}");
+                }
+            }
+        }
+
+        private void AnalyzePackageFunction(PackageFunctionNode function, Dictionary<string, string?> variableScope)
+        {
+            // Create a new scope for local variables
+            var localVariables = new Dictionary<string, string?>(variableScope);
+
+            // Declare function parameters in the local scope
+            foreach (var param in function.Parameters)
+            {
+                DeclareVariable(param.Name, param.Type, localVariables);
+            }
+
+            // Analyze the function body
+            AnalyzeBlock(function.Body, localVariables, function.ReturnType);
+
+            // Check the function's return statement
+            if (function.ReturnStatement != null)
+            {
+                var returnType = AnalyzeExpression(function.ReturnStatement.ReturnExpression, localVariables);
+                if (returnType != function.ReturnType)
+                {
+                    throw new Exception($"Return type mismatch in function '{function.Name}'. Expected '{function.ReturnType}' but got '{returnType}'.");
+                }
+            }
+            else if (function.ReturnType != "void")
+            {
+                throw new Exception($"Function '{function.Name}' must return a value of type '{function.ReturnType}'.");
+            }
         }
 
         /// <summary>
         /// Declares a function and performs analysis on it.
         /// </summary>
         /// <param name="function">The function to declare and analyze.</param>
-        private void DeclareFunction(FunctionNode function)
+        private void DeclareFunction(FunctionNode? function)
         {
             if (_functions.ContainsKey(function.Name))
             {
@@ -85,10 +180,10 @@
         /// Analyzes a function's parameters, body, and return type.
         /// </summary>
         /// <param name="function">The function to analyze.</param>
-        private void AnalyzeFunction(FunctionNode function)
+        private void AnalyzeFunction(FunctionNode? function)
         {
             // Create a new scope for local variables
-            var localVariables = new Dictionary<string?, string>(_globalVariables);
+            var localVariables = new Dictionary<string, string?>(_globalVariables);
 
             // Declare function parameters in the local scope
             foreach (var param in function.Parameters)
@@ -120,7 +215,7 @@
         /// <param name="block">The block of statements to analyze.</param>
         /// <param name="localVariables">The local variables available in the block.</param>
         /// <param name="functionReturnType">The return type of the function (if any).</param>
-        private void AnalyzeBlock(BlockNode block, Dictionary<string?, string> localVariables, string? functionReturnType = null)
+        private void AnalyzeBlock(BlockNode block, Dictionary<string, string?> localVariables, string? functionReturnType = null)
         {
             foreach (var statement in block.Statements)
             {
@@ -134,7 +229,7 @@
         /// <param name="statement">The statement to analyze.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <param name="functionReturnType">The return type of the function (if any).</param>
-        private void AnalyzeStatement(StatementNode statement, Dictionary<string?, string> localVariables, string? functionReturnType = null)
+        private void AnalyzeStatement(StatementNode statement, Dictionary<string, string?> localVariables, string? functionReturnType = null)
         {
             switch (statement)
             {
@@ -221,6 +316,21 @@
                         throw new Exception($"Return type mismatch in function. Expected '{functionReturnType}' but got '{resultValueType}'.");
                     }
                     break;
+                case ObjectInstantiationNode objectInstantiationNode:
+
+                    if (!_packages.ContainsKey(objectInstantiationNode.PackageName))
+                    {
+                        throw new Exception(
+                            $"A package with this name : {objectInstantiationNode.PackageName} has not been implemented ");
+                    }
+                    // TODO: Must check object name in this scope
+                    if (localVariables.ContainsKey(objectInstantiationNode.Name))
+                    {
+                        throw new Exception($"Variable '{objectInstantiationNode.Name}' is already declared.");
+                    }
+
+                    localVariables[objectInstantiationNode.Name] = objectInstantiationNode.PackageName;
+                    break;
                 default:
                     throw new Exception($"Unsupported statement type: {statement.GetType().Name}");
             }
@@ -231,7 +341,7 @@
         /// </summary>
         /// <param name="arrayAssignment">The array assignment statement to analyze.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
-        private void AnalyzeArrayAssignment(ArrayAssignmentNode arrayAssignment, Dictionary<string?, string> localVariables)
+        private void AnalyzeArrayAssignment(ArrayAssignmentNode arrayAssignment, Dictionary<string, string?> localVariables)
         {
             // Check if the array variable is declared
             if (!localVariables.TryGetValue(arrayAssignment.Name, out var arrayType))
@@ -273,7 +383,7 @@
         /// <param name="expression">The expression to analyze.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the expression.</returns>
-        private string? AnalyzeExpression(ExpressionNode expression, Dictionary<string?, string> localVariables)
+        private string? AnalyzeExpression(ExpressionNode expression, Dictionary<string, string?> localVariables)
         {
             switch (expression)
             {
@@ -293,9 +403,87 @@
                     return HandleArrayAccessNode(arrayAccess, localVariables);
                 case LogicalExpressionNode logical:
                     return HandleLogicalExpressionNode(logical, localVariables);
+                case MemberAccessNode memberAccess:
+                    return HandelMemberAccessNode(memberAccess, localVariables);
                 default:
                     throw new Exception($"Unsupported expression type: {expression.GetType().Name}");
             }
+        }
+
+        private string? HandelMemberAccessNode(MemberAccessNode memberAccess, Dictionary<string, string?> localVariables)
+        {
+            var packageName = localVariables[memberAccess.ObjectName];
+            var outPackage = _packages[packageName];
+
+            switch (memberAccess.Expression)
+            {
+                case FunctionCallNode expression:
+                    foreach (var member in outPackage.Members)
+                    {
+                        if (!(member is PackageFunctionNode callFunctionNode)) continue;
+                        if (callFunctionNode.Name == expression.FunctionName)
+                            return callFunctionNode.ReturnType;
+                    }
+
+                    // TODO: fix the error
+                    throw new Exception($"Error '{outPackage.Name}' does not contain a definition for '{expression.FunctionName}' ");
+
+                case CompoundAssignmentNode compoundAssignment:
+
+                    var compValueType = AnalyzeExpression(compoundAssignment.Expression, localVariables);
+                    string? compVariableType = string.Empty;
+                    foreach (var member in outPackage.Members)
+                    {
+                        if (!(member is PackageVariableDeclarationNode variableDeclarationNode)) continue;
+                        if (variableDeclarationNode.Name == compoundAssignment.Name)
+                        {
+                            compVariableType = variableDeclarationNode.Type;
+                            break;
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(compVariableType))
+                    {
+                        throw new Exception(
+                            $"Variable {compoundAssignment.Name} has not been implemented in package {outPackage.Name}.");
+                    }
+
+                    if (compVariableType != compValueType)
+                    {
+                        throw new Exception(
+                            $"Type mismatch in compound assignment to '{compoundAssignment.Name}'. Expected '{compVariableType}' but got '{compValueType}'.");
+                    }
+                    return compValueType;
+
+                case IdentifierNode identifierNode:
+                    foreach (var member in outPackage.Members)
+                    {
+                        if (!(member is PackageVariableDeclarationNode variableDeclarationNode)) continue;
+                        if (variableDeclarationNode.Name == identifierNode.Name)
+                        {
+                            return variableDeclarationNode.Type;
+                        }
+                    }
+                    throw new Exception($"Undeclared variable '{identifierNode.Name}' in package {outPackage.Name}.");
+
+                case AssignmentNode assignment:
+                    //var valueType = AnalyzeExpression(assignment.Expression, localVariables);
+                    //if (!localVariables.TryGetValue(assignment.Name, out var variableType))
+                    //{
+                    //    throw new Exception($"Undeclared variable '{assignment.Name}'.");
+                    //}
+
+                    //if (!CheckType(variableType, valueType))
+                    //{
+                    //    throw new Exception($"Type mismatch in assignment to '{assignment.Name}'. Expected '{variableType}' but got '{valueType}'.");
+                    //}
+                    //TODO : Not implemented
+                    return null;
+
+                default:
+                    throw new Exception($"Unsupported expression type: {memberAccess.GetType().Name}");
+            }
+
         }
 
         /// <summary>
@@ -304,7 +492,7 @@
         /// <param name="identifier">The identifier node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the identifier.</returns>
-        private string? HandleIdentifierNode(IdentifierNode identifier, Dictionary<string?, string> localVariables)
+        private string? HandleIdentifierNode(IdentifierNode identifier, Dictionary<string, string?> localVariables)
         {
             if (!localVariables.TryGetValue(identifier.Name, out var node))
             {
@@ -319,7 +507,7 @@
         /// <param name="binary">The binary expression node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the binary expression result.</returns>
-        private string? HandleBinaryExpressionNode(BinaryExpressionNode binary, Dictionary<string?, string> localVariables)
+        private string? HandleBinaryExpressionNode(BinaryExpressionNode binary, Dictionary<string, string?> localVariables)
         {
             var leftType = AnalyzeExpression(binary.Left, localVariables);
             var rightType = AnalyzeExpression(binary.Right, localVariables);
@@ -328,7 +516,8 @@
             {
                 return HandleArithmeticOperator(binary, leftType, rightType);
             }
-            else if (IsComparisonOperator(binary.Operator))
+
+            if (IsComparisonOperator(binary.Operator))
             {
                 return HandleComparisonOperator(leftType, rightType);
             }
@@ -385,7 +574,7 @@
         /// <param name="unary">The unary expression node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the unary expression result.</returns>
-        private string? HandleUnaryExpressionNode(UnaryExpressionNode unary, Dictionary<string?, string> localVariables)
+        private string? HandleUnaryExpressionNode(UnaryExpressionNode unary, Dictionary<string, string?> localVariables)
         {
             return AnalyzeExpression(unary.Operand, localVariables);
         }
@@ -396,7 +585,7 @@
         /// <param name="functionCall">The function call node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The return type of the function call.</returns>
-        private string? HandleFunctionCallNode(FunctionCallNode functionCall, Dictionary<string?, string> localVariables)
+        private string? HandleFunctionCallNode(FunctionCallNode functionCall, Dictionary<string, string?> localVariables)
         {
             if (!_functions.ContainsKey(functionCall.FunctionName) && !_defaultFunctions.ContainsKey(functionCall.FunctionName))
             {
@@ -436,7 +625,7 @@
         /// <param name="arrayInit">The array initializer node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the array.</returns>
-        private string? HandleArrayInitializerNode(ArrayInitializerNode arrayInit, Dictionary<string?, string> localVariables)
+        private string? HandleArrayInitializerNode(ArrayInitializerNode arrayInit, Dictionary<string, string?> localVariables)
         {
             var elementType = "unknown"; // Placeholder for the element type of the array
             foreach (var element in arrayInit.Elements)
@@ -460,7 +649,7 @@
         /// <param name="arrayAccess">The array access node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the array element.</returns>
-        private string? HandleArrayAccessNode(ArrayAccessNode arrayAccess, Dictionary<string?, string> localVariables)
+        private string? HandleArrayAccessNode(ArrayAccessNode arrayAccess, Dictionary<string, string?> localVariables)
         {
             if (!localVariables.TryGetValue(arrayAccess.Name, out var arrayType))
             {
@@ -482,7 +671,7 @@
         /// <param name="logical">The logical expression node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the result of the logical operation.</returns>
-        private string? HandleLogicalExpressionNode(LogicalExpressionNode logical, Dictionary<string?, string> localVariables)
+        private string? HandleLogicalExpressionNode(LogicalExpressionNode logical, Dictionary<string, string?> localVariables)
         {
             var leftType = AnalyzeExpression(logical.Left, localVariables);
             var rightType = AnalyzeExpression(logical.Right, localVariables);
@@ -502,7 +691,7 @@
         /// </summary>
         /// <param name="op">The operator to check.</param>
         /// <returns>True if the operator is an arithmetic operator, otherwise false.</returns>
-        private bool IsArithmeticOperator(string? op)
+        private bool IsArithmeticOperator(string op)
         {
             return op == "+" || op == "-" || op == "*" || op == "/" || op == "%";
         }
@@ -512,7 +701,7 @@
         /// </summary>
         /// <param name="op">The operator to check.</param>
         /// <returns>True if the operator is a comparison operator, otherwise false.</returns>
-        private bool IsComparisonOperator(string? op)
+        private bool IsComparisonOperator(string op)
         {
             return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==";
         }
@@ -560,7 +749,7 @@
         /// <param name="name">The name of the variable.</param>
         /// <param name="type">The type of the variable.</param>
         /// <param name="variableScope">The scope in which to declare the variable.</param>
-        private void DeclareVariable(string? name, string? type, Dictionary<string?, string> variableScope)
+        private void DeclareVariable(string name, string? type, Dictionary<string, string?> variableScope)
         {
             if (variableScope.ContainsKey(name))
             {

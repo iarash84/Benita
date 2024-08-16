@@ -31,10 +31,9 @@ _main_() {
 
 int main()
 {
-std::cout << ""This is a test"" + "" => "" << 1 << std::endl;
-return 0;
-}
-".Trim();
+  std::cout << ""This is a test"" + "" => "" << 1 << std::endl;
+  return 0;
+}".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert cgc
             Assert.AreEqual(expectedCode, generatedCode.Trim());
@@ -78,20 +77,19 @@ _main_() {
 double x = 10;
 double add(double a, double b)
 {
-double c = a + b;
-return a + b;
+  double c = a + b;
+  return a + b;
 }
 
 int main()
 {
-double y = 20;
-double sum = add(x, y);
-std::cout << sum << std::endl;
-std::string message = ""Hello, World!"";
-std::cout << message << std::endl;
-return 0;
-}
-".Trim();
+  double y = 20;
+  double sum = add(x, y);
+  std::cout << sum << std::endl;
+  std::string message = ""Hello, World!"";
+  std::cout << message << std::endl;
+  return 0;
+}".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
             Assert.AreEqual(expectedCode, generatedCode.Trim());
@@ -137,16 +135,16 @@ func myFunction(number a, number b) -> number {
 std::string global_var = ""This is global variable"";
 double myFunction(double a, double b)
 {
-return a + b;
+  return a + b;
 }
 
 int main()
 {
-double x = 10;
-double y = 20;
-std::cout << myFunction(x, y) << std::endl;
-std::cout << global_var << std::endl;
-return 0;
+  double x = 10;
+  double y = 20;
+  std::cout << myFunction(x, y) << std::endl;
+  std::cout << global_var << std::endl;
+  return 0;
 }".Trim();
             // Act
             var generatedCode = _compiler.GenerateCppCode(source);
@@ -187,15 +185,15 @@ _main_() {
 
 double myFunction(double a, double b)
 {
-return a + b;
+  return a + b;
 }
 
 int main()
 {
-double x = 10;
-double y = 8;
-std::cout << x << y << std::endl;
-return 0;
+  double x = 10;
+  double y = 8;
+  std::cout << x << y << std::endl;
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert cgc
@@ -241,22 +239,22 @@ _main_() {
 
 double myFunction(double a, double b)
 {
-return a + b;
+  return a + b;
 }
 
 int main()
 {
-double x = 10;
-double y = 20;
-std::cout << x << y << std::endl;
-double i = 0;
-while (i < 5)
-{
-x++;
-i++;
-}
-std::cout << x << std::endl;
-return 0;
+  double x = 10;
+  double y = 20;
+  std::cout << x << y << std::endl;
+  double i = 0;
+  while (i < 5)
+  {
+    x++;
+    i++;
+  }
+  std::cout << x << std::endl;
+  return 0;
 }".Trim();
             // Act
             var generatedCode = _compiler.GenerateCppCode(source);
@@ -296,14 +294,14 @@ _main_() {
 
 double add(double a, double b)
 {
-return a + b;
+  return a + b;
 }
 
 int main()
 {
-double result = add(2, 3);
-std::cout << result << std::endl;
-return 0;
+  double result = add(2, 3);
+  std::cout << result << std::endl;
+  return 0;
 }".Trim();
             // Act
             var generatedCode = _compiler.GenerateCppCode(source);
@@ -339,9 +337,9 @@ _main_()  {
 
 int main()
 {
-double result = 2 + 3;
-std::cout << result << std::endl;
-return 0;
+  double result = 2 + 3;
+  std::cout << result << std::endl;
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
@@ -387,22 +385,22 @@ _main_() {
 
 double add(double a, double b)
 {
-return a + b;
+  return a + b;
 }
 
 std::string concatenate(std::string a, std::string b)
 {
-return a + b;
+  return a + b;
 }
 
 int main()
 {
-double x = 10;
-double y = 20;
-double sum = add(x, y);
-std::string message = concatenate(""hello"", "" world"");
-std::cout << message << std::endl;
-return 0;
+  double x = 10;
+  double y = 20;
+  double sum = add(x, y);
+  std::string message = concatenate(""hello"", "" world"");
+  std::cout << message << std::endl;
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
@@ -440,11 +438,11 @@ std::string input();
 
 int main()
 {
-std::cout << ""Enter your name "" << std::endl;
-std::string message = input();
-std::cout << ""your name is "" << std::endl;
-std::cout << message << std::endl;
-return 0;
+  std::cout << ""Enter your name "" << std::endl;
+  std::string message = input();
+  std::cout << ""your name is "" << std::endl;
+  std::cout << message << std::endl;
+  return 0;
 }
 
 std::string input()
@@ -452,7 +450,9 @@ std::string input()
     std::string inputString;
     std::getline(std::cin, inputString);
     return inputString;
-}".Trim();
+}
+
+".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
             Assert.AreEqual(expectedCode, generatedCode.Trim());
@@ -523,46 +523,46 @@ std::string input();
 
 double add(double a, double b)
 {
-return a + b;
+  return a + b;
 }
 
 std::string concatenate(std::string a, std::string b)
 {
-return a + b;
+  return a + b;
 }
 
 bool is_even(double a)
 {
-return a % 2 == 0;
+  return a % 2 == 0;
 }
 
 int main()
 {
-double x = 10;
-double y = 20;
-double sum = add(x, y);
-std::string hello = ""Hello, "";
-std::string world = ""world!"";
-std::string message = concatenate(hello, world);
-std::cout << message << std::endl;
-bool check = is_even(sum);
-if (check)
-{
-std::cout << ""Sum is even."" << std::endl;
-}
-else
-{
-std::cout << ""Sum is odd."" << std::endl;
-}
-double i = 0;
-while (i < 5)
-{
-sum += i;
-i++;
-}
-std::string userInput = input();
-std::cout << ""You entered: "" << userInput << std::endl;
-return 0;
+  double x = 10;
+  double y = 20;
+  double sum = add(x, y);
+  std::string hello = ""Hello, "";
+  std::string world = ""world!"";
+  std::string message = concatenate(hello, world);
+  std::cout << message << std::endl;
+  bool check = is_even(sum);
+  if (check)
+  {
+    std::cout << ""Sum is even."" << std::endl;
+  }
+  else
+  {
+    std::cout << ""Sum is odd."" << std::endl;
+  }
+  double i = 0;
+  while (i < 5)
+  {
+    sum += i;
+    i++;
+  }
+  std::string userInput = input();
+  std::cout << ""You entered: "" << userInput << std::endl;
+  return 0;
 }
 
 std::string input()
@@ -575,7 +575,6 @@ std::string input()
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
             Assert.AreEqual(expectedCode, generatedCode.Trim());
-
 
             // Act
             var expectedInput = "Tom";
@@ -614,20 +613,17 @@ _main_() {
 
 void is_even()
 {
-std::cout << ""Sum is even."" << std::endl;
+  std::cout << ""Sum is even."" << std::endl;
 }
 
 int main()
 {
-while (true)
-{
-is_even();
-}
-return 0;
-}
-
-
-".Trim();
+  while (true)
+  {
+    is_even();
+  }
+  return 0;
+}".Trim();
             // Act            
             var generatedCode = _compiler.GenerateCppCode(source);
 
@@ -656,13 +652,13 @@ _main_() {
 
 int main()
 {
-double i = 0;
-while (i < 5)
-{
-i++;
-std::cout << ""While Test"" << std::endl;
-}
-return 0;
+  double i = 0;
+  while (i < 5)
+  {
+    i++;
+    std::cout << ""While Test"" << std::endl;
+  }
+  return 0;
 }".Trim();
             // Act            
             var generatedCode = _compiler.GenerateCppCode(source);
@@ -706,21 +702,21 @@ _main_() {
 
 bool is_even(double a)
 {
-return a % 2 == 0;
+  return a % 2 == 0;
 }
 
 int main()
 {
-double num = 12;
-if (is_even(num))
-{
-std::cout << ""Sum is even."" << std::endl;
-}
-else
-{
-std::cout << ""Sum is odd."" << std::endl;
-}
-return 0;
+  double num = 12;
+  if (is_even(num))
+  {
+    std::cout << ""Sum is even."" << std::endl;
+  }
+  else
+  {
+    std::cout << ""Sum is odd."" << std::endl;
+  }
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
@@ -759,16 +755,16 @@ _main_() {
 
 int main()
 {
-double num = 12;
-if (num == 12 || num > 15 && num == 10)
-{
-std::cout << ""YES"" << std::endl;
-}
-else
-{
-std::cout << ""NO"" << std::endl;
-}
-return 0;
+  double num = 12;
+  if (num == 12 || num > 15 && num == 10)
+  {
+    std::cout << ""YES"" << std::endl;
+  }
+  else
+  {
+    std::cout << ""NO"" << std::endl;
+  }
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
@@ -816,17 +812,17 @@ double myVar;
 std::string fileContent;
 int main()
 {
-if (file_exist(""test.txt""))
-{
-fileContent = file_read(""test.txt"");
-std::cout << fileContent << std::endl;
-}
-else
-{
-std::cout << ""File does not exist, creating new file with content."" << std::endl;
-file_write(""test.txt"", ""Hello, world!"");
-}
-return 0;
+  if (file_exist(""test.txt""))
+  {
+    fileContent = file_read(""test.txt"");
+    std::cout << fileContent << std::endl;
+  }
+  else
+  {
+    std::cout << ""File does not exist, creating new file with content."" << std::endl;
+    file_write(""test.txt"", ""Hello, world!"");
+  }
+  return 0;
 }
 
 bool file_exist(const std::string& filename)
@@ -856,15 +852,6 @@ void file_write(const std::string& filename, const std::string& content)
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
             Assert.AreEqual(expectedCode, generatedCode.Trim());
-
-            // Act
-            //var expectedOutput = "File does not exist, creating new file with content.\r\n";
-            //using (var consoleOutput = new ConsoleOutput())
-            //{
-            //    _compiler.Exec(source);
-            //    // Assert exc
-            //    Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
-            //}
         }
 
         [TestMethod]
@@ -893,17 +880,17 @@ bool file_delete(const std::string& filename);
 
 int main()
 {
-std::string file_path = ""test.txt"";
-if (file_exist(file_path))
-{
-file_delete(file_path);
-std::cout << ""file deleted sucessfully"" << std::endl;
-}
-else
-{
-std::cout << ""File does not exist."" << std::endl;
-}
-return 0;
+  std::string file_path = ""test.txt"";
+  if (file_exist(file_path))
+  {
+    file_delete(file_path);
+    std::cout << ""file deleted sucessfully"" << std::endl;
+  }
+  else
+  {
+    std::cout << ""File does not exist."" << std::endl;
+  }
+  return 0;
 }
 
 bool file_exist(const std::string& filename)
@@ -950,10 +937,10 @@ _main_() {
 std::vector<double> arr = {10, 20, 30};
 int main()
 {
-std::vector<double> anotherArr;
-anotherArr = {5, 10, 15};
-std::cout << anotherArr[1] << std::endl;
-return 0;
+  std::vector<double> anotherArr;
+  anotherArr = {5, 10, 15};
+  std::cout << anotherArr[1] << std::endl;
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
 
@@ -973,6 +960,7 @@ return 0;
         [TestMethod]
         public void Test18() // Array
         {
+
             string source = @"
 _main_() {
     // Declare an array of numbers
@@ -997,15 +985,15 @@ int array_len(const std::vector<T>& vec);
 
 int main()
 {
-std::vector<double> arr = {10, 20, 30, 40, 50};
-double i = 0;
-arr[2] = 5;
-while (i < array_len(arr))
-{
-std::cout << ""Element at index "" + i + "": "" << arr[i] << std::endl;
-i++;
-}
-return 0;
+  std::vector<double> arr = {10, 20, 30, 40, 50};
+  double i = 0;
+  arr[2] = 5;
+  while (i < array_len(arr))
+  {
+    std::cout << ""Element at index "" + i + "": "" << arr[i] << std::endl;
+    i++;
+  }
+  return 0;
 }
 
 int array_len(const std::vector<T>& vec)
@@ -1024,6 +1012,7 @@ int array_len(const std::vector<T>& vec)
                 // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
+
         }
 
         [TestMethod]
@@ -1056,17 +1045,17 @@ int array_len(const std::vector<T>& vec);
 
 int main()
 {
-std::vector<double> arr = {10, 20, 30, 40, 50};
-arr = array_remove(arr, 2);
-arr = array_add(arr, 60);
-arr = array_add(arr, 70);
-double i = 0;
-while (i < array_len(arr))
-{
-std::cout << ""Element at index "" + i + "": "" << arr[i] << std::endl;
-i++;
-}
-return 0;
+  std::vector<double> arr = {10, 20, 30, 40, 50};
+  arr = array_remove(arr, 2);
+  arr = array_add(arr, 60);
+  arr = array_add(arr, 70);
+  double i = 0;
+  while (i < array_len(arr))
+  {
+    std::cout << ""Element at index "" + i + "": "" << arr[i] << std::endl;
+    i++;
+  }
+  return 0;
 }
 
 std::vector<T> array_remove(const std::vector<T>& vec, int index)
@@ -1137,21 +1126,21 @@ std::string input();
 
 int main()
 {
-std::cout << ""Enter The Number Of Terms:"" << std::endl;
-double n = to_number(input());
-double f = 0;
-double f1 = -1;
-double f2 = 1;
-std::cout << ""The Fibonacci Series is:"" << std::endl;
-while (n > 0)
-{
-f = f1 + f2;
-f1 = f2;
-f2 = f;
-std::cout << f << std::endl;
-n--;
-}
-return 0;
+  std::cout << ""Enter The Number Of Terms:"" << std::endl;
+  double n = to_number(input());
+  double f = 0;
+  double f1 = -1;
+  double f2 = 1;
+  std::cout << ""The Fibonacci Series is:"" << std::endl;
+  while (n > 0)
+  {
+    f = f1 + f2;
+    f1 = f2;
+    f2 = f;
+    std::cout << f << std::endl;
+    n--;
+  }
+  return 0;
 }
 
 int to_number(const std::string& str)
@@ -1168,7 +1157,9 @@ std::string input()
     std::string inputString;
     std::getline(std::cin, inputString);
     return inputString;
-}".Trim();
+}
+
+".Trim();
             // Act            
             var generatedCode = _compiler.GenerateCppCode(source);
             //var result = _compiler.Exec(source);
@@ -1223,28 +1214,28 @@ _main_() {
 
 double fib(double x)
 {
-double result;
-if (x == 1 || x == 0)
-{
-result = x;
-}
-else
-{
-result = fib(x - 1) + fib(x - 2);
-}
-return result;
+  double result;
+  if (x == 1 || x == 0)
+  {
+    result = x;
+  }
+  else
+  {
+    result = fib(x - 1) + fib(x - 2);
+  }
+  return result;
 }
 
 int main()
 {
-double x = 20;
-double i = 0;
-while (i <= x)
-{
-std::cout << i + "" => "" << fib(i) << std::endl;
-i++;
-}
-return 0;
+  double x = 20;
+  double i = 0;
+  while (i <= x)
+  {
+    std::cout << i + "" => "" << fib(i) << std::endl;
+    i++;
+  }
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
@@ -1258,6 +1249,7 @@ return 0;
                 // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
+
         }
 
         [TestMethod]
@@ -1290,19 +1282,19 @@ _main_()
 
 double Factorial(double n)
 {
-double result = 1;
-if (n > 1)
-{
-result = n * Factorial(n - 1);
-}
-return result;
+  double result = 1;
+  if (n > 1)
+  {
+    result = n * Factorial(n - 1);
+  }
+  return result;
 }
 
 int main()
 {
-double a = 5;
-std::cout << Factorial(a) << std::endl;
-return 0;
+  double a = 5;
+  std::cout << Factorial(a) << std::endl;
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
 
@@ -1352,22 +1344,22 @@ print(CheckNumber(5));
 
 std::string CheckNumber(double n)
 {
-std::string result = """";
-if (n > 0)
-{
-result = ""Positive"";
-}
-else
-{
-result = ""Non-Positive"";
-}
-return result;
+  std::string result = """";
+  if (n > 0)
+  {
+    result = ""Positive"";
+  }
+  else
+  {
+    result = ""Non-Positive"";
+  }
+  return result;
 }
 
 int main()
 {
-std::cout << CheckNumber(5) << std::endl;
-return 0;
+  std::cout << CheckNumber(5) << std::endl;
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
 
@@ -1405,12 +1397,12 @@ _main_() {
 
 int main()
 {
-double i;
-for (i = 0;i < 5;i++)
-{
-std::cout << ""run count"" << std::endl;
-}
-return 0;
+  double i;
+  for (i = 0;i < 5;i++)
+  {
+    std::cout << ""run count"" << std::endl;
+  }
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
 
@@ -1464,25 +1456,25 @@ _main_() {
 
 double fib(double x)
 {
-if (x == 1 || x == 0)
-{
-return x;
-}
-return fib(x - 1) + fib(x - 2);
+  if (x == 1 || x == 0)
+  {
+    return x;
+  }
+  return fib(x - 1) + fib(x - 2);
 }
 
 void chap(double content)
 {
-std::cout << content << std::endl;
+  std::cout << content << std::endl;
 }
 
 int main()
 {
-for (double i = 0;i <= 20;i++)
-{
-chap(fib(i));
-}
-return 0;
+  for (double i = 0;i <= 20;i++)
+  {
+    chap(fib(i));
+  }
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
 
@@ -1528,20 +1520,20 @@ _main_(){
 
 void test(double i)
 {
-std::cout << ""yess"" << std::endl;
-if (i == 5)
-{
-std::cout << ""five"" << std::endl;
-return;
-}
-std::cout << ""Nop"" << std::endl;
-return;
+  std::cout << ""yess"" << std::endl;
+  if (i == 5)
+  {
+    std::cout << ""five"" << std::endl;
+    return;
+  }
+  std::cout << ""Nop"" << std::endl;
+  return;
 }
 
 int main()
 {
-test(5);
-return 0;
+  test(5);
+  return 0;
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
 
@@ -1558,5 +1550,433 @@ return 0;
             }
         }
 
+
+        [TestMethod]
+        public void Test27() // let implicitly typed local variables
+        {
+            string source = @"
+func myFunction(number a, number b) -> number {
+    return a + b;
+}
+
+_main_() {
+	let z = myFunction(2, 7);
+	print(z);
+    let x = 10;
+	let i = 0;
+    while ( i < 5 ) {
+        x++;
+		i++;
+    }
+	z = 40;
+    print(x);
+	let string_var1 = ""hassan"";
+	let string_var = ""this is a test"" + "" => "" + string_var1 + "" -> "" + x;
+	print(string_var);
+
+}";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+double myFunction(double a, double b)
+{
+  return a + b;
+}
+
+int main()
+{
+  double z = myFunction(2, 7);
+  std::cout << z << std::endl;
+  double x = 10;
+  double i = 0;
+  while (i < 5)
+  {
+    x++;
+    i++;
+  }
+  z = 40;
+  std::cout << x << std::endl;
+  std::string string_var1 = ""hassan"";
+  auto string_var = ""this is a test"" + "" => "" + string_var1 + "" -> "" + x;
+  std::cout << string_var << std::endl;
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "9\r\n15\r\nthis is a test => hassan -> 15\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+
+        [TestMethod]
+        public void Test28() // let implicitly typed local variables for instance class
+        {
+            string source = @"
+pkg myPackage {
+	number var = 10;
+	
+	func myPackage(number input1) -> void
+	{
+		var = input1;
+	}
+
+	func Second(number std) -> number{
+		return std + var;
+	}	
+}
+
+_main_() {
+	let classInstance = new myPackage(5);
+	print(classInstance.Second(2));
+}";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+class myPackage{
+  double var = 10;
+  void myPackage(double input1)
+  {
+    var = input1;
+  }
+
+  double Second(double std)
+  {
+    return std + var;
+  }
+
+}
+
+int main()
+{
+  myPackage classInstance = new myPackage(5);
+  std::cout << classInstance.Second(2) << std::endl;
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "7\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+
+        [TestMethod]
+        public void Test29() // let implicitly typed local variables in for statment
+        {
+            string source = @"
+_main_() {
+	for(let i =0; i < 5; i++;){
+		print(i + "" this is a test"");
+	}
+}";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+int main()
+{
+  for (double i = 0;i < 5;i++)
+  {
+    std::cout << i << "" this is a test"" << std::endl;
+  }
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "0 this is a test\r\n1 this is a test\r\n2 this is a test\r\n3 this is a test\r\n4 this is a test\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test30() // let implicitly typed local variables in package
+        {
+            string source = @"
+pkg My{
+    let var = 1;
+}
+_main_(){
+    let m = new My();
+    print(m.var);
+}";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+class My{
+  double var = 1;
+}
+
+int main()
+{
+  My m = new My();
+  std::cout << m.var << std::endl;
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "1\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test31() // Code with no _main_
+        {
+            string source = @"
+let text = ""hello world"";
+print(text);
+";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+std::string text = ""hello world"";
+int main()
+{
+  std::cout << text << std::endl;
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "hello world\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test32() // Code with no _main_
+        {
+            string source = @"
+func Add(number i, number j) -> number{
+	return i + j;
+}
+
+for(let i =0; i <5; i++;){
+	print(""this is a test"");
+}
+print(Add(4, 6));
+";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+double Add(double i, double j)
+{
+  return i + j;
+}
+
+int main()
+{
+  for (double i = 0;i < 5;i++)
+  {
+    std::cout << ""this is a test"" << std::endl;
+  }
+  std::cout << Add(4, 6) << std::endl;
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "this is a test\r\nthis is a test\r\nthis is a test\r\nthis is a test\r\nthis is a test\r\n10\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test33() // Code with no _main_
+        {
+            string source = @"
+pkg My{
+	let var = 22;
+	func AddPrint(number i) -> number {
+		return i + var;
+	}
+}
+let m = new My();
+print(m.AddPrint(3));
+";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+class My{
+  double var = 22;
+  double AddPrint(double i)
+  {
+    return i + var;
+  }
+
+}
+
+int main()
+{
+  My m = new My();
+  std::cout << m.AddPrint(3) << std::endl;
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "25\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test34() // Code with _main_
+        {
+            string source = @"
+pkg My{
+	let var = 22;
+	func AddChap(number i) -> number {
+		return i + var;
+	}
+}
+
+func Add(number i, number j) -> number{
+	return i + j;
+}
+
+let text = ""hello world"";
+print(text);
+for(let i =0; i <5; i++;){
+	print(""this is a test"");
+}
+print(Add(4, 6));
+let m = new My();
+print(m.AddChap(3));
+
+
+_main_(){
+	print(""YES"");
+}";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+class My{
+  double var = 22;
+  double AddChap(double i)
+  {
+    return i + var;
+  }
+
+}
+
+std::string text = ""hello world"";
+double Add(double i, double j)
+{
+  return i + j;
+}
+
+int main()
+{
+  std::cout << ""YES"" << std::endl;
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "YES\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
     }
 }

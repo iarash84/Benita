@@ -155,8 +155,8 @@
             };
 
             string[] keywords =
-                { "include_once", "_main_", "func", "if", "while", "for", "return", "true", "false", "else" };
-            string[] types = { "number", "string", "bool", "void" };
+                { "include_once", "_main_", "pkg", "func", "if", "while", "for", "return", "true", "false", "else" };
+            string[] types = { "number", "string", "bool", "void", "let" };
             string[] defaultFunctions =
             {
                 "array_len", "array_add", "array_remove", "file_read", "file_write", "file_exist", "file_delete",

@@ -22,7 +22,7 @@ namespace BenitaTestProject
             Parser parser = new Parser(tokens);
 
             // Act
-            ProgramNode program = parser.Parse();
+            ProgramNode? program = parser.Parse();
 
             // Assert
             Assert.IsNotNull(program);
@@ -52,7 +52,7 @@ namespace BenitaTestProject
             Parser parser = new Parser(tokens);
 
             // Act
-            ProgramNode program = parser.Parse();
+            ProgramNode? program = parser.Parse();
 
             // Assert
             Assert.IsNotNull(program);
@@ -101,7 +101,7 @@ namespace BenitaTestProject
             Parser parser = new Parser(tokens);
 
             // Act
-            ProgramNode program = parser.Parse();
+            ProgramNode? program = parser.Parse();
 
             // Assert
             Assert.IsNotNull(program);
@@ -151,7 +151,7 @@ namespace BenitaTestProject
             Parser parser = new Parser(tokens);
 
             // Act
-            ProgramNode program = parser.Parse();
+            ProgramNode? program = parser.Parse();
 
             // Assert
             Assert.IsNotNull(program);
@@ -200,7 +200,7 @@ namespace BenitaTestProject
             Parser parser = new Parser(tokens);
 
             // Act
-            ProgramNode program = parser.Parse();
+            ProgramNode? program = parser.Parse();
 
             // Assert
             Assert.IsNotNull(program);
@@ -280,7 +280,7 @@ namespace BenitaTestProject
             Parser parser = new Parser(tokens);
 
             // Act
-            ProgramNode program = parser.Parse();
+            ProgramNode? program = parser.Parse();
 
             // Assert
             Assert.IsNotNull(program);
@@ -470,7 +470,7 @@ namespace BenitaTestProject
             Parser parser = new Parser(tokens);
 
             // Act
-            ProgramNode program = parser.Parse();
+            ProgramNode? program = parser.Parse();
 
             // Assert
             Assert.IsNotNull(program);
