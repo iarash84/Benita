@@ -20,6 +20,13 @@ Benita is designed to be simple and extensible, making it an ideal choice for th
 - **Modular Design**: Built with modularity in mind, making it easy to add new features and extend the language.
 - **Developed in C#**: The compiler is implemented using the C# programming language, leveraging its powerful features and robust ecosystem.
 
+## Grammar:
+The grammar of the language is provided <a href="https://github.com/iarash84/Benita/tree/main/docs/Grammar.txt">here</a>.
+
+
+## Tutorial:
+The simple tutorial of the language is provided <a href="https://github.com/iarash84/Benita/tree/main/docs/Tutorial.MD">here</a>.
+
 ## Getting Started
 
 To get started with Benita, follow these steps:
