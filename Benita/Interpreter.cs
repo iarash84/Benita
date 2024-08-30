@@ -19,7 +19,7 @@ namespace Benita
         /// Initializes a new instance of the <see cref="Interpreter"/> class.
         /// </summary>
         /// <param name="packageScope">The scope of the package, default is "_main_".</param>
-        public Interpreter(string packageScope = "_main_")
+        public Interpreter(string packageScope = "Program")
         {
             _packageScope = packageScope;
             _outerScopeVariables = new Dictionary<string?, object>();
@@ -96,6 +96,10 @@ namespace Benita
                     return VisitArrayAssignmentNode(arrayAssignmentNode);
                 case ReturnStatementNode returnStatementNode:
                     return VisitReturnStatementNode(returnStatementNode);
+                case BreakStatementNode:
+                    throw new BreakException();
+                case ContinueStatementNode:
+                    throw new ContinueException();
                 case PackageNode packageNode:
                     return VisitPackageNode(packageNode);
                 case MemberAccessNode memberAccessNode:
@@ -265,6 +269,8 @@ namespace Benita
                 }
 
                 var originalVariables = _variables;
+                var originalFunctionReturnFlag = _functionReturnFlag;
+                _functionReturnFlag = false;
                 _variables = newScope;
 
                 try
@@ -292,6 +298,7 @@ namespace Benita
                     _functionReturnFlag = false;
                     originalVariables = SyncDictionaryValues(_variables, originalVariables);
                     _variables = originalVariables;
+                    _functionReturnFlag = originalFunctionReturnFlag;
                 }
             }
 
@@ -315,7 +322,7 @@ namespace Benita
         {
             foreach (var key in variables.Keys.ToList())
             {
-                if (originalVariables.ContainsKey(key) && _packageScope != "_main_")
+                if (originalVariables.ContainsKey(key) && _packageScope != "Program")
                 {
                     originalVariables[key] = variables[key];
                 }
@@ -473,7 +480,20 @@ namespace Benita
         {
             while ((bool)Visit(node.Condition))
             {
-                Visit(node.Body);
+                try
+                {
+                    var result = Visit(node.Body);
+                    if (_functionReturnFlag)
+                        return result;
+                }
+                catch (BreakException)
+                {
+                    break; // Exit the loop
+                }
+                catch (ContinueException)
+                {
+                    continue; // Move to the next iteration
+                }
             }
 
             return null;
@@ -489,8 +509,24 @@ namespace Benita
             Visit(node.Initializer);
             while ((bool)Visit(node.Condition))
             {
-                Visit(node.Body);
-                Visit(node.Increment);
+                try
+                {
+                    var result = Visit(node.Body);
+                    if (_functionReturnFlag)
+                        return result;
+                }
+                catch (BreakException)
+                {
+                    break; // Exit the loop
+                }
+                catch (ContinueException)
+                {
+                    continue; // Move to the next iteration
+                }
+                finally
+                {
+                    Visit(node.Increment);
+                }
             }
 
             return null;

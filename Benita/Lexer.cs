@@ -13,12 +13,12 @@
         /// <summary>
         /// The list to store the generated tokens.
         /// </summary>
-        private readonly List<Token> _tokens = new List<Token>();
+        private readonly List<Token> _tokens = new();
 
         /// <summary>
         /// A set to track included files to avoid duplicate inclusion.
         /// </summary>
-        private readonly HashSet<string> _includedFiles = new HashSet<string>();
+        private readonly HashSet<string> _includedFiles = new();
 
         /// <summary>
         /// Variables to keep track of the current position in the source code.
@@ -30,7 +30,7 @@
         /// <summary>
         /// A dictionary mapping keywords to their respective token types.
         /// </summary>
-        private static readonly Dictionary<string, TokenType> Keywords = new Dictionary<string, TokenType>
+        private static readonly Dictionary<string, TokenType> Keywords = new()
         {
             {"pkg", TokenType.PACKAGE},
             {"new", TokenType.NEW},
@@ -48,18 +48,20 @@
             {"void", TokenType.VOID},
             {"true", TokenType.TRUE_LITERAL},
             {"false", TokenType.FALSE_LITERAL},
+            {"break", TokenType.BREAK},
+            {"continue", TokenType.CONTINUE},
         };
 
         /// <summary>
         /// Constructor that initializes the Lexer with the source code and optionally prints the processed source.
         /// </summary>
         /// <param name="source">The source code to be tokenized.</param>
-        /// <param name="SourcePrint">Whether to print the processed source code.</param>
-        public Lexer(string source, bool SourcePrint = false)
+        /// <param name="sourcePrint">Whether to print the processed source code.</param>
+        public Lexer(string source, bool sourcePrint = false)
         {
             _source = source;
             ProcessIncludes(ref _source); ///< Process included files.
-            if (SourcePrint)
+            if (sourcePrint)
                 Console.WriteLine(_source);
         }
 
@@ -169,8 +171,8 @@
                 case '!': AddToken(Match('=') ? TokenType.BANG_EQUAL : TokenType.BANG); break;
                 case '"': ScanStringLiteral(); break;
 
-                case '[': AddToken(TokenType.LBRACE); break;
-                case ']': AddToken(TokenType.RBRACE); break;
+                case '[': AddToken(TokenType.LSQUAREBRACE); break;
+                case ']': AddToken(TokenType.RSQUAREBRACE); break;
 
                 ///< Ignore whitespace.
                 case ' ':
@@ -235,10 +237,7 @@
                 Console.WriteLine($"Unterminated string at line {_line}");
                 return;
             }
-
-            Advance(); ///< The closing "
-
-            ///< Trim the surrounding quotes.
+            Advance(); 
             string value = _source.Substring(_start + 1, _current - _start - 2);
             AddToken(TokenType.STRING_LITERAL, value);
         }
@@ -249,7 +248,6 @@
         private void ScanNumberLiteral()
         {
             while (IsDigit(Peek())) Advance();
-
             AddToken(TokenType.NUMBER_LITERAL, _source.Substring(_start, _current - _start));
         }
 
@@ -261,14 +259,7 @@
             while (IsAlphaNumeric(Peek())) Advance();
 
             string text = _source.Substring(_start, _current - _start);
-            if (Keywords.ContainsKey(text))
-            {
-                AddToken(Keywords[text]);
-            }
-            else
-            {
-                AddToken(TokenType.IDENTIFIER);
-            }
+            AddToken(Keywords.ContainsKey(text) ? Keywords[text] : TokenType.IDENTIFIER);
         }
 
         /// <summary>
@@ -280,7 +271,6 @@
         {
             if (IsAtEnd()) return false;
             if (_source[_current] != expected) return false;
-
             _current++;
             return true;
         }
@@ -330,10 +320,7 @@
         /// <param name="lexeme">The lexeme of the token.</param>
         private void AddToken(TokenType type, string lexeme = null)
         {
-            if (lexeme == null)
-            {
-                lexeme = _source.Substring(_start, _current - _start);
-            }
+            lexeme ??= _source.Substring(_start, _current - _start);
             _tokens.Add(new Token(type, lexeme, _line));
         }
 
@@ -344,7 +331,7 @@
         /// <returns>True if the character is a digit, otherwise false.</returns>
         private bool IsDigit(char c)
         {
-            return c >= '0' && c <= '9';
+            return c <= '9' && c >= '0';
         }
 
         /// <summary>

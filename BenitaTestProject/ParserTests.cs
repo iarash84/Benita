@@ -136,8 +136,8 @@ namespace BenitaTestProject
             List<Token> tokens = new List<Token>
             {
                 new Token(TokenType.NUMBER, "number", 0),
-                new Token(TokenType.LBRACE, "[", 0),
-                new Token(TokenType.RBRACE, "]", 0),
+                new Token(TokenType.LSQUAREBRACE, "[", 0),
+                new Token(TokenType.RSQUAREBRACE, "]", 0),
                 new Token(TokenType.IDENTIFIER, "arr", 0),
                 new Token(TokenType.SEMICOLON, ";", 0),
                 new Token(TokenType.MAIN, "_main_", 1),

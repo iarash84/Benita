@@ -1382,7 +1382,7 @@ int main()
             string source = @"
 _main_() {
 	number i;
-	for( i =0; i < 5; i++;){
+	for( i =0; i < 5; i++){
 		print(""run count"");
 	}	
 }
@@ -1440,7 +1440,7 @@ func chap(number content) -> void
 
 
 _main_() {
-   for(number i =0; i <= 20; i++;) {
+   for(number i =0; i <= 20; i++) {
       chap(fib(i));
 	  //print(fib(i));
    }
@@ -1692,7 +1692,7 @@ int main()
         {
             string source = @"
 _main_() {
-	for(let i =0; i < 5; i++;){
+	for(let i =0; i < 5; i++){
 		print(i + "" this is a test"");
 	}
 }";
@@ -1815,7 +1815,7 @@ func Add(number i, number j) -> number{
 	return i + j;
 }
 
-for(let i =0; i <5; i++;){
+for(let i =0; i <5; i++){
 	print(""this is a test"");
 }
 print(Add(4, 6));
@@ -1925,7 +1925,7 @@ func Add(number i, number j) -> number{
 
 let text = ""hello world"";
 print(text);
-for(let i =0; i <5; i++;){
+for(let i =0; i <5; i++){
 	print(""this is a test"");
 }
 print(Add(4, 6));
@@ -1971,6 +1971,649 @@ int main()
 
             // Act
             var expectedOutput = "YES\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test35() //Bubble Sort
+        {
+            string source = @"
+func BubbleSort(number[] sort_array) -> number[]
+{
+	let n = array_len(sort_array);
+	for (number i = 0; i < n - 1; i++)
+	//{
+		for (number j = 0; j < n - i - 1; j++)
+		{
+			if (sort_array[j] > sort_array[j + 1])
+			{
+				// Swap arr[j] and arr[j + 1]
+				number temp = sort_array[j];
+				sort_array[j] = sort_array[j + 1];
+				sort_array[j + 1] = temp;
+			}
+		}
+	//}	
+	return sort_array;
+}
+
+func ArrayPrint(number[] print_array) -> void {
+	let i = 0;
+    while (i < array_len(print_array)) {
+        print(""Element at index "" + i + "": "" + print_array[i]);
+        i++;
+    }    
+}
+
+_main_()
+{
+	print(""befor Bubble sorting"");
+	number[] first_array = [64, 34, 25, 12, 22, 11, 90];
+	ArrayPrint(first_array);
+	print(""after Bubble sorting"");
+	number[] second_array = BubbleSort(first_array);
+	ArrayPrint(second_array);
+}";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+template <typename T>
+int array_len(const std::vector<T>& vec);
+
+std::vector<double> BubbleSort(std::vector<double> sort_array)
+{
+  auto n = array_len(sort_array);
+  for (double i = 0;i < n - 1;i++)
+  {
+    for (double j = 0;j < n - i - 1;j++)
+    {
+      if (sort_array[j] > sort_array[j + 1])
+      {
+        double temp = sort_array[j];
+        sort_array[j] = sort_array[j + 1];
+        sort_array[j + 1] = temp;
+      }
+    }
+  }
+  return sort_array;
+}
+
+void ArrayPrint(std::vector<double> print_array)
+{
+  double i = 0;
+  while (i < array_len(print_array))
+  {
+    std::cout << ""Element at index "" + i + "": "" << print_array[i] << std::endl;
+    i++;
+  }
+}
+
+int main()
+{
+  std::cout << ""befor Bubble sorting"" << std::endl;
+  std::vector<double> first_array = {64, 34, 25, 12, 22, 11, 90};
+  ArrayPrint(first_array);
+  std::cout << ""after Bubble sorting"" << std::endl;
+  std::vector<double> second_array = BubbleSort(first_array);
+  ArrayPrint(second_array);
+  return 0;
+}
+
+int array_len(const std::vector<T>& vec)
+{
+    return static_cast<int>(vec.size());
+}
+
+".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "befor Bubble sorting\r\nElement at index 0: 64\r\nElement at index 1: 34\r\nElement at index 2: 25\r\nElement at index 3: 12\r\nElement at index 4: 22\r\nElement at index 5: 11\r\nElement at index 6: 90\r\nafter Bubble sorting\r\nElement at index 0: 11\r\nElement at index 1: 12\r\nElement at index 2: 22\r\nElement at index 3: 25\r\nElement at index 4: 34\r\nElement at index 5: 64\r\nElement at index 6: 90\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test36() //Binary Search
+        {
+            string source = @"
+ func BinarySearchIterative(number[] bsi_array, number key) -> number
+    {	
+        let min = 0;
+        let max = array_len(bsi_array) - 1;
+		
+		number mid;
+
+        while (min <= max)
+        {
+			mid = min + max;
+			mid /= 2;
+            if (bsi_array[mid] == key)
+            {
+                return mid;
+            }
+            else if (bsi_array[mid] < key)
+            {
+                min = mid + 1;
+            }
+            else
+            {
+                max = mid - 1;
+            }
+        }
+        return -1; // Element not found
+    }
+
+_main_()
+{
+	number[] sortedArray = [ 1, 3, 5, 7, 9, 11, 13, 15, 17, 19 ];
+	let target = 7;
+	let result = BinarySearchIterative(sortedArray, target);
+
+	if (result != -1)
+	{
+		print(""Element found at index "" + result);
+	}
+	else
+	{
+		print(""Element not found in the array"");
+	}
+
+}";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+template <typename T>
+int array_len(const std::vector<T>& vec);
+
+double BinarySearchIterative(std::vector<double> bsi_array, double key)
+{
+  double min = 0;
+  auto max = array_len(bsi_array) - 1;
+  double mid;
+  while (min <= max)
+  {
+    mid = min + max;
+    mid /= 2;
+    if (bsi_array[mid] == key)
+    {
+      return mid;
+    }
+    else
+    {
+      if (bsi_array[mid] < key)
+      {
+        min = mid + 1;
+      }
+      else
+      {
+        max = mid - 1;
+      }
+    }
+  }
+  return -1;
+}
+
+int main()
+{
+  std::vector<double> sortedArray = {1, 3, 5, 7, 9, 11, 13, 15, 17, 19};
+  double target = 7;
+  double result = BinarySearchIterative(sortedArray, target);
+  if (result != -1)
+  {
+    std::cout << ""Element found at index "" << result << std::endl;
+  }
+  else
+  {
+    std::cout << ""Element not found in the array"" << std::endl;
+  }
+  return 0;
+}
+
+int array_len(const std::vector<T>& vec)
+{
+    return static_cast<int>(vec.size());
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "Element found at index 3\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test37() //Binary search recursive
+        {
+            string source = @"
+func BinarySearch(number[] arr, number target, number left, number right) -> number
+{
+	if (right >= left)
+	{
+		number distance = right - left;
+		number mid = left + distance / 2;
+
+		// Check if the target is present at the mid
+		if (arr[mid] == target)
+		{
+			return mid;
+		}
+
+		// If the target is smaller than mid, it must be in the left subarray
+		if (arr[mid] > target)
+		{
+			return BinarySearch(arr, target, left, mid - 1);
+		}
+
+		// Otherwise, the target must be in the right subarray
+		return BinarySearch(arr, target, mid + 1, right);
+	}
+
+	// Target is not present in the array
+	return -1;
+}
+
+
+_main_()
+{
+	number[] array = [ 2, 3, 4, 10, 40 ];
+	number globalTarget = 10;
+
+	number result = BinarySearch(array, globalTarget, 0, array_len(array) - 1);
+
+	if (result != -1)
+	{
+		print(""Element found at index => "" + result);
+	}
+	else
+	{
+		print(""Element not found in the array"");
+	}
+}
+";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+template <typename T>
+int array_len(const std::vector<T>& vec);
+
+double BinarySearch(std::vector<double> arr, double target, double left, double right)
+{
+  if (right >= left)
+  {
+    double distance = right - left;
+    double mid = left + distance / 2;
+    if (arr[mid] == target)
+    {
+      return mid;
+    }
+    if (arr[mid] > target)
+    {
+      return BinarySearch(arr, target, left, mid - 1);
+    }
+    return BinarySearch(arr, target, mid + 1, right);
+  }
+  return -1;
+}
+
+int main()
+{
+  std::vector<double> array = {2, 3, 4, 10, 40};
+  double globalTarget = 10;
+  double result = BinarySearch(array, globalTarget, 0, array_len(array) - 1);
+  if (result != -1)
+  {
+    std::cout << ""Element found at index => "" << result << std::endl;
+  }
+  else
+  {
+    std::cout << ""Element not found in the array"" << std::endl;
+  }
+  return 0;
+}
+
+int array_len(const std::vector<T>& vec)
+{
+    return static_cast<int>(vec.size());
+}
+
+".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "Element found at index => 3\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test38() //QuickSort
+        {
+            string source = @"
+func Swap(number[] array, number a, number b) -> void
+{
+	number temp = array[a];
+	array[a] = array[b];
+	array[b] = temp;
+}
+func Partition(number[] array, number low, number high) -> number
+{
+	number pivot = array[high];
+	number i = low - 1;
+
+	for (number j = low; j < high; j++)
+	{
+		if (array[j] < pivot)
+		{
+			i++;
+			Swap(array, i, j);
+		}
+	}
+
+	Swap(array, i + 1, high);
+	return i + 1;
+}
+func QuickSort(number[] array, number low, number high) -> void
+{
+	if (low < high)
+	{
+		number pivotIndex = Partition(array, low, high);
+		QuickSort(array, low, pivotIndex - 1);
+		QuickSort(array, pivotIndex + 1, high);
+	}
+}
+func ArrayPrint(number[] print_array) -> void {
+	let i = 0;
+    while (i < array_len(print_array)) {
+        print(""Element at index "" + i + "": "" + print_array[i]);
+        i++;
+    }    
+}
+_main_()
+{
+	number[] array = [ 34, 7, 23, 32, 5, 62 ];
+	QuickSort(array, 0, array_len(array) - 1);
+	print(""Sorted array: "");
+	ArrayPrint(array);
+}";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+template <typename T>
+int array_len(const std::vector<T>& vec);
+
+void Swap(std::vector<double> array, double a, double b)
+{
+  double temp = array[a];
+  array[a] = array[b];
+  array[b] = temp;
+}
+
+double Partition(std::vector<double> array, double low, double high)
+{
+  double pivot = array[high];
+  double i = low - 1;
+  for (double j = low;j < high;j++)
+  {
+    if (array[j] < pivot)
+    {
+      i++;
+      Swap(array, i, j);
+    }
+  }
+  Swap(array, i + 1, high);
+  return i + 1;
+}
+
+void QuickSort(std::vector<double> array, double low, double high)
+{
+  if (low < high)
+  {
+    double pivotIndex = Partition(array, low, high);
+    QuickSort(array, low, pivotIndex - 1);
+    QuickSort(array, pivotIndex + 1, high);
+  }
+}
+
+void ArrayPrint(std::vector<double> print_array)
+{
+  double i = 0;
+  while (i < array_len(print_array))
+  {
+    std::cout << ""Element at index "" + i + "": "" << print_array[i] << std::endl;
+    i++;
+  }
+}
+
+int main()
+{
+  std::vector<double> array = {34, 7, 23, 32, 5, 62};
+  QuickSort(array, 0, array_len(array) - 1);
+  std::cout << ""Sorted array: "" << std::endl;
+  ArrayPrint(array);
+  return 0;
+}
+
+int array_len(const std::vector<T>& vec)
+{
+    return static_cast<int>(vec.size());
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "Sorted array: \r\nElement at index 0: 5\r\nElement at index 1: 7\r\nElement at index 2: 23\r\nElement at index 3: 32\r\nElement at index 4: 34\r\nElement at index 5: 62\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test39() //continue
+        {
+            string source = @"
+for(let i= 0; i <= 10; i++)
+{	
+	if( i%2 == 0)	
+		continue;	
+	print(i);
+}";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+int main()
+{
+  for (double i = 0;i <= 10;i++)
+  {
+    if (i % 2 == 0)
+    {
+      continue;
+    }
+    std::cout << i << std::endl;
+  }
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "1\r\n3\r\n5\r\n7\r\n9\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test40() //break
+        {
+            string source = @"
+for(let i= 0; i <= 10; i++)
+{	
+	if( i == 5)	
+		break;	
+	print(i);
+}";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+int main()
+{
+  for (double i = 0;i <= 10;i++)
+  {
+    if (i == 5)
+    {
+      break;
+    }
+    std::cout << i << std::endl;
+  }
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "0\r\n1\r\n2\r\n3\r\n4\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test41() //PowerOfTwo
+        {
+            string source = @"
+func PowerOfTwo(number n) -> bool  {
+	  if(n == 0) return false;
+      if(n == 1) return true;
+      while(n!=1)
+      {
+          if(n % 2 != 0) return false;
+          n /= 2;
+      }
+      return true;
+}
+
+for(let i = 0; i <= 100 ; i++)
+	if(PowerOfTwo(i))
+		print(i +"" is PowerOfTwo"");
+	//else
+	//	print(i +"" is not PowerOfTwo"");";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+bool PowerOfTwo(double n)
+{
+  if (n == 0)
+  {
+    return false;
+  }
+  if (n == 1)
+  {
+    return true;
+  }
+  while (n != 1)
+  {
+    if (n % 2 != 0)
+    {
+      return false;
+    }
+    n /= 2;
+  }
+  return true;
+}
+
+int main()
+{
+  for (double i = 0;i <= 100;i++)
+  {
+    if (PowerOfTwo(i))
+    {
+      std::cout << i << "" is PowerOfTwo"" << std::endl;
+    }
+  }
+  return 0;
+}
+
+".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "1 is PowerOfTwo\r\n2 is PowerOfTwo\r\n4 is PowerOfTwo\r\n8 is PowerOfTwo\r\n16 is PowerOfTwo\r\n32 is PowerOfTwo\r\n64 is PowerOfTwo\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);

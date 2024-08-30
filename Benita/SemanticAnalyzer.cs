@@ -331,6 +331,10 @@
 
                     localVariables[objectInstantiationNode.Name] = objectInstantiationNode.PackageName;
                     break;
+                case BreakStatementNode:
+                case ContinueStatementNode:
+                    // Do nothing
+                    break;
                 default:
                     throw new Exception($"Unsupported statement type: {statement.GetType().Name}");
             }
@@ -703,7 +707,7 @@
         /// <returns>True if the operator is a comparison operator, otherwise false.</returns>
         private bool IsComparisonOperator(string op)
         {
-            return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==";
+            return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!=";
         }
 
         /// <summary>

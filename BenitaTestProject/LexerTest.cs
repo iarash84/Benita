@@ -1,6 +1,6 @@
 using Benita;
 
-namespace NeoUnitTest
+namespace BenitaTestProject
 {
     [TestClass]
     public class LexerTest

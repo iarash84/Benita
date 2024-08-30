@@ -274,6 +274,12 @@ namespace Benita
                 case ObjectInstantiationNode objectInstantiationNode:
                     GenerateObjectInstantiation(objectInstantiationNode, indent);
                     break;
+                case BreakStatementNode:
+                    _code.AppendLine(indent + "break;");
+                    break;
+                case ContinueStatementNode:
+                    _code.AppendLine(indent + "continue;");
+                    break;
                 default:
                     throw new Exception($"Unknown statement type: {statement.GetType().Name}");
             }

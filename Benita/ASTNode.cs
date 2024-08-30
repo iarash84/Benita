@@ -75,6 +75,19 @@
     public abstract class StatementNode : AstNode
     {
     }
+    /// <summary>
+    /// Represents a break statement
+    /// </summary>
+    public class BreakStatementNode : StatementNode
+    {
+    }
+
+    /// <summary>
+    /// Represents a continue statement
+    /// </summary>
+    public class ContinueStatementNode : StatementNode
+    {
+    }
 
     /// <summary>
     /// Represents a variable declaration node with a type, optional name, and optional initializer.

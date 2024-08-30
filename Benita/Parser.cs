@@ -7,7 +7,7 @@
     {
         private readonly List<Token> _tokens; ///< The list of tokens to be parsed.
         private int _current = 0; ///< The index of the current token being processed.
-        readonly List<FunctionNode?> _functions;
+        readonly List<FunctionNode?> _functions;///< The list of functions to be parsed.
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Parser"/> class.
@@ -56,7 +56,7 @@
                 {
                     statements.Add(ParseStatement());
                 }
-                else if (Match(TokenType.VOID, TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
+                else if (Check(TokenType.VOID, TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
                 {
                     globalVariables.Add(ParseVariableDeclaration());
                 }
@@ -74,6 +74,27 @@
             return new ProgramNode(globalVariables, packages, _functions, mainFunction, statements);
         }
 
+        /// <summary>
+        /// Parses a package declaration, including its name and members (functions and variables).
+        /// This function expects the package declaration to follow a specific syntax:
+        /// <code>
+        /// package PackageName {
+        ///     func FunctionName(params) { ... }
+        ///     Type VariableName = Initializer;
+        /// }
+        /// </code>
+        /// The function will consume tokens to parse the package name, package body, and package members,
+        /// including functions and variable declarations. It supports both explicitly-typed and implicitly-typed
+        /// variable declarations.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="PackageNode"/> representing the parsed package, including its name and members.
+        /// Returns null if the package cannot be parsed correctly.
+        /// </returns>
+        /// <exception cref="Exception">
+        /// Thrown if the package syntax is incorrect, including missing braces, missing semicolons,
+        /// or unexpected tokens within the package.
+        /// </exception>
         private PackageNode? ParsePackage()
         {
             string packageName = Consume(TokenType.IDENTIFIER, "Expected package name").Lexeme;
@@ -145,49 +166,24 @@
         /// </summary>
         /// <returns>A <see cref="VariableDeclarationNode"/> representing the global variable declaration.</returns>
         /// <exception cref="Exception">Thrown if the declaration is malformed.</exception>
-        private VariableDeclarationNode? ParseVariableDeclaration()
+        private VariableDeclarationNode ParseVariableDeclaration()
         {
-            //string type = ParseType(); ///< The type of the variable (e.g., "number[]").
-            string? type = PreviousToken().Lexeme;
-            string name;
-            if (Check(TokenType.LBRACE))
-            {
-                // Array declaration
-                Advance(); // Consume '['
-
-                if (Check(TokenType.RBRACE))
-                {
-                    // Array declaration without size
-                    Advance(); // Consume ']'
-                }
-                else
-                {
-                    throw new Exception("Expected ']' after '[' for array declaration.");
-                }
-
-                name = Consume(TokenType.IDENTIFIER, "Expected variable name").Lexeme;
-
-                ExpressionNode? initializer = null;
-
-                if (Match(TokenType.EQUAL))
-                {
-                    initializer = ParseArrayInitializer();
-                }
-
-                Consume(TokenType.SEMICOLON, "Expected ';' after variable declaration");
-
-                return new VariableDeclarationNode(type + "[]", name, initializer);
-            }
-
+            string type = ParseType(); ///< The type of the variable (e.g., "number[]").
             if (Check(TokenType.IDENTIFIER))
             {
-                // Regular variable declaration
-                name = Consume(TokenType.IDENTIFIER, "Expected variable name").Lexeme;
-                ExpressionNode? initializer = null;
+                string name = Consume(TokenType.IDENTIFIER, "Expected variable name").Lexeme;
+                ExpressionNode initializer = null;
 
                 if (Match(TokenType.EQUAL))
                 {
-                    initializer = ParseExpression();
+                    if (type.Contains("[]") && !Check(TokenType.IDENTIFIER))
+                    {
+                        initializer = ParseArrayInitializer();
+                    }
+                    else
+                    {
+                        initializer = ParseExpression();
+                    }
                 }
 
                 if (type == "let")
@@ -215,6 +211,7 @@
 
                 return new VariableDeclarationNode(type, name, initializer);
             }
+
             throw new Exception("Expected array or variable declaration");
         }
 
@@ -341,9 +338,10 @@
             {
                 do
                 {
-                    string? type = ParseType();
+                    string type = ParseType();
                     string name = Consume(TokenType.IDENTIFIER, "Expected parameter name").Lexeme;
                     parameters.Add(new ParameterNode(type, name));
+
                 } while (Match(TokenType.COMMA));
             }
             return parameters;
@@ -356,21 +354,45 @@
         /// <exception cref="Exception">Thrown if an unexpected token is encountered.</exception>
         private string? ParseType()
         {
-            if (Match(TokenType.NUMBER)) return "number";
-            if (Match(TokenType.STRING)) return "string";
-            if (Match(TokenType.BOOL)) return "bool";
-            if (Match(TokenType.VOID)) return "void";
-            throw new Exception("Expected type");
+            string? type = string.Empty;
+            if (Match(TokenType.NUMBER,TokenType.STRING,TokenType.BOOL,TokenType.LET,TokenType.VOID)) 
+                type = ParseTokenType(PreviousToken().Type);
+
+            if (Check(TokenType.LSQUAREBRACE))
+            {
+                Advance(); // Consume '['
+                if (!Check(TokenType.RSQUAREBRACE))
+                    throw new Exception("Expected ']' after '[' for array declaration.");
+                Advance(); // Consume ']'
+                type += "[]";
+            }
+            if (string.IsNullOrEmpty(type))
+                throw new Exception("Expected type");
+
+            return type;
         }
 
-
+        /// <summary>
+        /// Converts a given <see cref="TokenType"/> to its corresponding string representation
+        /// for use in the language's type system.
+        /// </summary>
+        /// <param name="token">
+        /// The <see cref="TokenType"/> that represents a specific data type or keyword in the language.
+        /// </param>
+        /// <returns>
+        /// A string representing the corresponding data type ("number", "string", "bool", "void", "let").
+        /// Returns null if the provided token does not match any known type.
+        /// </returns>
+        /// <exception cref="Exception">
+        /// Thrown if the token does not correspond to any recognized type.
+        /// </exception>
         private string? ParseTokenType(TokenType token)
         {
             if (token is TokenType.NUMBER or TokenType.NUMBER_LITERAL) return "number";
             if (token is TokenType.STRING or TokenType.STRING_LITERAL) return "string";
             if (token == TokenType.BOOL) return "bool";
             if (token == TokenType.VOID) return "void";
-
+            if (token == TokenType.LET) return "let";
             throw new Exception("Expected type");
         }
 
@@ -381,6 +403,16 @@
         /// <exception cref="Exception">Thrown if an unexpected token is encountered.</exception>
         private StatementNode? ParseStatement()
         {
+            if (Match(TokenType.BREAK))
+            {
+                Consume(TokenType.SEMICOLON, "Expected ';' after break");
+                return new BreakStatementNode();
+            }
+            if (Match(TokenType.CONTINUE))
+            {
+                Consume(TokenType.SEMICOLON, "Expected ';' after continue");
+                return new ContinueStatementNode();
+            }
             if (Match(TokenType.IF))
             {
                 return ParseIfStatement();
@@ -409,7 +441,7 @@
             }
 
 
-            if (Match(TokenType.VOID, TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
+            if (Check(TokenType.VOID, TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
             {
                 return ParseVariableDeclaration();
             }
@@ -429,6 +461,24 @@
             throw new Exception($"Unexpected token: {CurrentToken().Type}");
         }
 
+        /// <summary>
+        /// Parses an object instantiation or assignment statement from the token stream.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="StatementNode"/> representing either an object instantiation or an assignment.
+        /// Returns <see cref="ObjectInstantiationNode"/> if the statement is an object instantiation,
+        /// otherwise returns <see cref="AssignmentNode"/> for an assignment statement.
+        /// </returns>
+        /// <exception cref="Exception">
+        /// Thrown in the following cases:
+        /// <list type="bullet">
+        /// <item><description>If the expected '=' token is missing after the identifier.</description></item>
+        /// <item><description>If the expected package name is missing after the 'new' keyword during object instantiation.</description></item>
+        /// <item><description>If the expected '(' or ')' tokens are missing around the argument list during object instantiation.</description></item>
+        /// <item><description>If the expected ';' token is missing after object instantiation or assignment.</description></item>
+        /// <item><description>If there is a type mismatch between the initially declared package and the package being instantiated.</description></item>
+        /// </list>
+        /// </exception>
         private StatementNode? ParseObjectInstantiationOrAssignment()
         {
             string initialPackageName = PreviousToken(2).Lexeme;
@@ -512,7 +562,7 @@
             StatementNode? increment = null;
             if (Match(TokenType.IDENTIFIER))
             {
-                increment = ParseExpressionStatementOrAssignment();
+                increment = ParseExpressionStatementOrAssignment(true);
             }
 
             Consume(TokenType.RPAREN, "Expected ')' after for increment");
@@ -542,20 +592,20 @@
         private ExpressionNode? ParseArrayInitializer()
         {
             List<ExpressionNode?> elements = new List<ExpressionNode?>();
-            if (Check(TokenType.LBRACE))
+            if (Check(TokenType.LSQUAREBRACE))
             {
-                Consume(TokenType.LBRACE, "Expected '[' to start array initializer");
+                Consume(TokenType.LSQUAREBRACE, "Expected '[' to start array initializer");
             }
 
             // Check if the array initializer is empty
-            if (!Check(TokenType.RBRACE))
+            if (!Check(TokenType.RSQUAREBRACE))
             {
                 do
                 {
                     elements.Add(ParseExpression());
                 } while (Match(TokenType.COMMA));
             }
-            Consume(TokenType.RBRACE, "Expected ']' after array initializer");
+            Consume(TokenType.RSQUAREBRACE, "Expected ']' after array initializer");
 
             return new ArrayInitializerNode(elements);
         }
@@ -569,11 +619,11 @@
         {
             string name = PreviousToken().Lexeme;
 
-            if (Match(TokenType.LBRACE)) // Check for array access
+            if (Match(TokenType.LSQUAREBRACE)) // Check for array access
             {
                 // Parse the array index expression
                 ExpressionNode? index = ParseExpression();
-                Consume(TokenType.RBRACE, "Expected ']' after array index");
+                Consume(TokenType.RSQUAREBRACE, "Expected ']' after array index");
 
                 // Check for assignment to array element
                 if (Match(TokenType.EQUAL))
@@ -803,7 +853,7 @@
                 }
             }
 
-            if (Match(TokenType.LBRACE))
+            if (Match(TokenType.LSQUAREBRACE))
             {
                 return ParseArrayInitializer();
             }
@@ -835,11 +885,11 @@
         {
             string name = PreviousToken().Lexeme;
 
-            if (Match(TokenType.LBRACE))
+            if (Match(TokenType.LSQUAREBRACE))
             {
                 // Array access case
                 ExpressionNode? index = ParseExpression();
-                Consume(TokenType.RBRACE, "Expected ']' after array index.");
+                Consume(TokenType.RSQUAREBRACE, "Expected ']' after array index.");
                 return new ArrayAccessNode(name, index);
             }
 
@@ -880,12 +930,19 @@
         /// <summary>
         /// Checks if the current token matches the specified token type.
         /// </summary>
-        /// <param name="type">The token type to check against.</param>
+        /// <param name="types">The token type to check against.</param>
         /// <returns>True if the current token matches the specified type; otherwise, false.</returns>
-        private bool Check(TokenType type)
+        private bool Check(params TokenType[] types)
         {
-            if (IsAtEnd()) return false;
-            return CurrentToken().Type == type;
+            foreach (var type in types)
+            {
+                if (IsAtEnd()) return false;
+                if (CurrentToken().Type == type)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
