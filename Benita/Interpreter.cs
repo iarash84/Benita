@@ -13,16 +13,30 @@ namespace Benita
         private readonly Dictionary<string?, object> _outerScopeVariables;
 
         private bool _functionReturnFlag;
+        private readonly bool _debugMode;
         private readonly string _packageScope;
+        private readonly DebugClass _debugClass;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Interpreter"/> class.
         /// </summary>
         /// <param name="packageScope">The scope of the package, default is "_main_".</param>
-        public Interpreter(string packageScope = "Program")
+        public Interpreter(bool debugMode = false, string packageScope = "Program")
         {
+            if (debugMode)
+            {
+                _debugClass = DebugClass.Instance;
+            }
             _packageScope = packageScope;
             _outerScopeVariables = new Dictionary<string?, object>();
+        }
+
+        private void DebugLog(string message, bool pressKeyWait = true)
+        {
+            if (_debugMode)
+            {
+                _debugClass.DebugLog(message, _variables, _outerScopeVariables, _functions, pressKeyWait);
+            }
         }
 
         /// <summary>
@@ -31,6 +45,7 @@ namespace Benita
         /// <param name="outerScopeVariables">A dictionary of variables in the outer scope.</param>
         public void SetOuterScopeVariables(Dictionary<string?, object> outerScopeVariables)
         {
+            DebugLog($"SetOuterScopeVariables: {string.Join(", ", outerScopeVariables.Select(kvp => $"{kvp.Key} = {kvp.Value}"))}");
             _outerScopeVariables.Clear();
             foreach (var kvp in outerScopeVariables)
                 _outerScopeVariables.Add(kvp.Key, kvp.Value);
@@ -41,6 +56,7 @@ namespace Benita
         /// </summary>
         public void SetGlobalVariable()
         {
+            DebugLog("SetGlobalVariable");
             foreach (var kvp in Globals.GlobalVariable)
                 _variables.Add(kvp.Key, kvp.Value);
         }
@@ -52,6 +68,7 @@ namespace Benita
         /// <returns>The result of the visit.</returns>
         public object Visit(AstNode? node)
         {
+            DebugLog($"Visit: {node.GetType().Name}, packageScope = {_packageScope}", false);
             switch (node)
             {
                 case ProgramNode programNode:
@@ -97,8 +114,10 @@ namespace Benita
                 case ReturnStatementNode returnStatementNode:
                     return VisitReturnStatementNode(returnStatementNode);
                 case BreakStatementNode:
+                    DebugLog($"BreakStatementNode", false);
                     throw new BreakException();
                 case ContinueStatementNode:
+                    DebugLog($"ContinueStatementNode", false);
                     throw new ContinueException();
                 case PackageNode packageNode:
                     return VisitPackageNode(packageNode);
@@ -118,6 +137,7 @@ namespace Benita
         /// <returns>The created package instance.</returns>
         private object VisitObjectInstantiationNode(ObjectInstantiationNode node)
         {
+            DebugLog($"Instantiating object {node.Name} from package {node.PackageName}", false);
             // Get the package definition from the list of packages
             if (!Globals.PackageList.TryGetValue(node.PackageName, out var packageNode))
             {
@@ -125,7 +145,7 @@ namespace Benita
             }
 
             // Create a new package instance
-            var packageInstance = new PackageInstance(node.Name, packageNode, node.Arguments);
+            var packageInstance = new PackageInstance(node.Name, packageNode, node.Arguments, _debugMode);
 
             // Optionally, you might handle constructor arguments here
             // For simplicity, we assume no arguments or default constructor logic.
@@ -133,6 +153,7 @@ namespace Benita
             // Store the new instance in the variables dictionary
             _variables[node.Name] = packageInstance;
 
+            DebugLog($"Object {node.Name} instantiated.");
             return packageInstance;
         }
 
@@ -143,9 +164,10 @@ namespace Benita
         /// <returns>The value of the literal node.</returns>
         private object VisitLiteralNode(LiteralNode node)
         {
+            DebugLog($"VisitLiteralNode: Type = {node.Type}, Value = {node.Value}");
             return node.Type switch
             {
-                TokenType.NUMBER or TokenType.NUMBER_LITERAL => Convert.ToInt32(node.Value),
+                TokenType.NUMBER or TokenType.NUMBER_LITERAL => Convert.ToDouble(node.Value),
                 TokenType.STRING or TokenType.STRING_LITERAL => node.Value,
                 TokenType.TRUE_LITERAL => true,
                 TokenType.FALSE_LITERAL => false,
@@ -160,8 +182,11 @@ namespace Benita
         /// <returns>The value of the identifier node.</returns>
         private object VisitIdentifierNode(IdentifierNode node)
         {
+            DebugLog($"VisitIdentifierNode: Name = {node.Name}", false);
+
             if (TryGetVariableValue(node.Name, out var value))
             {
+                DebugLog($"VisitIdentifierNode: value = {value}");
                 return value;
             }
 
@@ -175,28 +200,78 @@ namespace Benita
         /// <returns>The result of the binary expression.</returns>
         private object VisitBinaryExpressionNode(BinaryExpressionNode node)
         {
+            DebugLog($"VisitBinaryExpressionNode binary expression: {node.Operator}", false);
+
             var left = Visit(node.Left);
             var right = Visit(node.Right);
 
-            return node.Operator switch
+            DebugLog($"VisitBinaryExpressionNode binary expression result: {left} {node.Operator} {right}");
+
+            switch (node.Operator)
             {
-                "+" => (left is int && right is int)
-                    ? Convert.ToInt32(left) + Convert.ToInt32(right)
-                    : left.ToString() + right.ToString(),
-                "-" => Convert.ToInt32(left) - Convert.ToInt32(right),
-                "*" => Convert.ToInt32(left) * Convert.ToInt32(right),
-                "/" => Convert.ToInt32(left) / Convert.ToInt32(right),
-                "%" => Convert.ToInt32(left) % Convert.ToInt32(right),
-                "&&" => Convert.ToBoolean(left) && Convert.ToBoolean(right),
-                "||" => Convert.ToBoolean(left) || Convert.ToBoolean(right),
-                "==" => Convert.ToInt32(left) == Convert.ToInt32(right),
-                "!=" => Convert.ToInt32(left) != Convert.ToInt32(right),
-                "<" => Convert.ToInt32(left) < Convert.ToInt32(right),
-                ">" => Convert.ToInt32(left) > Convert.ToInt32(right),
-                "<=" => Convert.ToInt32(left) <= Convert.ToInt32(right),
-                ">=" => Convert.ToInt32(left) >= Convert.ToInt32(right),
-                _ => throw new($"Unknown operator '{node.Operator}'")
-            };
+                case "+":
+                    if (left is string || right is string)
+                    {
+                        return left.ToString() + right.ToString();
+                    }
+                    return Convert.ToDouble(left) + Convert.ToDouble(right);
+
+                case "-":
+                    return Convert.ToDouble(left) - Convert.ToDouble(right);
+
+                case "*":
+                    return Convert.ToDouble(left) * Convert.ToDouble(right);
+
+                case "/":
+                    if (Convert.ToDouble(right) != 0)
+                    {
+                        return Convert.ToDouble(left) / Convert.ToDouble(right);
+                    }
+
+                    throw new DivideByZeroException("Division by zero");
+
+                case "%":
+                    if (Convert.ToDouble(right) != 0)
+                    {
+                        return Convert.ToDouble(left) % Convert.ToDouble(right);
+                    }
+                    throw new DivideByZeroException("Division by zero");
+
+                case "&&":
+                    return Convert.ToBoolean(left) && Convert.ToBoolean(right);
+
+                case "||":
+                    return Convert.ToBoolean(left) || Convert.ToBoolean(right);
+
+                case "==":
+                    if (left is string || right is string)
+                    {
+                        return left.Equals(right);
+                    }
+                    return Convert.ToDouble(left) == Convert.ToDouble(right);
+
+                case "!=":
+                    if (left is string || right is string)
+                    {
+                        return !left.Equals(right);
+                    }
+                    return Convert.ToDouble(left) != Convert.ToDouble(right);
+
+                case "<":
+                    return Convert.ToDouble(left) < Convert.ToDouble(right);
+
+                case ">":
+                    return Convert.ToDouble(left) > Convert.ToDouble(right);
+
+                case "<=":
+                    return Convert.ToDouble(left) <= Convert.ToDouble(right);
+
+                case ">=":
+                    return Convert.ToDouble(left) >= Convert.ToDouble(right);
+
+                default:
+                    throw new Exception($"Unknown operator '{node.Operator}'");
+            }
         }
 
         /// <summary>
@@ -206,11 +281,13 @@ namespace Benita
         /// <returns>The result of the unary expression.</returns>
         private object VisitUnaryExpressionNode(UnaryExpressionNode node)
         {
+            DebugLog($"VisitUnaryExpressionNode: Operator = {node.Operator}");
+
             var operand = Visit(node.Operand);
             return node.Operator switch
             {
-                "-" => -(int)operand,
-                "!" => !(bool)operand,
+                "-" => -Convert.ToDouble(operand),
+                "!" => !Convert.ToBoolean(operand),
                 _ => throw new($"Unknown operator '{node.Operator}'")
             };
         }
@@ -222,6 +299,8 @@ namespace Benita
         /// <returns>The result of the logical expression.</returns>
         private object VisitLogicalExpressionNode(LogicalExpressionNode node)
         {
+            DebugLog($"VisitLogicalExpressionNode: Operator = {node.Operator}");
+
             var left = Visit(node.Left);
             var right = Visit(node.Right);
 
@@ -241,6 +320,8 @@ namespace Benita
         /// <returns>True if the function was found; otherwise, false.</returns>
         public bool TryGetFunction(string? name, out FunctionNode value)
         {
+            DebugLog($"TryGetFunction: Name = {name}", false);
+
             if (_functions.TryGetValue(name, out value))
                 return true;
 
@@ -257,6 +338,8 @@ namespace Benita
         /// <returns>The result of the function call.</returns>
         private object VisitFunctionCallNode(FunctionCallNode node)
         {
+            DebugLog($"VisitFunctionCallNode: FunctionName = {node.FunctionName}", false);
+
             if (TryGetFunction(node.FunctionName, out var function))
             {
                 var newScope = new Dictionary<string?, object>(_variables);
@@ -266,6 +349,7 @@ namespace Benita
                     var paramName = function.Parameters[i].Name;
                     var argValue = Visit(node.Arguments[i]);
                     newScope[paramName] = argValue;
+                    DebugLog($"Parameter: {paramName} = {argValue}");
                 }
 
                 var originalVariables = _variables;
@@ -320,6 +404,8 @@ namespace Benita
         /// <returns>The synchronized dictionary.</returns>
         private Dictionary<string?, object> SyncDictionaryValues(Dictionary<string?, object> variables, Dictionary<string?, object> originalVariables)
         {
+            DebugLog($"SyncDictionaryValues");
+
             foreach (var key in variables.Keys.ToList())
             {
                 if (originalVariables.ContainsKey(key) && _packageScope != "Program")
@@ -342,6 +428,8 @@ namespace Benita
         /// <returns>The result of the return expression.</returns>
         private object VisitReturnStatementNode(ReturnStatementNode returnStatementNode)
         {
+            DebugLog($"VisitReturnStatementNode", false);
+
             _functionReturnFlag = true;
             return returnStatementNode.ReturnExpression == null ? null : Visit(returnStatementNode.ReturnExpression);
         }
@@ -353,6 +441,8 @@ namespace Benita
         /// <returns>Null.</returns>
         private object VisitVariableDeclarationNode(VariableDeclarationNode node)
         {
+            DebugLog($"VisitVariableDeclarationNode: Name = {node.Name}, Type = {node.Type}");
+
             object value = node.Initializer != null ? Visit(node.Initializer) : GetDefaultValue(node.Type);
             _variables[node.Name] = value;
             return null;
@@ -365,6 +455,8 @@ namespace Benita
         /// <returns>The assigned value.</returns>
         private object VisitAssignmentNode(AssignmentNode node)
         {
+            DebugLog($"VisitAssignmentNode: Name = {node.Name}");
+
             var value = Visit(node.Expression);
             _variables[node.Name] = value;
             return value;
@@ -377,13 +469,15 @@ namespace Benita
         /// <returns>The result of the compound assignment.</returns>
         private object VisitCompoundAssignmentNode(CompoundAssignmentNode node)
         {
+            DebugLog($"VisitCompoundAssignmentNode: Name = {node.Name}, Operator = {node.Operator}", false);
+
             if (!TryGetVariableValue(node.Name, out var variable))
             {
                 throw new($"Undefined variable '{node.Name}'");
             }
 
-            var oldValue = (int)variable;
-            var newValue = (int)Visit(node.Expression);
+            var oldValue = Convert.ToDouble(variable);
+            var newValue = Convert.ToDouble(Visit(node.Expression));
 
             _variables[node.Name] = node.Operator switch
             {
@@ -393,7 +487,7 @@ namespace Benita
                 "/=" => oldValue / newValue,
                 _ => throw new($"Unknown compound assignment operator '{node.Operator}'")
             };
-
+            DebugLog($"VisitCompoundAssignmentNode: oldValue = {oldValue}, Operator = {node.Operator} ,newValue = {newValue}, result = {_variables[node.Name]}");
             return _variables[node.Name];
         }
 
@@ -404,19 +498,21 @@ namespace Benita
         /// <returns>The result of the increment/decrement operation.</returns>
         private object VisitIncrementDecrementNode(IncrementDecrementNode node)
         {
+            DebugLog($"VisitIncrementDecrementNode: Name = {node.Name}, Operator = {node.Operator}", false);
+
             if (!TryGetVariableValue(node.Name, out var variable))
             {
                 throw new($"Undefined variable '{node.Name}'");
             }
 
-            var oldValue = Convert.ToInt32(variable);
+            var oldValue = Convert.ToDouble(variable);
             _variables[node.Name] = node.Operator switch
             {
                 "++" => oldValue + 1,
                 "--" => oldValue - 1,
                 _ => throw new($"Unknown increment/decrement operator '{node.Operator}'")
             };
-
+            DebugLog($"VisitIncrementDecrementNode: result = {_variables[node.Name]}");
             return _variables[node.Name];
         }
 
@@ -427,6 +523,7 @@ namespace Benita
         /// <returns>The result of the expression.</returns>
         private object VisitExpressionStatementNode(ExpressionStatementNode node)
         {
+            DebugLog($"VisitExpressionStatementNode", false);
             return Visit(node.Expression);
         }
 
@@ -437,6 +534,7 @@ namespace Benita
         /// <returns>The result of the block execution.</returns>
         private object VisitBlockNode(BlockNode node)
         {
+            DebugLog($"VisitBlockNode");
             foreach (var statement in node.Statements)
             {
                 if (statement == null)
@@ -457,6 +555,8 @@ namespace Benita
         /// <returns>The result of the if statement execution.</returns>
         private object VisitIfStatementNode(IfStatementNode node)
         {
+            DebugLog($"VisitIfStatementNode");
+
             var condition = (bool)Visit(node.Condition);
             if (condition)
             {
@@ -478,6 +578,8 @@ namespace Benita
         /// <returns>Null.</returns>
         private object VisitWhileStatementNode(WhileStatementNode node)
         {
+            DebugLog($"VisitWhileStatementNode");
+
             while ((bool)Visit(node.Condition))
             {
                 try
@@ -506,6 +608,8 @@ namespace Benita
         /// <returns>Null.</returns>
         private object VisitForStatementNode(ForStatementNode node)
         {
+            DebugLog($"VisitForStatementNode");
+
             Visit(node.Initializer);
             while ((bool)Visit(node.Condition))
             {
@@ -539,6 +643,8 @@ namespace Benita
         /// <returns>Null.</returns>
         private object VisitFunctionNode(FunctionNode node)
         {
+            DebugLog($"VisitFunctionNode: Name = {node.Name}", false);
+
             _functions[node.Name] = node;
             return null;
         }
@@ -550,6 +656,8 @@ namespace Benita
         /// <returns>Null.</returns>
         private object VisitProgramNode(ProgramNode node)
         {
+            DebugLog($"VisitProgramNode:", false);
+
             foreach (var packageNode in node.Packages)
             {
                 Visit(packageNode);
@@ -602,6 +710,8 @@ namespace Benita
         /// <returns>Null.</returns>
         private object VisitPackageNode(PackageNode packageNode)
         {
+            DebugLog($"VisitPackageNode: Name = {packageNode.Name}");
+
             Globals.PackageList[packageNode.Name] = packageNode;
             return null;
         }
@@ -613,6 +723,8 @@ namespace Benita
         /// <returns>The result of the member access.</returns>
         private object VisitMemberAccessNode(MemberAccessNode node)
         {
+            DebugLog($"VisitMemberAccessNode: ObjectName = {node.ObjectName}");
+
             if (node.ObjectName == _packageScope)
                 return Visit(node.Expression);
 
@@ -632,6 +744,8 @@ namespace Benita
         /// <returns>True if the variable is found, false otherwise.</returns>
         public bool TryGetVariableValue(string? name, out object value)
         {
+            DebugLog($"TryGetVariableValue: Name = {name}", false);
+
             if (_variables.TryGetValue(name, out value))
                 return true;
 
@@ -648,10 +762,26 @@ namespace Benita
         /// <returns>The initialized array.</returns>
         private object VisitArrayInitializerNode(ArrayInitializerNode arrayInitializerNode)
         {
+            DebugLog($"VisitArrayInitializerNode", false);
+
             List<object> arrayValues = new();
-            foreach (var element in arrayInitializerNode.Elements)
+
+            var sizeValue = Convert.ToInt32(Visit(arrayInitializerNode.SizeExpression));
+            DebugLog($"VisitArrayInitializerNode: ArraySize = {sizeValue}, ElementsCount = {arrayInitializerNode.Elements.Count}");
+
+            if (sizeValue == arrayInitializerNode.Elements.Count)
             {
-                arrayValues.Add(Visit(element));
+                foreach (var element in arrayInitializerNode.Elements)
+                {
+                    arrayValues.Add(Visit(element));
+                }
+            }
+            else
+            {
+                for (int i = 0; i < sizeValue; i++)
+                {
+                    arrayValues.Add(0);
+                }
             }
 
             return arrayValues.ToArray();
@@ -664,17 +794,24 @@ namespace Benita
         /// <returns>The array element.</returns>
         private object VisitArrayAccessNode(ArrayAccessNode node)
         {
-            var arrayName = node.Name;
-            var index = (int)Visit(node.Index);
+            DebugLog($"VisitArrayAccessNode: ArrayName = {node.Name}", false);
 
+            var arrayName = node.Name;
+            var index = Convert.ToInt32(Visit(node.Index));
+
+            DebugLog($"VisitArrayAccessNode: index = {index}", false);
+
+            //if (_variables.TryGetValue(arrayName, out var value) && value is object[] array)
             if (TryGetVariableValue(arrayName, out var value) && value is object[] array)
             {
-                if (index >= 0 && index < array.Length)
-                {
-                    return array[(int)index];
-                }
+                if (index < 0)
+                    index = array.Length + index;
 
-                throw new($"Index out of bounds for array '{arrayName}'");
+                if (index < 0 || index >= array.Length)
+                    throw new($"Index out of bounds for array '{arrayName}'");
+
+                DebugLog($"VisitArrayAccessNode: value = {array[index]}", false);
+                return array[index];
             }
 
             throw new($"Variable '{arrayName}' is not an array");
@@ -687,9 +824,13 @@ namespace Benita
         /// <returns>The assigned value.</returns>
         private object VisitArrayAssignmentNode(ArrayAssignmentNode node)
         {
+            DebugLog($"VisitArrayAssignmentNode: ArrayName = {node.Name}", false);
+
             var arrayName = node.Name;
             var newValue = Visit(node.Value);
             var index = Visit(node.Index);
+
+            DebugLog($"VisitArrayAssignmentNode: index = {index}, newValue = {newValue}");
 
             if (!_variables.ContainsKey(arrayName))
             {
@@ -714,6 +855,8 @@ namespace Benita
         /// <returns>The default value.</returns>
         private object GetDefaultValue(string? type)
         {
+            DebugLog($"GetDefaultValue: Type = {type}");
+
             return type switch
             {
                 "number" => 0,

@@ -315,8 +315,13 @@
     /// <summary>
     /// Represents an array initializer node with a list of elements.
     /// </summary>
-    public class ArrayInitializerNode(List<ExpressionNode?> elements) : ExpressionNode
+    public class ArrayInitializerNode(List<ExpressionNode> elements, ExpressionNode sizeExpression) : ExpressionNode
     {
-        public List<ExpressionNode?> Elements { get; } = elements;
+        /// <summary>
+        /// Gets the list of elements used to initialize the array.
+        /// </summary>
+        public List<ExpressionNode> Elements = elements;
+
+        public ExpressionNode SizeExpression = sizeExpression;
     }
 }

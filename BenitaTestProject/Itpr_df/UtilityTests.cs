@@ -61,7 +61,7 @@ namespace BenitaTestProject.Itpr_df
             // Arrange
             var utility = new Utility();
             var argument = "42";
-            var expectedNumber = 42;
+            var expectedNumber = 42d;
 
             // Act
             var result = utility.HandleFunctionCall("to_number", new List<object> { argument });

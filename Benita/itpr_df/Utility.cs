@@ -11,19 +11,30 @@
                     {
                         Console.WriteLine(arg);
                     }
+
                     return null;
                 case "input":
                     return Console.ReadLine();
                 case "to_string":
-                    {
-                        var stringValue = arguments[0].ToString();
-                        return stringValue;
-                    }
+                {
+                    var stringValue = arguments[0].ToString();
+                    return stringValue;
+                }
                 case "to_number":
-                    {
-                        var numberValue = Convert.ToInt32(arguments[0]);
-                        return numberValue;
-                    }
+                {
+                    var numberValue = Convert.ToDouble(arguments[0]);
+                    return numberValue;
+                }
+                case "round_number":
+                {
+                    var numberValue = Convert.ToDouble(arguments[0]);
+                    return Math.Round(numberValue);
+                }
+                case "sqrt_number":
+                {
+                    var numberValue = Convert.ToDouble(arguments[0]);
+                    return Math.Sqrt(numberValue);
+                }
                 default:
                     throw new Exception($"Unknown utility function '{functionName}'");
             }

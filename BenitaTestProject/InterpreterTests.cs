@@ -19,7 +19,7 @@ namespace BenitaTestProject
         {
             var node = new LiteralNode("42", TokenType.NUMBER_LITERAL);
             var result = _interpreter.Visit(node);
-            Assert.AreEqual(42, result);
+            Assert.AreEqual(42d, result);
         }
 
         [TestMethod]
@@ -28,7 +28,7 @@ namespace BenitaTestProject
             _interpreter.Visit(new VariableDeclarationNode("number", "x", new LiteralNode("5", TokenType.NUMBER_LITERAL)));
             var node = new IdentifierNode("x");
             var result = _interpreter.Visit(node);
-            Assert.AreEqual(5, result);
+            Assert.AreEqual(5d, result);
         }
 
         [TestMethod]
@@ -40,7 +40,7 @@ namespace BenitaTestProject
 
             var result = _interpreter.Visit(node);
 
-            Assert.AreEqual(30, result);
+            Assert.AreEqual(30d, result);
         }
 
         [TestMethod]
@@ -51,7 +51,7 @@ namespace BenitaTestProject
 
             var result = _interpreter.Visit(node);
 
-            Assert.AreEqual(-10, result);
+            Assert.AreEqual(-10d, result);
         }
 
         [TestMethod]
@@ -69,16 +69,16 @@ namespace BenitaTestProject
         [TestMethod]
         public void TestVisitFunctionCallNode()
         {
-            var functionBody = new BlockNode(new List<StatementNode?>());
+            var functionBody = new BlockNode(new List<StatementNode>());
             var returnExpression = new LiteralNode("10", TokenType.NUMBER_LITERAL);
             var returnStatement = new ReturnStatementNode(returnExpression);
-            var functionNode = new FunctionNode("foo", new List<ParameterNode?>(), "number", functionBody, returnStatement);
+            var functionNode = new FunctionNode("foo", new List<ParameterNode>(), "number", functionBody, returnStatement);
             _interpreter.Visit(functionNode);
 
-            var callNode = new FunctionCallNode("foo", new List<ExpressionNode?>());
+            var callNode = new FunctionCallNode("foo", new List<ExpressionNode>());
             var result = _interpreter.Visit(callNode);
 
-            Assert.AreEqual(10, result);
+            Assert.AreEqual(10d, result);
         }
 
         [TestMethod]
@@ -89,7 +89,7 @@ namespace BenitaTestProject
             _interpreter.Visit(node);
 
             var result = _interpreter.Visit(new IdentifierNode("x"));
-            Assert.AreEqual(10, result);
+            Assert.AreEqual(10d, result);
         }
 
         [TestMethod]
@@ -101,7 +101,7 @@ namespace BenitaTestProject
             _interpreter.Visit(node);
 
             var result = _interpreter.Visit(new IdentifierNode("x"));
-            Assert.AreEqual(20, result);
+            Assert.AreEqual(20d, result);
         }
 
         [TestMethod]
@@ -113,7 +113,7 @@ namespace BenitaTestProject
             _interpreter.Visit(node);
 
             var result = _interpreter.Visit(new IdentifierNode("x"));
-            Assert.AreEqual(15, result);
+            Assert.AreEqual(15d, result);
         }
 
         [TestMethod]
@@ -125,7 +125,7 @@ namespace BenitaTestProject
             _interpreter.Visit(node);
 
             var result = _interpreter.Visit(new IdentifierNode("x"));
-            Assert.AreEqual(11, result);
+            Assert.AreEqual(11d, result);
         }
 
         [TestMethod]
@@ -139,7 +139,7 @@ namespace BenitaTestProject
             _interpreter.Visit(node);
 
             var result = _interpreter.Visit(new IdentifierNode("x"));
-            Assert.AreEqual(10, result);
+            Assert.AreEqual(10d, result);
         }
 
         [TestMethod]
@@ -153,40 +153,40 @@ namespace BenitaTestProject
             _interpreter.Visit(node);
 
             var result = _interpreter.Visit(new IdentifierNode("x"));
-            Assert.AreEqual(10, result);
+            Assert.AreEqual(10d, result);
         }
 
         [TestMethod]
         public void TestVisitArrayAccessNode()
         {
-            _interpreter.Visit(new VariableDeclarationNode("number[]", "arr", new ArrayInitializerNode(new List<ExpressionNode?>
+            _interpreter.Visit(new VariableDeclarationNode("number[]", "arr", new ArrayInitializerNode(new List<ExpressionNode>
             {
                 new LiteralNode("1", TokenType.NUMBER_LITERAL),
                 new LiteralNode("2", TokenType.NUMBER_LITERAL),
                 new LiteralNode("3", TokenType.NUMBER_LITERAL)
-            })));
+            }, new LiteralNode("3", TokenType.NUMBER_LITERAL))));
             var node = new ArrayAccessNode("arr", new LiteralNode("1", TokenType.NUMBER_LITERAL));
 
             var result = _interpreter.Visit(node);
 
-            Assert.AreEqual(2, result);
+            Assert.AreEqual(2d, result);
         }
 
         [TestMethod]
         public void TestVisitArrayAssignmentNode()
         {
-            _interpreter.Visit(new VariableDeclarationNode("number[]", "arr", new ArrayInitializerNode(new List<ExpressionNode?>
+            _interpreter.Visit(new VariableDeclarationNode("number[]", "arr", new ArrayInitializerNode(new List<ExpressionNode>
             {
                 new LiteralNode("1", TokenType.NUMBER_LITERAL),
                 new LiteralNode("2", TokenType.NUMBER_LITERAL),
                 new LiteralNode("3", TokenType.NUMBER_LITERAL)
-            })));
+            }, new LiteralNode("3", TokenType.NUMBER_LITERAL))));
             var node = new ArrayAssignmentNode("arr", new LiteralNode("1", TokenType.NUMBER_LITERAL), new LiteralNode("10", TokenType.NUMBER_LITERAL));
 
             _interpreter.Visit(node);
 
             var result = _interpreter.Visit(new ArrayAccessNode("arr", new LiteralNode("1", TokenType.NUMBER_LITERAL)));
-            Assert.AreEqual(10, result);
+            Assert.AreEqual(10d, result);
         }
     }
 }

@@ -30,6 +30,10 @@
                     ExecuteFile(args, printTokens, printAst, printSource, compiler);
                     Console.WriteLine("Program executed successfully.");
                     break;
+                case "dxc":
+                    ExecuteFile(args, printTokens, printAst, printSource, compiler, true);
+                    Console.WriteLine("Program executed successfully.");
+                    break;
                 case "ccg":
                     GenerateCppCode(args, printTokens, printAst, printSource, compiler);
                     break;
@@ -42,7 +46,7 @@
             Console.ReadKey();
         }
 
-        static void ExecuteFile(string[] args, bool printTokens, bool printAst, bool printSource, CompilerClass compiler)
+        static void ExecuteFile(string[] args, bool printTokens, bool printAst, bool printSource, CompilerClass compiler, bool debugModeAvailable = false)
         {
             if (args.Length < 2)
             {
@@ -54,7 +58,7 @@
             if (!ValidateFile(filePath)) return;
 
             string fileContent = File.ReadAllText(filePath);
-            compiler.Exec(fileContent, printTokens, printAst, printSource);
+            compiler.Exec(fileContent, printTokens, printAst, printSource, debugModeAvailable);
         }
 
         static void GenerateCppCode(string[] args, bool printTokens, bool printAst, bool printSource, CompilerClass compiler)
@@ -106,10 +110,11 @@
             Console.WriteLine(" |______  /\\___  >___|  /__||__| (____  / |_______ (____  /___|  /\\___  / ");
             Console.WriteLine("        \\/     \\/     \\/              \\/          \\/    \\/     \\//_____/ ");
             Console.WriteLine("  (c) Adm, 2024");
-            Console.WriteLine("  Version 0.2.2");
-            Console.WriteLine("Usage: Program <action> [filePath] [outputFilePath] [-a] [-t] [-s]");
+            Console.WriteLine("  Version 0.4.3");
+            Console.WriteLine("Usage: Program <action> <filePath> [outputFilePath] [-p] [-t]");
             Console.WriteLine("Actions:");
             Console.WriteLine("  exc        - Execute the code in the file.");
+            Console.WriteLine("  dxc       - Execute the code in the file in debug mode.");
             Console.WriteLine("  ccg        - Generate C++ code from the file content and save to output file.");
             Console.WriteLine("  edr        - Open the text editor.");
             Console.WriteLine("  help       - Show this help message.");

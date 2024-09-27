@@ -49,6 +49,8 @@
                 { "array_remove", ("array", ["array", "number"]) },
                 { "to_string", ("string", ["number"]) },
                 { "to_number", ("number", ["string"]) },
+                { "round_number", ("number", ["number"]) },
+                { "sqrt_number", ("number", ["number"]) },
             };
         }
 
@@ -234,7 +236,17 @@
             switch (statement)
             {
                 case VariableDeclarationNode varDecl:
-                    var initType = varDecl.Initializer != null ? AnalyzeExpression(varDecl.Initializer, localVariables) : varDecl.Type;
+                    string initType;
+                    if (varDecl.Type == "let")
+                    {
+                        initType = varDecl.Initializer != null
+                            ? AnalyzeExpression(varDecl.Initializer, localVariables)
+                            : varDecl.Type;
+                    }
+                    else
+                    {
+                        initType = varDecl.Type;
+                    }
                     DeclareVariable(varDecl.Name, initType, localVariables);
                     break;
                 case AssignmentNode assignment:

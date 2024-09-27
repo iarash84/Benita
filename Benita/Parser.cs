@@ -591,7 +591,8 @@
         /// <returns>A <see cref="ArrayInitializerNode"/> representing the array initializer.</returns>
         private ExpressionNode? ParseArrayInitializer()
         {
-            List<ExpressionNode?> elements = new List<ExpressionNode?>();
+            List<ExpressionNode> elements = new List<ExpressionNode>();
+            ExpressionNode sizeExpression = new LiteralNode(0.ToString(), TokenType.NUMBER_LITERAL);
             if (Check(TokenType.LSQUAREBRACE))
             {
                 Consume(TokenType.LSQUAREBRACE, "Expected '[' to start array initializer");
@@ -600,14 +601,34 @@
             // Check if the array initializer is empty
             if (!Check(TokenType.RSQUAREBRACE))
             {
-                do
+                if (Check(TokenType.NUMBER, TokenType.STRING, TokenType.BOOL))
                 {
-                    elements.Add(ParseExpression());
-                } while (Match(TokenType.COMMA));
+                    var elementType = CurrentToken().Type;
+                    Advance();
+                    Consume(TokenType.LSQUAREBRACE, "Expected '[' to start array initializer");
+                    sizeExpression = ParseExpression();
+
+                    if (sizeExpression is LiteralNode sizeToken)
+                    {
+                        for (int i = 0; i < int.Parse(sizeToken.Value); i++)
+                        {
+                            elements.Add(new LiteralNode("0", elementType));
+                        }
+                    }
+                }
+                else
+                {
+                    do
+                    {
+                        elements.Add(ParseExpression());
+                    } while (Match(TokenType.COMMA));
+
+                    sizeExpression = new LiteralNode(elements.Count.ToString(), TokenType.NUMBER_LITERAL);
+                }
             }
             Consume(TokenType.RSQUAREBRACE, "Expected ']' after array initializer");
 
-            return new ArrayInitializerNode(elements);
+            return new ArrayInitializerNode(elements, sizeExpression);
         }
 
         /// <summary>

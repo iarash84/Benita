@@ -5,6 +5,7 @@
     /// </summary>
     internal class PackageInstance
     {
+        public PackageNode InstancePackageNode { get; set; }
         private readonly Interpreter _interpreter;
 
         /// <summary>
@@ -13,9 +14,10 @@
         /// <param name="instanceName">The name of the instance.</param>
         /// <param name="packageNode">The package node that defines the package.</param>
         /// <param name="arguments">The arguments for the constructor, if any.</param>
-        public PackageInstance(string instanceName, PackageNode packageNode, List<ExpressionNode?> arguments)
+        /// <param name="debugMode"></param>
+        public PackageInstance(string instanceName, PackageNode packageNode, List<ExpressionNode> arguments, bool debugMode)
         {
-            _interpreter = new Interpreter(instanceName);
+            _interpreter = new Interpreter(debugMode, instanceName);
 
             bool hasConstructor = false;
             foreach (var member in packageNode.Members)

@@ -1550,7 +1550,6 @@ int main()
             }
         }
 
-
         [TestMethod]
         public void Test27() // let implicitly typed local variables
         {
@@ -1621,7 +1620,6 @@ int main()
             }
         }
 
-
         [TestMethod]
         public void Test28() // let implicitly typed local variables for instance class
         {
@@ -1685,7 +1683,6 @@ int main()
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
-
 
         [TestMethod]
         public void Test29() // let implicitly typed local variables in for statment
@@ -1987,7 +1984,7 @@ func BubbleSort(number[] sort_array) -> number[]
 {
 	let n = array_len(sort_array);
 	for (number i = 0; i < n - 1; i++)
-	//{
+	{
 		for (number j = 0; j < n - i - 1; j++)
 		{
 			if (sort_array[j] > sort_array[j + 1])
@@ -1998,7 +1995,7 @@ func BubbleSort(number[] sort_array) -> number[]
 				sort_array[j + 1] = temp;
 			}
 		}
-	//}	
+	}	
 	return sort_array;
 }
 
@@ -2103,7 +2100,7 @@ int array_len(const std::vector<T>& vec)
         while (min <= max)
         {
 			mid = min + max;
-			mid /= 2;
+			mid = round_number(mid/2);
             if (bsi_array[mid] == key)
             {
                 return mid;
@@ -2142,6 +2139,7 @@ _main_()
 #include <string>
 #include <vector>
 #include <fstream>
+#include <cmath>
 
 template <typename T>
 int array_len(const std::vector<T>& vec);
@@ -2154,7 +2152,7 @@ double BinarySearchIterative(std::vector<double> bsi_array, double key)
   while (min <= max)
   {
     mid = min + max;
-    mid /= 2;
+    mid = std::round(mid / 2);
     if (bsi_array[mid] == key)
     {
       return mid;
@@ -2218,7 +2216,7 @@ func BinarySearch(number[] arr, number target, number left, number right) -> num
 	if (right >= left)
 	{
 		number distance = right - left;
-		number mid = left + distance / 2;
+		number mid = round_number(left + distance / 2);
 
 		// Check if the target is present at the mid
 		if (arr[mid] == target)
@@ -2264,6 +2262,7 @@ _main_()
 #include <string>
 #include <vector>
 #include <fstream>
+#include <cmath>
 
 template <typename T>
 int array_len(const std::vector<T>& vec);
@@ -2273,7 +2272,7 @@ double BinarySearch(std::vector<double> arr, double target, double left, double 
   if (right >= left)
   {
     double distance = right - left;
-    double mid = left + distance / 2;
+    double mid = std::round(left + distance / 2);
     if (arr[mid] == target)
     {
       return mid;
@@ -2306,9 +2305,7 @@ int main()
 int array_len(const std::vector<T>& vec)
 {
     return static_cast<int>(vec.size());
-}
-
-".Trim();
+}".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
@@ -2461,8 +2458,10 @@ int array_len(const std::vector<T>& vec)
             string source = @"
 for(let i= 0; i <= 10; i++)
 {	
-	if( i%2 == 0)	
-		continue;	
+	if( i%2 == 0)
+	{
+		continue;
+	}
 	print(i);
 }";
             // Act
@@ -2506,8 +2505,10 @@ int main()
             string source = @"
 for(let i= 0; i <= 10; i++)
 {	
-	if( i == 5)	
-		break;	
+	if( i == 5)
+	{
+		break;
+	}
 	print(i);
 }";
             // Act
@@ -2614,6 +2615,770 @@ int main()
 
             // Act
             var expectedOutput = "1 is PowerOfTwo\r\n2 is PowerOfTwo\r\n4 is PowerOfTwo\r\n8 is PowerOfTwo\r\n16 is PowerOfTwo\r\n32 is PowerOfTwo\r\n64 is PowerOfTwo\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test42() //FizzBuzz
+        {
+            string source = @"
+for (let i = 1; i <= 30; i++)
+	// Check if the number is a multiple of both 3 and 5
+	if (i % 3 == 0 && i % 5 == 0)	
+		print(""FizzBuzz"");	
+	// Check if the number is a multiple of 3
+	else if (i % 3 == 0)	
+		print(""Fizz"");	
+	// Check if the number is a multiple of 5
+	else if (i % 5 == 0)	
+		print(""Buzz"");	
+	// If the number is not a multiple of 3 or 5, print the number
+	else
+		print(i);";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+int main()
+{
+  for (double i = 1;i <= 30;i++)
+  {
+    if (i % 3 == 0 && i % 5 == 0)
+    {
+      std::cout << ""FizzBuzz"" << std::endl;
+    }
+    else
+    {
+      if (i % 3 == 0)
+      {
+        std::cout << ""Fizz"" << std::endl;
+      }
+      else
+      {
+        if (i % 5 == 0)
+        {
+          std::cout << ""Buzz"" << std::endl;
+        }
+        else
+        {
+          std::cout << i << std::endl;
+        }
+      }
+    }
+  }
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "1\r\n2\r\nFizz\r\n4\r\nBuzz\r\nFizz\r\n7\r\n8\r\nFizz\r\nBuzz\r\n11\r\nFizz\r\n13\r\n14\r\nFizzBuzz\r\n16\r\n17\r\nFizz\r\n19\r\nBuzz\r\nFizz\r\n22\r\n23\r\nFizz\r\nBuzz\r\n26\r\nFizz\r\n28\r\n29\r\nFizzBuzz\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test43() //isPrime
+        {
+            string source = @"
+// Function to check if a number is prime
+func isPrime(number num) -> bool {
+    if (num <= 1) {
+        return false;
+    }
+    for (let i = 2; i <= sqrt_number(num); i++) {
+        if (num % i == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Function to generate all prime numbers up to a given limit
+func generatePrimesUpTo(number limit) -> number[]  {
+    number[] primes = [];
+    for (let i = 2; i <= limit; i++) {
+        if (isPrime(i)) {
+            primes = array_add(primes, i);
+        }
+    }
+    return primes;
+}
+
+_main_(){
+    let limit = 100; // You can change this limit to any number
+    number[] local_primes = generatePrimesUpTo(limit);
+
+    print(""Prime numbers up to "" + limit)
+    for (let i = 0; i < array_len(local_primes); i++ ) {
+        print(local_primes[i]);
+    }
+}";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <cmath>
+
+template <typename T>
+std::vector<T> array_add(const std::vector<T>& vec, const T& element);
+int array_len(const std::vector<T>& vec);
+
+bool isPrime(double num)
+{
+  if (num <= 1)
+  {
+    return false;
+  }
+  for (double i = 2;i <= std::sqrt(num);i++)
+  {
+    if (num % i == 0)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::vector<double> generatePrimesUpTo(double limit)
+{
+  std::vector<double> primes = {};
+  for (double i = 2;i <= limit;i++)
+  {
+    if (isPrime(i))
+    {
+      primes = array_add(primes, i);
+    }
+  }
+  return primes;
+}
+
+int main()
+{
+  double limit = 100;
+  std::vector<double> local_primes = generatePrimesUpTo(limit);
+  std::cout << ""Prime numbers up to "" << limit << std::endl;
+  for (double i = 0;i < array_len(local_primes);i++)
+  {
+    std::cout << local_primes[i] << std::endl;
+  }
+  return 0;
+}
+
+std::vector<T> array_add(const std::vector<T>& vec, const T& element)
+{
+    std::vector<T> newVec = vec;
+    newVec.push_back(element);
+    return newVec;
+}
+
+int array_len(const std::vector<T>& vec)
+{
+    return static_cast<int>(vec.size());
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "Prime numbers up to 100\r\n2\r\n3\r\n5\r\n7\r\n11\r\n13\r\n17\r\n19\r\n23\r\n29\r\n31\r\n37\r\n41\r\n43\r\n47\r\n53\r\n59\r\n61\r\n67\r\n71\r\n73\r\n79\r\n83\r\n89\r\n97\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test44() //Insertion Sort
+        {
+            string source = @"
+func InsertionSort(number[] arr) -> number[]
+{
+	number n = array_len(arr);
+	for (let i = 1; i < n; i++)
+	{
+		let key = arr[i];
+		let j = i - 1;
+
+		// Move elements of arr[0..i-1], that are greater than key, to one position ahead of their current position
+		while (j >= 0 && arr[j] > key)
+		{
+			arr[j + 1] = arr[j];
+			j = j - 1;
+		}
+		arr[j + 1] = key;
+	}	
+	return arr;
+}
+
+func PrintArray(number[] printArray) -> void
+{
+	for (let i = 0; i < array_len(printArray); i++)
+	{
+		print(printArray[i]);
+	}
+}
+
+number[] array = [ 12, 11, 13, 5, 6 ];
+print(""Original array:"");
+PrintArray(array);
+array = InsertionSort(array);
+print(""Sorted array:"");
+PrintArray(array);";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+template <typename T>
+int array_len(const std::vector<T>& vec);
+
+std::vector<double> array = {12, 11, 13, 5, 6};
+std::vector<double> InsertionSort(std::vector<double> arr)
+{
+  double n = array_len(arr);
+  for (double i = 1;i < n;i++)
+  {
+    auto key = arr[i];
+    auto j = i - 1;
+    while (j >= 0 && arr[j] > key)
+    {
+      arr[j + 1] = arr[j];
+      j = j - 1;
+    }
+    arr[j + 1] = key;
+  }
+  return arr;
+}
+
+void PrintArray(std::vector<double> printArray)
+{
+  for (double i = 0;i < array_len(printArray);i++)
+  {
+    std::cout << printArray[i] << std::endl;
+  }
+}
+
+int main()
+{
+  std::cout << ""Original array:"" << std::endl;
+  PrintArray(array);
+  array = InsertionSort(array);
+  std::cout << ""Sorted array:"" << std::endl;
+  PrintArray(array);
+  return 0;
+}
+
+int array_len(const std::vector<T>& vec)
+{
+    return static_cast<int>(vec.size());
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "Original array:\r\n12\r\n11\r\n13\r\n5\r\n6\r\nSorted array:\r\n5\r\n6\r\n11\r\n12\r\n13\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test45() //Selection Sort
+        {
+            string source = @"
+func SelectionSort(number[] array) -> number[]
+{
+	number n = array_len(array);
+	for (number i = 0; i < n - 1; i++)
+	{
+		number minIndex = i;
+		for (number j = i + 1; j < n; j++)
+		{
+			if (array[j] < array[minIndex])
+			{
+				minIndex = j;
+			}
+		}
+		number temp = array[minIndex];
+		array[minIndex] = array[i];
+		array[i] = temp;
+	}	
+	return array;
+}
+
+func PrintArray(number[] printArray) -> void
+{
+	for (let i = 0; i < array_len(printArray); i++)
+	{
+		print(printArray[i]);
+	}
+}
+
+number[] localArray = [ 64, 25, 12, 22, 11 ];
+print(""Original array:"");
+PrintArray(localArray);
+localArray = SelectionSort(localArray);
+print(""Sorted array:"");
+PrintArray(localArray);";
+
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+template <typename T>
+int array_len(const std::vector<T>& vec);
+
+std::vector<double> localArray = {64, 25, 12, 22, 11};
+std::vector<double> SelectionSort(std::vector<double> array)
+{
+  double n = array_len(array);
+  for (double i = 0;i < n - 1;i++)
+  {
+    double minIndex = i;
+    for (double j = i + 1;j < n;j++)
+    {
+      if (array[j] < array[minIndex])
+      {
+        minIndex = j;
+      }
+    }
+    double temp = array[minIndex];
+    array[minIndex] = array[i];
+    array[i] = temp;
+  }
+  return array;
+}
+
+void PrintArray(std::vector<double> printArray)
+{
+  for (double i = 0;i < array_len(printArray);i++)
+  {
+    std::cout << printArray[i] << std::endl;
+  }
+}
+
+int main()
+{
+  std::cout << ""Original array:"" << std::endl;
+  PrintArray(localArray);
+  localArray = SelectionSort(localArray);
+  std::cout << ""Sorted array:"" << std::endl;
+  PrintArray(localArray);
+  return 0;
+}
+
+int array_len(const std::vector<T>& vec)
+{
+    return static_cast<int>(vec.size());
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "Original array:\r\n64\r\n25\r\n12\r\n22\r\n11\r\nSorted array:\r\n11\r\n12\r\n22\r\n25\r\n64\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test46() //Counting Sort
+        {
+            string source = @"
+func CountingSort(number[] array) -> number[]
+{
+	number max = GetMaxValue(array);
+	let arrayLen = array_len(array);	
+	
+	number[] count = number[max +1];	
+	number[] output = number[arrayLen];
+
+	// Count the occurrences of each element
+	for (number i = 0; i < arrayLen; i++)
+	{
+		count[array[i]] = count[array[i]] + 1;
+	}
+
+	// Update the count array to store the actual positions of elements
+	for (number j = 1; j <= max; j++)
+	{
+		count[j] = count[j] + count[j - 1];
+	}
+
+	// Build the output array
+	for (number k = arrayLen - 1; k >= 0; k--)
+	{
+		output[count[array[k]] - 1] = array[k];
+		count[array[k]] = count[array[k]] - 1;
+	}
+
+	// Copy the sorted elements back to the original array
+	for (number l = 0; l < arrayLen; l++)
+	{
+		array[l] = output[l];
+	}
+	return array;
+}
+
+func GetMaxValue(number[] array) -> number
+{
+	let max = array[0];
+	for (let i = 1; i < array_len(array); i++)
+	{
+		if (array[i] > max)
+		{
+			max = array[i];
+		}
+	}
+	return max;
+}
+
+func PrintArray(number[] printArray) -> void
+{
+	let n = array_len(printArray);
+	for (let i = 0; i < n; i++)
+	{
+		print(printArray[i]);
+	}
+}
+
+number[] localArray = [ 4, 2, 2, 8, 3, 3, 1, 7, 5, 6 ];
+print(""Original array:"");
+PrintArray(localArray);
+localArray = CountingSort(localArray);
+print(""Sorted array:"");
+PrintArray(localArray);";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+template <typename T>
+int array_len(const std::vector<T>& vec);
+
+std::vector<double> localArray = {4, 2, 2, 8, 3, 3, 1, 7, 5, 6};
+std::vector<double> CountingSort(std::vector<double> array)
+{
+  double max = GetMaxValue(array);
+  auto arrayLen = array_len(array);
+  std::vector<double> count(max + 1, 0);
+  std::vector<double> output(arrayLen, 0);
+  for (double i = 0;i < arrayLen;i++)
+  {
+    count[array[i]] = count[array[i]] + 1;
+  }
+  for (double j = 1;j <= max;j++)
+  {
+    count[j] = count[j] + count[j - 1];
+  }
+  for (double k = arrayLen - 1;k >= 0;k--)
+  {
+    output[count[array[k]] - 1] = array[k];
+    count[array[k]] = count[array[k]] - 1;
+  }
+  for (double l = 0;l < arrayLen;l++)
+  {
+    array[l] = output[l];
+  }
+  return array;
+}
+
+double GetMaxValue(std::vector<double> array)
+{
+  auto max = array[0];
+  for (double i = 1;i < array_len(array);i++)
+  {
+    if (array[i] > max)
+    {
+      max = array[i];
+    }
+  }
+  return max;
+}
+
+void PrintArray(std::vector<double> printArray)
+{
+  auto n = array_len(printArray);
+  for (double i = 0;i < n;i++)
+  {
+    std::cout << printArray[i] << std::endl;
+  }
+}
+
+int main()
+{
+  std::cout << ""Original array:"" << std::endl;
+  PrintArray(localArray);
+  localArray = CountingSort(localArray);
+  std::cout << ""Sorted array:"" << std::endl;
+  PrintArray(localArray);
+  return 0;
+}
+
+int array_len(const std::vector<T>& vec)
+{
+    return static_cast<int>(vec.size());
+}
+
+".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "Original array:\r\n4\r\n2\r\n2\r\n8\r\n3\r\n3\r\n1\r\n7\r\n5\r\n6\r\nSorted array:\r\n1\r\n2\r\n2\r\n3\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test47() //Bingo Sort
+        {
+            string source = @"
+func BingoSort(number[] arr) -> number[] {
+	number n = array_len(arr);
+	number min = GetMinValue(arr);
+	number max = GetMaxValue(arr);
+	number nextBingo = max;
+	number nextPos = 0;
+
+	while (min < nextBingo)
+	{
+		number startPos = nextPos;
+		for (number i = startPos; i < n; i++)
+		{
+			if (arr[i] == min)
+			{
+				// Swap elements
+				number temp = arr[nextPos];
+				arr[nextPos] = arr[i];
+				arr[i] = temp;
+				nextPos++;
+			}
+			else if (arr[i] < nextBingo)
+			{
+				nextBingo = arr[i];
+			}
+		}
+		min = nextBingo;
+		nextBingo = max;
+	}	
+	return arr;
+}
+
+func GetMaxValue(number[] array) -> number {
+	let max = array[0];
+	for (let i = 1; i < array_len(array); i++)
+	{
+		if (array[i] > max)
+		{
+			max = array[i];
+		}
+	}
+	return max;
+}
+
+func GetMinValue(number[] array) -> number {
+	let min = array[0];
+	for (let i = 1; i < array_len(array); i++)
+	{
+		if (array[i] < min)
+		{
+			min = array[i];
+		}
+	}
+	return min;
+}
+
+func PrintArray(number[] printArray) -> void {
+	let n = array_len(printArray);
+	for (let i = 0; i < n; i++)
+	{
+		print(printArray[i]);
+	}
+}
+
+number[] localArray = [ 7, 15, 8, 5, 3, 11, 9, 4, 1, 6, 2];
+localArray = BingoSort(localArray);
+print(""Sorted array:"");
+PrintArray(localArray);";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+template <typename T>
+int array_len(const std::vector<T>& vec);
+
+std::vector<double> localArray = {7, 15, 8, 5, 3, 11, 9, 4, 1, 6, 2};
+std::vector<double> BingoSort(std::vector<double> arr)
+{
+  double n = array_len(arr);
+  double min = GetMinValue(arr);
+  double max = GetMaxValue(arr);
+  double nextBingo = max;
+  double nextPos = 0;
+  while (min < nextBingo)
+  {
+    double startPos = nextPos;
+    for (double i = startPos;i < n;i++)
+    {
+      if (arr[i] == min)
+      {
+        double temp = arr[nextPos];
+        arr[nextPos] = arr[i];
+        arr[i] = temp;
+        nextPos++;
+      }
+      else
+      {
+        if (arr[i] < nextBingo)
+        {
+          nextBingo = arr[i];
+        }
+      }
+    }
+    min = nextBingo;
+    nextBingo = max;
+  }
+  return arr;
+}
+
+double GetMaxValue(std::vector<double> array)
+{
+  auto max = array[0];
+  for (double i = 1;i < array_len(array);i++)
+  {
+    if (array[i] > max)
+    {
+      max = array[i];
+    }
+  }
+  return max;
+}
+
+double GetMinValue(std::vector<double> array)
+{
+  auto min = array[0];
+  for (double i = 1;i < array_len(array);i++)
+  {
+    if (array[i] < min)
+    {
+      min = array[i];
+    }
+  }
+  return min;
+}
+
+void PrintArray(std::vector<double> printArray)
+{
+  auto n = array_len(printArray);
+  for (double i = 0;i < n;i++)
+  {
+    std::cout << printArray[i] << std::endl;
+  }
+}
+
+int main()
+{
+  localArray = BingoSort(localArray);
+  std::cout << ""Sorted array:"" << std::endl;
+  PrintArray(localArray);
+  return 0;
+}
+
+int array_len(const std::vector<T>& vec)
+{
+    return static_cast<int>(vec.size());
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            //Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "Sorted array:\r\n1\r\n2\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n9\r\n11\r\n15\r\n";
+            using (var consoleOutput = new ConsoleOutput())
+            {
+                _compiler.Exec(source);
+                // Assert exc
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+            }
+        }
+
+        [TestMethod]
+        public void Test48() //Float test
+        {
+            string source = @"
+let num  = 5.2 + 8;
+print(num);
+";
+            // Act
+            string expectedCode = @"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+
+
+auto num = 5.2 + 8;
+int main()
+{
+  std::cout << num << std::endl;
+  return 0;
+}".Trim();
+            var generatedCode = _compiler.GenerateCppCode(source);
+
+            // Assert
+            Assert.AreEqual(expectedCode, generatedCode.Trim());
+
+            // Act
+            var expectedOutput = "13.2\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);

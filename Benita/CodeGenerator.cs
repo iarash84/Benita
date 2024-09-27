@@ -129,7 +129,8 @@ namespace Benita
             _code.Append(indent + $"{ConvertType(globalVar.Type)} {globalVar.Name}");
             if (globalVar.Initializer != null)
             {
-                _code.Append(" = ");
+                if (globalVar.Initializer is not ArrayInitializerNode)
+                    _code.Append(" = ");
                 GenerateExpression(globalVar.Initializer);
             }
             _code.AppendLine(";");
@@ -335,7 +336,8 @@ namespace Benita
             _code.Append(indent + $"{ConvertType(varDecl.Type)} {varDecl.Name}");
             if (varDecl.Initializer != null)
             {
-                _code.Append(" = ");
+                if (varDecl.Initializer is not ArrayInitializerNode)
+                    _code.Append(" = ");
                 GenerateExpression(varDecl.Initializer);
             }
             _code.AppendLine(";");
@@ -348,7 +350,9 @@ namespace Benita
         /// <param name="indent"></param>
         private void GenerateAssignment(AssignmentNode assign, string indent = "")
         {
-            _code.Append(indent + $"{assign.Name} = ");
+            _code.Append(indent + $"{assign.Name}");
+            if (assign.Expression is not ArrayInitializerNode)
+                _code.Append(" = ");
             GenerateExpression(assign.Expression);
 
             // If the last character is not semicolon  add it
@@ -490,32 +494,56 @@ namespace Benita
                     _code.Append("]");
                     break;
                 case ArrayInitializerNode arrayInitializerNode:
-                    _code.Append("{");
-                    for (int i = 0; i < arrayInitializerNode.Elements.Count; i++)
+                    string literalSize = string.Empty;
+                    if (arrayInitializerNode.SizeExpression is LiteralNode literalNode)
+                        literalSize = literalNode.Value;
+
+                    if (arrayInitializerNode.Elements.Count == 0 && literalSize != "0")
                     {
-                        _code.Append(((LiteralNode)arrayInitializerNode.Elements[i]).Value);
-                        if (i < arrayInitializerNode.Elements.Count - 1)
-                        {
-                            _code.Append(", ");
-                        }
-                    }
-                    _code.Append("}");
-                    break;
-                case FunctionCallNode node:
-                    if (node.FunctionName == "print")
-                    {
-                        GeneratePrintFunctionCall(node, indent);
+                        _code.Append("(");
+                        GenerateExpression(arrayInitializerNode.SizeExpression);
+                        _code.Append(", 0)");
                     }
                     else
                     {
-                        var functionManagementClass = FactoryClass.GetCodeGeneratorClass(node.FunctionName);
-                        if (functionManagementClass != null)
+                        _code.Append(" = ");
+                        _code.Append("{");
+                        for (int i = 0; i < arrayInitializerNode.Elements.Count; i++)
                         {
-                            functionManagementClass.HandleFunctionCall(node.FunctionName, ref _code, ref _defaultFunction, ref _codeHeader, ref _codeInclude);
+                            _code.Append(((LiteralNode)arrayInitializerNode.Elements[i]).Value);
+                            if (i < arrayInitializerNode.Elements.Count - 1)
+                            {
+                                _code.Append(", ");
+                            }
                         }
-                        _code.Append(indent + $"{node.FunctionName}(");
-                        GenerateFunctionCallArguments(node.Arguments);
-                        _code.Append(")");
+
+                        _code.Append("}");
+                    }
+                    break;
+                case FunctionCallNode node:
+                    switch (node.FunctionName)
+                    {
+                        case "print":
+                            GeneratePrintFunctionCall(node, indent);
+                            break;
+                        case "round_number":
+                            GenerateRoundFunctionCall(node, indent);
+                            break;
+                        case "sqrt_number":
+                            GenerateSqrtFunctionCall(node, indent);
+                            break;
+                        default:
+                        {
+                            var functionManagementClass = FactoryClass.GetCodeGeneratorClass(node.FunctionName);
+                            if (functionManagementClass != null)
+                            {
+                                functionManagementClass.HandleFunctionCall(node.FunctionName, ref _code, ref _defaultFunction, ref _codeHeader, ref _codeInclude);
+                            }
+                            _code.Append(indent + $"{node.FunctionName}(");
+                            GenerateFunctionCallArguments(node.Arguments);
+                            _code.Append(")");
+                            break;
+                        }
                     }
                     break;
                 case BinaryExpressionNode binaryExpr:
@@ -592,6 +620,22 @@ namespace Benita
             _code.Append(indent + "std::cout << ");
             GenerateExpression(funcCall.Arguments[0], "", true); // Assuming print has exactly one argument
             _code.Append(" << std::endl");
+        }
+
+        private void GenerateRoundFunctionCall(FunctionCallNode funcCall, string indent = "")
+        {
+            AppendToSubstring("#include <cmath>", ref _codeInclude);
+            _code.Append(indent + "std::round(");
+            GenerateExpression(funcCall.Arguments[0]); // Assuming print has exactly one argument
+            _code.Append(")");
+        }
+
+        private void GenerateSqrtFunctionCall(FunctionCallNode funcCall, string indent = "")
+        {
+            AppendToSubstring("#include <cmath>", ref _codeInclude);
+            _code.Append(indent + "std::sqrt(");
+            GenerateExpression(funcCall.Arguments[0]); // Assuming print has exactly one argument
+            _code.Append(")");
         }
 
         /// <summary>

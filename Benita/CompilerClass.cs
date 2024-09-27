@@ -3,20 +3,20 @@
     public class CompilerClass
     {
 
-        public void Exec(string sourceCode, bool lexerPrint = false, bool parserPrint = false, bool sourcePrint = false)
+        public void Exec(string sourceCode, bool lexerPrint = false, bool parserPrint = false, bool sourcePrint = false, bool debugModeAvailable = false)
         {
             // 1. Tokenize the source code
-            List<Token> tokens = TokenizeCode(sourceCode: sourceCode, resultPrint: lexerPrint, sourcePrint: sourcePrint);
+            List<Token> tokens = TokenizeCode(sourceCode, lexerPrint, sourcePrint);
 
             // 2. Parse the tokens to create an AST
-            ProgramNode? programAst = ParseCode(tokens: tokens, resultPrint: parserPrint);
+            ProgramNode programAst = ParseCode(tokens, parserPrint);
 
             // 3. Analyze the AST using SemanticAnalyzer
             SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
-            semanticAnalyzer.Analyze(program: programAst);
+            semanticAnalyzer.Analyze(programAst);
 
-            var interpreter = new Interpreter();
-            interpreter.Visit(node: programAst);
+            var interpreter = new Interpreter(debugModeAvailable);
+            interpreter.Visit(programAst);
         }
 
         public string GenerateCppCode(string sourceCode, bool lexerPrint = false, bool parserPrint = false, bool sourcePrint = false)
@@ -64,184 +64,184 @@
         {
             if (node == null) return;
 
-            Console.WriteLine(value: $"{indent}{node.GetType().Name}");
+            Console.WriteLine($"{indent}{node.GetType().Name}");
             switch (node)
             {
                 case ProgramNode programNode:
                     foreach (var globalVariable in programNode.GlobalVariables)
                     {
-                        PrintAst(node: globalVariable, indent: indent + "  ");
+                        PrintAst(globalVariable, indent + "  ");
                     }
                     foreach (var packageNode in programNode.Packages)
                     {
-                        PrintAst(node: packageNode, indent: indent + "  ");
+                        PrintAst(packageNode, indent + "  ");
                     }
                     foreach (var function in programNode.Functions)
                     {
-                        PrintAst(node: function, indent: indent + "  ");
+                        PrintAst(function, indent + "  ");
                     }
-                    PrintAst(node: programNode.MainFunction, indent: indent + "  ");
+                    PrintAst(programNode.MainFunction, indent + "  ");
                     break;
 
                 case PackageNode packageNode:
                     foreach (var packageMember in packageNode.Members)
                     {
-                        PrintAst(node: packageMember, indent: indent + "  ");
+                        PrintAst(packageMember, indent + "  ");
                     }
                     break;
 
                 case PackageVariableDeclarationNode packageVariableDeclaration:
                     Console.WriteLine(
-                        value: $"{indent}  Type: {packageVariableDeclaration.Type}, Name: {packageVariableDeclaration.Name}");
-                    PrintAst(node: packageVariableDeclaration.Initializer, indent: indent + "  ");
+                        $"{indent}  Type: {packageVariableDeclaration.Type}, Name: {packageVariableDeclaration.Name}");
+                    PrintAst(packageVariableDeclaration.Initializer, indent + "  ");
                     break;
 
                 case MemberAccessNode memberAccessNode:
-                    Console.WriteLine(value: $"{indent}  Object Name: {memberAccessNode.ObjectName}");
-                    PrintAst(node: memberAccessNode.Expression, indent: indent + "  ");
+                    Console.WriteLine($"{indent}  Object Name: {memberAccessNode.ObjectName}");
+                    PrintAst(memberAccessNode.Expression, indent + "  ");
                     break;
 
                 case PackageFunctionNode packageFunctionNode:
-                    Console.WriteLine(value: $"{indent}  Name: {packageFunctionNode.Name}");
+                    Console.WriteLine($"{indent}  Name: {packageFunctionNode.Name}");
                     foreach (var param in packageFunctionNode.Parameters)
                     {
-                        PrintAst(node: param, indent: indent + "  ");
+                        PrintAst(param, indent + "  ");
                     }
 
-                    PrintAst(node: packageFunctionNode.Body, indent: indent + "  ");
+                    PrintAst(packageFunctionNode.Body, indent + "  ");
                     if (packageFunctionNode.ReturnStatement != null)
                     {
-                        Console.WriteLine(value: $"{indent}  ReturnExpression");
-                        PrintAst(node: packageFunctionNode.ReturnStatement.ReturnExpression, indent: indent + "  " + "  ");
+                        Console.WriteLine($"{indent}  ReturnExpression");
+                        PrintAst(packageFunctionNode.ReturnStatement.ReturnExpression, indent + "  " + "  ");
                     }
                     break;
 
                 case FunctionNode functionNode:
-                    Console.WriteLine(value: $"{indent}  Name: {functionNode.Name}");
+                    Console.WriteLine($"{indent}  Name: {functionNode.Name}");
                     foreach (var param in functionNode.Parameters)
                     {
-                        PrintAst(node: param, indent: indent + "  ");
+                        PrintAst(param, indent + "  ");
                     }
 
-                    PrintAst(node: functionNode.Body, indent: indent + "  ");
+                    PrintAst(functionNode.Body, indent + "  ");
                     if (functionNode.ReturnStatement != null)
                     {
-                        Console.WriteLine(value: $"{indent}  ReturnExpression");
-                        PrintAst(node: functionNode.ReturnStatement.ReturnExpression, indent: indent + "  " + "  ");
+                        Console.WriteLine($"{indent}  ReturnExpression");
+                        PrintAst(functionNode.ReturnStatement.ReturnExpression, indent + "  " + "  ");
                     }
                     break;
 
                 case ParameterNode parameterNode:
-                    Console.WriteLine(value: $"{indent}  Type: {parameterNode.Type}, Name: {parameterNode.Name}");
+                    Console.WriteLine($"{indent}  Type: {parameterNode.Type}, Name: {parameterNode.Name}");
                     break;
 
                 case BlockNode blockNode:
                     foreach (var statement in blockNode.Statements)
                     {
-                        PrintAst(node: statement, indent: indent + "  ");
+                        PrintAst(statement, indent + "  ");
                     }
                     break;
 
                 case VariableDeclarationNode varDeclNode:
-                    Console.WriteLine(value: $"{indent}  Type: {varDeclNode.Type}, Name: {varDeclNode.Name}");
-                    PrintAst(node: varDeclNode.Initializer, indent: indent + "  ");
+                    Console.WriteLine($"{indent}  Type: {varDeclNode.Type}, Name: {varDeclNode.Name}");
+                    PrintAst(varDeclNode.Initializer, indent + "  ");
                     break;
 
                 case AssignmentNode assignmentNode:
-                    Console.WriteLine(value: $"{indent}  Name: {assignmentNode.Name}");
-                    PrintAst(node: assignmentNode.Expression, indent: indent + "  ");
+                    Console.WriteLine($"{indent}  Name: {assignmentNode.Name}");
+                    PrintAst(assignmentNode.Expression, indent + "  ");
                     break;
 
                 case ArrayAssignmentNode arrayAssignmentNode:
-                    Console.WriteLine(value: $"{indent}  Name: {arrayAssignmentNode.Name}");
-                    Console.WriteLine(value: $"{indent}  Index => ");
-                    PrintAst(node: arrayAssignmentNode.Index, indent: indent + "  ");
-                    Console.WriteLine(value: $"{indent}  Value => ");
-                    PrintAst(node: arrayAssignmentNode.Value, indent: indent + "  ");
+                    Console.WriteLine($"{indent}  Name: {arrayAssignmentNode.Name}");
+                    Console.WriteLine($"{indent}  Index => ");
+                    PrintAst(arrayAssignmentNode.Index, indent + "  ");
+                    Console.WriteLine($"{indent}  Value => ");
+                    PrintAst(arrayAssignmentNode.Value, indent + "  ");
                     break;
 
                 case ExpressionStatementNode exprStmtNode:
-                    PrintAst(node: exprStmtNode.Expression, indent: indent + "  ");
+                    PrintAst(exprStmtNode.Expression, indent + "  ");
                     break;
 
                 case LiteralNode literalNode:
-                    Console.WriteLine(value: $"{indent}  Value: {literalNode.Value}");
+                    Console.WriteLine($"{indent}  Value: {literalNode.Value}");
                     break;
 
                 case IdentifierNode identifierNode:
-                    Console.WriteLine(value: $"{indent}  Name: {identifierNode.Name}");
+                    Console.WriteLine($"{indent}  Name: {identifierNode.Name}");
                     break;
 
                 case BinaryExpressionNode binaryExprNode:
-                    Console.WriteLine(value: $"{indent}  Operator: {binaryExprNode.Operator}");
-                    PrintAst(node: binaryExprNode.Left, indent: indent + "  ");
-                    PrintAst(node: binaryExprNode.Right, indent: indent + "  ");
+                    Console.WriteLine($"{indent}  Operator: {binaryExprNode.Operator}");
+                    PrintAst(binaryExprNode.Left, indent + "  ");
+                    PrintAst(binaryExprNode.Right, indent + "  ");
                     break;
 
                 case UnaryExpressionNode unaryExprNode:
-                    Console.WriteLine(value: $"{indent}  Operator: {unaryExprNode.Operator}");
-                    PrintAst(node: unaryExprNode.Operand, indent: indent + "  ");
+                    Console.WriteLine($"{indent}  Operator: {unaryExprNode.Operator}");
+                    PrintAst(unaryExprNode.Operand, indent + "  ");
                     break;
 
                 case FunctionCallNode functionCallNode:
-                    Console.WriteLine(value: $"{indent}  FunctionName: {functionCallNode.FunctionName}");
+                    Console.WriteLine($"{indent}  FunctionName: {functionCallNode.FunctionName}");
                     foreach (var arg in functionCallNode.Arguments)
                     {
-                        PrintAst(node: arg, indent: indent + "  ");
+                        PrintAst(arg, indent + "  ");
                     }
                     break;
 
                 case IfStatementNode ifStatementNode:
-                    PrintAst(node: ifStatementNode.Condition, indent: indent + "  ");
-                    PrintAst(node: ifStatementNode.ThenBranch, indent: indent + "  ");
-                    PrintAst(node: ifStatementNode.ElseBranch, indent: indent + "  ");
+                    PrintAst(ifStatementNode.Condition, indent + "  ");
+                    PrintAst(ifStatementNode.ThenBranch, indent + "  ");
+                    PrintAst(ifStatementNode.ElseBranch, indent + "  ");
                     break;
 
                 case WhileStatementNode whileStatementNode:
-                    PrintAst(node: whileStatementNode.Condition, indent: indent + "  ");
-                    PrintAst(node: whileStatementNode.Body, indent: indent + "  ");
+                    PrintAst(whileStatementNode.Condition, indent + "  ");
+                    PrintAst(whileStatementNode.Body, indent + "  ");
                     break;
 
                 case IncrementDecrementNode incDecNode:
-                    Console.WriteLine(value: $"{indent}  Name: {incDecNode.Name}");
-                    Console.WriteLine(value: $"{indent}  Operator: {incDecNode.Operator}");
+                    Console.WriteLine($"{indent}  Name: {incDecNode.Name}");
+                    Console.WriteLine($"{indent}  Operator: {incDecNode.Operator}");
                     break;
 
                 case ArrayInitializerNode arrayInitNode:
-                    Console.WriteLine(value: $"{indent}  ArrayInitializer");
+                    Console.WriteLine($"{indent}  ArrayInitializer");
                     foreach (var element in arrayInitNode.Elements)
                     {
-                        PrintAst(node: element, indent: indent + "  ");
+                        PrintAst(element, indent + "  ");
                     }
                     break;
 
                 case ArrayAccessNode arrayAccessNode:
-                    Console.WriteLine(value: $"{indent}  ArrayName: {arrayAccessNode.Name}");
-                    PrintAst(node: arrayAccessNode.Index, indent: indent + "  ");
+                    Console.WriteLine($"{indent}  ArrayName: {arrayAccessNode.Name}");
+                    PrintAst(arrayAccessNode.Index, indent + "  ");
                     break;
 
                 case LogicalExpressionNode logicalExpressionNode:
-                    PrintAst(node: logicalExpressionNode.Left, indent: indent + "  ");
-                    Console.WriteLine(value: $"{indent}  Operator: {logicalExpressionNode.Operator}");
-                    PrintAst(node: logicalExpressionNode.Right, indent: indent + "  ");
+                    PrintAst(logicalExpressionNode.Left, indent + "  ");
+                    Console.WriteLine($"{indent}  Operator: {logicalExpressionNode.Operator}");
+                    PrintAst(logicalExpressionNode.Right, indent + "  ");
                     break;
 
                 case ObjectInstantiationNode objectInstantiationNode:
-                    Console.WriteLine(value: $"{indent}  Package Name: {objectInstantiationNode.PackageName}");
-                    Console.WriteLine(value: $"{indent}  Name: {objectInstantiationNode.Name}");
+                    Console.WriteLine($"{indent}  Package Name: {objectInstantiationNode.PackageName}");
+                    Console.WriteLine($"{indent}  Name: {objectInstantiationNode.Name}");
                     foreach (var arg in objectInstantiationNode.Arguments)
                     {
-                        PrintAst(node: arg, indent: indent + "  ");
+                        PrintAst(arg, indent + "  ");
                     }
                     break;
                 case BreakStatementNode:
-                    Console.WriteLine(value: $"{indent}  BreakStatementNode");
+                    Console.WriteLine($"{indent}  BreakStatementNode");
                     break;
                 case ContinueStatementNode:
-                    Console.WriteLine(value: $"{indent}  ContinueStatementNode");
+                    Console.WriteLine($"{indent}  ContinueStatementNode");
                     break;
                 default:
-                    Console.WriteLine(value: $"{indent}  Unknown node type: {node.GetType().Name}");
+                    Console.WriteLine($"{indent}  Unknown node type: {node.GetType().Name}");
                     break;
             }
         }

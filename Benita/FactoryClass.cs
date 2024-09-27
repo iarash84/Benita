@@ -11,7 +11,7 @@ namespace Benita
         /// <summary>
         /// A dictionary mapping function names to their respective interpreter and code generator types.
         /// </summary>
-        private static readonly Dictionary<string?, (Type, Type)> FunctionMappings = new Dictionary<string?, (Type, Type)>
+        private static readonly Dictionary<string, (Type, Type)> FunctionMappings = new()
         {
             { "array_len", (typeof(ArrayManagement),typeof(CgArrayManagement)) },
             { "array_add", (typeof(ArrayManagement),typeof(CgArrayManagement)) },
@@ -23,7 +23,9 @@ namespace Benita
             { "print", (typeof(Utility),typeof(CgUtility)) },
             { "input", (typeof(Utility),typeof(CgUtility)) },
             { "to_string", (typeof(Utility),typeof(CgUtility)) },
-            { "to_number", (typeof(Utility),typeof(CgUtility)) }
+            { "to_number", (typeof(Utility),typeof(CgUtility)) },
+            { "round_number", (typeof(Utility),typeof(CgUtility)) },
+            { "sqrt_number", (typeof(Utility),typeof(CgUtility)) }
         };
 
         /// <summary>

@@ -184,7 +184,7 @@
                     break;
 
                 default:
-                    if (IsDigit(c))
+                    if (IsDigit(c) || c == '.')
                     {
                         ScanNumberLiteral(); ///< Scan number literal.
                     }
@@ -243,12 +243,40 @@
         }
 
         /// <summary>
-        /// Scans and adds a number literal token.
+        /// Scans and processes a numeric literal from the source code.
+        /// Handles both integer and floating-point numbers.
         /// </summary>
         private void ScanNumberLiteral()
         {
-            while (IsDigit(Peek())) Advance();
-            AddToken(TokenType.NUMBER_LITERAL, _source.Substring(_start, _current - _start));
+            // Check if the number starts with a decimal point (e.g., .5)
+            if (Peek() == '.')
+            {
+                Advance();
+            }
+
+            // Process the integer part of the number
+            while (IsDigit(Peek()))
+            {
+                Advance();
+            }
+
+            // Check for a fractional part
+            if (Peek() == '.')
+            {
+                Advance();
+
+                // Process the fractional part of the number
+                while (IsDigit(Peek()))
+                {
+                    Advance();
+                }
+            }
+
+            // Extract the numeric literal from the source
+            string lexeme = _source.Substring(_start, _current - _start);
+
+            // Add the numeric literal token to the token list
+            AddToken(TokenType.NUMBER_LITERAL, lexeme);
         }
 
         /// <summary>
