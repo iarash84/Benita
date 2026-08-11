@@ -367,14 +367,14 @@ namespace Benita
 
         private static void TrimEndNewline(ref StringBuilder sb)
         {
-            if (sb.Length >= 2)
+            if (sb.Length > 0 && sb[sb.Length - 1] == '\n')
             {
-                // Check if the last two characters are \r\n
-                if (sb[sb.Length - 2] == '\r' && sb[sb.Length - 1] == '\n')
-                {
-                    // Remove the last two characters
-                    sb.Length -= 2;
-                }
+                sb.Length--;
+            }
+
+            if (sb.Length > 0 && sb[sb.Length - 1] == '\r')
+            {
+                sb.Length--;
             }
         }
 
