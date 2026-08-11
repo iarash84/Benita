@@ -37,8 +37,9 @@
             bool printTokens = args.Contains("-t");
             bool printSource = args.Contains("-s");
             bool printAst = args.Contains("-a");
+            bool optimizeAst = args.Contains("--optimize");
 
-            args = args.Where(arg => arg != "-t" && arg != "-s" && arg != "-a").ToArray();
+            args = args.Where(arg => arg != "-t" && arg != "-s" && arg != "-a" && arg != "--optimize").ToArray();
 
             if (args.Length == 0)
             {
@@ -57,15 +58,15 @@
                     editor.Run(printTokens, printAst, printSource);
                     break;
                 case "exc":
-                    ExecuteFile(args, printTokens, printAst, printSource, compiler);
+                    ExecuteFile(args, printTokens, printAst, printSource, compiler, optimizeAst: optimizeAst);
                     Console.WriteLine("Program executed successfully.");
                     break;
                 case "dxc":
-                    ExecuteFile(args, printTokens, printAst, printSource, compiler, true);
+                    ExecuteFile(args, printTokens, printAst, printSource, compiler, true, optimizeAst);
                     Console.WriteLine("Program executed successfully.");
                     break;
                 case "ccg":
-                    GenerateCppCode(args, printTokens, printAst, printSource, compiler);
+                    GenerateCppCode(args, printTokens, printAst, printSource, compiler, optimizeAst);
                     break;
                 case "check":
                     CheckFile(args, printTokens, printAst, printSource, compiler);
@@ -82,7 +83,8 @@
             }
         }
 
-        static void ExecuteFile(string[] args, bool printTokens, bool printAst, bool printSource, CompilerClass compiler, bool debugModeAvailable = false)
+        static void ExecuteFile(string[] args, bool printTokens, bool printAst, bool printSource, CompilerClass compiler,
+            bool debugModeAvailable = false, bool optimizeAst = false)
         {
             if (args.Length < 2)
             {
@@ -94,10 +96,11 @@
             if (!ValidateFile(filePath)) return;
 
             string fileContent = File.ReadAllText(filePath);
-            compiler.Exec(fileContent, printTokens, printAst, printSource, debugModeAvailable, filePath);
+            compiler.Exec(fileContent, printTokens, printAst, printSource, debugModeAvailable, filePath, optimizeAst);
         }
 
-        static void GenerateCppCode(string[] args, bool printTokens, bool printAst, bool printSource, CompilerClass compiler)
+        static void GenerateCppCode(string[] args, bool printTokens, bool printAst, bool printSource,
+            CompilerClass compiler, bool optimizeAst)
         {
             if (args.Length < 2)
             {
@@ -110,7 +113,7 @@
 
             string fileContent = File.ReadAllText(filePath);
             string outputFilePath = args.Length > 2 ? args[2] : string.Empty;
-            var generatedCode = compiler.GenerateCppCode(fileContent, printTokens, printAst, printSource, filePath);
+            var generatedCode = compiler.GenerateCppCode(fileContent, printTokens, printAst, printSource, filePath, optimizeAst);
 
             if (!string.IsNullOrEmpty(outputFilePath))
             {
@@ -177,6 +180,7 @@
             Console.WriteLine("  -a         - Print the AST.");
             Console.WriteLine("  -t         - Print the tokens.");
             Console.WriteLine("  -s         - Print the Source.");
+            Console.WriteLine("  --optimize - Optimize the AST before execution or C++ generation.");
         }
     }
 }

@@ -1,3 +1,5 @@
+<div dir="rtl" align="right">
+
 # معماری و راهنمای توسعهٔ Benita
 
 <p align="center">
@@ -27,6 +29,8 @@
 
 پیش از هرکدام از این دو مسیر، کد منبع توکن‌سازی، Parse و از نظر معنایی بررسی می‌شود. بنابراین برنامه‌ای که خطای نحوی یا معنایی دارد، نه اجرا می‌شود و نه به C++ تبدیل خواهد شد.
 
+<div dir="ltr" align="left">
+
 ```mermaid
 flowchart LR
     Source[فایل .ben] --> Lexer[Lexer]
@@ -39,6 +43,8 @@ flowchart LR
     Interpreter --> Result[خروجی برنامه]
     Generator --> Cpp[فایل یا متن C++]
 ```
+
+</div>
 
 ## ساختار مخزن
 
@@ -133,6 +139,8 @@ flowchart LR
 
 برای نمونه، کد زیر را در نظر بگیرید:
 
+<div dir="ltr" align="left">
+
 ```benita
 func add(number a, number b) -> number {
     return a + b;
@@ -142,6 +150,8 @@ _main_() {
     print(add(2, 3));
 }
 ```
+
+</div>
 
 پردازش آن به‌ترتیب زیر انجام می‌شود:
 
@@ -155,6 +165,8 @@ _main_() {
 
 ابتدا پروژه را آماده کنید:
 
+<div dir="ltr" align="left">
+
 ```bash
 git clone https://github.com/iarash84/Benita.git
 cd Benita
@@ -162,37 +174,69 @@ dotnet restore Benita.sln
 dotnet build Benita.sln
 ```
 
+</div>
+
 ### اجرای مستقیم
+
+<div dir="ltr" align="left">
 
 ```bash
 dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
 ```
 
+</div>
+
 ### اجرای Debug
+
+<div dir="ltr" align="left">
 
 ```bash
 dotnet run --project Benita -- dxc Examples/simple-addition-expression.ben
 ```
 
+</div>
+
 ### بررسی بدون اجرا
+
+<div dir="ltr" align="left">
 
 ```bash
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben
 ```
 
+</div>
+
 این فرمان فقط مراحل Lexer، Parser و Semantic Analyzer را انجام می‌دهد و برای IDE، CI و اعتبارسنجی سریع مناسب است.
 
 ### تولید C++
+
+<div dir="ltr" align="left">
 
 ```bash
 dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
 ```
 
+</div>
+
+برای فعال‌کردن constant folding و حذف شاخه‌های ثابت غیرقابل‌دسترسی، گزینهٔ `--optimize` را اضافه کنید:
+
+<div dir="ltr" align="left">
+
+```bash
+dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp --optimize
+```
+
+</div>
+
 ### مشاهدهٔ جزئیات پردازش
+
+<div dir="ltr" align="left">
 
 ```bash
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben -s -t -a
 ```
+
+</div>
 
 - `-s`: نمایش منبع پردازش‌شده
 - `-t`: نمایش Tokenها
@@ -202,11 +246,15 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben -s 
 
 توابع داخلی در `FactoryClass` به دو پیاده‌سازی نگاشت می‌شوند:
 
+<div dir="ltr" align="left">
+
 ```text
 نام تابع داخلی
 ├── itpr_df: رفتار تابع هنگام اجرای مستقیم
 └── Cg_df: کد و helperهای لازم هنگام تولید C++
 ```
+
+</div>
 
 گروه‌های فعلی عبارت‌اند از:
 
@@ -233,9 +281,13 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben -s 
 
 پروژهٔ تست از MSTest استفاده می‌کند:
 
+<div dir="ltr" align="left">
+
 ```bash
 dotnet test Benita.sln --configuration Release
 ```
+
+</div>
 
 تست‌ها چند سطح را پوشش می‌دهند:
 
@@ -284,3 +336,5 @@ Interpreter و Code Generator دو مصرف‌کنندهٔ یک AST هستند. 
 - [گرامر زبان](https://github.com/iarash84/Benita/blob/main/docs/Grammar.txt)
 - [برنامه‌های نمونه](https://github.com/iarash84/Benita/tree/main/Examples)
 - [مخزن Benita در GitHub](https://github.com/iarash84/Benita)
+
+</div>

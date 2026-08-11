@@ -69,6 +69,7 @@ Options:
   -a         - Print the AST.
   -t         - Print the tokens.
   -s         - Print the Source.
+  --optimize - Optimize the AST before execution or C++ generation.
 ```
 
 #### فرمان‌ها
@@ -110,11 +111,18 @@ Options:
 - `-a`: درخت نحوی انتزاعی یا AST را نمایش می‌دهد.
 - `-t`: توکن‌های تولیدشده توسط Lexer را نمایش می‌دهد.
 - `-s`: کد منبع پردازش‌شده، از جمله نتیجه `include_once`، را نمایش می‌دهد.
+- `--optimize`: پیش از اجرا یا تولید C++، عبارت‌های ثابت و شاخه‌های غیرقابل‌دسترسی AST را بهینه می‌کند.
 
 گزینه‌ها را می‌توان همراه فرمان‌های پردازش فایل استفاده کرد؛ برای مثال:
 
 ```bash
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben -t -a
+```
+
+برای تولید C++ بهینه‌شده:
+
+```bash
+dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp --optimize
 ```
 
 ### اجرای تست‌ها
@@ -213,6 +221,7 @@ Options:
   -a         - Print the AST.
   -t         - Print the tokens.
   -s         - Print the Source.
+  --optimize - Optimize the AST before execution or C++ generation.
 ```
 
 #### Actions
@@ -254,11 +263,18 @@ Options:
 - `-a`: prints the Abstract Syntax Tree (AST).
 - `-t`: prints tokens produced by the Lexer.
 - `-s`: prints the processed source, including the result of `include_once`.
+- `--optimize`: folds constant expressions and removes unreachable constant branches before execution or C++ generation.
 
 Options can be combined with file-processing actions. For example:
 
 ```bash
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben -t -a
+```
+
+To generate optimized C++:
+
+```bash
+dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp --optimize
 ```
 
 ### Tests
