@@ -1,393 +1,463 @@
-# New Programming Language Tutorial
+# Benita Language Tutorial | آموزش زبان بنیتا
 
-Welcome to the tutorial for the new programming language! This guide will walk you through the basics of the language, including its syntax and structure, to help you get started with writing programs.
+[فارسی](#آموزش-فارسی) · [English](#english-tutorial)
 
-## Table of Contents
-1. [Program Structure](#program-structure)
-2. [Include Directives](#include-directives)
-3. [Main Function](#main-function)
-4. [Functions](#functions)
-5. [Types](#types)
-6. [Global Variables](#global-variables)
-7. [Packages](#packages)
-8. [Statements](#statements)
-9. [Expressions](#expressions)
-10. [Comments](#comments)
-11. [Default Functions](#default-functions)
+---
 
-## Program Structure
-A program in this language consists of include directives, global variable declarations, packages, functions, a main function, and default functions. Here's the overall structure:
+## آموزش فارسی
 
-```bnf
-program ::= include_directive* global_variable_declaration* package* function* main_function default_functions
-```
+### ۱. اولین برنامه
 
-Example:
+نقطه شروع صریح یک برنامه تابع `_main_` است:
 
-```c
-include_once "library.lib";
-
-number globalVar = 10;
-
-package Math {
-    number pi = 3.14;
-
-    func square(number x) -> number {
-        return x * x;
-    }
-}
-
-func add(number a, number b) -> number {
-    return a + b;
-}
-
+```benita
 _main_() {
-    let number result = add(5, 3);
-    print(result);
-    return 0;
+    print("Hello, Benita!");
 }
 ```
 
-## Include Directives
-Include directives are used to include external files or libraries in your program. They follow this syntax:
+بنیتا از دستورات اجرایی سطح بالا نیز پشتیبانی می‌کند و در این حالت main به‌صورت ضمنی ساخته می‌شود:
 
-```bnf
-include_directive ::= "include_once" string_literal ";"
+```benita
+number x = 2;
+print(x + 3);
 ```
 
-Example:
-```c
-include_once "library.lib";
+### ۲. انواع و متغیرها
+
+انواع اصلی زبان عبارت‌اند از `number`، `string`، `bool` و `void`. برای استنتاج نوع از مقدار اولیه از `let` استفاده کنید:
+
+```benita
+number age = 20;
+string name = "Benita";
+bool active = true;
+let total = 5.2 + 8;
 ```
 
-## Main Function
-The main function serves as the entry point of the program. It follows this syntax:
+متغیرها می‌توانند سراسری یا محلی باشند. متغیر `let` باید مقدار اولیه داشته باشد.
 
-```bnf
-main_function ::= "_main_" "(" parameters? ")" "{" statement* "return" expression ";" "}"
+### ۳. عملگرها
+
+```benita
+number sum = 10 + 5;
+number remainder = sum % 4;
+bool comparison = sum >= 15;
+bool accepted = comparison && true;
+
+sum += 2;
+sum++;
 ```
 
-Example:
-```c
-_main_() {
-    // Your code here
-    let number x = 5;
-    print(x);
-    return 0;
-}
-```
+- عملگرهای حسابی: `+`، `-`، `*`، `/` و `%`
+- عملگرهای مقایسه‌ای: `==`، `!=`، `<`، `>`، `<=` و `>=`
+- عملگرهای منطقی: `&&`، `||` و `!`
 
-## Functions
-Functions are defined using the `func` keyword. They can accept parameters and return a value. Here's the syntax:
+### ۴. شرط‌ها
 
-```bnf
-function ::= "func" identifier "(" parameters? ")" "->" type "{" statement* "return" expression? ";" "}"
-parameters ::= parameter ("," parameter)*
-parameter ::= type identifier
-```
+```benita
+number value = 12;
 
-Example:
-```c
-func add(number a, number b) -> number {
-    return a + b;
-}
-
-func greet(string name) -> void {
-    print("Hello, " + name);
-}
-```
-
-## Types
-The language supports various types, including primitive types, array types, and custom types. Here are the supported types:
-
-```bnf
-type ::= "number" | "string" | "bool" | "void" | array_type | identifier
-```
-
-Example:
-```c
-number x;
-string name;
-bool isTrue;
-```
-
-## Global Variables
-Global variables can be declared outside of functions and are accessible throughout the program. The syntax is:
-
-```bnf
-global_variable_declaration ::= type identifier ("=" expression)? ";"
-```
-
-Example:
-```c
-number globalVar = 10;
-string greeting = "Hello, world!";
-```
-
-## Packages
-Packages allow you to group related variables and functions together. Here's the syntax:
-
-```bnf
-package ::= "package" identifier "{" package_body "}"
-package_body ::= (variable_declaration | function)*
-```
-
-Example:
-```c
-package Math {
-    number pi = 3.14;
-
-    func square(number x) -> number {
-        return x * x;
-    }
-}
-```
-
-## Statements
-Statements are the building blocks of a program. They include variable declarations, assignments, conditionals, loops, and more. Here are some of the key statement types:
-
-### Variable Declaration
-```bnf
-variable_declaration ::= (type | "let") identifier ("=" expression)? ";"
-```
-Example:
-```c
-let number x = 5;
-let string message = "Hello";
-```
-
-### Assignment
-```bnf
-assignment ::= (identifier | member_access) ("=" | "[" expression "]") expression ";"
-```
-Example:
-```c
-x = 10;
-message = "Goodbye";
-```
-
-### Compound Assignment
-```bnf
-compound_assignment ::= (identifier | member_access) ("+=" | "-=" | "*=" | "/=") expression ";"
-```
-Example:
-```c
-x += 5;
-y -= 3;
-z *= 2;
-w /= 4;
-```
-
-### Increment/Decrement
-```bnf
-increment_decrement ::= (identifier | member_access) ("++" | "--") ";"
-```
-Example:
-```c
-x++;
-y--;
-```
-
-### If Statement
-```bnf
-if_statement ::= "if" "(" expression ")" statement ("else" statement)?
-```
-Example:
-```c
-if (x > 10) {
-    print("x is greater than 10");
+if (value % 2 == 0) {
+    print("even");
 } else {
-    print("x is 10 or less");
+    print("odd");
 }
 ```
 
-### While Statement
-```bnf
-while_statement ::= "while" "(" expression ")" statement
-```
-Example:
-```c
-while (x < 10) {
-    x++;
+شرط باید مقدار `bool` تولید کند.
+
+### ۵. حلقه‌ها و کنترل جریان
+
+حلقه `while`:
+
+```benita
+number i = 0;
+while (i < 3) {
+    print(i);
+    i++;
 }
 ```
 
-### For Statement
-```bnf
-for_statement ::= "for" "(" (variable_declaration | assignment) expression ";" expression_statement ")" statement
-```
-Example:
-```c
-for (let number i = 0; i < 10; i++;) {
+حلقه `for`:
+
+```benita
+for (number i = 0; i < 3; i++) {
     print(i);
 }
 ```
 
-### Block
-```bnf
-block ::= "{" statement* "}"
-```
-Example:
-```c
-{
-    let number x = 0;
-    x++;
-    print(x);
+از `break` برای خروج از حلقه و از `continue` برای رفتن به تکرار بعدی استفاده کنید.
+
+### ۶. توابع و بازگشت
+
+```benita
+func add(number a, number b) -> number {
+    return a + b;
+}
+
+func show(string message) -> void {
+    print(message);
+    return;
+}
+
+_main_() {
+    print(add(2, 3));
+    show("done");
 }
 ```
 
-### Expression Statement
-```bnf
-expression_statement ::= expression ";"
-```
-Example:
-```c
-print("Hello, World");
-```
+توابع می‌توانند پیش یا پس از محل فراخوانی تعریف شوند. نوع مقدار `return` باید با نوع خروجی تابع هماهنگ باشد.
 
-### Object Instantiation
-```bnf
-object_instantiation ::= identifier identifier "=" "new" identifier "(" arguments? ")" ";"
-```
-Example:
-```c
-Person john = new Person("John");
+نمونه بازگشتی:
+
+```benita
+func factorial(number n) -> number {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
 ```
 
-## Expressions
-Expressions include literals, identifiers, binary and unary operations, function calls, and more. Here's the syntax:
+### ۷. آرایه‌ها
 
-```bnf
-expression ::= literal 
-              | string_literal 
-              | boolean_literal 
-              | identifier 
-              | array_access 
-              | member_access
-              | binary_expression 
-              | unary_expression 
-              | "(" expression ")" 
-              | function_call
+```benita
+number[] values = [10, 20, 30];
+values[1] = 25;
+print(values[1]);
+
+values = array_add(values, 40);
+values = array_remove(values, 0);
+print(array_len(values));
 ```
 
-### Binary and Unary Expressions
-```bnf
-binary_expression ::= expression binary_operator expression
-unary_expression ::= unary_operator expression
-binary_operator ::= "+" | "-" | "*" | "/" | "%" | "<" | ">" | "<=" | ">=" | "==" | "&&" | "||"
-unary_operator ::= "-" | "++" | "--" | "!"
-```
+تمام عناصر یک آرایه باید نوع یکسان داشته باشند و اندیس آرایه عددی است.
 
-Example:
-```c
-let number a = 5 + 3;
-let number b = a * 2;
-let bool isEqual = (a == b);
-b++;
-```
+### ۸. بسته‌ها
 
-### Array Access and Member Access
-```bnf
-array_access ::= identifier "[" expression "]"
-member_access ::= identifier "." identifier
-```
+بسته‌ها متغیرها و توابع مرتبط را کنار هم نگه می‌دارند. تابعی که نامش با نام بسته برابر باشد نقش سازنده را دارد:
 
-Example:
-```c
-let number arr[10];
-arr[0] = 1;
-let number firstElement = arr[0];
+```benita
+pkg Counter {
+    number value = 0;
 
-let string person.name = "John";
-let string name = person.name;
-```
+    func Counter(number initial) -> void {
+        value = initial;
+    }
 
-### Literals
-```bnf
-literal ::= [0-9]+
-string_literal ::= "\"" [^\"]* "\""
-boolean_literal ::= "true" | "false"
-identifier ::= [a-zA-Z_][a-zA-Z0-9_]*
-```
-
-Example:
-```c
-let number x = 42;
-let string str = "Hello, World";
-let bool isTrue = true;
-```
-
-### Function Call
-```bnf
-function_call ::= (identifier | member_access) "(" arguments? ")"
-arguments ::= expression ("," expression)*
-```
-
-Example:
-```c
-let number sum = add(5, 3);
-print("Sum: " + sum);
-```
-
-## Comments
-Comments can be single-line or multi-line. Here's the syntax:
-
-```bnf
-comment ::= single_line_comment | multi_line_comment
-single_line_comment ::= "//" [^\n]*
-multi_line_comment ::= "/*" .* "*/"
-```
-
-### Example:
-```c
-// This is a single-line comment
-/* This is a 
-multi-line comment */
-```
-
-## Default Functions
-The language provides some default functions for common operations:
-
-```bnf
-default_functions ::= "func print(string msg) -> void" 
-                      | "func input() -> string" 
-                      | "func file_read(string filename) -> string" 
-                      | "func file_write(string filename, string content) -> void"
-                      | "func file_exist(string filename) -> bool"
-                      | "func file_delete(string filename) -> bool"
-                      | "func array_len(array_type array) -> number"
-                      | "func array_add(array_type array, type element) -> array_type"
-                      | "func array_remove(array_type array, number index) -> array_type"
-```
-
-### Example:
-```c
-print("Hello, World");
-
-let string name = input();
-print("You entered: " + name);
-
-let string content = file_read("file.txt");
-print("File content: " + content);
-
-file_write("file.txt", "New content");
-
-if (file_exist("file.txt")) {
-    print("File exists");
-    file_delete("file.txt");
-    print("File deleted");
+    func increment() -> void {
+        value++;
+    }
 }
 
-let number length = array_len(myArray);
-print("Array length: " + length);
-
-myArray = array_add(myArray, 42);
-print("Element added");
-
-myArray = array_remove(myArray,
-
- 0);
-print("Element removed");
+_main_() {
+    Counter counter = new Counter(5);
+    counter.increment();
+    print(counter.value);
+}
 ```
 
-This tutorial covers the basics of the language's syntax and structure. For more advanced features and detailed examples, refer to the language documentation or additional tutorials. Happy coding!
+### ۹. ورودی، تبدیل و ریاضیات
+
+```benita
+_main_() {
+    print("Enter a number:");
+    number value = to_number(input());
+    print(to_string(value));
+    print(round_number(value));
+    print(sqrt_number(value));
+}
+```
+
+توابع داخلی این بخش:
+
+- `print(value)` چاپ مقدار
+- `input()` خواندن یک خط رشته‌ای
+- `to_string(value)` تبدیل مقدار به رشته
+- `to_number(value)` تبدیل مقدار به عدد
+- `round_number(value)` گرد کردن عدد
+- `sqrt_number(value)` محاسبه ریشه دوم
+
+### ۱۰. عملیات فایل
+
+```benita
+_main_() {
+    if (!file_exist("message.txt")) {
+        file_write("message.txt", "Hello");
+    }
+
+    print(file_read("message.txt"));
+    file_delete("message.txt");
+}
+```
+
+توابع موجود: `file_read`، `file_write`، `file_exist` و `file_delete`.
+
+### ۱۱. استفاده از فایل‌های دیگر
+
+```benita
+include_once "add-function-library.ben";
+
+_main_() {
+    print(add(2, 3));
+}
+```
+
+`include_once` هر فایل را حداکثر یک بار وارد می‌کند. مسیر فایل نسبت به پوشه کاری برنامه محاسبه می‌شود.
+
+### ۱۲. کامنت‌ها
+
+```benita
+// کامنت تک‌خطی
+
+/*
+   کامنت چندخطی
+*/
+```
+
+### ۱۳. اجرا و تولید C++
+
+از ریشه مخزن:
+
+```bash
+dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
+```
+
+گزینه‌های کاربردی:
+
+- `-t`: نمایش توکن‌ها
+- `-a`: نمایش درخت AST
+- `-s`: نمایش کد منبع پردازش‌شده
+
+برای نمونه‌های بیشتر به پوشه [`Examples`](../Examples) مراجعه کنید.
+
+---
+
+## English tutorial
+
+### 1. Your first program
+
+The explicit entry point of a Benita program is `_main_`:
+
+```benita
+_main_() {
+    print("Hello, Benita!");
+}
+```
+
+Benita also supports executable top-level statements, in which case an implicit main function is generated:
+
+```benita
+number x = 2;
+print(x + 3);
+```
+
+### 2. Types and variables
+
+The primary types are `number`, `string`, `bool`, and `void`. Use `let` to infer a variable's type from its initializer:
+
+```benita
+number age = 20;
+string name = "Benita";
+bool active = true;
+let total = 5.2 + 8;
+```
+
+Variables may be global or local. A `let` variable must have an initializer.
+
+### 3. Operators
+
+```benita
+number sum = 10 + 5;
+number remainder = sum % 4;
+bool comparison = sum >= 15;
+bool accepted = comparison && true;
+
+sum += 2;
+sum++;
+```
+
+- Arithmetic operators: `+`, `-`, `*`, `/`, and `%`
+- Comparison operators: `==`, `!=`, `<`, `>`, `<=`, and `>=`
+- Logical operators: `&&`, `||`, and `!`
+
+### 4. Conditions
+
+```benita
+number value = 12;
+
+if (value % 2 == 0) {
+    print("even");
+} else {
+    print("odd");
+}
+```
+
+A condition must evaluate to `bool`.
+
+### 5. Loops and control flow
+
+A `while` loop:
+
+```benita
+number i = 0;
+while (i < 3) {
+    print(i);
+    i++;
+}
+```
+
+A `for` loop:
+
+```benita
+for (number i = 0; i < 3; i++) {
+    print(i);
+}
+```
+
+Use `break` to leave a loop and `continue` to move to its next iteration.
+
+### 6. Functions and returns
+
+```benita
+func add(number a, number b) -> number {
+    return a + b;
+}
+
+func show(string message) -> void {
+    print(message);
+    return;
+}
+
+_main_() {
+    print(add(2, 3));
+    show("done");
+}
+```
+
+Functions may be declared before or after their call sites. A returned value must match the function's declared return type.
+
+A recursive example:
+
+```benita
+func factorial(number n) -> number {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+```
+
+### 7. Arrays
+
+```benita
+number[] values = [10, 20, 30];
+values[1] = 25;
+print(values[1]);
+
+values = array_add(values, 40);
+values = array_remove(values, 0);
+print(array_len(values));
+```
+
+All elements in an array must have the same type, and an array index must be numeric.
+
+### 8. Packages
+
+Packages group related variables and functions. A function whose name matches its package acts as the constructor:
+
+```benita
+pkg Counter {
+    number value = 0;
+
+    func Counter(number initial) -> void {
+        value = initial;
+    }
+
+    func increment() -> void {
+        value++;
+    }
+}
+
+_main_() {
+    Counter counter = new Counter(5);
+    counter.increment();
+    print(counter.value);
+}
+```
+
+### 9. Input, conversion, and mathematics
+
+```benita
+_main_() {
+    print("Enter a number:");
+    number value = to_number(input());
+    print(to_string(value));
+    print(round_number(value));
+    print(sqrt_number(value));
+}
+```
+
+Built-in functions in this group:
+
+- `print(value)` prints a value
+- `input()` reads one line of text
+- `to_string(value)` converts a value to a string
+- `to_number(value)` converts a value to a number
+- `round_number(value)` rounds a number
+- `sqrt_number(value)` returns a square root
+
+### 10. File operations
+
+```benita
+_main_() {
+    if (!file_exist("message.txt")) {
+        file_write("message.txt", "Hello");
+    }
+
+    print(file_read("message.txt"));
+    file_delete("message.txt");
+}
+```
+
+Available functions are `file_read`, `file_write`, `file_exist`, and `file_delete`.
+
+### 11. Including other files
+
+```benita
+include_once "add-function-library.ben";
+
+_main_() {
+    print(add(2, 3));
+}
+```
+
+`include_once` imports each file at most once. File paths are resolved relative to the program's working directory.
+
+### 12. Comments
+
+```benita
+// A single-line comment
+
+/*
+   A multi-line comment
+*/
+```
+
+### 13. Running and generating C++
+
+From the repository root:
+
+```bash
+dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
+```
+
+Useful options:
+
+- `-t`: print tokens
+- `-a`: print the AST
+- `-s`: print the processed source
+
+See the [`Examples`](../Examples) directory for more working programs.
