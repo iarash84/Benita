@@ -38,25 +38,84 @@ dotnet restore Benita.sln
 dotnet build Benita.sln
 ```
 
-اجرای یک برنامه بنیتا:
+### نحوه استفاده
 
-```bash
-dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
-```
-
-تولید کد C++:
-
-```bash
-dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
-```
-
-نمایش راهنما:
+با اجرای فرمان زیر راهنمای خط فرمان نمایش داده می‌شود:
 
 ```bash
 dotnet run --project Benita -- help
 ```
 
-گزینه‌های `-t`، `-a` و `-s` به‌ترتیب برای نمایش توکن‌ها، AST و کد منبع پردازش‌شده قابل استفاده‌اند.
+خروجی راهنما:
+
+```text
+__________              .__  __           .____
+\______   \ ____   ____ |__|/  |______    |    |   _____    ____    ____
+ |    |  _// __ \ /    \|  \   __\__  \   |    |   \__  \  /    \  / ___\
+ |    |   \  ___/|   |  \  ||  |  / __ \_ |    |___ / __ \|   |  \/ /_/  >
+ |______  /\___  >___|  /__||__| (____  / |_______ (____  /___|  /\___  /
+        \/     \/     \/              \/          \/    \/     \//_____/
+  (c) Adm, 2024
+  Version 0.4.3
+Usage: Program <action> <filePath> [outputFilePath] [-p] [-t]
+Actions:
+  exc        - Execute the code in the file.
+  dxc        - Execute the code in the file in debug mode.
+  ccg        - Generate C++ code from the file content and save to output file.
+  check      - Check syntax and semantics without executing the program.
+  edr        - Open the text editor.
+  help       - Show this help message.
+Options:
+  -a         - Print the AST.
+  -t         - Print the tokens.
+  -s         - Print the Source.
+```
+
+#### فرمان‌ها
+
+- `exc`: فایل `.ben` را با مفسر اجرا می‌کند.
+
+  ```bash
+  dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+  ```
+
+- `dxc`: برنامه را در حالت debug اجرا می‌کند و وضعیت اجرای مفسر را نمایش می‌دهد.
+
+  ```bash
+  dotnet run --project Benita -- dxc Examples/simple-addition-expression.ben
+  ```
+
+- `ccg`: برنامه را به C++ تبدیل می‌کند. مسیر خروجی اختیاری است؛ در صورت حذف آن، کد در کنسول چاپ می‌شود.
+
+  ```bash
+  dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
+  ```
+
+- `check`: مراحل Lexer، Parser و SemanticAnalyzer را بدون اجرای برنامه یا تولید C++ انجام می‌دهد.
+
+  ```bash
+  dotnet run --project Benita -- check Examples/simple-addition-expression.ben
+  ```
+
+- `edr`: ویرایشگر کنسولی Benita را با syntax highlighting باز می‌کند.
+
+  ```bash
+  dotnet run --project Benita -- edr
+  ```
+
+- `help`: لوگو، نسخه، فرمان‌ها و گزینه‌های CLI را نمایش می‌دهد.
+
+#### گزینه‌ها
+
+- `-a`: درخت نحوی انتزاعی یا AST را نمایش می‌دهد.
+- `-t`: توکن‌های تولیدشده توسط Lexer را نمایش می‌دهد.
+- `-s`: کد منبع پردازش‌شده، از جمله نتیجه `include_once`، را نمایش می‌دهد.
+
+گزینه‌ها را می‌توان همراه فرمان‌های پردازش فایل استفاده کرد؛ برای مثال:
+
+```bash
+dotnet run --project Benita -- check Examples/simple-addition-expression.ben -t -a
+```
 
 ### اجرای تست‌ها
 
@@ -123,25 +182,84 @@ dotnet restore Benita.sln
 dotnet build Benita.sln
 ```
 
-Run a Benita program:
+### Usage
 
-```bash
-dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
-```
-
-Generate C++ code:
-
-```bash
-dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
-```
-
-Show command-line help:
+Display the command-line help with:
 
 ```bash
 dotnet run --project Benita -- help
 ```
 
-Use `-t`, `-a`, and `-s` to print tokens, the AST, and the processed source respectively.
+The CLI prints the following guide:
+
+```text
+__________              .__  __           .____
+\______   \ ____   ____ |__|/  |______    |    |   _____    ____    ____
+ |    |  _// __ \ /    \|  \   __\__  \   |    |   \__  \  /    \  / ___\
+ |    |   \  ___/|   |  \  ||  |  / __ \_ |    |___ / __ \|   |  \/ /_/  >
+ |______  /\___  >___|  /__||__| (____  / |_______ (____  /___|  /\___  /
+        \/     \/     \/              \/          \/    \/     \//_____/
+  (c) Adm, 2024
+  Version 0.4.3
+Usage: Program <action> <filePath> [outputFilePath] [-p] [-t]
+Actions:
+  exc        - Execute the code in the file.
+  dxc        - Execute the code in the file in debug mode.
+  ccg        - Generate C++ code from the file content and save to output file.
+  check      - Check syntax and semantics without executing the program.
+  edr        - Open the text editor.
+  help       - Show this help message.
+Options:
+  -a         - Print the AST.
+  -t         - Print the tokens.
+  -s         - Print the Source.
+```
+
+#### Actions
+
+- `exc`: executes a `.ben` file with the interpreter.
+
+  ```bash
+  dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+  ```
+
+- `dxc`: executes the program in debug mode and displays interpreter state.
+
+  ```bash
+  dotnet run --project Benita -- dxc Examples/simple-addition-expression.ben
+  ```
+
+- `ccg`: translates a program to C++. The output path is optional; without it, generated code is printed to the console.
+
+  ```bash
+  dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
+  ```
+
+- `check`: runs the Lexer, Parser, and SemanticAnalyzer without executing the program or generating C++.
+
+  ```bash
+  dotnet run --project Benita -- check Examples/simple-addition-expression.ben
+  ```
+
+- `edr`: opens Benita's console editor with syntax highlighting.
+
+  ```bash
+  dotnet run --project Benita -- edr
+  ```
+
+- `help`: displays the logo, version, CLI actions, and available options.
+
+#### Options
+
+- `-a`: prints the Abstract Syntax Tree (AST).
+- `-t`: prints tokens produced by the Lexer.
+- `-s`: prints the processed source, including the result of `include_once`.
+
+Options can be combined with file-processing actions. For example:
+
+```bash
+dotnet run --project Benita -- check Examples/simple-addition-expression.ben -t -a
+```
 
 ### Tests
 
