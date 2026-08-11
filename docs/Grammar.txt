@@ -9,10 +9,11 @@ parameters                  ::= parameter ("," parameter)*
 parameter                   ::= type identifier
 
 type                        ::= "number" | "string" | "bool" | "void" | array_type | identifier
+array_type                  ::= "number[]" | "string[]" | "bool[]"
 
 global_variable_declaration ::= type identifier ("=" expression)? ";"
 
-package                     ::= "package" identifier "{" package_body "}"
+package                     ::= "pkg" identifier "{" package_body "}"
 package_body                ::= (variable_declaration | function)*
 
 statement                   ::= variable_declaration 
@@ -79,3 +80,13 @@ default_functions           ::= "func print(string msg) -> void"
                                | "func array_len(array_type array) -> number"
                                | "func array_add(array_type array, type element) -> array_type"
                                | "func array_remove(array_type array, number index) -> array_type"
+                               | "func string_len(string value) -> number"
+                               | "func string_char_at(string value, number index) -> string"
+                               | "func string_substring(string value, number start, number length) -> string"
+                               | "func string_contains(string value, string search) -> bool"
+                               | "func string_index_of(string value, string search) -> number"
+                               | "func string_replace(string value, string old, string new) -> string"
+                               | "func string_split(string value, string separator) -> string[]"
+                               | "func string_trim(string value) -> string"
+                               | "func string_to_lower(string value) -> string"
+                               | "func string_to_upper(string value) -> string"

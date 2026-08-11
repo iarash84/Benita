@@ -178,6 +178,27 @@ _main_() {
 - `round_number(value)` گرد کردن عدد
 - `sqrt_number(value)` محاسبه ریشه دوم
 
+#### توابع رشته‌ای
+
+```benita
+_main_() {
+    string value = "  Hello Benita  ";
+    print(string_len(value));
+    print(string_char_at(value, 2));
+    print(string_substring(value, 2, 5));
+    print(string_contains(value, "Benita"));
+    print(string_index_of(value, "Benita"));
+    print(string_replace(value, "Benita", "World"));
+    string[] parts = string_split("one,two,three", ",");
+    print(parts[1]);
+    print(string_trim(value));
+    print(string_to_lower("BENITA"));
+    print(string_to_upper("benita"));
+}
+```
+
+اندیس‌های رشته از صفر شروع می‌شوند. `string_index_of` در صورت پیدا نشدن عبارت، مقدار `-1` برمی‌گرداند و `string_split` یک `string[]` تولید می‌کند.
+
 ### ۱۰. عملیات فایل
 
 ```benita
@@ -412,6 +433,27 @@ Built-in functions in this group:
 - `to_number(value)` converts a value to a number
 - `round_number(value)` rounds a number
 - `sqrt_number(value)` returns a square root
+
+#### String functions
+
+```benita
+_main_() {
+    string value = "  Hello Benita  ";
+    print(string_len(value));
+    print(string_char_at(value, 2));
+    print(string_substring(value, 2, 5));
+    print(string_contains(value, "Benita"));
+    print(string_index_of(value, "Benita"));
+    print(string_replace(value, "Benita", "World"));
+    string[] parts = string_split("one,two,three", ",");
+    print(parts[1]);
+    print(string_trim(value));
+    print(string_to_lower("BENITA"));
+    print(string_to_upper("benita"));
+}
+```
+
+String indexes are zero-based. `string_index_of` returns `-1` when no match is found, and `string_split` returns a `string[]`.
 
 ### 10. File operations
 

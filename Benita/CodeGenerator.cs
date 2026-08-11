@@ -656,7 +656,7 @@ namespace Benita
                 case "number[]":
                     return "std::vector<double>";
                 case "string[]":
-                    return "std::vector<string>";
+                    return "std::vector<std::string>";
                 case "bool[]":
                     return "std::vector<bool>";
                 case "void":

@@ -16,6 +16,7 @@
 
 - متغیرهای عددی، رشته‌ای، بولی و دارای نوع استنتاجی (`let`)
 - آرایه‌ها و توابع مدیریت آرایه
+- توابع کامل رشته‌ای برای طول، جست‌وجو، برش، جایگزینی، تقسیم و تغییر حروف
 - توابع، بازگشت و فراخوانی بازگشتی
 - شرط‌های `if/else` و حلقه‌های `while` و `for`
 - بسته‌ها (`pkg`)، اعضای بسته و نمونه‌سازی
@@ -168,6 +169,7 @@ Benita is a simple, extensible programming language built for education and expe
 
 - Number, string, Boolean, and inferred (`let`) variables
 - Arrays and built-in array operations
+- String operations for length, search, slicing, replacement, splitting, trimming, and letter case
 - Functions, returns, and recursion
 - `if/else` conditions and `while`/`for` loops
 - Packages (`pkg`), package members, and object instantiation

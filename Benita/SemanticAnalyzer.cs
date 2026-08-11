@@ -51,6 +51,16 @@
                 { "to_number", ("number", ["string"]) },
                 { "round_number", ("number", ["number"]) },
                 { "sqrt_number", ("number", ["number"]) },
+                { "string_len", ("number", ["string"]) },
+                { "string_char_at", ("string", ["string", "number"]) },
+                { "string_substring", ("string", ["string", "number", "number"]) },
+                { "string_contains", ("bool", ["string", "string"]) },
+                { "string_index_of", ("number", ["string", "string"]) },
+                { "string_replace", ("string", ["string", "string", "string"]) },
+                { "string_split", ("string[]", ["string", "string"]) },
+                { "string_trim", ("string", ["string"]) },
+                { "string_to_lower", ("string", ["string"]) },
+                { "string_to_upper", ("string", ["string"]) },
             };
         }
 
@@ -268,18 +278,23 @@
             switch (statement)
             {
                 case VariableDeclarationNode varDecl:
-                    string initType;
+                    string? declaredType = varDecl.Type;
                     if (varDecl.Type == "let")
                     {
-                        initType = varDecl.Initializer != null
+                        declaredType = varDecl.Initializer != null
                             ? AnalyzeExpression(varDecl.Initializer, localVariables)
                             : varDecl.Type;
                     }
-                    else
+                    else if (varDecl.Initializer != null)
                     {
-                        initType = varDecl.Type;
+                        string? initializerType = AnalyzeExpression(varDecl.Initializer, localVariables);
+                        if (!CheckType(varDecl.Type!, initializerType))
+                        {
+                            throw new Exception(
+                                $"Type mismatch in variable '{varDecl.Name}'. Expected '{varDecl.Type}' but got '{initializerType}'.");
+                        }
                     }
-                    DeclareVariable(varDecl.Name, initType, localVariables);
+                    DeclareVariable(varDecl.Name, declaredType, localVariables);
                     break;
                 case AssignmentNode assignment:
                     var valueType = AnalyzeExpression(assignment.Expression, localVariables);
@@ -651,14 +666,19 @@
             {
                 var argType = AnalyzeExpression(functionCall.Arguments[i], localVariables);
 
-                if ((functionCall.FunctionName == "array_len" || functionCall.FunctionName == "array_add" || functionCall.FunctionName == "array_remove") && (argType == "number[]" || argType == "array"))
+                if ((functionCall.FunctionName == "array_len" || functionCall.FunctionName == "array_add" || functionCall.FunctionName == "array_remove") &&
+                    (argType == "array" || argType?.EndsWith("[]", StringComparison.Ordinal) == true))
                 {
                     argType = "array";
                 }
 
                 if (argType != functionInfo.Item2[i])
                 {
-                    if (!(argType == "number" && functionInfo.Item2[i] == "string"))
+                    bool isPrintableScalar = functionCall.FunctionName == "print" &&
+                                             argType is "number" or "string" or "bool";
+                    bool isSupportedArrayElement = functionCall.FunctionName == "array_add" && i == 1 &&
+                                                   argType is "number" or "string" or "bool";
+                    if (!isPrintableScalar && !isSupportedArrayElement)
                     {
                         throw new Exception($"Type mismatch in argument {i + 1} of function call to '{functionCall.FunctionName}'. Expected '{functionInfo.Item2[i]}' but got '{argType}'.");
                     }
@@ -763,7 +783,7 @@
         private bool CheckType(string firstType, string? secondType)
         {
             string[] arrayTypes = { "number[]", "string[]", "bool[]" };
-            return (arrayTypes.Contains(firstType) && secondType == "array") ||
+            return (arrayTypes.Contains(firstType) && secondType is "array" or "unknown[]") ||
                    (arrayTypes.Contains(secondType) && firstType == "array") || firstType == secondType;
         }
 

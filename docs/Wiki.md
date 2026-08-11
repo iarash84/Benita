@@ -261,6 +261,7 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben -s 
 - آرایه: `array_len`، `array_add` و `array_remove`
 - فایل: `file_read`، `file_write`، `file_exist` و `file_delete`
 - ابزار عمومی: `print`، `input`، `to_string`، `to_number`، `round_number` و `sqrt_number`
+- رشته: `string_len`، `string_char_at`، `string_substring`، `string_contains`، `string_index_of`، `string_replace`، `string_split`، `string_trim`، `string_to_lower` و `string_to_upper`
 
 این طراحی باعث می‌شود رفتار اجرای مستقیم و خروجی C++ هر تابع داخلی کنار یکدیگر قابل توسعه و آزمایش باشند.
 

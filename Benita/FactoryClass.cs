@@ -25,7 +25,17 @@ namespace Benita
             { "to_string", (typeof(Utility),typeof(CgUtility)) },
             { "to_number", (typeof(Utility),typeof(CgUtility)) },
             { "round_number", (typeof(Utility),typeof(CgUtility)) },
-            { "sqrt_number", (typeof(Utility),typeof(CgUtility)) }
+            { "sqrt_number", (typeof(Utility),typeof(CgUtility)) },
+            { "string_len", (typeof(StringManagement),typeof(CgStringManagement)) },
+            { "string_char_at", (typeof(StringManagement),typeof(CgStringManagement)) },
+            { "string_substring", (typeof(StringManagement),typeof(CgStringManagement)) },
+            { "string_contains", (typeof(StringManagement),typeof(CgStringManagement)) },
+            { "string_index_of", (typeof(StringManagement),typeof(CgStringManagement)) },
+            { "string_replace", (typeof(StringManagement),typeof(CgStringManagement)) },
+            { "string_split", (typeof(StringManagement),typeof(CgStringManagement)) },
+            { "string_trim", (typeof(StringManagement),typeof(CgStringManagement)) },
+            { "string_to_lower", (typeof(StringManagement),typeof(CgStringManagement)) },
+            { "string_to_upper", (typeof(StringManagement),typeof(CgStringManagement)) }
         };
 
         /// <summary>
