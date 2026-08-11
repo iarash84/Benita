@@ -6,7 +6,7 @@ namespace BenitaTestProject.Itpr_df
     public class UtilityTests
     {
         [TestMethod]
-        public void TestHandleFunctionCall_Print()
+        public void HandleFunctionCall_WithPrint_WritesEachArgument()
         {
             // Arrange
             var utility = new Utility();
@@ -24,7 +24,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestHandleFunctionCall_Input()
+        public void HandleFunctionCall_WithInput_ReturnsConsoleInput()
         {
             // Arrange
             var utility = new Utility();
@@ -41,7 +41,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestHandleFunctionCall_ToString()
+        public void HandleFunctionCall_WithToString_ReturnsStringRepresentation()
         {
             // Arrange
             var utility = new Utility();
@@ -56,7 +56,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestHandleFunctionCall_ToNumber()
+        public void HandleFunctionCall_WithToNumber_ReturnsNumericValue()
         {
             // Arrange
             var utility = new Utility();
@@ -71,7 +71,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestHandleFunctionCall_UnknownFunction()
+        public void HandleFunctionCall_WithUnknownFunction_ThrowsException()
         {
             // Arrange
             var utility = new Utility();

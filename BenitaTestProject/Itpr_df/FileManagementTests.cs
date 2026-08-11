@@ -9,7 +9,7 @@ namespace BenitaTestProject.Itpr_df
         private const string TestFilePath = "testfile.txt";
 
         [TestMethod]
-        public void TestFileRead()
+        public void HandleFunctionCall_WithFileRead_ReturnsFileContent()
         {
             // Arrange
             var fileContent = "Test file content";
@@ -26,7 +26,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestFileWrite()
+        public void HandleFunctionCall_WithFileWrite_WritesFileContent()
         {
             // Arrange
             var fileManagement = new FileManagement();
@@ -44,7 +44,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestFileExist()
+        public void HandleFunctionCall_WithFileExist_ReturnsCurrentExistenceState()
         {
             // Arrange
             var fileManagement = new FileManagement();
@@ -70,7 +70,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestFileDelete()
+        public void HandleFunctionCall_WithFileDelete_DeletesExistingFile()
         {
             // Arrange
             var fileManagement = new FileManagement();
@@ -89,7 +89,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestUnknownFunction()
+        public void HandleFunctionCall_WithUnknownFunction_ThrowsException()
         {
             // Arrange
             var fileManagement = new FileManagement();

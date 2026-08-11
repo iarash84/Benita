@@ -6,7 +6,7 @@ namespace BenitaTestProject.Itpr_df
     public class ArrayManagementTests
     {
         [TestMethod]
-        public void TestArrayLen()
+        public void HandleFunctionCall_WithArrayLength_ReturnsElementCount()
         {
             // Arrange
             var array = new object[] { 1, 2, 3 };
@@ -22,7 +22,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestArrayAdd()
+        public void HandleFunctionCall_WithArrayAdd_ReturnsArrayWithAppendedElement()
         {
             // Arrange
             var initialArray = new object[] { 1, 2, 3 };
@@ -43,7 +43,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestArrayRemove()
+        public void HandleFunctionCall_WithArrayRemove_ReturnsArrayWithoutSelectedElement()
         {
             // Arrange
             var initialArray = new object[] { 1, 2, 3, 4 };
@@ -64,7 +64,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestArrayLenWithInvalidArgument()
+        public void HandleFunctionCall_WithNonArrayLengthArgument_ThrowsException()
         {
             // Arrange
             var arguments = new List<object> { "not an array" };
@@ -76,7 +76,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestArrayAddWithInvalidArgument()
+        public void HandleFunctionCall_WithNonArrayAddArgument_ThrowsException()
         {
             // Arrange
             var arguments = new List<object> { "not an array", 1 };
@@ -88,7 +88,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestArrayRemoveWithInvalidArgument()
+        public void HandleFunctionCall_WithNonArrayRemoveArgument_ThrowsException()
         {
             // Arrange
             var arguments = new List<object> { "not an array", 0 };
@@ -100,7 +100,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestArrayRemoveWithOutOfRangeIndex()
+        public void HandleFunctionCall_WithOutOfRangeRemoveIndex_ThrowsArgumentOutOfRangeException()
         {
             // Arrange
             var initialArray = new object[] { 1, 2, 3 };
@@ -115,7 +115,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void TestUnknownFunction()
+        public void HandleFunctionCall_WithUnknownFunction_ThrowsException()
         {
             // Arrange
             var arrayManagement = new ArrayManagement();

@@ -15,7 +15,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitLiteralNode()
+        public void Visit_WithNumericLiteral_ReturnsNumericValue()
         {
             var node = new LiteralNode("42", TokenType.NUMBER_LITERAL);
             var result = _interpreter.Visit(node);
@@ -23,7 +23,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitIdentifierNode()
+        public void Visit_WithDeclaredIdentifier_ReturnsVariableValue()
         {
             _interpreter.Visit(new VariableDeclarationNode("number", "x", new LiteralNode("5", TokenType.NUMBER_LITERAL)));
             var node = new IdentifierNode("x");
@@ -32,7 +32,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitBinaryExpressionNode()
+        public void Visit_WithAdditionExpression_ReturnsSum()
         {
             var leftNode = new LiteralNode("10", TokenType.NUMBER_LITERAL);
             var rightNode = new LiteralNode("20", TokenType.NUMBER_LITERAL);
@@ -44,7 +44,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitUnaryExpressionNode()
+        public void Visit_WithUnaryNegation_ReturnsNegativeValue()
         {
             var operandNode = new LiteralNode("10", TokenType.NUMBER_LITERAL);
             var node = new UnaryExpressionNode("-", operandNode);
@@ -55,7 +55,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitLogicalExpressionNode()
+        public void Visit_WithLogicalAndExpression_ReturnsFalse()
         {
             var leftNode = new LiteralNode("true", TokenType.TRUE_LITERAL);
             var rightNode = new LiteralNode("false", TokenType.FALSE_LITERAL);
@@ -67,7 +67,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitFunctionCallNode()
+        public void Visit_WithFunctionCall_ReturnsFunctionResult()
         {
             var functionBody = new BlockNode(new List<StatementNode>());
             var returnExpression = new LiteralNode("10", TokenType.NUMBER_LITERAL);
@@ -82,7 +82,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitVariableDeclarationNode()
+        public void Visit_WithVariableDeclaration_StoresInitialValue()
         {
             var node = new VariableDeclarationNode("number", "x", new LiteralNode("10", TokenType.NUMBER_LITERAL));
 
@@ -93,7 +93,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitAssignmentNode()
+        public void Visit_WithAssignment_UpdatesVariableValue()
         {
             _interpreter.Visit(new VariableDeclarationNode("number", "x", new LiteralNode("10", TokenType.NUMBER_LITERAL)));
             var node = new AssignmentNode("x", new LiteralNode("20", TokenType.NUMBER_LITERAL));
@@ -105,7 +105,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitCompoundAssignmentNode()
+        public void Visit_WithAdditionAssignment_UpdatesVariableValue()
         {
             _interpreter.Visit(new VariableDeclarationNode("number", "x", new LiteralNode("10", TokenType.NUMBER_LITERAL)));
             var node = new CompoundAssignmentNode("x", "+=", new LiteralNode("5", TokenType.NUMBER_LITERAL));
@@ -117,7 +117,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitIncrementDecrementNode()
+        public void Visit_WithIncrement_UpdatesVariableValue()
         {
             _interpreter.Visit(new VariableDeclarationNode("number", "x", new LiteralNode("10", TokenType.NUMBER_LITERAL)));
             var node = new IncrementDecrementNode("x", "++");
@@ -129,7 +129,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitIfStatementNode()
+        public void Visit_WithTrueIfCondition_ExecutesThenBranch()
         {
             var condition = new LiteralNode("true", TokenType.TRUE_LITERAL);
             var thenBranch = new AssignmentNode("x", new LiteralNode("10", TokenType.NUMBER_LITERAL));
@@ -143,7 +143,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitWhileStatementNode()
+        public void Visit_WithWhileLoop_ExecutesUntilConditionIsFalse()
         {
             var condition = new BinaryExpressionNode(new IdentifierNode("x"), "<", new LiteralNode("10", TokenType.NUMBER_LITERAL));
             var body = new IncrementDecrementNode("x", "++");
@@ -157,7 +157,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitArrayAccessNode()
+        public void Visit_WithArrayAccess_ReturnsElementAtIndex()
         {
             _interpreter.Visit(new VariableDeclarationNode("number[]", "arr", new ArrayInitializerNode(new List<ExpressionNode>
             {
@@ -173,7 +173,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestVisitArrayAssignmentNode()
+        public void Visit_WithArrayAssignment_UpdatesElementAtIndex()
         {
             _interpreter.Visit(new VariableDeclarationNode("number[]", "arr", new ArrayInitializerNode(new List<ExpressionNode>
             {

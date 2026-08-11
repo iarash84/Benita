@@ -6,25 +6,25 @@ namespace BenitaTestProject
     public class SemanticAnalyzerTests
     {
         [TestMethod]
-        public void TestAnalyze_GlobalVariables()
+        public void Analyze_WithGlobalVariables_CompletesSuccessfully()
         {
             // TODO : Notimpelimented
         }
 
         [TestMethod]
-        public void TestAnalyze_Functions()
+        public void Analyze_WithFunctions_CompletesSuccessfully()
         {
             // TODO : Notimpelimented
         }
 
         [TestMethod]
-        public void TestAnalyze_DuplicateFunction()
+        public void Analyze_WithDuplicateFunction_ThrowsException()
         {
             // TODO : Notimpelimented
         }
 
         [TestMethod]
-        public void TestAnalyze_MainFunction()
+        public void Analyze_WithValidMainFunction_CompletesSuccessfully()
         {
             // Arrange
             var semanticAnalyzer = new SemanticAnalyzer();
@@ -42,7 +42,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestAnalyze_ReturnTypeMismatch()
+        public void Analyze_WithMismatchedReturnType_ThrowsException()
         {
             // Arrange
             var semanticAnalyzer = new SemanticAnalyzer();
@@ -64,7 +64,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void TestAnalyze_UndeclaredVariable()
+        public void Analyze_WithUndeclaredVariable_ThrowsException()
         {
             // Arrange
             var semanticAnalyzer = new SemanticAnalyzer();

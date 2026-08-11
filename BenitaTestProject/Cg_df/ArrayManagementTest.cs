@@ -15,7 +15,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestHandleFunctionCall_ArrayLen()
+        public void HandleFunctionCall_WithArrayLength_AppendsCallAndIncludesHelperOnce()
         {
             var code = new StringBuilder();
             var defaultFunction = new StringBuilder();
@@ -32,7 +32,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestHandleFunctionCall_ArrayAdd()
+        public void HandleFunctionCall_WithArrayAdd_AppendsCallAndIncludesHelperOnce()
         {
             var code = new StringBuilder();
             var defaultFunction = new StringBuilder();
@@ -49,7 +49,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestHandleFunctionCall_ArrayRemove()
+        public void HandleFunctionCall_WithArrayRemove_AppendsCallAndIncludesHelperOnce()
         {
             var code = new StringBuilder();
             var defaultFunction = new StringBuilder();
@@ -78,7 +78,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestGenerateArrayLenFunction()
+        public void GenerateArrayLengthFunction_WhenCalledTwice_AppendsDefinitionOnce()
         {
             var defaultFunction = new StringBuilder();
             var codeHeader = new StringBuilder();
@@ -99,7 +99,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestGenerateArrayAddFunction()
+        public void GenerateArrayAddFunction_WhenCalledTwice_AppendsDefinitionOnce()
         {
             var defaultFunction = new StringBuilder();
             var codeHeader = new StringBuilder();
@@ -120,7 +120,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestGenerateArrayRemoveFunction()
+        public void GenerateArrayRemoveFunction_WhenCalledTwice_AppendsDefinitionOnce()
         {
             var defaultFunction = new StringBuilder();
             var codeHeader = new StringBuilder();
@@ -141,7 +141,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestAppendToSubstring()
+        public void AppendToSubstring_WithDuplicateValue_AppendsValueOnce()
         {
             var stringBuilder = new StringBuilder();
 

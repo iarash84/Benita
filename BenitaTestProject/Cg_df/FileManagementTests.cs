@@ -15,7 +15,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestHandleFunctionCall_FileRead()
+        public void HandleFunctionCall_WithFileRead_AppendsCallAndIncludesHelperOnce()
         {
             var code = new StringBuilder();
             var defaultFunction = new StringBuilder();
@@ -34,7 +34,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestHandleFunctionCall_FileWrite()
+        public void HandleFunctionCall_WithFileWrite_AppendsCallAndIncludesHelperOnce()
         {
             var code = new StringBuilder();
             var defaultFunction = new StringBuilder();
@@ -54,7 +54,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestHandleFunctionCall_FileExist()
+        public void HandleFunctionCall_WithFileExist_AppendsCallAndIncludesHelperOnce()
         {
             var code = new StringBuilder();
             var defaultFunction = new StringBuilder();
@@ -73,7 +73,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestHandleFunctionCall_FileDelete()
+        public void HandleFunctionCall_WithFileDelete_AppendsCallAndIncludesHelperOnce()
         {
             var code = new StringBuilder();
             var defaultFunction = new StringBuilder();
@@ -107,7 +107,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestGenerateReadFileFunction()
+        public void GenerateReadFileFunction_WhenCalledTwice_AppendsDefinitionOnce()
         {
             var defaultFunction = new StringBuilder();
             var codeHeader = new StringBuilder();
@@ -129,7 +129,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestGenerateWriteFileFunction()
+        public void GenerateWriteFileFunction_WhenCalledTwice_AppendsDefinitionOnce()
         {
             var defaultFunction = new StringBuilder();
             var codeHeader = new StringBuilder();
@@ -152,7 +152,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestGenerateExistFileFunction()
+        public void GenerateExistFileFunction_WhenCalledTwice_AppendsDefinitionOnce()
         {
             var defaultFunction = new StringBuilder();
             var codeHeader = new StringBuilder();
@@ -174,7 +174,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestGenerateDeleteFileFunction()
+        public void GenerateDeleteFileFunction_WhenCalledTwice_AppendsDefinitionOnce()
         {
             var defaultFunction = new StringBuilder();
             var codeHeader = new StringBuilder();
@@ -200,7 +200,7 @@ namespace BenitaTestProject.Cg_df
         }
 
         [TestMethod]
-        public void TestAppendToSubstring()
+        public void AppendToSubstring_WithDuplicateValue_AppendsValueOnce()
         {
             var stringBuilder = new StringBuilder();
             string value = "test_value";

@@ -14,7 +14,7 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void Test1()
+        public void ConcatenatedPrintExpressionGeneratesAndExecutesCorrectly()
         {
             string source = @"
 _main_() {
@@ -49,7 +49,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test2()
+        public void GlobalVariableFunctionAndLocalVariablesGenerateAndExecuteCorrectly()
         {
             string source = @"
 number x = 10;
@@ -105,7 +105,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test3()
+        public void CommentsGlobalVariableAndFunctionCallGenerateAndExecuteCorrectly()
         {
             string source = @"
 // this is a comment
@@ -162,7 +162,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test4()
+        public void NumericAdditionExpressionGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func myFunction(number a, number b) -> number {
@@ -211,7 +211,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test5()
+        public void WhileLoopWithIncrementGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func myFunction(number a, number b) -> number {
@@ -273,7 +273,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test6()
+        public void NumericFunctionCallGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func add(number a, number b) -> number {
@@ -319,7 +319,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test7()
+        public void NumericExpressionAssignmentGeneratesAndExecutesCorrectly()
         {
             string source = @" 
 _main_()  {
@@ -356,7 +356,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test8()
+        public void NumericAndStringFunctionsGenerateAndExecuteCorrectly()
         {
             string source = @"
 func add(number a, number b) -> number {
@@ -417,7 +417,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test9() // input
+        public void InputFunctionReadsAndPrintsUserInput()
         {
             string source = @"
 _main_() {
@@ -472,7 +472,7 @@ std::string input()
         }
 
         [TestMethod]
-        public void Test10() // input
+        public void CombinedFunctionsConditionLoopAndInputExecuteCorrectly()
         {
             string source = @"
 func add(number a, number b) -> number {
@@ -591,7 +591,7 @@ std::string input()
         }
 
         [TestMethod]
-        public void Test11() // Infinite loop
+        public void InfiniteWhileLoopGeneratesCorrectCppCode()
         {
             string source = @"
 func is_even() -> void {
@@ -632,7 +632,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test12() //while
+        public void WhileLoopRunsExpectedNumberOfTimes()
         {
             string source = @"
 _main_() {
@@ -676,7 +676,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test13() // if else
+        public void IfElseWithFunctionConditionSelectsEvenBranch()
         {
             string source = @"
 func is_even(number a) -> bool {
@@ -733,7 +733,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test14() // if else or
+        public void IfElseWithLogicalOperatorsSelectsExpectedBranch()
         {
             string source = @"
 _main_() {
@@ -781,7 +781,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test15() // File => cgc only
+        public void FileExistReadAndWriteFunctionsGenerateCorrectCppCode()
         {
             string source = @"
 number myVar;
@@ -855,7 +855,7 @@ void file_write(const std::string& filename, const std::string& content)
         }
 
         [TestMethod]
-        public void Test16() // File Delete => cgc only
+        public void FileDeleteFunctionGeneratesCorrectCppCode()
         {
             string source = @"
 _main_() {
@@ -915,7 +915,7 @@ bool file_delete(const std::string& filename)
         }
 
         [TestMethod]
-        public void Test17() // Simple Array
+        public void ArrayDeclarationsGenerateCorrectCppCode()
         {
             string source = @"
 number[] arr = [10, 20, 30];  // Example array declaration with initializer
@@ -958,7 +958,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test18() // Array
+        public void ArrayIterationWithLengthExecutesCorrectly()
         {
 
             string source = @"
@@ -1016,7 +1016,7 @@ int array_len(const std::vector<T>& vec)
         }
 
         [TestMethod]
-        public void Test19() // Array Func
+        public void ArrayAddRemoveAndLengthFunctionsExecuteCorrectly()
         {
             string source = @"
 _main_() {                                        
@@ -1095,7 +1095,7 @@ int array_len(const std::vector<T>& vec)
         }
 
         [TestMethod]
-        public void Test20() // Fibo
+        public void IterativeFibonacciGeneratesAndExecutesCorrectly()
         {
             string source = @"
 _main_() {
@@ -1182,7 +1182,7 @@ std::string input()
         }
 
         [TestMethod]
-        public void Test21() // Fibo Recurtion
+        public void RecursiveFibonacciGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func fib(number x) -> number 
@@ -1253,7 +1253,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test22() // Factorial
+        public void FactorialFunctionGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func Factorial(number n) -> number
@@ -1312,7 +1312,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test23() // CheckNumber
+        public void CheckNumberFunctionReturnsExpectedClassification()
         {
             string source = @"
 func CheckNumber(number n) -> string
@@ -1377,7 +1377,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test24() // Test for
+        public void ForLoopGeneratesAndExecutesCorrectly()
         {
             string source = @"
 _main_() {
@@ -1420,7 +1420,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test25() // Test fib with 2 return and for
+        public void FibonacciWithMultipleReturnsAndForLoopExecutesCorrectly()
         {
             string source = @"
 func fib(number x) -> number 
@@ -1493,7 +1493,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test26() // return without parameter
+        public void VoidFunctionWithEmptyReturnGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func test(number i) -> void
@@ -1551,7 +1551,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test27() // let implicitly typed local variables
+        public void ImplicitlyTypedLocalVariablesGenerateAndExecuteCorrectly()
         {
             string source = @"
 func myFunction(number a, number b) -> number {
@@ -1621,7 +1621,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test28() // let implicitly typed local variables for instance class
+        public void ImplicitlyTypedPackageInstanceGeneratesAndExecutesCorrectly()
         {
             string source = @"
 pkg myPackage {
@@ -1685,7 +1685,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test29() // let implicitly typed local variables in for statment
+        public void ImplicitlyTypedForLoopVariableGeneratesAndExecutesCorrectly()
         {
             string source = @"
 _main_() {
@@ -1725,7 +1725,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test30() // let implicitly typed local variables in package
+        public void ImplicitlyTypedPackageFieldGeneratesAndExecutesCorrectly()
         {
             string source = @"
 pkg My{
@@ -1769,7 +1769,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test31() // Code with no _main_
+        public void TopLevelVariableAndPrintCreateImplicitMain()
         {
             string source = @"
 let text = ""hello world"";
@@ -1805,7 +1805,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test32() // Code with no _main_
+        public void TopLevelFunctionLoopAndPrintCreateImplicitMain()
         {
             string source = @"
 func Add(number i, number j) -> number{
@@ -1855,7 +1855,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test33() // Code with no _main_
+        public void TopLevelPackageUsageCreatesImplicitMain()
         {
             string source = @"
 pkg My{
@@ -1906,7 +1906,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test34() // Code with _main_
+        public void ExplicitMainExcludesTopLevelExecutableStatements()
         {
             string source = @"
 pkg My{
@@ -1977,7 +1977,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test35() //Bubble Sort
+        public void BubbleSortGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func BubbleSort(number[] sort_array) -> number[]
@@ -2087,7 +2087,7 @@ int array_len(const std::vector<T>& vec)
         }
 
         [TestMethod]
-        public void Test36() //Binary Search
+        public void IterativeBinarySearchGeneratesAndExecutesCorrectly()
         {
             string source = @"
  func BinarySearchIterative(number[] bsi_array, number key) -> number
@@ -2208,7 +2208,7 @@ int array_len(const std::vector<T>& vec)
         }
 
         [TestMethod]
-        public void Test37() //Binary search recursive
+        public void RecursiveBinarySearchGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func BinarySearch(number[] arr, number target, number left, number right) -> number
@@ -2322,7 +2322,7 @@ int array_len(const std::vector<T>& vec)
         }
 
         [TestMethod]
-        public void Test38() //QuickSort
+        public void QuickSortGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func Swap(number[] array, number a, number b) -> void
@@ -2453,7 +2453,7 @@ int array_len(const std::vector<T>& vec)
         }
 
         [TestMethod]
-        public void Test39() //continue
+        public void ContinueStatementSkipsExpectedIterations()
         {
             string source = @"
 for(let i= 0; i <= 10; i++)
@@ -2500,7 +2500,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test40() //break
+        public void BreakStatementStopsLoopAtExpectedIteration()
         {
             string source = @"
 for(let i= 0; i <= 10; i++)
@@ -2547,7 +2547,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test41() //PowerOfTwo
+        public void PowerOfTwoDetectionGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func PowerOfTwo(number n) -> bool  {
@@ -2624,7 +2624,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test42() //FizzBuzz
+        public void FizzBuzzGeneratesAndExecutesCorrectly()
         {
             string source = @"
 for (let i = 1; i <= 30; i++)
@@ -2693,7 +2693,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test43() //isPrime
+        public void PrimeNumberGenerationGeneratesAndExecutesCorrectly()
         {
             string source = @"
 // Function to check if a number is prime
@@ -2809,7 +2809,7 @@ int array_len(const std::vector<T>& vec)
         }
 
         [TestMethod]
-        public void Test44() //Insertion Sort
+        public void InsertionSortGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func InsertionSort(number[] arr) -> number[]
@@ -2911,7 +2911,7 @@ int array_len(const std::vector<T>& vec)
         }
 
         [TestMethod]
-        public void Test45() //Selection Sort
+        public void SelectionSortGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func SelectionSort(number[] array) -> number[]
@@ -3018,7 +3018,7 @@ int array_len(const std::vector<T>& vec)
         }
 
         [TestMethod]
-        public void Test46() //Counting Sort
+        public void CountingSortGeneratesAndExecutesCorrectly()
         {
             string source = @"
 func CountingSort(number[] array) -> number[]
@@ -3175,7 +3175,7 @@ int array_len(const std::vector<T>& vec)
         }
 
         [TestMethod]
-        public void Test47() //Bingo Sort
+        public void BingoSortExecutesCorrectly()
         {
             string source = @"
 func BingoSort(number[] arr) -> number[] {
@@ -3352,7 +3352,7 @@ int array_len(const std::vector<T>& vec)
         }
 
         [TestMethod]
-        public void Test48() //Float test
+        public void FloatingPointAdditionGeneratesAndExecutesCorrectly()
         {
             string source = @"
 let num  = 5.2 + 8;

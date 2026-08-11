@@ -14,7 +14,7 @@ namespace BenitaTestProject
 
 
         [TestMethod]
-        public void Test1() // check constructor
+        public void PackageConstructor_WithInitialValue_GeneratesAndExecutesCorrectly()
         {
             string source = @"
 pkg myPackage {
@@ -74,7 +74,7 @@ int main()
         }
 
         [TestMethod]
-        public void Test2() // check constructor
+        public void PackageMethods_WhenInvoked_GenerateAndExecuteCorrectly()
         {
             string source = @"
 pkg myPackage {
@@ -146,7 +146,7 @@ int main()
 
 
         [TestMethod]
-        public void Test() // check constructor
+        public void PackageMembers_WithMixedOperations_GenerateAndExecuteCorrectly()
         {
             string source = @"
 pkg myPackage {
