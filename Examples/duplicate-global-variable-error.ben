@@ -20,7 +20,7 @@ _main_() {
     print("YES");
 }
 
-string a = 20;
+string a = "20";
 
 number a = 50;
 /*

@@ -2,7 +2,7 @@
 
 _main_() {
 	number i;
-	for( i =0; i < 5; i++;){
+	for( i =0; i < 5; i++){
 		print("run count");
 	}	
 }

@@ -15,7 +15,7 @@ func chap(number content) -> void
 
 
 _main_() {
-   for(number i =0; i <= 20; i++;) {
+   for(number i =0; i <= 20; i++) {
       chap(fib(i));
 	  //print(fib(i));
    }
