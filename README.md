@@ -50,6 +50,19 @@ To get started with Benita, follow these steps:
 
 Contributions are welcome! If you have ideas for new features or improvements, feel free to open an issue or submit a pull request.
 
+## Continuous Integration and Releases
+
+Every push and pull request automatically builds the solution and runs the complete test suite with GitHub Actions.
+
+To publish a new version, create and push a semantic-version tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+After all tests pass, GitHub Actions creates a GitHub Release with automatically generated release notes and self-contained packages for Windows x64, Linux x64, and macOS x64. A release can also be started manually from the **Release** workflow by selecting an existing version tag.
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
