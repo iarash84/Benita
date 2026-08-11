@@ -19,6 +19,17 @@
             interpreter.Visit(programAst);
         }
 
+        /// <summary>
+        /// Validates lexical, syntactic, and semantic correctness without executing the program or generating code.
+        /// </summary>
+        public void Check(string sourceCode, bool lexerPrint = false, bool parserPrint = false,
+            bool sourcePrint = false, string? sourceName = null)
+        {
+            List<Token> tokens = TokenizeCode(sourceCode, lexerPrint, sourcePrint, sourceName);
+            ProgramNode programAst = ParseCode(tokens, parserPrint);
+            AnalyzeProgram(programAst);
+        }
+
         public string GenerateCppCode(string sourceCode, bool lexerPrint = false, bool parserPrint = false,
             bool sourcePrint = false, string? sourceName = null)
         {

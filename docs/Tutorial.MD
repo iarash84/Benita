@@ -222,7 +222,10 @@ _main_() {
 ```bash
 dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
 dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
+dotnet run --project Benita -- check Examples/simple-addition-expression.ben
 ```
+
+فرمان `check` مراحل Lexer، Parser و SemanticAnalyzer را اجرا می‌کند، اما برنامه را اجرا نمی‌کند و کد C++ نیز تولید نمی‌شود.
 
 گزینه‌های کاربردی:
 
@@ -452,7 +455,10 @@ From the repository root:
 ```bash
 dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
 dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
+dotnet run --project Benita -- check Examples/simple-addition-expression.ben
 ```
+
+The `check` command runs the Lexer, Parser, and SemanticAnalyzer, but does not execute the program or generate C++ code.
 
 Useful options:
 

@@ -67,6 +67,9 @@
                 case "ccg":
                     GenerateCppCode(args, printTokens, printAst, printSource, compiler);
                     break;
+                case "check":
+                    CheckFile(args, printTokens, printAst, printSource, compiler);
+                    break;
                 default:
                     Console.WriteLine("Error: Unknown action - " + action);
                     ShowHelp();
@@ -120,6 +123,21 @@
             }
         }
 
+        static void CheckFile(string[] args, bool printTokens, bool printAst, bool printSource, CompilerClass compiler)
+        {
+            if (args.Length < 2)
+            {
+                throw new ArgumentException("A .ben file path is required for the check command.");
+            }
+
+            string filePath = args[1];
+            if (!ValidateFile(filePath)) return;
+
+            string fileContent = File.ReadAllText(filePath);
+            compiler.Check(fileContent, printTokens, printAst, printSource, filePath);
+            Console.WriteLine($"Check passed: {filePath}");
+        }
+
         static bool ValidateFile(string filePath)
         {
             if (!File.Exists(filePath))
@@ -152,6 +170,7 @@
             Console.WriteLine("  exc        - Execute the code in the file.");
             Console.WriteLine("  dxc       - Execute the code in the file in debug mode.");
             Console.WriteLine("  ccg        - Generate C++ code from the file content and save to output file.");
+            Console.WriteLine("  check      - Check syntax and semantics without executing the program.");
             Console.WriteLine("  edr        - Open the text editor.");
             Console.WriteLine("  help       - Show this help message.");
             Console.WriteLine("Options:");
