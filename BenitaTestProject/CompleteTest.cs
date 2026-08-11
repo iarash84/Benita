@@ -1,4 +1,4 @@
-﻿using Benita;
+using Benita;
 
 namespace BenitaTestProject
 {
@@ -36,7 +36,7 @@ int main()
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert cgc
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "This is a test => 1\r\n";
@@ -92,7 +92,7 @@ int main()
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             var expectedOutput = "30\r\nHello, World!\r\n";
             using (var consoleOutput = new ConsoleOutput())
@@ -149,7 +149,7 @@ int main()
             // Act
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             var expectedOutput = "30\r\nThis is global variable\r\n";
             using (var consoleOutput = new ConsoleOutput())
@@ -197,7 +197,7 @@ int main()
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert cgc
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
 
             // Act
@@ -259,7 +259,7 @@ int main()
             // Act
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "30\r\n15\r\n";
@@ -306,7 +306,7 @@ int main()
             // Act
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "5\r\n";
@@ -343,7 +343,7 @@ int main()
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "5\r\n";
@@ -404,7 +404,7 @@ int main()
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "hello world\r\n";
@@ -455,7 +455,7 @@ std::string input()
 ".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedInput = "Tom";
@@ -574,7 +574,7 @@ std::string input()
             // Act            
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedInput = "Tom";
@@ -628,7 +628,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
         }
 
         [TestMethod]
@@ -663,7 +663,7 @@ int main()
             // Act            
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "While Test\r\nWhile Test\r\nWhile Test\r\nWhile Test\r\nWhile Test\r\n";
@@ -720,7 +720,7 @@ int main()
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Sum is even.\r\n";
@@ -768,7 +768,7 @@ int main()
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "YES\r\n";
@@ -851,7 +851,7 @@ void file_write(const std::string& filename, const std::string& content)
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
         }
 
         [TestMethod]
@@ -911,7 +911,7 @@ bool file_delete(const std::string& filename)
             _compiler.Exec(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
         }
 
         [TestMethod]
@@ -945,7 +945,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "10\r\n";
@@ -1002,7 +1002,7 @@ int array_len(const std::vector<T>& vec)
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Element at index 0: 10\r\nElement at index 1: 20\r\nElement at index 2: 5\r\nElement at index 3: 40\r\nElement at index 4: 50\r\n";
@@ -1081,7 +1081,7 @@ int array_len(const std::vector<T>& vec)
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Element at index 0: 10\r\nElement at index 1: 20\r\nElement at index 2: 40\r\nElement at index 3: 50\r\nElement at index 4: 60\r\nElement at index 5: 70\r\n";
@@ -1165,7 +1165,7 @@ std::string input()
             //var result = _compiler.Exec(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedInput = "5";
@@ -1239,7 +1239,7 @@ int main()
 }".Trim();
             var generatedCode = _compiler.GenerateCppCode(source);
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "0 => 0\r\n1 => 1\r\n2 => 1\r\n3 => 2\r\n4 => 3\r\n5 => 5\r\n6 => 8\r\n7 => 13\r\n8 => 21\r\n9 => 34\r\n10 => 55\r\n11 => 89\r\n12 => 144\r\n13 => 233\r\n14 => 377\r\n15 => 610\r\n16 => 987\r\n17 => 1597\r\n18 => 2584\r\n19 => 4181\r\n20 => 6765\r\n";
@@ -1299,7 +1299,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "120\r\n";
@@ -1364,7 +1364,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Positive\r\n";
@@ -1407,7 +1407,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "run count\r\nrun count\r\nrun count\r\nrun count\r\nrun count\r\n";
@@ -1479,7 +1479,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput =
@@ -1538,7 +1538,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "yess\r\nfive\r\n";
@@ -1608,7 +1608,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "9\r\n15\r\nthis is a test => hassan -> 15\r\n";
@@ -1672,7 +1672,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "7\r\n";
@@ -1712,7 +1712,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "0 this is a test\r\n1 this is a test\r\n2 this is a test\r\n3 this is a test\r\n4 this is a test\r\n";
@@ -1756,7 +1756,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "1\r\n";
@@ -1792,7 +1792,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "hello world\r\n";
@@ -1842,7 +1842,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "this is a test\r\nthis is a test\r\nthis is a test\r\nthis is a test\r\nthis is a test\r\n10\r\n";
@@ -1893,7 +1893,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "25\r\n";
@@ -1964,7 +1964,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "YES\r\n";
@@ -2074,7 +2074,7 @@ int array_len(const std::vector<T>& vec)
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "befor Bubble sorting\r\nElement at index 0: 64\r\nElement at index 1: 34\r\nElement at index 2: 25\r\nElement at index 3: 12\r\nElement at index 4: 22\r\nElement at index 5: 11\r\nElement at index 6: 90\r\nafter Bubble sorting\r\nElement at index 0: 11\r\nElement at index 1: 12\r\nElement at index 2: 22\r\nElement at index 3: 25\r\nElement at index 4: 34\r\nElement at index 5: 64\r\nElement at index 6: 90\r\n";
@@ -2195,7 +2195,7 @@ int array_len(const std::vector<T>& vec)
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Element found at index 3\r\n";
@@ -2309,7 +2309,7 @@ int array_len(const std::vector<T>& vec)
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Element found at index => 3\r\n";
@@ -2440,7 +2440,7 @@ int array_len(const std::vector<T>& vec)
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Sorted array: \r\nElement at index 0: 5\r\nElement at index 1: 7\r\nElement at index 2: 23\r\nElement at index 3: 32\r\nElement at index 4: 34\r\nElement at index 5: 62\r\n";
@@ -2487,7 +2487,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "1\r\n3\r\n5\r\n7\r\n9\r\n";
@@ -2534,7 +2534,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "0\r\n1\r\n2\r\n3\r\n4\r\n";
@@ -2611,7 +2611,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "1 is PowerOfTwo\r\n2 is PowerOfTwo\r\n4 is PowerOfTwo\r\n8 is PowerOfTwo\r\n16 is PowerOfTwo\r\n32 is PowerOfTwo\r\n64 is PowerOfTwo\r\n";
@@ -2680,7 +2680,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "1\r\n2\r\nFizz\r\n4\r\nBuzz\r\nFizz\r\n7\r\n8\r\nFizz\r\nBuzz\r\n11\r\nFizz\r\n13\r\n14\r\nFizzBuzz\r\n16\r\n17\r\nFizz\r\n19\r\nBuzz\r\nFizz\r\n22\r\n23\r\nFizz\r\nBuzz\r\n26\r\nFizz\r\n28\r\n29\r\nFizzBuzz\r\n";
@@ -2796,7 +2796,7 @@ int array_len(const std::vector<T>& vec)
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Prime numbers up to 100\r\n2\r\n3\r\n5\r\n7\r\n11\r\n13\r\n17\r\n19\r\n23\r\n29\r\n31\r\n37\r\n41\r\n43\r\n47\r\n53\r\n59\r\n61\r\n67\r\n71\r\n73\r\n79\r\n83\r\n89\r\n97\r\n";
@@ -2898,7 +2898,7 @@ int array_len(const std::vector<T>& vec)
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Original array:\r\n12\r\n11\r\n13\r\n5\r\n6\r\nSorted array:\r\n5\r\n6\r\n11\r\n12\r\n13\r\n";
@@ -3005,7 +3005,7 @@ int array_len(const std::vector<T>& vec)
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Original array:\r\n64\r\n25\r\n12\r\n22\r\n11\r\nSorted array:\r\n11\r\n12\r\n22\r\n25\r\n64\r\n";
@@ -3162,7 +3162,7 @@ int array_len(const std::vector<T>& vec)
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Original array:\r\n4\r\n2\r\n2\r\n8\r\n3\r\n3\r\n1\r\n7\r\n5\r\n6\r\nSorted array:\r\n1\r\n2\r\n2\r\n3\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n";
@@ -3339,7 +3339,7 @@ int array_len(const std::vector<T>& vec)
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            //Assert.AreEqual(expectedCode, generatedCode.Trim());
+            //SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Sorted array:\r\n1\r\n2\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n9\r\n11\r\n15\r\n";
@@ -3375,7 +3375,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "13.2\r\n";

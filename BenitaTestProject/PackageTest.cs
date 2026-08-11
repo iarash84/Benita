@@ -1,4 +1,4 @@
-﻿using Benita;
+using Benita;
 namespace BenitaTestProject
 {
     [TestClass]
@@ -59,7 +59,7 @@ int main()
             //var result = _compiler.Exec(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "5\r\n";
@@ -130,7 +130,7 @@ int main()
             //var result = _compiler.Exec(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "3\r\n8\r\n";
@@ -269,7 +269,7 @@ int main()
             var generatedCode = _compiler.GenerateCppCode(source);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "3\r\n8\r\n6\r\n9\r\n4\r\n7\r\n7\r\n5\r\n9\r\n9\r\nthis is a test\r\n";

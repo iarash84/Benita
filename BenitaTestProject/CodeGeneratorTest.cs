@@ -1,4 +1,4 @@
-﻿using Benita;
+using Benita;
 
 namespace BenitaTestProject
 {
@@ -137,7 +137,7 @@ int main()
             var generatedCode = _codeGenerator.GenerateCode(program);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
         }
 
         [TestMethod]
@@ -178,7 +178,7 @@ int main()
             var generatedCode = _codeGenerator.GenerateCode(program);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
         }
 
         [TestMethod]
@@ -237,7 +237,7 @@ int main()
             var generatedCode = _codeGenerator.GenerateCode(program);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
         }
 
         [TestMethod]
@@ -340,7 +340,7 @@ int main()
             var generatedCode = _codeGenerator.GenerateCode(program);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
         }
 
         [TestMethod]
@@ -433,7 +433,7 @@ int main()
             var generatedCode = _codeGenerator.GenerateCode(program);
 
             // Assert
-            Assert.AreEqual(expectedCode, generatedCode.Trim());
+            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
         }
     }
 }
