@@ -30,7 +30,9 @@ namespace BenitaTestProject
 
         public string GetOuput()
         {
-            return _stringWriter.ToString();
+            // Use one canonical line ending so output assertions behave identically
+            // on Windows, Linux, and macOS runners.
+            return _stringWriter.ToString().ReplaceLineEndings("\r\n");
         }
 
         public void Dispose()

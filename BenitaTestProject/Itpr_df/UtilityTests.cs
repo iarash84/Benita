@@ -11,7 +11,7 @@ namespace BenitaTestProject.Itpr_df
             // Arrange
             var utility = new Utility();
             var arguments = new List<object> { "Hello", "world!" };
-            var expectedOutput = "Hello" + Environment.NewLine + "world!" + Environment.NewLine;
+            var expectedOutput = "Hello\r\nworld!\r\n";
 
             // Act
             using (var consoleOutput = new ConsoleOutput())
