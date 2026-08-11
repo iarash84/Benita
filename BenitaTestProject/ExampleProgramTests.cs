@@ -96,7 +96,7 @@ public class ExampleProgramTests
     {
         var source = File.ReadAllText(Path.Combine(ExamplesDirectory, fileName));
 
-        var exception = Assert.ThrowsException<Exception>(() => new CompilerClass().Exec(source));
+        var exception = Assert.ThrowsException<SemanticException>(() => new CompilerClass().Exec(source));
 
         StringAssert.Contains(exception.Message, expectedMessage);
     }

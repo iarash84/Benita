@@ -41,7 +41,7 @@
                 if (Check(TokenType.MAIN))
                 {
                     if (mainFunction != null)
-                        throw new Exception("Error, Main function is already defined.");
+                        throw Error("BEN2002", "The main function is already defined.");
 
                     mainFunction = ParseMainFunction();
                 }
@@ -72,7 +72,7 @@
 
             if (mainFunction == null && statements.Count == 0)
             {
-                throw new Exception("No main function defined.");
+                throw Error("BEN2003", "No main function or top-level executable statement was found.");
             }
 
             return new ProgramNode(globalVariables, packages, _functions, mainFunction, statements);
@@ -143,7 +143,7 @@
                             }
                             else
                             {
-                                throw new Exception("Implicitly-typed variables must be initialized");
+                                throw Error("BEN2004", "Implicitly-typed variables must have an initializer.");
                             }
                         }
                         #endregion
@@ -152,12 +152,12 @@
                     }
                     else
                     {
-                        throw new Exception("Expected variable or function declaration.");
+                        throw Error("BEN2001", "Expected a variable or function declaration.");
                     }
                 }
                 else
                 {
-                    throw new Exception("Unexpected token inside package.");
+                    throw Error("BEN2001", "Unexpected token inside package.");
                 }
             }
             Consume(TokenType.RBRACE, "Expected '}' after package body.");
@@ -207,7 +207,7 @@
                     }
                     else
                     {
-                        throw new Exception("Implicitly-typed variables must be initialized");
+                        throw Error("BEN2004", "Implicitly-typed variables must have an initializer.");
                     }
                 }
 
@@ -216,7 +216,7 @@
                 return new VariableDeclarationNode(type, name, initializer);
             }
 
-            throw new Exception("Expected array or variable declaration");
+            throw Error("BEN2001", "Expected an array or variable declaration.");
         }
 
         /// <summary>
@@ -366,12 +366,12 @@
             {
                 Advance(); // Consume '['
                 if (!Check(TokenType.RSQUAREBRACE))
-                    throw new Exception("Expected ']' after '[' for array declaration.");
+                    throw Error("BEN2001", "Expected ']' after '[' in array declaration.");
                 Advance(); // Consume ']'
                 type += "[]";
             }
             if (string.IsNullOrEmpty(type))
-                throw new Exception("Expected type");
+                throw Error("BEN2001", "Expected a type.");
 
             return type;
         }
@@ -397,7 +397,7 @@
             if (token == TokenType.BOOL) return "bool";
             if (token == TokenType.VOID) return "void";
             if (token == TokenType.LET) return "let";
-            throw new Exception("Expected type");
+            throw Error("BEN2001", "Expected a type.");
         }
 
         /// <summary>
@@ -462,7 +462,7 @@
                 return ParseReturnStatement();
             }
 
-            throw new Exception($"Unexpected token: {CurrentToken().Type}");
+            throw Error("BEN2001", $"Unexpected token '{CurrentToken().Lexeme}' ({CurrentToken().Type}).");
         }
 
         /// <summary>
@@ -508,7 +508,7 @@
                 Consume(TokenType.SEMICOLON, "Expected ';' after object instantiation");
 
                 if (initialPackageName != packageName && initialPackageName != "let")
-                    throw new Exception($"Cannot implicitly convert type '{packageName}' to '{initialPackageName}'");
+                    throw Error("BEN2005", $"Cannot implicitly convert type '{packageName}' to '{initialPackageName}'.");
 
                 return new ObjectInstantiationNode(name, packageName, arguments);
             }
@@ -659,7 +659,7 @@
                     return new ArrayAssignmentNode(name, index, value);
                 }
 
-                throw new Exception("Expected '=' after array index");
+                throw Error("BEN2001", "Expected '=' after array index.");
             }
 
             if (Match(TokenType.PLUS_PLUS, TokenType.MINUS_MINUS))
@@ -689,8 +689,7 @@
             }
 
             expression = ParseExpression();
-            if (Check(TokenType.SEMICOLON))
-                Consume(TokenType.SEMICOLON, "Expected ';' after expression");
+            Consume(TokenType.SEMICOLON, "Expected ';' after expression");
             return new ExpressionStatementNode(expression);
         }
 
@@ -899,7 +898,7 @@
                 return new FunctionCallNode(name, arguments);
             }
 
-            throw new Exception($"Unexpected token: {CurrentToken().Type}");
+            throw Error("BEN2001", $"Unexpected token '{CurrentToken().Lexeme}' ({CurrentToken().Type}).");
         }
 
         /// <summary>
@@ -1027,7 +1026,10 @@
         private Token Consume(TokenType type, string message)
         {
             if (Check(type)) return Advance();
-            throw new Exception(message);
+            throw Error("BEN2001", message);
         }
+
+        private ParserException Error(string code, string message) =>
+            new(code, message, CurrentToken().Span);
     }
 }

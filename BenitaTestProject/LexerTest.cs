@@ -132,7 +132,7 @@ namespace BenitaTestProject
             string code = "string str = \"hello world";
             Lexer lexer = new Lexer(code);
 
-            Assert.ThrowsException<InvalidOperationException>(() => lexer.Tokenize());
+            Assert.ThrowsException<LexerException>(() => lexer.Tokenize());
         }
 
         [TestMethod]

@@ -2,7 +2,31 @@
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
+        {
+            try
+            {
+                Run(args);
+                return 0;
+            }
+            catch (BenitaException exception)
+            {
+                Console.Error.WriteLine(exception.Message);
+                return 1;
+            }
+            catch (IOException exception)
+            {
+                Console.Error.WriteLine($"BEN0002: File operation failed: {exception.Message}");
+                return 1;
+            }
+            catch (Exception exception)
+            {
+                Console.Error.WriteLine(new RuntimeException(exception.Message, exception).Message);
+                return 1;
+            }
+        }
+
+        private static void Run(string[] args)
         {
             if (args.Length == 0 || args[0] is "-help" or "help")
             {
@@ -67,7 +91,7 @@
             if (!ValidateFile(filePath)) return;
 
             string fileContent = File.ReadAllText(filePath);
-            compiler.Exec(fileContent, printTokens, printAst, printSource, debugModeAvailable);
+            compiler.Exec(fileContent, printTokens, printAst, printSource, debugModeAvailable, filePath);
         }
 
         static void GenerateCppCode(string[] args, bool printTokens, bool printAst, bool printSource, CompilerClass compiler)
@@ -83,7 +107,7 @@
 
             string fileContent = File.ReadAllText(filePath);
             string outputFilePath = args.Length > 2 ? args[2] : string.Empty;
-            var generatedCode = compiler.GenerateCppCode(fileContent, printTokens, printAst, printSource);
+            var generatedCode = compiler.GenerateCppCode(fileContent, printTokens, printAst, printSource, filePath);
 
             if (!string.IsNullOrEmpty(outputFilePath))
             {

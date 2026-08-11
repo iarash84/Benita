@@ -3,33 +3,34 @@
     public class CompilerClass
     {
 
-        public void Exec(string sourceCode, bool lexerPrint = false, bool parserPrint = false, bool sourcePrint = false, bool debugModeAvailable = false)
+        public void Exec(string sourceCode, bool lexerPrint = false, bool parserPrint = false, bool sourcePrint = false,
+            bool debugModeAvailable = false, string? sourceName = null)
         {
             // 1. Tokenize the source code
-            List<Token> tokens = TokenizeCode(sourceCode, lexerPrint, sourcePrint);
+            List<Token> tokens = TokenizeCode(sourceCode, lexerPrint, sourcePrint, sourceName);
 
             // 2. Parse the tokens to create an AST
             ProgramNode programAst = ParseCode(tokens, parserPrint);
 
             // 3. Analyze the AST using SemanticAnalyzer
-            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
-            semanticAnalyzer.Analyze(programAst);
+            AnalyzeProgram(programAst);
 
             var interpreter = new Interpreter(debugModeAvailable);
             interpreter.Visit(programAst);
         }
 
-        public string GenerateCppCode(string sourceCode, bool lexerPrint = false, bool parserPrint = false, bool sourcePrint = false)
+        public string GenerateCppCode(string sourceCode, bool lexerPrint = false, bool parserPrint = false,
+            bool sourcePrint = false, string? sourceName = null)
         {
             // 1. Tokenize the source code
-            List<Token> tokens = TokenizeCode(sourceCode: sourceCode, resultPrint: lexerPrint, sourcePrint: sourcePrint);
+            List<Token> tokens = TokenizeCode(sourceCode: sourceCode, resultPrint: lexerPrint, sourcePrint: sourcePrint,
+                sourceName: sourceName);
 
             // 2. Parse the tokens to create an AST
             ProgramNode? programAst = ParseCode(tokens: tokens, resultPrint: parserPrint);
 
             // 3. Analyze the AST using SemanticAnalyzer
-            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
-            semanticAnalyzer.Analyze(program: programAst);
+            AnalyzeProgram(programAst);
 
             var codeGenerator = new CodeGenerator();
             var generatedCode = codeGenerator.GenerateCode(program: programAst);
@@ -38,9 +39,10 @@
         }
 
 
-        private List<Token> TokenizeCode(string sourceCode, bool resultPrint = false, bool sourcePrint = false)
+        private List<Token> TokenizeCode(string sourceCode, bool resultPrint = false, bool sourcePrint = false,
+            string? sourceName = null)
         {
-            Lexer lexer = new Lexer(source: sourceCode, sourcePrint: sourcePrint);
+            Lexer lexer = new Lexer(source: sourceCode, sourcePrint: sourcePrint, sourceName: sourceName);
             List<Token> tokens = lexer.Tokenize();
             if (resultPrint)
                 foreach (Token token in tokens)
@@ -48,6 +50,22 @@
                     Console.WriteLine(value: token.ToString());
                 }
             return tokens;
+        }
+
+        private static void AnalyzeProgram(ProgramNode program)
+        {
+            try
+            {
+                new SemanticAnalyzer().Analyze(program);
+            }
+            catch (BenitaException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                throw new SemanticException(exception.Message, exception);
+            }
         }
 
         private ProgramNode? ParseCode(List<Token> tokens, bool resultPrint = false)

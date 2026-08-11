@@ -2724,7 +2724,7 @@ _main_(){
     let limit = 100; // You can change this limit to any number
     number[] local_primes = generatePrimesUpTo(limit);
 
-    print(""Prime numbers up to "" + limit)
+    print(""Prime numbers up to "" + limit);
     for (let i = 0; i < array_len(local_primes); i++ ) {
         print(local_primes[i]);
     }

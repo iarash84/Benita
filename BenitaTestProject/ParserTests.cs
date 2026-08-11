@@ -346,8 +346,9 @@ namespace BenitaTestProject
 
             Parser parser = new Parser(tokens);
             // Act & Assert
-            var exception = Assert.ThrowsException<Exception>(() => parser.Parse());
-            Assert.AreEqual("No main function defined.", exception.Message);
+            var exception = Assert.ThrowsException<ParserException>(() => parser.Parse());
+            Assert.AreEqual("BEN2003", exception.Code);
+            StringAssert.Contains(exception.Message, "No main function or top-level executable statement was found.");
         }
 
         [TestMethod]
@@ -381,8 +382,9 @@ namespace BenitaTestProject
 
             Parser parser = new Parser(tokens);
             // Act & Assert
-            var exception = Assert.ThrowsException<Exception>(() => parser.Parse());
-            Assert.AreEqual("Error, Main function is already defined.", exception.Message);
+            var exception = Assert.ThrowsException<ParserException>(() => parser.Parse());
+            Assert.AreEqual("BEN2002", exception.Code);
+            StringAssert.Contains(exception.Message, "The main function is already defined.");
         }
 
         [TestMethod]

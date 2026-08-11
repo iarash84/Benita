@@ -34,17 +34,21 @@
         public TokenType Type { get; }
         public string Lexeme { get; }
         public int Line { get; }
+        public int Column { get; }
+        public SourceSpan Span { get; }
 
-        public Token(TokenType type, string lexeme, int line)
+        public Token(TokenType type, string lexeme, int line, int column = 1, string? fileName = null, string? lineText = null)
         {
             Type = type;
             Lexeme = lexeme;
             Line = line;
+            Column = column;
+            Span = new SourceSpan(fileName, line, column, Math.Max(1, lexeme.Length), lineText);
         }
 
         public override string ToString()
         {
-            return $"{Type} {Lexeme} (Line: {Line})";
+            return $"{Type} {Lexeme} (Line: {Line}, Column: {Column})";
         }
     }
 

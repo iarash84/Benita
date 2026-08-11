@@ -9,6 +9,7 @@
         /// The input source code to be tokenized.
         /// </summary>
         private readonly string _source;
+        private readonly string? _sourceName;
 
         /// <summary>
         /// The list to store the generated tokens.
@@ -57,9 +58,10 @@
         /// </summary>
         /// <param name="source">The source code to be tokenized.</param>
         /// <param name="sourcePrint">Whether to print the processed source code.</param>
-        public Lexer(string source, bool sourcePrint = false)
+        public Lexer(string source, bool sourcePrint = false, string? sourceName = null)
         {
             _source = source;
+            _sourceName = sourceName;
             ProcessIncludes(ref _source); ///< Process included files.
             if (sourcePrint)
                 Console.WriteLine(_source);
@@ -77,7 +79,8 @@
                 ScanToken(); ///< Scan a single token.
             }
 
-            _tokens.Add(new Token(TokenType.EOF, "", _line)); ///< Add end-of-file token.
+            _start = _current;
+            AddToken(TokenType.EOF, ""); ///< Add end-of-file token.
             return _tokens; ///< Return the list of tokens.
         }
 
@@ -110,7 +113,7 @@
                             }
                             else
                             {
-                                throw new FileNotFoundException($"Included file not found: {filePath}", filePath);
+                                throw CreateError("BEN1003", $"Included file '{filePath}' was not found.");
                             }
                         }
                     }
@@ -194,7 +197,7 @@
                     }
                     else
                     {
-                        Console.WriteLine($"Unexpected character: {c} at line {_line}");
+                        throw CreateError("BEN1001", $"Unexpected character '{c}'.");
                     }
                     break;
             }
@@ -234,7 +237,7 @@
 
             if (IsAtEnd())
             {
-                throw new InvalidOperationException($"Unterminated string literal at line {_line}.");
+                throw CreateError("BEN1002", "Unterminated string literal.");
             }
             Advance(); 
             string value = _source.Substring(_start + 1, _current - _start - 2);
@@ -348,7 +351,26 @@
         private void AddToken(TokenType type, string? lexeme = null)
         {
             lexeme ??= _source.Substring(_start, _current - _start);
-            _tokens.Add(new Token(type, lexeme, _line));
+            var span = GetCurrentSpan(Math.Max(1, lexeme.Length));
+            _tokens.Add(new Token(type, lexeme, span.Line, span.Column, span.FileName, span.LineText));
+        }
+
+        private LexerException CreateError(string code, string message) =>
+            new(code, message, GetCurrentSpan(Math.Max(1, _current - _start)));
+
+        private SourceSpan GetCurrentSpan(int length)
+        {
+            var lineStart = _start == 0 ? -1 : _source.LastIndexOf('\n', _start - 1);
+            lineStart = lineStart < 0 ? 0 : lineStart + 1;
+            var lineEnd = _source.IndexOf('\n', _start);
+            if (lineEnd < 0) lineEnd = _source.Length;
+            var lineText = _source[lineStart..lineEnd].TrimEnd('\r');
+            var line = 1;
+            for (var index = 0; index < _start; index++)
+            {
+                if (_source[index] == '\n') line++;
+            }
+            return new SourceSpan(_sourceName, line, _start - lineStart + 1, length, lineText);
         }
 
         /// <summary>
