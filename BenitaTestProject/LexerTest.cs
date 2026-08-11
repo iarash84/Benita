@@ -126,22 +126,13 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void Tokenize_UnterminatedStringLiteral_ShouldHandleError()
+        public void Tokenize_WithUnterminatedStringLiteral_ThrowsInvalidOperationException()
         {
             // Arrange
             string code = "string str = \"hello world";
             Lexer lexer = new Lexer(code);
 
-            // Act
-            List<Token> tokens = lexer.Tokenize();
-
-            // Assert
-            Assert.AreEqual(4, tokens.Count);
-            Assert.AreEqual(TokenType.STRING, tokens[0].Type);
-            Assert.AreEqual(TokenType.IDENTIFIER, tokens[1].Type);
-            Assert.AreEqual(TokenType.EQUAL, tokens[2].Type);
-            // Check for EOF as it couldn't find the closing "
-            Assert.AreEqual(TokenType.EOF, tokens[3].Type);
+            Assert.ThrowsException<InvalidOperationException>(() => lexer.Tokenize());
         }
 
         [TestMethod]

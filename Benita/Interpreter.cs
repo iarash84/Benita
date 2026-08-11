@@ -8,9 +8,9 @@ namespace Benita
     /// </summary>
     public class Interpreter
     {
-        private readonly Dictionary<string?, FunctionNode> _functions = [];
-        private Dictionary<string?, object> _variables = [];
-        private readonly Dictionary<string?, object> _outerScopeVariables;
+        private readonly Dictionary<string, FunctionNode> _functions = [];
+        private Dictionary<string, object> _variables = [];
+        private readonly Dictionary<string, object> _outerScopeVariables;
 
         private bool _functionReturnFlag;
         private readonly bool _debugMode;
@@ -23,12 +23,13 @@ namespace Benita
         /// <param name="packageScope">The scope of the package, default is "_main_".</param>
         public Interpreter(bool debugMode = false, string packageScope = "Program")
         {
+            _debugMode = debugMode;
             if (debugMode)
             {
                 _debugClass = DebugClass.Instance;
             }
             _packageScope = packageScope;
-            _outerScopeVariables = new Dictionary<string?, object>();
+            _outerScopeVariables = new Dictionary<string, object>();
         }
 
         private void DebugLog(string message, bool pressKeyWait = true)
@@ -43,7 +44,7 @@ namespace Benita
         /// Sets the outer scope variables for the interpreter.
         /// </summary>
         /// <param name="outerScopeVariables">A dictionary of variables in the outer scope.</param>
-        public void SetOuterScopeVariables(Dictionary<string?, object> outerScopeVariables)
+        public void SetOuterScopeVariables(Dictionary<string, object> outerScopeVariables)
         {
             DebugLog($"SetOuterScopeVariables: {string.Join(", ", outerScopeVariables.Select(kvp => $"{kvp.Key} = {kvp.Value}"))}");
             _outerScopeVariables.Clear();
@@ -302,12 +303,10 @@ namespace Benita
             DebugLog($"VisitLogicalExpressionNode: Operator = {node.Operator}");
 
             var left = Visit(node.Left);
-            var right = Visit(node.Right);
-
             return node.Operator switch
             {
-                "&&" => Convert.ToBoolean(left) && Convert.ToBoolean(right),
-                "||" => Convert.ToBoolean(left) || Convert.ToBoolean(right),
+                "&&" => Convert.ToBoolean(left) && Convert.ToBoolean(Visit(node.Right)),
+                "||" => Convert.ToBoolean(left) || Convert.ToBoolean(Visit(node.Right)),
                 _ => throw new($"Unknown operator '{node.Operator}' for logical expression")
             };
         }
@@ -318,7 +317,7 @@ namespace Benita
         /// <param name="name">The name of the function.</param>
         /// <param name="value">The retrieved function node.</param>
         /// <returns>True if the function was found; otherwise, false.</returns>
-        public bool TryGetFunction(string? name, out FunctionNode value)
+        public bool TryGetFunction(string name, out FunctionNode value)
         {
             DebugLog($"TryGetFunction: Name = {name}", false);
 
@@ -342,7 +341,13 @@ namespace Benita
 
             if (TryGetFunction(node.FunctionName, out var function))
             {
-                var newScope = new Dictionary<string?, object>(_variables);
+                if (node.Arguments.Count != function.Parameters.Count)
+                {
+                    throw new ArgumentException(
+                        $"Function '{node.FunctionName}' expects {function.Parameters.Count} argument(s), but received {node.Arguments.Count}.");
+                }
+
+                var newScope = new Dictionary<string, object>(_variables);
 
                 for (int i = 0; i < function.Parameters.Count; i++)
                 {
@@ -373,10 +378,6 @@ namespace Benita
                             : null;
                     }
                 }
-                catch (Exception ex)
-                {
-                    throw new(ex.Message);
-                }
                 finally
                 {
                     _functionReturnFlag = false;
@@ -402,7 +403,7 @@ namespace Benita
         /// <param name="variables">The current variable dictionary.</param>
         /// <param name="originalVariables">The original variable dictionary.</param>
         /// <returns>The synchronized dictionary.</returns>
-        private Dictionary<string?, object> SyncDictionaryValues(Dictionary<string?, object> variables, Dictionary<string?, object> originalVariables)
+        private Dictionary<string, object> SyncDictionaryValues(Dictionary<string, object> variables, Dictionary<string, object> originalVariables)
         {
             DebugLog($"SyncDictionaryValues");
 
@@ -658,6 +659,10 @@ namespace Benita
         {
             DebugLog($"VisitProgramNode:", false);
 
+            Globals.GlobalVariable.Clear();
+            Globals.GlobalFunctions.Clear();
+            Globals.PackageList.Clear();
+
             foreach (var packageNode in node.Packages)
             {
                 Visit(packageNode);
@@ -742,7 +747,7 @@ namespace Benita
         /// <param name="name">The name of the variable.</param>
         /// <param name="value">The value of the variable.</param>
         /// <returns>True if the variable is found, false otherwise.</returns>
-        public bool TryGetVariableValue(string? name, out object value)
+        public bool TryGetVariableValue(string name, out object value)
         {
             DebugLog($"TryGetVariableValue: Name = {name}", false);
 
@@ -752,7 +757,8 @@ namespace Benita
             if (_outerScopeVariables.TryGetValue(name, out value))
                 return true;
 
-            throw new Exception($"Undefined variable '{name}'");
+            value = null!;
+            return false;
         }
 
         /// <summary>

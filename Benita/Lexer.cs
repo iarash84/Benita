@@ -110,7 +110,7 @@
                             }
                             else
                             {
-                                Console.WriteLine($"Included file not found: {filePath}");
+                                throw new FileNotFoundException($"Included file not found: {filePath}", filePath);
                             }
                         }
                     }
@@ -234,8 +234,7 @@
 
             if (IsAtEnd())
             {
-                Console.WriteLine($"Unterminated string at line {_line}");
-                return;
+                throw new InvalidOperationException($"Unterminated string literal at line {_line}.");
             }
             Advance(); 
             string value = _source.Substring(_start + 1, _current - _start - 2);
@@ -346,7 +345,7 @@
         /// </summary>
         /// <param name="type">The type of the token.</param>
         /// <param name="lexeme">The lexeme of the token.</param>
-        private void AddToken(TokenType type, string lexeme = null)
+        private void AddToken(TokenType type, string? lexeme = null)
         {
             lexeme ??= _source.Substring(_start, _current - _start);
             _tokens.Add(new Token(type, lexeme, _line));

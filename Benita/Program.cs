@@ -4,7 +4,7 @@
     {
         static void Main(string[] args)
         {
-            if (args.Length == 0 || args[0] == "-help")
+            if (args.Length == 0 || args[0] is "-help" or "help")
             {
                 ShowHelp();
                 return;
@@ -15,6 +15,12 @@
             bool printAst = args.Contains("-a");
 
             args = args.Where(arg => arg != "-t" && arg != "-s" && arg != "-a").ToArray();
+
+            if (args.Length == 0)
+            {
+                ShowHelp();
+                return;
+            }
 
             string action = args[0].ToLower();
 
@@ -42,8 +48,11 @@
                     ShowHelp();
                     break;
             }
-            Console.WriteLine("Press any key to exit");
-            Console.ReadKey();
+            if (!Console.IsInputRedirected)
+            {
+                Console.WriteLine("Press any key to exit");
+                Console.ReadKey();
+            }
         }
 
         static void ExecuteFile(string[] args, bool printTokens, bool printAst, bool printSource, CompilerClass compiler, bool debugModeAvailable = false)
@@ -77,11 +86,14 @@
             var generatedCode = compiler.GenerateCppCode(fileContent, printTokens, printAst, printSource);
 
             if (!string.IsNullOrEmpty(outputFilePath))
+            {
                 File.WriteAllText(outputFilePath, generatedCode);
+                Console.WriteLine($"C++ code generated at: {outputFilePath}");
+            }
             else
+            {
                 Console.WriteLine(generatedCode);
-
-            Console.WriteLine($"C++ code generated at: {outputFilePath}");
+            }
         }
 
         static bool ValidateFile(string filePath)

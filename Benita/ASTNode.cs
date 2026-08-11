@@ -34,39 +34,39 @@
     /// <summary>
     /// Represents a binary expression node with left and right expressions and an operator.
     /// </summary>
-    public class BinaryExpressionNode(ExpressionNode? left, string op, ExpressionNode? right) : ExpressionNode
+    public class BinaryExpressionNode(ExpressionNode left, string op, ExpressionNode right) : ExpressionNode
     {
-        public ExpressionNode? Left { get; } = left;
+        public ExpressionNode Left { get; } = left;
         public string Operator { get; } = op;
-        public ExpressionNode? Right { get; } = right;
+        public ExpressionNode Right { get; } = right;
     }
 
     /// <summary>
     /// Represents a logical expression node with left and right expressions and an operator.
     /// </summary>
-    public class LogicalExpressionNode(ExpressionNode? left, string op, ExpressionNode? right) : ExpressionNode
+    public class LogicalExpressionNode(ExpressionNode left, string op, ExpressionNode right) : ExpressionNode
     {
-        public ExpressionNode? Left { get; } = left;
+        public ExpressionNode Left { get; } = left;
         public string Operator { get; } = op;
-        public ExpressionNode? Right { get; } = right;
+        public ExpressionNode Right { get; } = right;
     }
 
     /// <summary>
     /// Represents a unary expression node with an operator and an operand.
     /// </summary>
-    public class UnaryExpressionNode(string? op, ExpressionNode? operand) : ExpressionNode
+    public class UnaryExpressionNode(string op, ExpressionNode operand) : ExpressionNode
     {
-        public string? Operator { get; } = op;
-        public ExpressionNode? Operand { get; } = operand;
+        public string Operator { get; } = op;
+        public ExpressionNode Operand { get; } = operand;
     }
 
     /// <summary>
     /// Represents a function call node with a function name and arguments.
     /// </summary>
-    public class FunctionCallNode(string? functionName, List<ExpressionNode?> arguments) : ExpressionNode
+    public class FunctionCallNode(string functionName, List<ExpressionNode> arguments) : ExpressionNode
     {
-        public string? FunctionName { get; } = functionName;
-        public List<ExpressionNode?> Arguments { get; } = arguments;
+        public string FunctionName { get; } = functionName;
+        public List<ExpressionNode> Arguments { get; } = arguments;
     }
 
     /// <summary>
@@ -111,12 +111,12 @@
     /// <summary>
     /// Represents an object instantiation node with a name, package name, and arguments.
     /// </summary>
-    public class ObjectInstantiationNode(string name, string? packageName, List<ExpressionNode?> arguments)
+    public class ObjectInstantiationNode(string name, string packageName, List<ExpressionNode> arguments)
         : StatementNode
     {
         public string Name { get; } = name;
-        public string? PackageName { get; } = packageName;
-        public List<ExpressionNode?> Arguments { get; } = arguments;
+        public string PackageName { get; } = packageName;
+        public List<ExpressionNode> Arguments { get; } = arguments;
     }
 
     /// <summary>
@@ -195,9 +195,9 @@
     /// <summary>
     /// Represents a block node containing a list of statements.
     /// </summary>
-    public class BlockNode(List<StatementNode?> statements) : StatementNode
+    public class BlockNode(List<StatementNode> statements) : StatementNode
     {
-        public List<StatementNode?> Statements { get; } = statements;
+        public List<StatementNode> Statements { get; } = statements;
     }
 
     /// <summary>
@@ -212,16 +212,16 @@
     /// Represents a function node with a name, parameters, return type, body, and return statement.
     /// </summary>
     public class FunctionNode(
-        string? name,
+        string name,
         List<ParameterNode> parameters,
         string? returnType,
-        BlockNode? body,
+        BlockNode body,
         ReturnStatementNode? returnStatement) : AstNode
     {
-        public string? Name { get; } = name;
+        public string Name { get; } = name;
         public List<ParameterNode> Parameters { get; } = parameters;
         public string? ReturnType { get; } = returnType;
-        public BlockNode? Body { get; } = body;
+        public BlockNode Body { get; } = body;
         public ReturnStatementNode? ReturnStatement { get; } = returnStatement;
     }
 
@@ -236,18 +236,18 @@
     /// <summary>
     /// Represents a parameter node with a type and optional name.
     /// </summary>
-    public class ParameterNode(string? type, string? name) : AstNode
+    public class ParameterNode(string? type, string name) : AstNode
     {
         public string? Type { get; } = type;
-        public string? Name { get; } = name;
+        public string Name { get; } = name;
     }
 
     /// <summary>
     /// Represents a package node with a name and a list of members.
     /// </summary>
-    public class PackageNode(string? name, List<PackageMemberNode> members) : AstNode
+    public class PackageNode(string name, List<PackageMemberNode> members) : AstNode
     {
-        public string? Name { get; } = name;
+        public string Name { get; } = name;
         public List<PackageMemberNode> Members { get; } = members;
     }
 
@@ -273,16 +273,16 @@
     /// Represents a package function node with a name, parameters, return type, body, and return statement.
     /// </summary>
     public class PackageFunctionNode(
-        string? name,
+        string name,
         List<ParameterNode> parameters,
         string? returnType,
-        BlockNode? body,
+        BlockNode body,
         ReturnStatementNode? returnStatement) : PackageMemberNode
     {
-        public string? Name { get; } = name;
+        public string Name { get; } = name;
         public List<ParameterNode> Parameters { get; } = parameters;
         public string? ReturnType { get; } = returnType;
-        public BlockNode? Body { get; } = body;
+        public BlockNode Body { get; } = body;
         public ReturnStatementNode? ReturnStatement { get; } = returnStatement;
     }
 
@@ -290,15 +290,15 @@
     /// Represents the program node containing global variables, packages, functions, main function, and statements.
     /// </summary>
     public class ProgramNode(
-        List<VariableDeclarationNode?> globalVariables,
-        List<PackageNode?> packages,
-        List<FunctionNode?> functions,
+        List<VariableDeclarationNode> globalVariables,
+        List<PackageNode> packages,
+        List<FunctionNode> functions,
         FunctionNode? mainFunction,
         List<StatementNode?>? statements) : AstNode
     {
-        public List<VariableDeclarationNode?> GlobalVariables { get; } = globalVariables;
-        public List<FunctionNode?> Functions { get; } = functions;
-        public List<PackageNode?> Packages { get; } = packages;
+        public List<VariableDeclarationNode> GlobalVariables { get; } = globalVariables;
+        public List<FunctionNode> Functions { get; } = functions;
+        public List<PackageNode> Packages { get; } = packages;
         public FunctionNode? MainFunction { get; } = mainFunction;
         public List<StatementNode?>? Statements { get; } = statements;
     }

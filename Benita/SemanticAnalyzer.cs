@@ -9,7 +9,7 @@
         /// <summary>
         /// Dictionary to store packages names and their associated PackageNode.
         /// </summary>
-        private readonly Dictionary<string?, PackageNode?> _packages;
+        private readonly Dictionary<string, PackageNode> _packages;
 
 
         /// <summary>
@@ -20,7 +20,7 @@
         /// <summary>
         /// Dictionary to store function names and their associated FunctionNode.
         /// </summary>
-        private readonly Dictionary<string?, FunctionNode?> _functions;
+        private readonly Dictionary<string, FunctionNode> _functions;
 
         /// <summary>
         /// Dictionary to store default functions with their return types and parameter types.
@@ -34,8 +34,8 @@
         public SemanticAnalyzer()
         {
             _globalVariables = new Dictionary<string, string?>();
-            _functions = new Dictionary<string?, FunctionNode?>();
-            _packages = new Dictionary<string?, PackageNode?>();
+            _functions = new Dictionary<string, FunctionNode>();
+            _packages = new Dictionary<string, PackageNode>();
             _defaultFunctions = new Dictionary<string, (string, List<string>)>
             {
                 { "print", ("void", ["string"]) },
@@ -60,6 +60,9 @@
         /// <param name="program">The ProgramNode to analyze.</param>
         public void Analyze(ProgramNode program)
         {
+            _packages.Clear();
+            _globalVariables.Clear();
+            _functions.Clear();
 
             foreach (var packageNode in program.Packages)
             {
@@ -69,13 +72,43 @@
             // Analyze global variables and ensure they are declared
             foreach (var globalVar in program.GlobalVariables)
             {
-                DeclareVariable(globalVar.Name, globalVar.Type, _globalVariables);
+                var declaredType = globalVar.Type;
+                if (globalVar.Initializer != null)
+                {
+                    var initializerType = AnalyzeExpression(globalVar.Initializer, _globalVariables);
+                    if (declaredType == "let")
+                    {
+                        declaredType = initializerType;
+                    }
+                    else if (!CheckType(declaredType!, initializerType))
+                    {
+                        throw new Exception(
+                            $"Type mismatch in global variable '{globalVar.Name}'. Expected '{declaredType}' but got '{initializerType}'.");
+                    }
+                }
+
+                DeclareVariable(globalVar.Name, declaredType, _globalVariables);
             }
 
-            // Analyze function declarations
+            // Register every function before analyzing bodies, allowing forward calls.
             foreach (var function in program.Functions)
             {
                 DeclareFunction(function);
+            }
+
+            foreach (var function in program.Functions)
+            {
+                AnalyzeFunction(function);
+            }
+
+            if (program.Statements != null)
+            {
+                var topLevelVariables = new Dictionary<string, string?>(_globalVariables);
+                foreach (var statement in program.Statements)
+                {
+                    if (statement != null)
+                        AnalyzeStatement(statement, topLevelVariables);
+                }
             }
 
             // Analyze the main function
@@ -88,11 +121,11 @@
         /// </summary>
         /// <param name="packageNode"></param>
         /// <exception cref="Exception"></exception>
-        private void DeclarePackage(PackageNode? packageNode)
+        private void DeclarePackage(PackageNode packageNode)
         {
             if (_packages.ContainsKey(packageNode.Name))
             {
-                throw new Exception($"Function '{packageNode.Name}' is already declared.");
+                throw new Exception($"Package '{packageNode.Name}' is already declared.");
             }
             _packages[packageNode.Name] = packageNode;
             AnalyzePackage(packageNode);
@@ -102,10 +135,10 @@
         /// 
         /// </summary>
         /// <param name="packageNode"></param>
-        private void AnalyzePackage(PackageNode? packageNode)
+        private void AnalyzePackage(PackageNode packageNode)
         {
             Dictionary<string, string?> variableScope = new Dictionary<string, string?>();
-            Dictionary<string?, PackageFunctionNode> packageFunctions = new Dictionary<string?, PackageFunctionNode>();
+            Dictionary<string, PackageFunctionNode> packageFunctions = new Dictionary<string, PackageFunctionNode>();
 
             foreach (var packageMember in packageNode.Members)
             {
@@ -167,7 +200,7 @@
         /// Declares a function and performs analysis on it.
         /// </summary>
         /// <param name="function">The function to declare and analyze.</param>
-        private void DeclareFunction(FunctionNode? function)
+        private void DeclareFunction(FunctionNode function)
         {
             if (_functions.ContainsKey(function.Name))
             {
@@ -175,14 +208,13 @@
             }
 
             _functions[function.Name] = function;
-            AnalyzeFunction(function);
         }
 
         /// <summary>
         /// Analyzes a function's parameters, body, and return type.
         /// </summary>
         /// <param name="function">The function to analyze.</param>
-        private void AnalyzeFunction(FunctionNode? function)
+        private void AnalyzeFunction(FunctionNode function)
         {
             // Create a new scope for local variables
             var localVariables = new Dictionary<string, string?>(_globalVariables);

@@ -1,7 +1,0 @@
-include_once "MyFunc.neo";
-include_once "MyFunc.neo";
-
-_main_() {
-    number result = add(2, 3);
-    print(result);
-}

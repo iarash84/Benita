@@ -15,6 +15,10 @@
         /// <param name="tokens">The list of tokens to parse.</param>
         public Parser(List<Token> tokens)
         {
+            ArgumentNullException.ThrowIfNull(tokens);
+            if (tokens.Count == 0 || tokens[^1].Type != TokenType.EOF)
+                throw new ArgumentException("The token stream must end with an EOF token.", nameof(tokens));
+
             _tokens = tokens;
             _functions = new List<FunctionNode?>();
         }
@@ -1009,7 +1013,8 @@
         /// <returns>The next token.</returns>
         private Token NextToken(int i = 1)
         {
-            return _tokens[_current + i];
+            var index = Math.Min(_current + i, _tokens.Count - 1);
+            return _tokens[index];
         }
 
         /// <summary>

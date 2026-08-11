@@ -52,7 +52,7 @@
         /// <param name="initializer">The initializer node to visit.</param>
         /// <param name="outerScopeVariables">The variables in the outer scope to be used.</param>
         /// <returns>The result of the visit operation.</returns>
-        public object Visit(AstNode? initializer, Dictionary<string?, object> outerScopeVariables)
+        public object Visit(AstNode? initializer, Dictionary<string, object> outerScopeVariables)
         {
             _interpreter.SetOuterScopeVariables(outerScopeVariables);
             return _interpreter.Visit(initializer);
