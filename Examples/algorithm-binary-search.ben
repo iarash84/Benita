@@ -1,0 +1,26 @@
+// Binary search requires a sorted array and repeatedly halves the search range.
+func binary_search(number[] values, number target) -> number {
+    number left = 0;
+    number right = array_len(values) - 1;
+
+    while (left <= right) {
+        number middle = round_number((left + right) / 2);
+        if (values[middle] == target) {
+            return middle;
+        }
+
+        if (values[middle] < target) {
+            left = middle + 1;
+        } else {
+            right = middle - 1;
+        }
+    }
+
+    return -1;
+}
+
+_main_() {
+    number[] values = [2, 5, 8, 12, 16, 23, 38];
+    print(binary_search(values, 16));
+    print(binary_search(values, 7));
+}

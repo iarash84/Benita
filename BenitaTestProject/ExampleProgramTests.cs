@@ -13,6 +13,13 @@ public class ExampleProgramTests
         get
         {
             // تعریف و فراخوانی تابع جمع عددی و بازگرداندن نتیجه آن را بررسی می‌کند.
+            yield return Case("algorithm-binary-search.ben", null, "4", "-1");
+            yield return Case("algorithm-bubble-sort.ben", null, "1", "2", "4", "5", "8");
+            yield return Case("algorithm-euclidean-gcd.ben", null, "6");
+            yield return Case("algorithm-linear-search.ben", null, "3", "-1");
+            yield return Case("algorithm-prime-check.ben", null,
+                "2 is prime", "9 is not prime", "17 is prime", "21 is not prime", "29 is prime");
+            yield return Case("algorithm-recursive-factorial.ben", null, "720");
             yield return Case("addition-function-call.ben", null, "5");
             // حذف و افزودن عناصر آرایه، محاسبه طول آرایه و پیمایش نتیجه را بررسی می‌کند.
             yield return Case("array-add-remove-and-length.ben", null, "Element at index 0: 10", "Element at index 1: 20", "Element at index 2: 40", "Element at index 3: 50", "Element at index 4: 60", "Element at index 5: 70");

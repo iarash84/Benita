@@ -1,0 +1,23 @@
+// Bubble sort repeatedly swaps adjacent elements that are out of order.
+func bubble_sort(number[] values) -> number[] {
+    number length = array_len(values);
+    for (number pass = 0; pass < length - 1; pass++) {
+        for (number index = 0; index < length - pass - 1; index++) {
+            if (values[index] > values[index + 1]) {
+                number temporary = values[index];
+                values[index] = values[index + 1];
+                values[index + 1] = temporary;
+            }
+        }
+    }
+
+    return values;
+}
+
+_main_() {
+    number[] values = [5, 1, 4, 2, 8];
+    number[] sorted = bubble_sort(values);
+    for (value in sorted) {
+        print(value);
+    }
+}

@@ -1,0 +1,25 @@
+// Prime-number test using trial division up to the square root of the value.
+func is_prime(number value) -> bool {
+    if (value < 2) {
+        return false;
+    }
+
+    for (number divisor = 2; divisor * divisor <= value; divisor++) {
+        if (value % divisor == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+_main_() {
+    number[] values = [2, 9, 17, 21, 29];
+    for (value in values) {
+        if (is_prime(value)) {
+            print(value + " is prime");
+        } else {
+            print(value + " is not prime");
+        }
+    }
+}

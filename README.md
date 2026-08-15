@@ -284,7 +284,7 @@ Programs in the [`Examples`](Examples) directory are executed directly by the te
 
 - [Bilingual language tutorial](docs/Tutorial.MD)
 - [Language grammar](docs/Grammar.txt)
-- [Example programs](Examples)
+- [Example programs and educational algorithms](Examples/README.md)
 
 ### Publishing a release
 
