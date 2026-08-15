@@ -106,6 +106,10 @@ namespace Benita
                     return VisitExpressionStatementNode(expressionStatementNode);
                 case IfStatementNode ifStatementNode:
                     return VisitIfStatementNode(ifStatementNode);
+                case MatchExpressionNode matchExpressionNode:
+                    return VisitMatchExpressionNode(matchExpressionNode);
+                case MatchStatementNode matchStatementNode:
+                    return VisitMatchStatementNode(matchStatementNode);
                 case WhileStatementNode whileStatementNode:
                     return VisitWhileStatementNode(whileStatementNode);
                 case ForStatementNode forStatementNode:
@@ -717,6 +721,42 @@ namespace Benita
             Synchronize(_context.GlobalFunctions, _functions);
             Synchronize(_context.GlobalVariables, _variables);
             return null;
+        }
+
+        /// <summary>اولین شاخه منطبق match مقدارساز را ارزیابی می‌کند.</summary>
+        private object VisitMatchExpressionNode(MatchExpressionNode node)
+        {
+            object value = Visit(node.Value);
+            MatchArm? defaultArm = null;
+            foreach (MatchArm arm in node.Arms)
+            {
+                if (arm.IsDefault)
+                {
+                    defaultArm = arm;
+                    continue;
+                }
+                if (Equals(value, Visit(arm.Pattern)))
+                    return Visit(arm.Body);
+            }
+            return Visit(defaultArm!.Body);
+        }
+
+        /// <summary>اولین شاخه منطبق match دستوری را اجرا می‌کند.</summary>
+        private object VisitMatchStatementNode(MatchStatementNode node)
+        {
+            object value = Visit(node.Value);
+            MatchArm? defaultArm = null;
+            foreach (MatchArm arm in node.Arms)
+            {
+                if (arm.IsDefault)
+                {
+                    defaultArm = arm;
+                    continue;
+                }
+                if (Equals(value, Visit(arm.Pattern)))
+                    return Visit(arm.Body);
+            }
+            return defaultArm is null ? null : Visit(defaultArm.Body);
         }
 
         /// <summary>

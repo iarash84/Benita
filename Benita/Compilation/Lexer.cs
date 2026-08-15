@@ -51,6 +51,7 @@
             {"false", TokenType.FALSE_LITERAL},
             {"break", TokenType.BREAK},
             {"continue", TokenType.CONTINUE},
+            {"match", TokenType.MATCH},
         };
 
         /// <summary>
@@ -172,7 +173,7 @@
                 case '%': AddToken(TokenType.PERCENT); break;
                 case '<': AddToken(Match('=') ? TokenType.LTE : TokenType.LT); break;
                 case '>': AddToken(Match('=') ? TokenType.GTE : TokenType.GT); break;
-                case '=': AddToken(Match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL); break;
+                case '=': AddToken(Match('=') ? TokenType.EQUAL_EQUAL : Match('>') ? TokenType.FAT_ARROW : TokenType.EQUAL); break;
                 case '&':
                     if (!Match('&')) throw CreateError("BEN1001", "Expected '&&' but found '&'.");
                     AddToken(TokenType.AND_AND);

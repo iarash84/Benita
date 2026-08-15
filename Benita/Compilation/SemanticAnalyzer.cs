@@ -305,6 +305,9 @@
                         AnalyzeStatement(ifStmt.ElseBranch, localVariables, functionReturnType, loopDepth);
                     }
                     break;
+                case MatchStatementNode matchStatement:
+                    AnalyzeMatchStatement(matchStatement, localVariables, functionReturnType, loopDepth);
+                    break;
                 case WhileStatementNode whileStmt:
                     var whileConditionType = AnalyzeExpression(whileStmt.Condition, localVariables);
                     if (whileConditionType != "bool")
@@ -375,8 +378,27 @@
             BlockNode block => block.Statements.Any(AlwaysReturns),
             IfStatementNode branch => branch.ElseBranch != null &&
                                       AlwaysReturns(branch.ThenBranch) && AlwaysReturns(branch.ElseBranch),
+            MatchStatementNode match => match.Arms.Any(arm => arm.IsDefault) &&
+                                        match.Arms.All(arm => AlwaysReturns(arm.Body as StatementNode)),
             _ => false
         };
+
+        private void AnalyzeMatchStatement(MatchStatementNode match,
+            Dictionary<string, string?> localVariables, string? functionReturnType, int loopDepth)
+        {
+            string? valueType = AnalyzeExpression(match.Value, localVariables);
+            foreach (MatchArm arm in match.Arms)
+            {
+                if (!arm.IsDefault)
+                {
+                    string? patternType = AnalyzeExpression(arm.Pattern!, localVariables);
+                    if (!CheckType(valueType, patternType))
+                        throw new Exception($"Match pattern type mismatch. Expected '{valueType}' but got '{patternType}'.");
+                }
+
+                AnalyzeStatement((StatementNode)arm.Body, localVariables, functionReturnType, loopDepth);
+            }
+        }
 
         /// <summary>
         /// Analyzes an array assignment statement.
@@ -447,9 +469,33 @@
                     return HandleLogicalExpressionNode(logical, localVariables);
                 case MemberAccessNode memberAccess:
                     return HandleMemberAccessNode(memberAccess, localVariables);
+                case MatchExpressionNode matchExpression:
+                    return AnalyzeMatchExpression(matchExpression, localVariables);
                 default:
                     throw new Exception($"Unsupported expression type: {expression.GetType().Name}");
             }
+        }
+
+        private string? AnalyzeMatchExpression(MatchExpressionNode match,
+            Dictionary<string, string?> localVariables)
+        {
+            string? valueType = AnalyzeExpression(match.Value, localVariables);
+            string? resultType = null;
+            foreach (MatchArm arm in match.Arms)
+            {
+                if (!arm.IsDefault)
+                {
+                    string? patternType = AnalyzeExpression(arm.Pattern!, localVariables);
+                    if (!CheckType(valueType, patternType))
+                        throw new Exception($"Match pattern type mismatch. Expected '{valueType}' but got '{patternType}'.");
+                }
+
+                string? armType = AnalyzeExpression((ExpressionNode)arm.Body, localVariables);
+                resultType ??= armType;
+                if (!CheckType(resultType, armType))
+                    throw new Exception($"All match expression arms must return the same type. Expected '{resultType}' but got '{armType}'.");
+            }
+            return resultType;
         }
 
         private string? HandleMemberAccessNode(MemberAccessNode memberAccess, Dictionary<string, string?> localVariables)

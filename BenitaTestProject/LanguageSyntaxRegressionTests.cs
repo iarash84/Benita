@@ -107,4 +107,110 @@ _main_() { print(sign(2)); }";
         var exception = Assert.ThrowsException<SemanticException>(() => new CompilerClass().Check(source));
         StringAssert.Contains(exception.Message, expectedMessage);
     }
+
+    [TestMethod]
+    public void Exec_ParenthesizedExpression_PreservesGrouping()
+    {
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec("print((2 + 3) * 4);");
+
+        Assert.AreEqual("20\r\n", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void Check_ParenthesizedTopLevelExpression_IsAccepted()
+    {
+        new CompilerClass().Check("(2 + 3) * 4;");
+    }
+
+    [TestMethod]
+    public void Check_PackageMemberReadAndCall_AreAccepted()
+    {
+        const string source = """
+            pkg Counter {
+                number value = 1;
+                func get() -> number { return value; }
+            }
+            Counter counter = new Counter();
+            print(counter.value);
+            print(counter.get());
+            """;
+
+        new CompilerClass().Check(source);
+    }
+
+    [TestMethod]
+    public void Exec_ElseIf_SelectsFirstMatchingBranch()
+    {
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec("""
+            number x = 7;
+            if (x > 10) { print("large"); }
+            else if (x > 5) { print("medium"); }
+            else { print("small"); }
+            """);
+
+        Assert.AreEqual("medium\r\n", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void Exec_MatchExpression_ReturnsMatchingValue()
+    {
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec("""
+            number score = 4;
+            let result = match score {
+                0 => "No score",
+                1 => "Bad",
+                2 => "Average",
+                3 => "Good",
+                4 => "Excellent",
+                _ => "Invalid"
+            };
+            print(result);
+            """);
+
+        Assert.AreEqual("Excellent\r\n", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void Exec_MatchStatement_ExecutesMatchingBlock()
+    {
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec("""
+            number value = 2;
+            match value {
+                1 => { print("one"); }
+                2 => { print("two"); }
+                _ => { print("other"); }
+            }
+            """);
+
+        Assert.AreEqual("two\r\n", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void Check_MatchExpressionWithoutDefault_IsRejected()
+    {
+        Assert.ThrowsException<ParserException>(() =>
+            new CompilerClass().Check("number x = match 1 { 1 => 2 };"));
+    }
+
+    [TestMethod]
+    public void Check_MatchExpressionWithMixedResultTypes_IsRejected()
+    {
+        var exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check("let x = match 1 { 1 => 2, _ => \"two\" }; print(x);"));
+
+        StringAssert.Contains(exception.Message, "same type");
+    }
+
+    [TestMethod]
+    public void Check_MatchPatternTypeMustMatchInputType()
+    {
+        var exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check("let x = match 1 { \"one\" => 1, _ => 0 }; print(x);"));
+
+        StringAssert.Contains(exception.Message, "pattern type mismatch");
+    }
 }

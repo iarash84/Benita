@@ -3,7 +3,7 @@
     public enum TokenType
     {
         // Keywords
-        FUNC, MAIN, RETURN, IF, ELSE, WHILE, FOR, PACKAGE, NEW, BREAK, CONTINUE,
+        FUNC, MAIN, RETURN, IF, ELSE, WHILE, FOR, PACKAGE, NEW, BREAK, CONTINUE, MATCH,
 
         // Types
         NUMBER, STRING, BOOL, VOID, LET,
@@ -12,7 +12,7 @@
         PLUS, MINUS, STAR, SLASH, PERCENT,
         LT, GT, LTE, GTE, EQUAL_EQUAL, BANG_EQUAL,
         AND_AND, OR_OR,
-        BANG, PLUS_PLUS, MINUS_MINUS, ARROW, DOT,
+        BANG, PLUS_PLUS, MINUS_MINUS, ARROW, FAT_ARROW, DOT,
 
         // Assignment operators
         EQUAL, PLUS_EQUAL, MINUS_EQUAL, STAR_EQUAL, SLASH_EQUAL,

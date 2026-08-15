@@ -422,6 +422,10 @@
             {
                 return ParseForStatement();
             }
+            if (Match(TokenType.MATCH))
+            {
+                return ParseMatchStatement();
+            }
             if (Match(TokenType.LBRACE))
             {
                 return ParseBlockStatement();
@@ -449,6 +453,14 @@
                     return ParseObjectInstantiationOrAssignment();
                 }
                 return ParseExpressionStatementOrAssignment();
+            }
+            if (Check(TokenType.NUMBER_LITERAL, TokenType.STRING_LITERAL, TokenType.TRUE_LITERAL,
+                    TokenType.FALSE_LITERAL, TokenType.LPAREN, TokenType.LSQUAREBRACE,
+                    TokenType.BANG, TokenType.MINUS))
+            {
+                ExpressionNode? expression = ParseExpression();
+                Consume(TokenType.SEMICOLON, "Expected ';' after expression");
+                return new ExpressionStatementNode(expression);
             }
             if (Match(TokenType.RETURN))
             {
@@ -529,6 +541,49 @@
             }
 
             return new IfStatementNode(condition, thenBranch, elseBranch);
+        }
+
+        /// <summary>یک match دستوری با بدنه‌های بلوکی را تجزیه می‌کند.</summary>
+        private MatchStatementNode ParseMatchStatement()
+        {
+            ExpressionNode value = ParseExpression();
+            Consume(TokenType.LBRACE, "Expected '{' after match value");
+            List<MatchArm> arms = new();
+            bool hasDefault = false;
+
+            while (!Check(TokenType.RBRACE) && !IsAtEnd())
+            {
+                (ExpressionNode? pattern, bool isDefault) = ParseMatchPattern();
+                if (isDefault && hasDefault)
+                    throw Error("BEN2007", "A match can contain only one default '_' arm.");
+                if (hasDefault)
+                    throw Error("BEN2007", "The default '_' arm must be the last match arm.");
+                hasDefault |= isDefault;
+
+                Consume(TokenType.FAT_ARROW, "Expected '=>' after match pattern");
+                Consume(TokenType.LBRACE, "Expected '{' before match statement arm");
+                StatementNode body = ParseBlockStatement();
+                arms.Add(new MatchArm(pattern, body, isDefault));
+                Match(TokenType.COMMA);
+            }
+
+            Consume(TokenType.RBRACE, "Expected '}' after match arms");
+            if (arms.Count == 0)
+                throw Error("BEN2007", "A match must contain at least one arm.");
+            return new MatchStatementNode(value, arms);
+        }
+
+        /// <summary>الگوی یک شاخه match یا شاخه پیش‌فرض `_` را می‌خواند.</summary>
+        private (ExpressionNode? Pattern, bool IsDefault) ParseMatchPattern()
+        {
+            if (Check(TokenType.IDENTIFIER) && CurrentToken().Lexeme == "_" &&
+                NextToken().Type == TokenType.FAT_ARROW)
+            {
+                Advance();
+                return (null, true);
+            }
+
+            return (ParseExpression(), false);
         }
 
         /// <summary>
@@ -698,6 +753,9 @@
                 return new CompoundAssignmentNode(name, operation, expression);
             }
 
+            // The leading identifier was consumed by ParseStatement. Rewind it so the
+            // regular precedence parser can handle calls, member access and binary expressions.
+            _current--;
             expression = ParseExpression();
             Consume(TokenType.SEMICOLON, "Expected ';' after expression");
             return new ExpressionStatementNode(expression);
@@ -841,50 +899,19 @@
         /// <returns>An <see cref="ExpressionNode"/> representing the primary expression.</returns>
         private ExpressionNode? ParsePrimary()
         {
+            if (Match(TokenType.MATCH))
+                return ParseMatchExpression();
+
             if (Match(TokenType.NUMBER_LITERAL, TokenType.STRING_LITERAL, TokenType.TRUE_LITERAL, TokenType.FALSE_LITERAL))
             {
                 return new LiteralNode(PreviousToken().Lexeme, PreviousToken().Type);
             }
 
-            if (Match(TokenType.IDENTIFIER) && !Check(TokenType.DOT))
+            if (Match(TokenType.IDENTIFIER))
             {
+                if (Check(TokenType.DOT))
+                    return ParseMemberAccess(PreviousToken().Lexeme);
                 return ParseIdentifier();
-            }
-
-            if (Check(TokenType.DOT))
-            {
-                string objectName = PreviousToken().Lexeme;
-                Consume(TokenType.DOT, "Expected dot separator");
-                if (NextToken().Type == TokenType.LPAREN)
-                {
-                    var expressionNode = ParseExpression();
-                    return new MemberAccessNode(objectName, expressionNode);
-                }
-
-                Consume(TokenType.IDENTIFIER, "Expected member name");
-                if (NextToken().Type == TokenType.SEMICOLON || NextToken().Type == TokenType.RPAREN)
-                {
-                    var state = ParseIdentifier();
-                    return new MemberAccessNode(objectName, state);
-                }
-                else
-                {
-                    var expression = ParseIdentifier();
-                    if (Match(TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH, TokenType.PERCENT))
-                    {
-                        do
-                        {
-                            string op = PreviousToken().Lexeme;
-                            ExpressionNode? right = ParseFactor();
-                            expression = new BinaryExpressionNode(expression, op, right);
-                        } while (Match(TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH, TokenType.PERCENT));
-
-                        return new MemberAccessNode(objectName, new ExpressionStatementNode(expression));
-                    }
-
-                    var state = ParseExpressionStatementOrAssignment(true);
-                    return new MemberAccessNode(objectName, state);
-                }
             }
 
             if (Match(TokenType.LSQUAREBRACE))
@@ -892,11 +919,60 @@
                 return ParseArrayInitializer();
             }
 
-            if (Check(TokenType.LPAREN))
+            if (Match(TokenType.LPAREN))
             {
-                string name = PreviousToken().Lexeme;
-                Consume(TokenType.LPAREN, "Expected '(' before arguments");
-                List<ExpressionNode?> arguments = new List<ExpressionNode?>();
+                ExpressionNode? expression = ParseExpression();
+                Consume(TokenType.RPAREN, "Expected ')' after expression");
+                return expression;
+            }
+
+            throw Error("BEN2001", $"Unexpected token '{CurrentToken().Lexeme}' ({CurrentToken().Type}).");
+        }
+
+        /// <summary>یک match مقدارساز را تجزیه می‌کند.</summary>
+        private MatchExpressionNode ParseMatchExpression()
+        {
+            ExpressionNode value = ParseExpression();
+            Consume(TokenType.LBRACE, "Expected '{' after match value");
+            List<MatchArm> arms = new();
+            bool hasDefault = false;
+
+            while (!Check(TokenType.RBRACE) && !IsAtEnd())
+            {
+                (ExpressionNode? pattern, bool isDefault) = ParseMatchPattern();
+                if (isDefault && hasDefault)
+                    throw Error("BEN2007", "A match can contain only one default '_' arm.");
+                if (hasDefault)
+                    throw Error("BEN2007", "The default '_' arm must be the last match arm.");
+                hasDefault |= isDefault;
+
+                Consume(TokenType.FAT_ARROW, "Expected '=>' after match pattern");
+                ExpressionNode result = ParseExpression();
+                arms.Add(new MatchArm(pattern, result, isDefault));
+
+                if (!Match(TokenType.COMMA) && !Check(TokenType.RBRACE))
+                    throw Error("BEN2007", "Expected ',' between match expression arms.");
+            }
+
+            Consume(TokenType.RBRACE, "Expected '}' after match arms");
+            if (arms.Count == 0)
+                throw Error("BEN2007", "A match must contain at least one arm.");
+            if (!hasDefault)
+                throw Error("BEN2007", "A match expression requires a default '_' arm.");
+            return new MatchExpressionNode(value, arms);
+        }
+
+        /// <summary>
+        /// یک دسترسی مستقیم به عضو package را پس از خواندن نام شیء تجزیه می‌کند.
+        /// </summary>
+        private ExpressionNode ParseMemberAccess(string objectName)
+        {
+            Consume(TokenType.DOT, "Expected '.' before member name");
+            string memberName = Consume(TokenType.IDENTIFIER, "Expected member name after '.'").Lexeme;
+
+            if (Match(TokenType.LPAREN))
+            {
+                List<ExpressionNode?> arguments = new();
                 if (!Check(TokenType.RPAREN))
                 {
                     do
@@ -904,11 +980,25 @@
                         arguments.Add(ParseExpression());
                     } while (Match(TokenType.COMMA));
                 }
-                Consume(TokenType.RPAREN, "Expected ')' after arguments");
-                return new FunctionCallNode(name, arguments);
+                Consume(TokenType.RPAREN, "Expected ')' after member arguments");
+                return new MemberAccessNode(objectName, new FunctionCallNode(memberName, arguments));
             }
 
-            throw Error("BEN2001", $"Unexpected token '{CurrentToken().Lexeme}' ({CurrentToken().Type}).");
+            if (Match(TokenType.EQUAL))
+                return new MemberAccessNode(objectName, new AssignmentNode(memberName, ParseExpression()));
+
+            if (Match(TokenType.PLUS_EQUAL, TokenType.MINUS_EQUAL, TokenType.STAR_EQUAL, TokenType.SLASH_EQUAL))
+            {
+                string operation = PreviousToken().Lexeme;
+                return new MemberAccessNode(objectName,
+                    new CompoundAssignmentNode(memberName, operation, ParseExpression()));
+            }
+
+            if (Match(TokenType.PLUS_PLUS, TokenType.MINUS_MINUS))
+                return new MemberAccessNode(objectName,
+                    new IncrementDecrementNode(memberName, PreviousToken().Lexeme));
+
+            return new MemberAccessNode(objectName, new IdentifierNode(memberName));
         }
 
         /// <summary>

@@ -56,6 +56,13 @@ The Lexer, Parser, and Semantic Analyzer share the following language contract:
 
 The normative EBNF is maintained in [Grammar.txt](Grammar.txt).
 
+## Conditional selection
+
+Benita supports chained `else if` branches and two forms of `match`: an
+expression form that returns a value and a statement form whose arms contain
+blocks. Match expressions require a final `_` default arm and consistent result
+types. Match statements may omit the default arm.
+
 ## ساختار مخزن
 
 | مسیر | مسئولیت |

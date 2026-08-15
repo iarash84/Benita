@@ -31,6 +31,8 @@ internal static class AstPrinter
             case FunctionCallNode value: Detail(child, "Function", value.FunctionName); PrintAll(value.Arguments, child); break;
             case ReturnStatementNode value: Print(value.ReturnExpression, child); break;
             case IfStatementNode value: Print(value.Condition, child); Print(value.ThenBranch, child); Print(value.ElseBranch, child); break;
+            case MatchExpressionNode value: Print(value.Value, child); PrintMatchArms(value.Arms, child); break;
+            case MatchStatementNode value: Print(value.Value, child); PrintMatchArms(value.Arms, child); break;
             case WhileStatementNode value: Print(value.Condition, child); Print(value.Body, child); break;
             case ForStatementNode value: Print(value.Initializer, child); Print(value.Condition, child); Print(value.Increment, child); Print(value.Body, child); break;
             case ArrayInitializerNode value: PrintAll(value.Elements, child); break;
@@ -44,6 +46,16 @@ internal static class AstPrinter
     private static void PrintAll<T>(IEnumerable<T?> nodes, string indent) where T : AstNode
     {
         foreach (T? node in nodes) Print(node, indent);
+    }
+
+    private static void PrintMatchArms(IEnumerable<MatchArm> arms, string indent)
+    {
+        foreach (MatchArm arm in arms)
+        {
+            Console.WriteLine($"{indent}MatchArm{(arm.IsDefault ? " (default)" : string.Empty)}");
+            Print(arm.Pattern, indent + "  ");
+            Print(arm.Body, indent + "  ");
+        }
     }
 
     private static void Detail(string indent, string label, string? value) =>

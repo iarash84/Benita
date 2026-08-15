@@ -67,6 +67,8 @@ namespace Benita
                 ExpressionStatementNode expression => new ExpressionStatementNode(
                     OptimizeExpression(expression.Expression)),
                 IfStatementNode ifStatement => OptimizeIf(ifStatement),
+                MatchStatementNode match => new MatchStatementNode(
+                    OptimizeExpression(match.Value)!, OptimizeMatchArms(match.Arms)),
                 WhileStatementNode whileStatement => OptimizeWhile(whileStatement),
                 ForStatementNode forStatement => new ForStatementNode(
                     OptimizeStatement(forStatement.Initializer),
@@ -133,6 +135,8 @@ namespace Benita
                     OptimizeExpression(array.SizeExpression)!),
                 MemberAccessNode member => new MemberAccessNode(
                     member.ObjectName, OptimizeMemberExpression(member.Expression)),
+                MatchExpressionNode match => new MatchExpressionNode(
+                    OptimizeExpression(match.Value)!, OptimizeMatchArms(match.Arms)),
                 _ => throw new InvalidOperationException($"Unsupported expression '{node.GetType().Name}'.")
             };
         }
@@ -144,6 +148,15 @@ namespace Benita
             StatementNode statement => OptimizeStatement(statement),
             _ => node
         };
+
+        private List<MatchArm> OptimizeMatchArms(IEnumerable<MatchArm> arms) => arms
+            .Select(arm => new MatchArm(
+                OptimizeExpression(arm.Pattern),
+                arm.Body is ExpressionNode expression
+                    ? OptimizeExpression(expression)!
+                    : OptimizeStatement((StatementNode)arm.Body)!,
+                arm.IsDefault))
+            .ToList();
 
         private ExpressionNode OptimizeBinary(BinaryExpressionNode node)
         {

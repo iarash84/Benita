@@ -4,16 +4,18 @@ Benita Language Grammar
 This document uses EBNF. Terminals are written in quotes, `?` means optional,
 `*` means zero or more occurrences, and `+` means one or more occurrences.
 
-program                 ::= include-directive* top-level-item* EOF ;
-include-directive       ::= "include_once" string-literal ";" ;
+program                 ::= top-level-item* EOF ;
 
 top-level-item          ::= package-declaration
                           | function-declaration
                           | main-function
                           | statement ;
 
-package-declaration     ::= "package" identifier "{" package-member* "}" ;
-package-member          ::= variable-declaration | function-declaration ;
+package-declaration     ::= "pkg" identifier "{" package-member* "}" ;
+package-member          ::= package-variable-declaration | function-declaration ;
+package-variable-declaration
+                         ::= (primitive-type | "let") identifier
+                             ("=" expression)? ";" ;
 
 main-function           ::= "_main_" "(" ")" block ;
 function-declaration    ::= "func" identifier "(" parameter-list? ")"
@@ -21,11 +23,16 @@ function-declaration    ::= "func" identifier "(" parameter-list? ")"
 parameter-list          ::= parameter ("," parameter)* ;
 parameter               ::= parameter-type identifier ;
 
-variable-declaration    ::= variable-type identifier ("=" expression)? ";" ;
-variable-type           ::= value-type | "let" | array-type ;
-parameter-type          ::= value-type | array-type ;
-return-type             ::= value-type | array-type | "void" ;
-value-type              ::= primitive-type | identifier ;
+variable-declaration    ::= scalar-variable-declaration | array-variable-declaration ;
+scalar-variable-declaration
+                         ::= (primitive-type | "let") identifier
+                             ("=" expression)? ";" ;
+array-variable-declaration
+                         ::= array-type identifier
+                             ("=" (expression | sized-array-initializer))? ";" ;
+parameter-type          ::= primitive-type | named-type | array-type ;
+return-type             ::= primitive-type | named-type | array-type | "void" ;
+named-type              ::= identifier ;
 primitive-type          ::= "number" | "string" | "bool" ;
 array-type              ::= primitive-type "[" "]" ;
 
@@ -33,18 +40,20 @@ statement               ::= variable-declaration
                           | assignment-statement
                           | compound-assignment-statement
                           | increment-statement
+                          | object-instantiation
                           | expression-statement
                           | if-statement
                           | while-statement
                           | for-statement
+                          | match-statement
                           | return-statement
                           | break-statement
                           | continue-statement
                           | block ;
 
 block                   ::= "{" statement* "}" ;
-if-statement            ::= "if" "(" expression ")" statement
-                            ("else" statement)? ;
+if-statement            ::= "if" "(" expression ")" statement else-clause? ;
+else-clause             ::= "else" (if-statement | statement) ;
 while-statement         ::= "while" "(" expression ")" statement ;
 for-statement           ::= "for" "(" for-initializer? ";"
                             expression? ";" for-increment? ")" statement ;
@@ -52,6 +61,8 @@ for-initializer         ::= variable-declaration-no-semicolon | assignment ;
 for-increment           ::= assignment | compound-assignment | increment ;
 variable-declaration-no-semicolon
                          ::= variable-type identifier ("=" expression)? ;
+match-statement         ::= "match" expression "{" match-statement-arm+ "}" ;
+match-statement-arm     ::= match-pattern "=>" block ","? ;
 
 return-statement        ::= "return" expression? ";" ;
 break-statement         ::= "break" ";" ;
@@ -61,6 +72,8 @@ assignment-statement    ::= assignment ";" ;
 compound-assignment-statement
                          ::= compound-assignment ";" ;
 increment-statement     ::= increment ";" ;
+object-instantiation    ::= ("let" | named-type) identifier "="
+                            "new" named-type "(" argument-list? ")" ";" ;
 assignment              ::= assignable "=" expression ;
 compound-assignment     ::= identifier ("+=" | "-=" | "*=" | "/=") expression ;
 increment               ::= identifier ("++" | "--") ;
@@ -81,15 +94,22 @@ primary                 ::= literal
                           | array-access
                           | member-access
                           | array-initializer
-                          | sized-array-initializer
+                          | match-expression
                           | "(" expression ")" ;
 function-call           ::= identifier "(" argument-list? ")" ;
 array-access            ::= identifier "[" expression "]" ;
-member-access           ::= identifier "." identifier
-                            ("(" argument-list? ")")? ;
+member-access           ::= identifier "." identifier member-suffix? ;
+member-suffix           ::= "(" argument-list? ")"
+                          | "=" expression
+                          | ("+=" | "-=" | "*=" | "/=") expression
+                          | "++" | "--" ;
 argument-list           ::= expression ("," expression)* ;
 array-initializer       ::= "[" argument-list? "]" ;
 sized-array-initializer ::= primitive-type "[" expression "]" ;
+match-expression        ::= "match" expression "{" match-expression-arm
+                            ("," match-expression-arm)* ","? "}" ;
+match-expression-arm    ::= match-pattern "=>" expression ;
+match-pattern           ::= expression | "_" ;
 
 literal                 ::= number-literal | string-literal | boolean-literal ;
 boolean-literal         ::= "true" | "false" ;
@@ -116,10 +136,16 @@ Semantic constraints
    `&&` and `||`.
 8. Strings cannot span physical lines. Supported escapes are `\\n`, `\\r`,
    `\\t`, `\\"`, and `\\\\`.
+9. A match expression must contain exactly one default `_` arm, placed last.
+   The default arm of a match statement is optional, but when present it is last.
+10. Match patterns must have the same type as the matched value. Every result
+    arm of a match expression must produce the same type.
 
 Notes
 -----
 
-`include_once` directives are expanded before tokenization. Built-in function
+`include_once "path";` is a preprocessing directive rather than a tokenized
+grammar production and may appear on its own source line. Directives are
+expanded before parsing. Built-in function
 names and signatures are runtime API entries, not grammar productions; their
 authoritative definitions live in `BuiltInRegistry`.

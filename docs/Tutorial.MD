@@ -64,7 +64,43 @@ if (value % 2 == 0) {
 }
 ```
 
-شرط باید مقدار `bool` تولید کند.
+شرط باید مقدار `bool` تولید کند. برای بررسی چند حالت می‌توان `else if`ها را زنجیره کرد:
+
+```benita
+if (value > 10) {
+    print("large");
+} else if (value > 5) {
+    print("medium");
+} else {
+    print("small");
+}
+```
+
+ساختار `match` می‌تواند مستقیماً یک مقدار تولید کند:
+
+```benita
+let result = match score {
+    0 => "No score",
+    1 => "Bad",
+    2 => "Average",
+    3 => "Good",
+    4 => "Excellent",
+    _ => "Invalid"
+};
+```
+
+یا شاخه‌های دستوری را اجرا کند:
+
+```benita
+match value {
+    1 => { print("one"); }
+    2 => { print("two"); }
+    _ => { print("other"); }
+}
+```
+
+در نوع مقدارساز، شاخه‌ی پیش‌فرض `_` اجباری است و خروجی همه‌ی شاخه‌ها باید یک نوع
+داشته باشد. در نوع دستوری `_` اختیاری است. اگر استفاده شود باید آخرین شاخه باشد.
 
 ### ۵. حلقه‌ها و کنترل جریان
 
@@ -439,7 +475,43 @@ if (value % 2 == 0) {
 }
 ```
 
-A condition must evaluate to `bool`.
+A condition must evaluate to `bool`. Multiple conditions can be chained with `else if`:
+
+```benita
+if (value > 10) {
+    print("large");
+} else if (value > 5) {
+    print("medium");
+} else {
+    print("small");
+}
+```
+
+`match` can produce a value:
+
+```benita
+let result = match score {
+    0 => "No score",
+    1 => "Bad",
+    2 => "Average",
+    3 => "Good",
+    4 => "Excellent",
+    _ => "Invalid"
+};
+```
+
+It can also execute statement blocks:
+
+```benita
+match value {
+    1 => { print("one"); }
+    2 => { print("two"); }
+    _ => { print("other"); }
+}
+```
+
+A match expression requires a final `_` arm and all of its arms must produce the
+same type. The default arm is optional for a match statement.
 
 ### 5. Loops and control flow
 

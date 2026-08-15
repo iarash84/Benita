@@ -168,6 +168,28 @@
         public StatementNode? ElseBranch { get; } = elseBranch;
     }
 
+    /// <summary>یک شاخه از ساختار match را همراه الگو و بدنه نگهداری می‌کند.</summary>
+    public class MatchArm(ExpressionNode? pattern, AstNode body, bool isDefault)
+    {
+        public ExpressionNode? Pattern { get; } = pattern;
+        public AstNode Body { get; } = body;
+        public bool IsDefault { get; } = isDefault;
+    }
+
+    /// <summary>ساختار match را در جایگاه یک عبارت بازنمایی می‌کند.</summary>
+    public class MatchExpressionNode(ExpressionNode value, List<MatchArm> arms) : ExpressionNode
+    {
+        public ExpressionNode Value { get; } = value;
+        public List<MatchArm> Arms { get; } = arms;
+    }
+
+    /// <summary>ساختار match را در جایگاه یک دستور بازنمایی می‌کند.</summary>
+    public class MatchStatementNode(ExpressionNode value, List<MatchArm> arms) : StatementNode
+    {
+        public ExpressionNode Value { get; } = value;
+        public List<MatchArm> Arms { get; } = arms;
+    }
+
     /// <summary>
     /// Represents a while statement node with a condition and body.
     /// </summary>
