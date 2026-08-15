@@ -264,4 +264,52 @@ _main_() { print(sign(2)); }";
 
         StringAssert.Contains(exception.Message, "require a number");
     }
+
+    [TestMethod]
+    public void Exec_ForIn_VisitsEveryArrayElement()
+    {
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec("""
+            number[] values = [1, 2, 3];
+            for (item in values) {
+                print(item);
+            }
+            """, optimizeAst: true);
+
+        Assert.AreEqual("1\r\n2\r\n3\r\n", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void Exec_ForIn_SupportsBreakAndContinue()
+    {
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec("""
+            number[] values = [1, 2, 3, 4, 5];
+            for (item in values) {
+                if (item == 2) { continue; }
+                if (item == 4) { break; }
+                print(item);
+            }
+            """);
+
+        Assert.AreEqual("1\r\n3\r\n", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void Check_ForIn_RejectsNonArrayIterable()
+    {
+        var exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check("number value = 1; for (item in value) { print(item); }"));
+
+        StringAssert.Contains(exception.Message, "must be an array");
+    }
+
+    [TestMethod]
+    public void Check_ForIn_VariableDoesNotLeakOutsideLoop()
+    {
+        var exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check("number[] values = [1]; for (item in values) {} print(item);"));
+
+        StringAssert.Contains(exception.Message, "Undeclared variable 'item'");
+    }
 }

@@ -18,7 +18,7 @@
 - آرایه‌ها و توابع مدیریت آرایه
 - توابع کامل رشته‌ای برای طول، جست‌وجو، برش، جایگزینی، تقسیم و تغییر حروف
 - توابع، بازگشت و فراخوانی بازگشتی
-- شرط‌های `if/else if/else`، ساختار مقدارساز/دستوری `match` و حلقه‌های `while` و `for`
+- شرط‌های `if/else if/else`، ساختار مقدارساز/دستوری `match` و حلقه‌های `while`، `for` و `for-in`
 - بسته‌ها (`pkg`)، اعضای بسته و نمونه‌سازی
 - ورودی و خروجی کنسول
 - عملیات خواندن، نوشتن، بررسی وجود و حذف فایل
@@ -163,7 +163,7 @@ Benita is a simple, extensible programming language built for education and expe
 - Arrays and built-in array operations
 - String operations for length, search, slicing, replacement, splitting, trimming, and letter case
 - Functions, returns, and recursion
-- `if/else if/else` conditions, value/statement `match`, and `while`/`for` loops
+- `if/else if/else` conditions, value/statement `match`, and `while`/`for`/`for-in` loops
 - Packages (`pkg`), package members, and object instantiation
 - Console input and output
 - File read, write, existence, and deletion operations

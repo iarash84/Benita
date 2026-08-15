@@ -75,6 +75,10 @@ namespace Benita
                     OptimizeExpression(forStatement.Condition),
                     OptimizeStatement(forStatement.Increment),
                     OptimizeStatement(forStatement.Body)),
+                ForEachStatementNode forEach => new ForEachStatementNode(
+                    forEach.VariableName,
+                    OptimizeExpression(forEach.Iterable)!,
+                    OptimizeStatement(forEach.Body)!),
                 BlockNode block => OptimizeBlock(block),
                 ReturnStatementNode returnStatement => OptimizeReturn(returnStatement),
                 ObjectInstantiationNode creation => new ObjectInstantiationNode(

@@ -41,6 +41,7 @@
             {"if", TokenType.IF},
             {"else", TokenType.ELSE},
             {"for", TokenType.FOR},
+            {"in", TokenType.IN},
             {"while", TokenType.WHILE},
             {"number", TokenType.NUMBER},
             {"string", TokenType.STRING},

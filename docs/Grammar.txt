@@ -55,8 +55,10 @@ block                   ::= "{" statement* "}" ;
 if-statement            ::= "if" "(" expression ")" statement else-clause? ;
 else-clause             ::= "else" (if-statement | statement) ;
 while-statement         ::= "while" "(" expression ")" statement ;
-for-statement           ::= "for" "(" for-initializer? ";"
+for-statement           ::= classic-for-statement | for-in-statement ;
+classic-for-statement   ::= "for" "(" for-initializer? ";"
                             expression? ";" for-increment? ")" statement ;
+for-in-statement        ::= "for" "(" identifier "in" expression ")" statement ;
 for-initializer         ::= variable-declaration-no-semicolon | assignment ;
 for-increment           ::= assignment | compound-assignment | increment ;
 variable-declaration-no-semicolon
@@ -145,6 +147,9 @@ Semantic constraints
 11. Multiple patterns in one arm are alternatives: `1, 2, 3` matches any of
     those values. A numeric range `start..end` is inclusive at both boundaries.
     Arms are tested from top to bottom and the first matching arm is selected.
+12. The expression in a `for (item in expression)` loop must be an array. The
+    iteration variable is inferred from the array element type and is scoped to
+    the loop body.
 
 Notes
 -----

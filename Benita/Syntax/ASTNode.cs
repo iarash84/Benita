@@ -230,6 +230,15 @@
         public StatementNode? Body { get; } = body;
     }
 
+    /// <summary>حلقه پیمایش مستقیم عناصر یک آرایه را بازنمایی می‌کند.</summary>
+    public class ForEachStatementNode(string variableName, ExpressionNode iterable, StatementNode body)
+        : StatementNode
+    {
+        public string VariableName { get; } = variableName;
+        public ExpressionNode Iterable { get; } = iterable;
+        public StatementNode Body { get; } = body;
+    }
+
     /// <summary>
     /// Represents a block node containing a list of statements.
     /// </summary>

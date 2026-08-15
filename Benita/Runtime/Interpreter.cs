@@ -114,6 +114,8 @@ namespace Benita
                     return VisitWhileStatementNode(whileStatementNode);
                 case ForStatementNode forStatementNode:
                     return VisitForStatementNode(forStatementNode);
+                case ForEachStatementNode forEachStatementNode:
+                    return VisitForEachStatementNode(forEachStatementNode);
                 case FunctionNode functionNode:
                     return VisitFunctionNode(functionNode);
                 case ArrayInitializerNode arrayInitializerNode:
@@ -720,6 +722,46 @@ namespace Benita
 
             Synchronize(_context.GlobalFunctions, _functions);
             Synchronize(_context.GlobalVariables, _variables);
+            return null;
+        }
+
+        /// <summary>تمام عناصر آرایه را به‌ترتیب در متغیر iteration قرار می‌دهد.</summary>
+        private object VisitForEachStatementNode(ForEachStatementNode node)
+        {
+            object iterable = Visit(node.Iterable);
+            if (iterable is not Array values)
+                throw new Exception("The expression after 'in' must evaluate to an array.");
+
+            bool hadPreviousValue = _variables.TryGetValue(node.VariableName, out object previousValue);
+            try
+            {
+                foreach (object? value in values)
+                {
+                    _variables[node.VariableName] = value;
+                    try
+                    {
+                        object result = Visit(node.Body);
+                        if (_functionReturnFlag)
+                            return result;
+                    }
+                    catch (BreakException)
+                    {
+                        break;
+                    }
+                    catch (ContinueException)
+                    {
+                        continue;
+                    }
+                }
+            }
+            finally
+            {
+                if (hadPreviousValue)
+                    _variables[node.VariableName] = previousValue;
+                else
+                    _variables.Remove(node.VariableName);
+            }
+
             return null;
         }
 

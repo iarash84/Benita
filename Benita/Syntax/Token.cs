@@ -3,7 +3,7 @@
     public enum TokenType
     {
         // Keywords
-        FUNC, MAIN, RETURN, IF, ELSE, WHILE, FOR, PACKAGE, NEW, BREAK, CONTINUE, MATCH,
+        FUNC, MAIN, RETURN, IF, ELSE, WHILE, FOR, IN, PACKAGE, NEW, BREAK, CONTINUE, MATCH,
 
         // Types
         NUMBER, STRING, BOOL, VOID, LET,

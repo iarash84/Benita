@@ -144,6 +144,16 @@ for (number i = 0; i < 3; i++) {
 }
 ```
 
+برای پیمایش مستقیم عناصر آرایه از فرم `for-in` استفاده کنید. متغیر `item` نیازی
+به تعریف قبلی ندارد و فقط داخل بدنه‌ی حلقه در دسترس است:
+
+```benita
+number[] values = [10, 20, 30];
+for (item in values) {
+    print(item);
+}
+```
+
 از `break` برای خروج از حلقه و از `continue` برای رفتن به تکرار بعدی استفاده کنید.
 
 ### ۶. توابع و بازگشت
@@ -574,6 +584,16 @@ A `for` loop:
 ```benita
 for (number i = 0; i < 3; i++) {
     print(i);
+}
+```
+
+Use `for-in` to iterate directly over an array. The iteration variable is
+inferred and exists only inside the loop body:
+
+```benita
+number[] values = [10, 20, 30];
+for (item in values) {
+    print(item);
 }
 ```
 

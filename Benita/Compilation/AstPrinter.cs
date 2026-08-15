@@ -35,6 +35,7 @@ internal static class AstPrinter
             case MatchStatementNode value: Print(value.Value, child); PrintMatchArms(value.Arms, child); break;
             case WhileStatementNode value: Print(value.Condition, child); Print(value.Body, child); break;
             case ForStatementNode value: Print(value.Initializer, child); Print(value.Condition, child); Print(value.Increment, child); Print(value.Body, child); break;
+            case ForEachStatementNode value: Detail(child, "Variable", value.VariableName); Print(value.Iterable, child); Print(value.Body, child); break;
             case ArrayInitializerNode value: PrintAll(value.Elements, child); break;
             case ArrayAccessNode value: Detail(child, "Array", value.Name); Print(value.Index, child); break;
             case ArrayAssignmentNode value: Detail(child, "Array", value.Name); Print(value.Index, child); Print(value.Value, child); break;

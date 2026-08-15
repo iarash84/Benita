@@ -1,8 +1,12 @@
 
 
 _main_() {
-	number i;
-	for( i =0; i < 5; i++){
-		print("run count");
-	}	
+    for (number i = 0; i < 5; i++) {
+        print(i);
+    }
+
+    number[] values = [10, 20, 30];
+    for (item in values) {
+        print(item);
+    }
 }

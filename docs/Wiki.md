@@ -65,6 +65,9 @@ types. Match statements may omit the default arm.
 An arm may contain alternative patterns such as `1, 2, 3`, an inclusive numeric
 range such as `0..10`, and either a block or a single statement body.
 
+Array elements can be traversed directly with `for (item in array)`. The
+iteration variable has the array element type and is local to the loop body.
+
 ## ساختار مخزن
 
 | مسیر | مسئولیت |

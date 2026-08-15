@@ -620,6 +620,16 @@
         private StatementNode? ParseForStatement()
         {
             Consume(TokenType.LPAREN, "Expected '(' after 'for'");
+            if (Check(TokenType.IDENTIFIER) && NextToken().Type == TokenType.IN)
+            {
+                string variableName = Advance().Lexeme;
+                Consume(TokenType.IN, "Expected 'in' after iteration variable");
+                ExpressionNode iterable = ParseExpression();
+                Consume(TokenType.RPAREN, "Expected ')' after for-in iterable");
+                StatementNode forEachBody = ParseStatement();
+                return new ForEachStatementNode(variableName, iterable, forEachBody);
+            }
+
             StatementNode? initializer = null;
             if (Match(TokenType.SEMICOLON))
             {

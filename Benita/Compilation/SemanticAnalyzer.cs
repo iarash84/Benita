@@ -328,6 +328,14 @@
                         AnalyzeStatement(forStmt.Increment, localVariables, functionReturnType, loopDepth + 1);
                     AnalyzeStatement(forStmt.Body, localVariables, functionReturnType, loopDepth + 1);
                     break;
+                case ForEachStatementNode forEach:
+                    string? iterableType = AnalyzeExpression(forEach.Iterable, localVariables);
+                    if (iterableType?.EndsWith("[]", StringComparison.Ordinal) != true)
+                        throw new Exception($"The expression after 'in' must be an array, but got '{iterableType}'.");
+                    var iterationScope = new Dictionary<string, string?>(localVariables);
+                    DeclareVariable(forEach.VariableName, iterableType[..^2], iterationScope);
+                    AnalyzeStatement(forEach.Body, iterationScope, functionReturnType, loopDepth + 1);
+                    break;
                 case BlockNode block:
                     AnalyzeBlock(block, localVariables, functionReturnType, loopDepth);
                     break;
