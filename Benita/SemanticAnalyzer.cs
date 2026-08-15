@@ -47,6 +47,14 @@
                 { "array_len", ("number", ["array"]) },
                 { "array_add", ("array", ["array", "string"]) },
                 { "array_remove", ("array", ["array", "number"]) },
+                { "array_contains", ("bool", ["array", "string"]) },
+                { "array_index_of", ("number", ["array", "string"]) },
+                { "array_reverse", ("array", ["array"]) },
+                { "array_clear", ("array", ["array"]) },
+                { "array_insert", ("array", ["array", "number", "string"]) },
+                { "array_slice", ("array", ["array", "number", "number"]) },
+                { "array_concat", ("array", ["array", "array"]) },
+                { "array_sort", ("array", ["array"]) },
                 { "to_string", ("string", ["number"]) },
                 { "to_number", ("number", ["string"]) },
                 { "round_number", ("number", ["number"]) },
@@ -662,11 +670,26 @@
             {
                 throw new Exception($"Argument count mismatch in function call to '{functionCall.FunctionName}'. Expected {functionInfo.Item2.Count} but got {functionCall.Arguments.Count}.");
             }
+            string? arrayElementType = null;
             for (int i = 0; i < functionCall.Arguments.Count; i++)
             {
                 var argType = AnalyzeExpression(functionCall.Arguments[i], localVariables);
 
-                if ((functionCall.FunctionName == "array_len" || functionCall.FunctionName == "array_add" || functionCall.FunctionName == "array_remove") &&
+                bool isArrayFunction = functionCall.FunctionName.StartsWith("array_", StringComparison.Ordinal);
+                if (isArrayFunction && i == 0 && argType?.EndsWith("[]", StringComparison.Ordinal) == true)
+                    arrayElementType = argType[..^2];
+
+                bool isElementArgument =
+                    functionCall.FunctionName is "array_add" or "array_contains" or "array_index_of" && i == 1 ||
+                    functionCall.FunctionName == "array_insert" && i == 2;
+                if (isElementArgument && arrayElementType is not null and not "unknown" && argType != arrayElementType)
+                    throw new Exception($"Type mismatch in argument {i + 1} of function call to '{functionCall.FunctionName}'. Expected '{arrayElementType}' but got '{argType}'.");
+
+                if (functionCall.FunctionName == "array_concat" && i == 1 &&
+                    arrayElementType is not null and not "unknown" && argType != $"{arrayElementType}[]")
+                    throw new Exception($"Type mismatch in argument 2 of function call to 'array_concat'. Expected '{arrayElementType}[]' but got '{argType}'.");
+
+                if (isArrayFunction && functionInfo.Item2[i] == "array" &&
                     (argType == "array" || argType?.EndsWith("[]", StringComparison.Ordinal) == true))
                 {
                     argType = "array";
@@ -676,7 +699,9 @@
                 {
                     bool isPrintableScalar = functionCall.FunctionName == "print" &&
                                              argType is "number" or "string" or "bool";
-                    bool isSupportedArrayElement = functionCall.FunctionName == "array_add" && i == 1 &&
+                    bool isSupportedArrayElement = functionCall.FunctionName is "array_add" or "array_contains" or "array_index_of" && i == 1 &&
+                                                   argType is "number" or "string" or "bool";
+                    isSupportedArrayElement |= functionCall.FunctionName == "array_insert" && i == 2 &&
                                                    argType is "number" or "string" or "bool";
                     if (!isPrintableScalar && !isSupportedArrayElement)
                     {

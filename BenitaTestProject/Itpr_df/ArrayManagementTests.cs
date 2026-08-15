@@ -125,5 +125,46 @@ namespace BenitaTestProject.Itpr_df
             var exception = Assert.ThrowsException<Exception>(() => arrayManagement.HandleFunctionCall("unknown_function", arguments));
             Assert.AreEqual("Unknown function 'unknown_function'", exception.Message);
         }
+
+        [TestMethod]
+        public void NewArrayLookupFunctions_FindElements()
+        {
+            var service = new ArrayManagement();
+            var array = new object[] { "a", "b", "c" };
+            Assert.AreEqual(true, service.HandleFunctionCall("array_contains", [array, "b"]));
+            Assert.AreEqual(false, service.HandleFunctionCall("array_contains", [array, "z"]));
+            Assert.AreEqual(1, service.HandleFunctionCall("array_index_of", [array, "b"]));
+            Assert.AreEqual(-1, service.HandleFunctionCall("array_index_of", [array, "z"]));
+        }
+
+        [TestMethod]
+        public void NewArrayTransformFunctions_ReturnNewArrays()
+        {
+            var service = new ArrayManagement();
+            var source = new object[] { 3, 1, 2 };
+            CollectionAssert.AreEqual(new object[] { 2, 1, 3 }, (object[])service.HandleFunctionCall("array_reverse", [source]));
+            CollectionAssert.AreEqual(Array.Empty<object>(), (object[])service.HandleFunctionCall("array_clear", [source]));
+            CollectionAssert.AreEqual(new object[] { 3, 1, 2 }, source);
+        }
+
+        [TestMethod]
+        public void NewArrayCompositionFunctions_InsertSliceConcatAndSort()
+        {
+            var service = new ArrayManagement();
+            var inserted = (object[])service.HandleFunctionCall("array_insert", [new object[] { 10, 30 }, 1, 20]);
+            CollectionAssert.AreEqual(new object[] { 10, 20, 30 }, inserted);
+            CollectionAssert.AreEqual(new object[] { 20, 30 }, (object[])service.HandleFunctionCall("array_slice", [inserted, 1, 2]));
+            var combined = (object[])service.HandleFunctionCall("array_concat", [new object[] { 3, 1 }, new object[] { 4, 2 }]);
+            CollectionAssert.AreEqual(new object[] { 1, 2, 3, 4 }, (object[])service.HandleFunctionCall("array_sort", [combined]));
+        }
+
+        [TestMethod]
+        public void NewArrayRangeFunctions_RejectInvalidRanges()
+        {
+            var service = new ArrayManagement();
+            var array = new object[] { 1, 2, 3 };
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => service.HandleFunctionCall("array_insert", [array, 4, 9]));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => service.HandleFunctionCall("array_slice", [array, 2, 2]));
+        }
     }
 }

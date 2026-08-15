@@ -133,6 +133,44 @@ print(array_len(values));
 
 تمام عناصر یک آرایه باید نوع یکسان داشته باشند و اندیس آرایه عددی است.
 
+#### توابع مدیریت آرایه
+
+توابع مدیریت آرایه، آرایه ورودی را تغییر نمی‌دهند و نتیجه را به‌صورت یک آرایه جدید
+برمی‌گردانند. بنابراین نتیجه توابعی مانند `array_insert` و `array_sort` را در یک
+متغیر ذخیره کنید.
+
+| تابع | کاربرد | مقدار بازگشتی |
+| --- | --- | --- |
+| `array_len(array)` | تعداد عناصر آرایه را محاسبه می‌کند. | `number` |
+| `array_add(array, value)` | مقدار را به انتهای آرایه اضافه می‌کند. | آرایه جدید |
+| `array_remove(array, index)` | عنصر موجود در اندیس مشخص را حذف می‌کند. | آرایه جدید |
+| `array_contains(array, value)` | وجود مقدار در آرایه را بررسی می‌کند. | `bool` |
+| `array_index_of(array, value)` | اندیس اولین مقدار مطابق را پیدا می‌کند؛ اگر مقدار وجود نداشته باشد `-1` برمی‌گرداند. | `number` |
+| `array_reverse(array)` | ترتیب عناصر را معکوس می‌کند. | آرایه جدید |
+| `array_clear(array)` | تمام عناصر را حذف می‌کند. | آرایه خالی هم‌نوع |
+| `array_insert(array, index, value)` | مقدار را در اندیس مشخص درج می‌کند. اندیس می‌تواند از صفر تا طول آرایه باشد. | آرایه جدید |
+| `array_slice(array, start, length)` | از اندیس `start` به تعداد `length` عنصر استخراج می‌کند. | آرایه جدید |
+| `array_concat(first, second)` | دو آرایه هم‌نوع را به هم متصل می‌کند. | آرایه جدید |
+| `array_sort(array)` | عناصر را به‌صورت صعودی مرتب می‌کند. | آرایه جدید |
+
+نوع مقداری که به `array_add` یا `array_insert` داده می‌شود باید با نوع عناصر آرایه
+یکسان باشد. همچنین دو ورودی `array_concat` باید آرایه‌های هم‌نوع باشند. اندیس یا
+بازه نامعتبر در `array_remove`، `array_insert` و `array_slice` باعث ایجاد خطا می‌شود.
+
+```benita
+number[] values = [30, 10, 20];
+
+print(array_contains(values, 10)); // True
+print(array_index_of(values, 20)); // 2
+
+values = array_insert(values, 1, 40);       // [30, 40, 10, 20]
+number[] middle = array_slice(values, 1, 2); // [40, 10]
+values = array_concat(middle, [50, 5]);      // [40, 10, 50, 5]
+values = array_reverse(values);              // [5, 50, 10, 40]
+values = array_sort(values);                 // [5, 10, 40, 50]
+values = array_clear(values);                // []
+```
+
 ### ۸. بسته‌ها
 
 بسته‌ها متغیرها و توابع مرتبط را کنار هم نگه می‌دارند. تابعی که نامش با نام بسته برابر باشد نقش سازنده را دارد:
@@ -386,6 +424,43 @@ print(array_len(values));
 ```
 
 All elements in an array must have the same type, and an array index must be numeric.
+
+#### Array management functions
+
+Array management functions do not modify their input. They return a new array, so
+store the result of functions such as `array_insert` and `array_sort` in a variable.
+
+| Function | Description | Return value |
+| --- | --- | --- |
+| `array_len(array)` | Gets the number of elements. | `number` |
+| `array_add(array, value)` | Appends a value to the array. | New array |
+| `array_remove(array, index)` | Removes the element at the given index. | New array |
+| `array_contains(array, value)` | Checks whether the array contains a value. | `bool` |
+| `array_index_of(array, value)` | Gets the first matching index, or `-1` when the value is absent. | `number` |
+| `array_reverse(array)` | Reverses the element order. | New array |
+| `array_clear(array)` | Removes every element. | New empty array of the same type |
+| `array_insert(array, index, value)` | Inserts a value at an index from zero through the array length. | New array |
+| `array_slice(array, start, length)` | Copies `length` elements beginning at `start`. | New array |
+| `array_concat(first, second)` | Joins two arrays of the same type. | New array |
+| `array_sort(array)` | Sorts the elements in ascending order. | New array |
+
+Values passed to `array_add` and `array_insert` must match the array element type.
+Both inputs to `array_concat` must also have the same element type. Invalid indices
+or ranges passed to `array_remove`, `array_insert`, or `array_slice` produce an error.
+
+```benita
+number[] values = [30, 10, 20];
+
+print(array_contains(values, 10)); // True
+print(array_index_of(values, 20)); // 2
+
+values = array_insert(values, 1, 40);       // [30, 40, 10, 20]
+number[] middle = array_slice(values, 1, 2); // [40, 10]
+values = array_concat(middle, [50, 5]);      // [40, 10, 50, 5]
+values = array_reverse(values);              // [5, 50, 10, 40]
+values = array_sort(values);                 // [5, 10, 40, 50]
+values = array_clear(values);                // []
+```
 
 ### 8. Packages
 
