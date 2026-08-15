@@ -25,7 +25,7 @@
         /// <summary>
         /// Dictionary to store default functions with their return types and parameter types.
         /// </summary>
-        private readonly Dictionary<string, (string, List<string>)> _defaultFunctions;
+        private readonly Dictionary<string, (TypeSymbol ReturnType, List<TypeSymbol> ParameterTypes)> _defaultFunctions;
 
 
         /// <summary>
@@ -699,54 +699,45 @@
             {
                 throw new Exception($"Undeclared function '{functionCall.FunctionName}'.");
             }
-            (string? ReturnType, List<string>) functionInfo = _functions.ContainsKey(functionCall.FunctionName)
-                ? (_functions[functionCall.FunctionName].ReturnType, _functions[functionCall.FunctionName].Parameters.ConvertAll(p => p.Type))
+            (TypeSymbol ReturnType, List<TypeSymbol> ParameterTypes) functionInfo = _functions.ContainsKey(functionCall.FunctionName)
+                ? (TypeFacts.FromName(_functions[functionCall.FunctionName].ReturnType),
+                    _functions[functionCall.FunctionName].Parameters
+                        .Select(parameter => TypeFacts.FromName(parameter.Type)).ToList())
                 : _defaultFunctions[functionCall.FunctionName];
 
-            if (functionCall.Arguments.Count != functionInfo.Item2.Count)
+            if (functionCall.Arguments.Count != functionInfo.ParameterTypes.Count)
             {
-                throw new Exception($"Argument count mismatch in function call to '{functionCall.FunctionName}'. Expected {functionInfo.Item2.Count} but got {functionCall.Arguments.Count}.");
+                throw new Exception($"Argument count mismatch in function call to '{functionCall.FunctionName}'. Expected {functionInfo.ParameterTypes.Count} but got {functionCall.Arguments.Count}.");
             }
-            string? arrayElementType = null;
+            TypeSymbol? arrayElementType = null;
             for (int i = 0; i < functionCall.Arguments.Count; i++)
             {
-                var argType = AnalyzeExpression(functionCall.Arguments[i], localVariables);
+                TypeSymbol argType = TypeFacts.FromName(
+                    AnalyzeExpression(functionCall.Arguments[i], localVariables));
 
                 bool isArrayFunction = functionCall.FunctionName.StartsWith("array_", StringComparison.Ordinal);
-                if (isArrayFunction && i == 0 && argType?.EndsWith("[]", StringComparison.Ordinal) == true)
-                    arrayElementType = argType[..^2];
+                if (isArrayFunction && i == 0 && argType is ArrayTypeSymbol arrayType)
+                    arrayElementType = arrayType.ElementType;
 
                 bool isElementArgument =
                     functionCall.FunctionName is "array_add" or "array_contains" or "array_index_of" && i == 1 ||
                     functionCall.FunctionName == "array_insert" && i == 2;
-                if (isElementArgument && arrayElementType is not null and not "unknown" && argType != arrayElementType)
+                if (isElementArgument && arrayElementType is not null && arrayElementType != Types.Unknown &&
+                    !TypeFacts.IsAssignableTo(argType, arrayElementType))
                     throw new Exception($"Type mismatch in argument {i + 1} of function call to '{functionCall.FunctionName}'. Expected '{arrayElementType}' but got '{argType}'.");
 
                 if (functionCall.FunctionName == "array_concat" && i == 1 &&
-                    arrayElementType is not null and not "unknown" && argType != $"{arrayElementType}[]")
+                    arrayElementType is not null && arrayElementType != Types.Unknown &&
+                    !TypeFacts.IsAssignableTo(argType, Types.ArrayOf(arrayElementType)))
                     throw new Exception($"Type mismatch in argument 2 of function call to 'array_concat'. Expected '{arrayElementType}[]' but got '{argType}'.");
 
-                if (isArrayFunction && functionInfo.Item2[i] == "array" &&
-                    (argType == "array" || argType?.EndsWith("[]", StringComparison.Ordinal) == true))
+                TypeSymbol expectedType = functionInfo.ParameterTypes[i];
+                if (!TypeFacts.IsAssignableTo(argType, expectedType))
                 {
-                    argType = "array";
-                }
-
-                if (argType != functionInfo.Item2[i])
-                {
-                    bool isPrintableScalar = functionCall.FunctionName == "print" &&
-                                             argType is "number" or "string" or "bool";
-                    bool isSupportedArrayElement = functionCall.FunctionName is "array_add" or "array_contains" or "array_index_of" && i == 1 &&
-                                                   argType is "number" or "string" or "bool";
-                    isSupportedArrayElement |= functionCall.FunctionName == "array_insert" && i == 2 &&
-                                                   argType is "number" or "string" or "bool";
-                    if (!isPrintableScalar && !isSupportedArrayElement)
-                    {
-                        throw new Exception($"Type mismatch in argument {i + 1} of function call to '{functionCall.FunctionName}'. Expected '{functionInfo.Item2[i]}' but got '{argType}'.");
-                    }
+                    throw new Exception($"Type mismatch in argument {i + 1} of function call to '{functionCall.FunctionName}'. Expected '{expectedType}' but got '{argType}'.");
                 }
             }
-            return functionInfo.Item1;
+            return functionInfo.ReturnType.Name;
         }
 
         /// <summary>
@@ -844,9 +835,9 @@
         /// <returns>True if the types are compatible, otherwise false.</returns>
         private bool CheckType(string firstType, string? secondType)
         {
-            string[] arrayTypes = { "number[]", "string[]", "bool[]" };
-            return (arrayTypes.Contains(firstType) && secondType is "array" or "unknown[]") ||
-                   (arrayTypes.Contains(secondType) && firstType == "array") || firstType == secondType;
+            TypeSymbol target = TypeFacts.FromName(firstType);
+            TypeSymbol source = TypeFacts.FromName(secondType);
+            return TypeFacts.IsAssignableTo(source, target);
         }
 
         /// <summary>
@@ -856,21 +847,7 @@
         /// <returns>The string representation of the token type.</returns>
         private string? ConvertTokenTypeToString(TokenType tokenType)
         {
-            switch (tokenType)
-            {
-                case TokenType.NUMBER_LITERAL:
-                case TokenType.NUMBER:
-                    return "number";
-                case TokenType.STRING_LITERAL:
-                case TokenType.STRING:
-                    return "string";
-                case TokenType.FALSE_LITERAL:
-                case TokenType.TRUE_LITERAL:
-                case TokenType.BOOL:
-                    return "bool";
-                default:
-                    throw new Exception($"Unsupported token type: {tokenType}");
-            }
+            return TypeFacts.FromToken(tokenType).Name;
         }
 
         /// <summary>
