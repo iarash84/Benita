@@ -3,7 +3,7 @@ using Benita.itpr_df;
 namespace Benita
 {
     /// <summary>
-    /// Creates the interpreter implementation associated with each built-in function.
+    /// پیاده‌سازی مناسب هر تابع داخلی را بر اساس نام آن ایجاد می‌کند.
     /// </summary>
     internal static class FactoryClass
     {
@@ -42,6 +42,7 @@ namespace Benita
             { "string_to_upper", typeof(StringManagement) }
         };
 
+        /// <summary>handler تابع داخلی را برمی‌گرداند؛ اگر نام ثبت نشده باشد مقدار null می‌دهد.</summary>
         public static IInterpreterClass? GetInterpreterClass(string? functionName)
         {
             if (functionName is null || !FunctionMappings.TryGetValue(functionName, out Type? implementationType))

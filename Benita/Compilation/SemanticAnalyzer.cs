@@ -475,13 +475,13 @@
                 case LogicalExpressionNode logical:
                     return HandleLogicalExpressionNode(logical, localVariables);
                 case MemberAccessNode memberAccess:
-                    return HandelMemberAccessNode(memberAccess, localVariables);
+                    return HandleMemberAccessNode(memberAccess, localVariables);
                 default:
                     throw new Exception($"Unsupported expression type: {expression.GetType().Name}");
             }
         }
 
-        private string? HandelMemberAccessNode(MemberAccessNode memberAccess, Dictionary<string, string?> localVariables)
+        private string? HandleMemberAccessNode(MemberAccessNode memberAccess, Dictionary<string, string?> localVariables)
         {
             var packageName = localVariables[memberAccess.ObjectName];
             var outPackage = _packages[packageName];

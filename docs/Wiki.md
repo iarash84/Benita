@@ -58,18 +58,19 @@ flowchart LR
 
 | فایل | نقش |
 | --- | --- |
-| `Program.cs` | نقطهٔ ورود و پردازش فرمان‌های CLI |
-| `CompilerClass.cs` | هماهنگ‌کنندهٔ مراحل Lexer، Parser، تحلیل معنایی، بهینه‌سازی و اجرا |
-| `Lexer.cs` | تبدیل متن منبع به توکن‌ها و پردازش `include_once` |
-| `Token.cs` | تعریف انواع توکن و اطلاعات موقعیت آن‌ها |
-| `Parser.cs` | تبدیل توکن‌ها به AST بر اساس گرامر زبان |
-| `ASTNode.cs` | تعریف Nodeهای عبارت‌ها، دستورات، توابع، حلقه‌ها، آرایه‌ها و بسته‌ها |
-| `SemanticAnalyzer.cs` | کنترل نوع، declarationها، scopeها، توابع و قواعد معنایی |
-| `Interpreter.cs` | اجرای AST و نگهداری وضعیت زمان اجرا |
-| `FactoryClass.cs` | نگاشت توابع داخلی به پیاده‌سازی‌های مفسر |
-| `ExceptionClass.cs` | خطاهای ساخت‌یافتهٔ Lexer، Parser، Semantic و Runtime |
-| `Repl.cs` | محیط تعاملی stateful با ورودی چندخطی، تاریخچه و فرمان‌های مدیریتی |
-| `DebugClass.cs` | امکانات اجرای برنامه در حالت Debug |
+| `Application/Program.cs` | نقطهٔ ورود و پردازش فرمان‌های CLI |
+| `Application/Repl.cs` | محیط تعاملی stateful با ورودی چندخطی، تاریخچه و فرمان‌های مدیریتی |
+| `Compilation/CompilerClass.cs` | هماهنگ‌کنندهٔ مراحل Lexer، Parser، تحلیل معنایی، بهینه‌سازی و اجرا |
+| `Compilation/AstPrinter.cs` | نمایش مستقل و سلسله‌مراتبی AST |
+| `Compilation/Lexer.cs` | تبدیل متن منبع به توکن‌ها و پردازش `include_once` |
+| `Compilation/Parser.cs` | تبدیل توکن‌ها به AST بر اساس گرامر زبان |
+| `Compilation/SemanticAnalyzer.cs` | کنترل نوع، declarationها، scopeها، توابع و قواعد معنایی |
+| `Syntax/Token.cs` | تعریف انواع توکن و اطلاعات موقعیت آن‌ها |
+| `Syntax/ASTNode.cs` | تعریف Nodeهای عبارت‌ها، دستورات، توابع، حلقه‌ها، آرایه‌ها و بسته‌ها |
+| `Runtime/Interpreter.cs` | اجرای AST و نگهداری وضعیت زمان اجرا |
+| `Runtime/BuiltIns/FactoryClass.cs` | نگاشت توابع داخلی به پیاده‌سازی‌های مفسر |
+| `Runtime/DebugClass.cs` | امکانات اجرای برنامه در حالت Debug |
+| `Diagnostics/ExceptionClass.cs` | خطاهای ساخت‌یافتهٔ Lexer، Parser، Semantic و Runtime |
 
 ## معماری کامپایلر
 

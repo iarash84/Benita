@@ -1,7 +1,9 @@
 ﻿namespace Benita.itpr_df
 {
+    /// <summary>توابع عمومی ورودی، خروجی، تبدیل نوع و محاسبات پایه را ارائه می‌کند.</summary>
     public class Utility : IInterpreterClass
     {
+        /// <summary>تابع عمومی متناظر با نام دریافتی را اجرا می‌کند.</summary>
         public object HandleFunctionCall(string? functionName, List<object> arguments)
         {
             switch (functionName)

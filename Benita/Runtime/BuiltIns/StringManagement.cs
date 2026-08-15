@@ -1,7 +1,9 @@
 namespace Benita.itpr_df
 {
+    /// <summary>توابع داخلی پردازش رشته را با رفتار مستقل از فرهنگ سیستم اجرا می‌کند.</summary>
     public class StringManagement : IInterpreterClass
     {
+        /// <summary>تابع رشته‌ای متناظر با نام دریافتی را اجرا می‌کند.</summary>
         public object HandleFunctionCall(string? functionName, List<object> arguments)
         {
             string value = Convert.ToString(arguments[0]) ?? string.Empty;

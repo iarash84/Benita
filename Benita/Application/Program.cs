@@ -1,5 +1,6 @@
 ﻿namespace Benita
 {
+    /// <summary>نقطهٔ ورود برنامه و مسئول تفسیر فرمان‌ها و گزینه‌های خط فرمان است.</summary>
     internal class Program
     {
         static int Main(string[] args)

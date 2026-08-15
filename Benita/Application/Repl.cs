@@ -3,7 +3,7 @@ using System.Text;
 namespace Benita;
 
 /// <summary>
-/// Provides an interactive, stateful read-evaluate-print loop for Benita.
+/// محیط تعاملی و stateful خواندن، ارزیابی و نمایش نتیجه را برای زبان بنیتا فراهم می‌کند.
 /// </summary>
 public sealed class Repl
 {
@@ -14,12 +14,14 @@ public sealed class Repl
     private CompilerClass _compiler = new();
     private Interpreter _interpreter = new(preserveStateBetweenPrograms: true);
 
+    /// <summary>یک نشست تعاملی با ورودی و خروجی قابل‌جایگزینی ایجاد می‌کند.</summary>
     public Repl(TextReader? input = null, TextWriter? output = null)
     {
         _input = input ?? Console.In;
         _output = output ?? Console.Out;
     }
 
+    /// <summary>حلقهٔ تعاملی را تا دریافت فرمان خروج یا پایان جریان ورودی اجرا می‌کند.</summary>
     public void Run(bool printTokens = false, bool printAst = false, bool printSource = false,
         bool optimizeAst = false)
     {

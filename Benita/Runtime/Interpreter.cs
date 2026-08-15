@@ -813,7 +813,6 @@ namespace Benita
 
             DebugLog($"VisitArrayAccessNode: index = {index}", false);
 
-            //if (_variables.TryGetValue(arrayName, out var value) && value is object[] array)
             if (TryGetVariableValue(arrayName, out var value) && value is object[] array)
             {
                 if (index < 0)
