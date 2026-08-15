@@ -6,7 +6,8 @@
   <img src="https://raw.githubusercontent.com/iarash84/Benita/main/Logo.jpg" alt="Benita Logo" width="150" height="150">
 </p>
 
-این صفحه نمایی فنی از ساختار پروژهٔ **Benita**، مراحل پردازش برنامه و روش توسعه و آزمایش آن ارائه می‌دهد. Benita یک زبان برنامه‌نویسی آموزشی و تفسیرشونده است که با C# و .NET 8 پیاده‌سازی شده است.
+در این صفحه ساختار پروژه، مسیر اجرای کد و نکاتی را که برای توسعهٔ Benita لازم است
+یک‌جا نوشته‌ام. Benita یک زبان آموزشی و تفسیرشونده است که با C# و .NET 8 اجرا می‌شود.
 
 ## فهرست مطالب
 
@@ -15,16 +16,16 @@
 - [معماری کامپایلر](#معماری-کامپایلر)
 - [مراحل پردازش برنامه](#مراحل-پردازش-برنامه)
 - [حالت‌های اجرای برنامه](#حالتهای-اجرای-برنامه)
-- [توابع داخلی و Factory](#توابع-داخلی-و-factory)
+- [توابع داخلی و Registry](#توابع-داخلی-و-registry)
 - [خطاها و ابزارهای عیب‌یابی](#خطاها-و-ابزارهای-عیبیابی)
 - [آزمایش پروژه](#آزمایش-پروژه)
 - [راهنمای توسعه](#راهنمای-توسعه)
 
 ## نمای کلی
 
-هستهٔ Benita یک خط لولهٔ تفسیر کامل دارد. کد پس از تحلیل و بهینه‌سازی اختیاری AST مستقیماً اجرا می‌شود.
-
-پیش از اجرا، کد منبع توکن‌سازی، Parse و از نظر معنایی بررسی می‌شود. بنابراین برنامه‌ای که خطای نحوی یا معنایی دارد اجرا نخواهد شد.
+مسیر اجرای برنامه مستقیم است: کد ابتدا به توکن و AST تبدیل می‌شود، بعد بررسی معنایی
+روی آن انجام می‌گیرد و در پایان مفسر آن را اجرا می‌کند. بهینه‌سازی AST اختیاری است.
+اگر Lexer، Parser یا تحلیل معنایی خطایی پیدا کند، برنامه به مرحلهٔ اجرا نمی‌رسد.
 
 <div dir="ltr" align="left">
 
@@ -42,31 +43,27 @@ flowchart LR
 
 </div>
 
-## Syntax consistency rules
+## چند قاعدهٔ مهم زبان
 
-The Lexer, Parser, and Semantic Analyzer share the following language contract:
+- تابع `_main_()` پارامتر نمی‌گیرد.
+- `void` فقط نوع خروجی تابع است و `let` برای متغیرهایی استفاده می‌شود که نوعشان از مقدار اولیه مشخص می‌شود.
+- تابعی که خروجی آن `void` نیست باید در تمام مسیرها مقدار برگرداند.
+- `break` و `continue` بیرون حلقه معتبر نیستند.
+- هر سه بخش `for` اختیاری‌اند؛ در نتیجه `for (;;)` هم معتبر است.
+- عدد اعشاری باید به‌شکل `0.5` یا `1.0` نوشته شود و `&` و `|` تکی نداریم.
+- رشته‌ها تک‌خطی هستند و escapeهای پشتیبانی‌شده در Tutorial آمده‌اند.
 
-- `_main_()` has no parameters.
-- `void` is limited to function return types; `let` is limited to inferred variable declarations.
-- Every path of a non-void function returns a compatible value.
-- `break` and `continue` are valid only inside loops.
-- `for` clauses are optional, including the `for (;;)` form.
-- Decimal literals use forms such as `0.5` and `1.0`; single `&` and `|` are invalid.
-- Strings are single-line and use the documented escape sequences.
+نسخهٔ دقیق قواعد را در [Grammar.txt](Grammar.txt) نگه می‌دارم.
 
-The normative EBNF is maintained in [Grammar.txt](Grammar.txt).
+## شرط و انتخاب
 
-## Conditional selection
+علاوه بر `if` و `else if`، دو شکل از `match` وجود دارد. شکل expression یک مقدار
+برمی‌گرداند و باید شاخهٔ نهایی `_` داشته باشد. شکل statement فقط شاخهٔ منطبق را
+اجرا می‌کند و داشتن `_` در آن اختیاری است. می‌توان چند مقدار مثل `1, 2, 3` یا یک
+بازهٔ بسته مثل `0..10` را در یک شاخه نوشت.
 
-Benita supports chained `else if` branches and two forms of `match`: an
-expression form that returns a value and a statement form whose arms contain
-blocks. Match expressions require a final `_` default arm and consistent result
-types. Match statements may omit the default arm.
-An arm may contain alternative patterns such as `1, 2, 3`, an inclusive numeric
-range such as `0..10`, and either a block or a single statement body.
-
-Array elements can be traversed directly with `for (item in array)`. The
-iteration variable has the array element type and is local to the loop body.
+برای پیمایش آرایه هم فرم `for (item in array)` وجود دارد. نوع `item` از نوع عناصر
+آرایه گرفته می‌شود و بیرون بدنهٔ حلقه در دسترس نیست.
 
 ## ساختار مخزن
 
@@ -112,7 +109,7 @@ iteration variable has the array element type and is local to the loop body.
 - `Exec`: تحلیل کامل و سپس اجرای AST با مفسر
 - `Check`: بررسی واژگانی، نحوی و معنایی بدون اجرا
 
-تمرکز این مراحل در یک کلاس باعث می‌شود تمام مسیرها قواعد یکسانی را روی کد منبع اعمال کنند.
+این کلاس باعث می‌شود فرمان‌های مختلف CLI از یک مسیر مشترک برای بررسی کد استفاده کنند.
 
 ### Lexer
 
@@ -134,7 +131,7 @@ iteration variable has the array element type and is local to the loop body.
 
 ### Semantic Analyzer
 
-درستی گرامر به‌تنهایی برای اجرای امن برنامه کافی نیست. `SemanticAnalyzer` AST را بررسی می‌کند تا خطاهایی از این نوع پیش از اجرا پیدا شوند:
+درست‌بودن گرامر کافی نیست. `SemanticAnalyzer` پیش از اجرا این خطاها را پیدا می‌کند:
 
 - استفاده از متغیر تعریف‌نشده
 - تعریف تکراری متغیر یا تابع
@@ -237,8 +234,8 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben -s 
 
 ## توابع داخلی و Registry
 
-توابع داخلی به‌صورت descriptor در `BuiltInRegistry` ثبت می‌شوند. هر descriptor نام، نوع
-خروجی، نوع پارامترها و سازندهٔ handler را یکجا نگه می‌دارد:
+مشخصات هر تابع داخلی در `BuiltInRegistry` ثبت می‌شود: نام تابع، نوع خروجی، نوع
+پارامترها و روشی که handler آن را می‌سازد.
 
 <div dir="ltr" align="left">
 
@@ -250,14 +247,14 @@ BuiltInDescriptor
 
 </div>
 
-گروه‌های فعلی عبارت‌اند از:
+توابع داخلی فعلی در چهار گروه قرار می‌گیرند:
 
-- آرایه: `array_len`، `array_add` و `array_remove`
+- آرایه: `array_len`، `array_add`، `array_remove`، جست‌وجو، برش، ادغام و مرتب‌سازی
 - فایل: `file_read`، `file_write`، `file_exist` و `file_delete`
 - ابزار عمومی: `print`، `input`، `to_string`، `to_number`، `round_number` و `sqrt_number`
 - رشته: `string_len`، `string_char_at`، `string_substring`، `string_contains`، `string_index_of`، `string_replace`، `string_split`، `string_trim`، `string_to_lower` و `string_to_upper`
 
-این طراحی منطق توابع داخلی را از هستهٔ Interpreter جدا می‌کند و توسعه و آزمایش آن‌ها را ساده نگه می‌دارد.
+با این ساختار برای اضافه‌کردن یک تابع داخلی لازم نیست چند فهرست جدا را تغییر بدهم.
 
 ## خطاها و ابزارهای عیب‌یابی
 
@@ -270,7 +267,8 @@ BuiltInDescriptor
 | Semantic Analyzer | متغیر تعریف‌نشده یا ناسازگاری نوع |
 | Runtime | خطای زمان اجرا یا عملیات نامعتبر فایل/آرایه |
 
-برای تشخیص بهتر می‌توان ابتدا فرمان `check` را همراه `-t` و `-a` اجرا کرد. حالت `dxc` نیز برای مشاهدهٔ وضعیت اجرای مفسر در نظر گرفته شده است.
+برای پیدا کردن خطا معمولاً از `check` همراه `-t` و `-a` شروع کنید. اگر مشکل هنگام
+اجرا رخ می‌دهد، `dxc` وضعیت مفسر را هم نشان می‌دهد.
 
 ## آزمایش پروژه
 
@@ -317,9 +315,11 @@ GitHub Actions در Push و Pull Request پروژه را build کرده و مج�
 3. افزودن قواعد ویژهٔ نوعی فقط در صورت نیاز؛ امضای عادی مستقیماً از registry خوانده می‌شود
 4. نوشتن تست واحد و یکپارچه و بررسی خطای پایدار `BEN4101`
 
-### اصل مهم توسعه
+### چک‌لیست تغییرات زبان
 
-هر قابلیت جدید باید در تمام مراحل Lexer، Parser، AST، Semantic Analyzer، Optimizer و Interpreter به‌صورت هماهنگ پشتیبانی شود. تست‌های یکپارچه باید نتیجهٔ واقعی اجرای برنامه را بررسی کنند.
+هر قابلیت نحوی باید در Lexer، Parser، AST، Semantic Analyzer، Optimizer و Interpreter
+پشتیبانی شود. در پایان هم یک تست اجرایی لازم است تا فقط ساخته‌شدن AST را بررسی نکنیم و
+نتیجهٔ واقعی برنامه را ببینیم.
 
 ## منابع مرتبط
 

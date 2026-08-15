@@ -10,7 +10,7 @@
 
 ## فارسی
 
-بنیتا یک زبان برنامه‌نویسی آموزشی، ساده و توسعه‌پذیر است که با C# و .NET پیاده‌سازی شده است. کدهای بنیتا پس از تحلیل واژگانی، نحوی و معنایی مستقیماً توسط مفسر اجرا می‌شوند. نام Benita با الهام از دختر سازنده پروژه انتخاب شده است.
+بنیتا یک زبان برنامه‌نویسی ساده و آموزشی است که آن را با C# و .NET ساخته‌ام. هدف پروژه این است که بتوانم بخش‌های مختلف یک زبان، از Lexer و Parser گرفته تا تحلیل معنایی و مفسر، را قدم‌به‌قدم توسعه بدهم. نام Benita هم از نام دخترم الهام گرفته شده است.
 
 ### قابلیت‌ها
 
@@ -24,8 +24,8 @@
 - عملیات خواندن، نوشتن، بررسی وجود و حذف فایل
 - دستور `include_once` برای استفاده از فایل‌های دیگر
 - اجرای مستقیم با مفسر و بهینه‌سازی اختیاری AST
-- context مستقل برای هر اجرا و registry واحد توابع داخلی
-- خطاهای ساخت‌یافتهٔ built-in با کد پایدار `BEN4101`
+- فضای اجرای مستقل برای هر مفسر و یک فهرست مرکزی برای توابع داخلی
+- خطاهای مشخص برای توابع داخلی با کد `BEN4101`
 
 ### نیازمندی‌ها
 
@@ -124,7 +124,7 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben -t 
 dotnet test Benita.sln
 ```
 
-فایل‌های پوشه [`Examples`](Examples) مستقیماً در مجموعه تست‌ها اجرا می‌شوند. GitHub Actions نیز در هر Push و Pull Request پروژه را build کرده و تمام تست‌ها را اجرا می‌کند.
+فایل‌های پوشه [`Examples`](Examples) هم جزو تست‌ها هستند؛ یعنی تغییرات زبان نباید مثال‌های قبلی را خراب کنند. GitHub Actions نیز با هر Push و Pull Request پروژه را build و تست می‌کند.
 
 ### مستندات
 
@@ -145,7 +145,7 @@ git push origin v1.0.0
 
 ### مشارکت
 
-برای گزارش اشکال یا پیشنهاد قابلیت جدید، Issue ایجاد کنید. برای مشارکت در کد نیز می‌توانید Fork ساخته و Pull Request ارسال کنید. پیش از ارسال تغییرات، اجرای موفق `dotnet test Benita.sln` توصیه می‌شود.
+اگر اشکالی پیدا کردید یا پیشنهادی داشتید، یک Issue باز کنید. برای تغییر کد هم می‌توانید پروژه را Fork کنید و Pull Request بفرستید. فقط لطفاً قبل از ارسال، `dotnet test Benita.sln` را اجرا کنید.
 
 ### مجوز
 
@@ -155,7 +155,7 @@ git push origin v1.0.0
 
 ## English
 
-Benita is a simple, extensible programming language built for education and experimentation. It is implemented in C# and .NET. Benita programs are lexed, parsed, semantically analyzed, and then executed directly by the interpreter. The name Benita was inspired by the project creator's daughter.
+Benita is a small educational programming language I am building with C# and .NET. I use the project to explore each part of a language implementation, from lexing and parsing to semantic analysis and interpretation. The name Benita was inspired by my daughter.
 
 ### Features
 
@@ -265,12 +265,11 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben -t 
 
 ### Syntax compatibility notes
 
-The language now applies its grammar consistently during lexing, parsing, and semantic
-analysis. `_main_` takes no parameters; `void` is only a return type; `let` is only a
-variable-declaration type; every path in a non-void function must return; and loop-control
-statements are rejected outside loops. Decimal literals require digits on both sides of the
-point, strings use explicit escapes, and `for` supports omitted clauses such as `for (;;)`.
-See the [language grammar](docs/Grammar.txt) and [tutorial](docs/Tutorial.MD) for details.
+Some syntax rules are intentionally strict. `_main_` has no parameters, `void` is only a
+return type, and `let` is only used for inferred variables. Non-void functions must return
+on every path, while `break` and `continue` only work inside loops. Decimal values use forms
+such as `0.5`, and an empty `for (;;)` is valid. The complete rules are in the
+[language grammar](docs/Grammar.txt) and [tutorial](docs/Tutorial.MD).
 
 ### Tests
 
