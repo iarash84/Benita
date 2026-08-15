@@ -60,7 +60,7 @@
                 {
                     statements.Add(ParseStatement());
                 }
-                else if (Check(TokenType.VOID, TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
+                else if (Check(TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
                 {
                     globalVariables.Add(ParseVariableDeclaration());
                 }
@@ -172,7 +172,7 @@
         /// <exception cref="Exception">Thrown if the declaration is malformed.</exception>
         private VariableDeclarationNode ParseVariableDeclaration()
         {
-            string type = ParseType(); ///< The type of the variable (e.g., "number[]").
+            string type = ParseType(allowLet: true); ///< The type of the variable (e.g., "number[]").
             if (Check(TokenType.IDENTIFIER))
             {
                 string name = Consume(TokenType.IDENTIFIER, "Expected variable name").Lexeme;
@@ -228,7 +228,9 @@
         {
             Consume(TokenType.MAIN, "Expected 'main'");
             Consume(TokenType.LPAREN, "Expected '(' after 'main'");
-            List<ParameterNode> parameters = ParseParameters();
+            if (!Check(TokenType.RPAREN))
+                throw Error("BEN2006", "The _main_ entry point cannot declare parameters.");
+            List<ParameterNode> parameters = [];
             Consume(TokenType.RPAREN, "Expected ')' after parameters");
             Consume(TokenType.LBRACE, "Expected '{' before main function body");
 
@@ -253,7 +255,7 @@
             List<ParameterNode> parameters = ParseParameters();
             Consume(TokenType.RPAREN, "Expected ')' after parameters");
             Consume(TokenType.ARROW, "Expected '->' after parameters");
-            string? returnType = ParseType();
+            string? returnType = ParseType(allowVoid: true, allowCustom: true);
             Consume(TokenType.LBRACE, "Expected '{' before function body");
 
             List<StatementNode?> statements = new List<StatementNode?>();
@@ -261,13 +263,10 @@
 
             while (!IsAtEnd() && !Check(TokenType.RBRACE))
             {
-                if (Check(TokenType.RETURN))
-                {
-                    returnExpression = ParseReturnStatement(returnType, ref statements);
-                    SkipRemainingCode();
-                    break;
-                }
-                statements.Add(ParseStatement());
+                StatementNode? statement = ParseStatement();
+                statements.Add(statement);
+                if (statement is ReturnStatementNode returnStatement)
+                    returnExpression = returnStatement;
             }
 
             Consume(TokenType.RBRACE, "Expected '}' after function body");
@@ -318,20 +317,6 @@
         }
 
         /// <summary>
-        /// Skips the remaining code until the closing brace is found.
-        /// </summary>
-        private void SkipRemainingCode()
-        {
-            int openBlock = 0;
-            while (!IsAtEnd() && !(Check(TokenType.RBRACE) && openBlock == 0))
-            {
-                if (Check(TokenType.LBRACE)) openBlock++;
-                if (Check(TokenType.RBRACE)) openBlock--;
-                Advance(); // Skip tokens until the closing brace
-            }
-        }
-
-        /// <summary>
         /// Parses the parameters of a function.
         /// </summary>
         /// <returns>A list of <see cref="ParameterNode"/> representing the function parameters.</returns>
@@ -342,7 +327,7 @@
             {
                 do
                 {
-                    string type = ParseType();
+                    string type = ParseType(allowCustom: true);
                     string name = Consume(TokenType.IDENTIFIER, "Expected parameter name").Lexeme;
                     parameters.Add(new ParameterNode(type, name));
 
@@ -356,14 +341,22 @@
         /// </summary>
         /// <returns>The type as a string.</returns>
         /// <exception cref="Exception">Thrown if an unexpected token is encountered.</exception>
-        private string? ParseType()
+        private string ParseType(bool allowVoid = false, bool allowLet = false, bool allowCustom = false)
         {
-            string? type = string.Empty;
-            if (Match(TokenType.NUMBER,TokenType.STRING,TokenType.BOOL,TokenType.LET,TokenType.VOID)) 
+            string type = string.Empty;
+            if (Match(TokenType.NUMBER, TokenType.STRING, TokenType.BOOL))
                 type = ParseTokenType(PreviousToken().Type);
+            else if (allowVoid && Match(TokenType.VOID))
+                type = "void";
+            else if (allowLet && Match(TokenType.LET))
+                type = "let";
+            else if (allowCustom && Match(TokenType.IDENTIFIER))
+                type = PreviousToken().Lexeme;
 
             if (Check(TokenType.LSQUAREBRACE))
             {
+                if (type is "void" or "let" || string.IsNullOrEmpty(type))
+                    throw Error("BEN2001", "Only value types can be used as array elements.");
                 Advance(); // Consume '['
                 if (!Check(TokenType.RSQUAREBRACE))
                     throw Error("BEN2001", "Expected ']' after '[' in array declaration.");
@@ -445,7 +438,7 @@
             }
 
 
-            if (Check(TokenType.VOID, TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
+            if (Check(TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
             {
                 return ParseVariableDeclaration();
             }
@@ -558,14 +551,31 @@
         private StatementNode? ParseForStatement()
         {
             Consume(TokenType.LPAREN, "Expected '(' after 'for'");
+            StatementNode? initializer = null;
+            if (Match(TokenType.SEMICOLON))
+            {
+                // Empty initializer.
+            }
+            else if (Check(TokenType.NUMBER, TokenType.STRING, TokenType.BOOL, TokenType.LET))
+            {
+                initializer = ParseVariableDeclaration();
+            }
+            else if (Match(TokenType.IDENTIFIER))
+            {
+                initializer = ParseExpressionStatementOrAssignment();
+            }
+            else
+            {
+                throw Error("BEN2001", "Expected a variable declaration, assignment, or ';' in for initializer.");
+            }
 
-            // Regular variable declaration
-            var initializer = ParseStatement();
-            ExpressionNode? condition = ParseExpression();
+            ExpressionNode? condition = Check(TokenType.SEMICOLON) ? null : ParseExpression();
             Consume(TokenType.SEMICOLON, "Expected ';' after condition in 'for'");
             StatementNode? increment = null;
-            if (Match(TokenType.IDENTIFIER))
+            if (!Check(TokenType.RPAREN))
             {
+                if (!Match(TokenType.IDENTIFIER))
+                    throw Error("BEN2001", "Expected assignment or increment expression in for increment.");
                 increment = ParseExpressionStatementOrAssignment(true);
             }
 

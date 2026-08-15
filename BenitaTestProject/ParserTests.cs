@@ -119,7 +119,8 @@ namespace BenitaTestProject
             Assert.AreEqual("b", function.Parameters[1].Name);
 
             Assert.IsNotNull(function.Body);
-            Assert.AreEqual(0, function.Body.Statements.Count);
+            Assert.AreEqual(1, function.Body.Statements.Count);
+            Assert.IsInstanceOfType<ReturnStatementNode>(function.Body.Statements[0]);
 
             Assert.IsTrue(function.ReturnStatement.ReturnExpression is BinaryExpressionNode);
             var returnStatement = function.ReturnStatement.ReturnExpression as BinaryExpressionNode;
@@ -490,7 +491,7 @@ namespace BenitaTestProject
             Assert.AreEqual("number", factorialFunction.Parameters[0].Type);
 
             Assert.IsNotNull(factorialFunction.Body);
-            Assert.AreEqual(2, factorialFunction.Body.Statements.Count);
+            Assert.AreEqual(3, factorialFunction.Body.Statements.Count);
 
             var resultVarDecl = factorialFunction.Body.Statements[0] as VariableDeclarationNode;
             Assert.IsNotNull(resultVarDecl);

@@ -1,100 +1,125 @@
-program                     ::= include_directive* global_variable_declaration* package* function* main_function default_functions
+Benita Language Grammar
+=======================
 
-include_directive           ::= "include_once" string_literal ";"
+This document uses EBNF. Terminals are written in quotes, `?` means optional,
+`*` means zero or more occurrences, and `+` means one or more occurrences.
 
-main_function               ::= "_main_" "(" parameters? ")" "{" statement* "return" expression ";" "}"
+program                 ::= include-directive* top-level-item* EOF ;
+include-directive       ::= "include_once" string-literal ";" ;
 
-function                    ::= "func" identifier "(" parameters? ")" "->" type "{" statement* "return" expression? ";" "}"
-parameters                  ::= parameter ("," parameter)*
-parameter                   ::= type identifier
+top-level-item          ::= package-declaration
+                          | function-declaration
+                          | main-function
+                          | statement ;
 
-type                        ::= "number" | "string" | "bool" | "void" | array_type | identifier
-array_type                  ::= "number[]" | "string[]" | "bool[]"
+package-declaration     ::= "package" identifier "{" package-member* "}" ;
+package-member          ::= variable-declaration | function-declaration ;
 
-global_variable_declaration ::= type identifier ("=" expression)? ";"
+main-function           ::= "_main_" "(" ")" block ;
+function-declaration    ::= "func" identifier "(" parameter-list? ")"
+                            "->" return-type block ;
+parameter-list          ::= parameter ("," parameter)* ;
+parameter               ::= parameter-type identifier ;
 
-package                     ::= "pkg" identifier "{" package_body "}"
-package_body                ::= (variable_declaration | function)*
+variable-declaration    ::= variable-type identifier ("=" expression)? ";" ;
+variable-type           ::= value-type | "let" | array-type ;
+parameter-type          ::= value-type | array-type ;
+return-type             ::= value-type | array-type | "void" ;
+value-type              ::= primitive-type | identifier ;
+primitive-type          ::= "number" | "string" | "bool" ;
+array-type              ::= primitive-type "[" "]" ;
 
-statement                   ::= variable_declaration 
-                               | assignment 
-                               | compound_assignment 
-                               | increment_decrement 
-                               | if_statement 
-                               | while_statement 
-                               | for_statement
-                               | block 
-                               | expression_statement 
-                               | comment
-                               | object_instantiation
+statement               ::= variable-declaration
+                          | assignment-statement
+                          | compound-assignment-statement
+                          | increment-statement
+                          | expression-statement
+                          | if-statement
+                          | while-statement
+                          | for-statement
+                          | return-statement
+                          | break-statement
+                          | continue-statement
+                          | block ;
 
-variable_declaration        ::= (type | "let") identifier ("=" expression)? ";"
-assignment                  ::= (identifier | member_access) ("=" | "[" expression "]") expression ";"
-compound_assignment         ::= (identifier | member_access) ("+=" | "-=" | "*=" | "/=") expression ";"
-increment_decrement         ::= (identifier | member_access) ("++" | "--") ";"
-if_statement                ::= "if" "(" expression ")" statement ("else" statement)?
-while_statement             ::= "while" "(" expression ")" statement
-for_statement               ::= "for" "(" (variable_declaration | assignment) expression ";" expression_statement ")" statement
-block                       ::= "{" statement* "}"
-expression_statement        ::= expression ";"
-object_instantiation        ::= identifier identifier "=" "new" identifier "(" arguments? ")" ";"
+block                   ::= "{" statement* "}" ;
+if-statement            ::= "if" "(" expression ")" statement
+                            ("else" statement)? ;
+while-statement         ::= "while" "(" expression ")" statement ;
+for-statement           ::= "for" "(" for-initializer? ";"
+                            expression? ";" for-increment? ")" statement ;
+for-initializer         ::= variable-declaration-no-semicolon | assignment ;
+for-increment           ::= assignment | compound-assignment | increment ;
+variable-declaration-no-semicolon
+                         ::= variable-type identifier ("=" expression)? ;
 
-expression                  ::= literal 
-                               | string_literal 
-                               | boolean_literal 
-                               | identifier 
-                               | array_access 
-                               | member_access
-                               | binary_expression 
-                               | unary_expression 
-                               | "(" expression ")" 
-                               | function_call
+return-statement        ::= "return" expression? ";" ;
+break-statement         ::= "break" ";" ;
+continue-statement      ::= "continue" ";" ;
+expression-statement    ::= expression ";" ;
+assignment-statement    ::= assignment ";" ;
+compound-assignment-statement
+                         ::= compound-assignment ";" ;
+increment-statement     ::= increment ";" ;
+assignment              ::= assignable "=" expression ;
+compound-assignment     ::= identifier ("+=" | "-=" | "*=" | "/=") expression ;
+increment               ::= identifier ("++" | "--") ;
+assignable              ::= identifier | identifier "[" expression "]" ;
 
-binary_expression           ::= expression binary_operator expression
-unary_expression            ::= unary_operator expression
+expression              ::= logical-or ;
+logical-or              ::= logical-and ("||" logical-and)* ;
+logical-and             ::= equality ("&&" equality)* ;
+equality                ::= comparison (("==" | "!=") comparison)* ;
+comparison              ::= term (("<" | "<=" | ">" | ">=") term)* ;
+term                    ::= factor (("+" | "-") factor)* ;
+factor                  ::= unary (("*" | "/" | "%") unary)* ;
+unary                   ::= ("!" | "-") unary | primary ;
 
-binary_operator             ::= "+" | "-" | "*" | "/" | "%" | "<" | ">" | "<=" | ">=" | "==" | "&&" | "||"
-unary_operator              ::= "-" | "++" | "--" | "!"
+primary                 ::= literal
+                          | identifier
+                          | function-call
+                          | array-access
+                          | member-access
+                          | array-initializer
+                          | sized-array-initializer
+                          | "(" expression ")" ;
+function-call           ::= identifier "(" argument-list? ")" ;
+array-access            ::= identifier "[" expression "]" ;
+member-access           ::= identifier "." identifier
+                            ("(" argument-list? ")")? ;
+argument-list           ::= expression ("," expression)* ;
+array-initializer       ::= "[" argument-list? "]" ;
+sized-array-initializer ::= primitive-type "[" expression "]" ;
 
-array_access                ::= identifier "[" expression "]"
-member_access               ::= identifier "." identifier
+literal                 ::= number-literal | string-literal | boolean-literal ;
+boolean-literal         ::= "true" | "false" ;
+number-literal          ::= digit+ ("." digit+)? ;
+string-literal          ::= '"' string-character* '"' ;
+string-character        ::= any character except newline, '"', and "\\"
+                          | "\\n" | "\\r" | "\\t" | '\\"' | "\\\\" ;
+identifier              ::= (letter | "_") (letter | digit | "_")* ;
+digit                   ::= "0" | "1" | "2" | "3" | "4"
+                          | "5" | "6" | "7" | "8" | "9" ;
 
-literal                     ::= [0-9]+
-string_literal              ::= "\"" [^\"]* "\""
-boolean_literal             ::= "true" | "false"
-identifier                  ::= [a-zA-Z_][a-zA-Z0-9_]*
+Semantic constraints
+--------------------
 
-comment                     ::= single_line_comment | multi_line_comment
-single_line_comment         ::= "//" [^\n]*
-multi_line_comment          ::= "/*" .* "*/"
+1. `_main_` never accepts parameters.
+2. `let` is allowed only for local/global variable declarations and requires
+   an initializer from which a concrete type can be inferred.
+3. `void` is allowed only as a function return type.
+4. Every reachable path of a non-void function must return a compatible value.
+5. `break` and `continue` are valid only inside `while` or `for` loops.
+6. A decimal literal must include digits on both sides of the decimal point;
+   write `0.5`, not `.5`, and `1.0`, not `1.`.
+7. A single `&` or `|` is invalid; logical conjunction and disjunction use
+   `&&` and `||`.
+8. Strings cannot span physical lines. Supported escapes are `\\n`, `\\r`,
+   `\\t`, `\\"`, and `\\\\`.
 
-function_call               ::= (identifier | member_access) "(" arguments? ")"
-arguments                   ::= expression ("," expression)*
+Notes
+-----
 
-default_functions           ::= "func print(string msg) -> void" 
-                               | "func input() -> string" 
-                               | "func file_read(string filename) -> string" 
-                               | "func file_write(string filename, string content) -> void"
-                               | "func file_exist(string filename) -> bool"
-                               | "func file_delete(string filename) -> bool"
-                               | "func array_len(array_type array) -> number"
-                               | "func array_add(array_type array, type element) -> array_type"
-                               | "func array_remove(array_type array, number index) -> array_type"
-                               | "func array_contains(array_type array, type element) -> bool"
-                               | "func array_index_of(array_type array, type element) -> number"
-                               | "func array_reverse(array_type array) -> array_type"
-                               | "func array_clear(array_type array) -> array_type"
-                               | "func array_insert(array_type array, number index, type element) -> array_type"
-                               | "func array_slice(array_type array, number start, number length) -> array_type"
-                               | "func array_concat(array_type first, array_type second) -> array_type"
-                               | "func array_sort(array_type array) -> array_type"
-                               | "func string_len(string value) -> number"
-                               | "func string_char_at(string value, number index) -> string"
-                               | "func string_substring(string value, number start, number length) -> string"
-                               | "func string_contains(string value, string search) -> bool"
-                               | "func string_index_of(string value, string search) -> number"
-                               | "func string_replace(string value, string old, string new) -> string"
-                               | "func string_split(string value, string separator) -> string[]"
-                               | "func string_trim(string value) -> string"
-                               | "func string_to_lower(string value) -> string"
-                               | "func string_to_upper(string value) -> string"
+`include_once` directives are expanded before tokenization. Built-in function
+names and signatures are runtime API entries, not grammar productions; their
+authoritative definitions live in `BuiltInRegistry`.

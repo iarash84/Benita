@@ -74,6 +74,7 @@ namespace Benita
         /// <returns>The result of the visit.</returns>
         public object Visit(AstNode? node)
         {
+            if (node is null) return null;
             DebugLog($"Visit: {node.GetType().Name}, packageScope = {_packageScope}", false);
             switch (node)
             {
@@ -585,7 +586,7 @@ namespace Benita
         {
             DebugLog($"VisitWhileStatementNode");
 
-            while ((bool)Visit(node.Condition))
+            while (node.Condition is null || (bool)Visit(node.Condition))
             {
                 try
                 {
@@ -616,7 +617,7 @@ namespace Benita
             DebugLog($"VisitForStatementNode");
 
             Visit(node.Initializer);
-            while ((bool)Visit(node.Condition))
+            while (node.Condition is null || (bool)Visit(node.Condition))
             {
                 try
                 {

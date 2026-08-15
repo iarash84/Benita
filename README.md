@@ -263,6 +263,15 @@ Options can be combined with file-processing actions. For example:
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben -t -a
 ```
 
+### Syntax compatibility notes
+
+The language now applies its grammar consistently during lexing, parsing, and semantic
+analysis. `_main_` takes no parameters; `void` is only a return type; `let` is only a
+variable-declaration type; every path in a non-void function must return; and loop-control
+statements are rejected outside loops. Decimal literals require digits on both sides of the
+point, strings use explicit escapes, and `for` supports omitted clauses such as `for (;;)`.
+See the [language grammar](docs/Grammar.txt) and [tutorial](docs/Tutorial.MD) for details.
+
 ### Tests
 
 ```bash

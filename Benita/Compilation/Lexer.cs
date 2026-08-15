@@ -141,7 +141,11 @@
                 case '}': AddToken(TokenType.RBRACE); break;
                 case ';': AddToken(TokenType.SEMICOLON); break;
                 case ',': AddToken(TokenType.COMMA); break;
-                case '.': AddToken(TokenType.DOT); break;
+                case '.':
+                    if (IsDigit(Peek()))
+                        throw CreateError("BEN1005", "Decimal literals must start with a digit; use '0.5' instead of '.5'.");
+                    AddToken(TokenType.DOT);
+                    break;
                 case '+':
                     AddToken(Match('=') ? TokenType.PLUS_EQUAL : Match('+') ? TokenType.PLUS_PLUS : TokenType.PLUS);
                     break;
@@ -169,8 +173,14 @@
                 case '<': AddToken(Match('=') ? TokenType.LTE : TokenType.LT); break;
                 case '>': AddToken(Match('=') ? TokenType.GTE : TokenType.GT); break;
                 case '=': AddToken(Match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL); break;
-                case '&': if (Match('&')) AddToken(TokenType.AND_AND); break;
-                case '|': if (Match('|')) AddToken(TokenType.OR_OR); break;
+                case '&':
+                    if (!Match('&')) throw CreateError("BEN1001", "Expected '&&' but found '&'.");
+                    AddToken(TokenType.AND_AND);
+                    break;
+                case '|':
+                    if (!Match('|')) throw CreateError("BEN1001", "Expected '||' but found '|'.");
+                    AddToken(TokenType.OR_OR);
+                    break;
                 case '!': AddToken(Match('=') ? TokenType.BANG_EQUAL : TokenType.BANG); break;
                 case '"': ScanStringLiteral(); break;
 
@@ -217,11 +227,13 @@
         /// </summary>
         private void SkipMultiLineComment()
         {
-            while (!(Peek() == '*' && PeekNext() == '/') && !IsAtEnd())
-                _current++;
-
-            if (!IsAtEnd())
-                _current += 2;
+            while (!(Peek() == '*' && PeekNext() == '/'))
+            {
+                if (IsAtEnd())
+                    throw CreateError("BEN1004", "Unterminated multiline comment.");
+                if (Advance() == '\n') _line++;
+            }
+            _current += 2;
         }
 
         /// <summary>
@@ -229,10 +241,28 @@
         /// </summary>
         private void ScanStringLiteral()
         {
-            while (Peek() != '"' && !IsAtEnd())
+            var value = new System.Text.StringBuilder();
+            while (!IsAtEnd() && Peek() != '"')
             {
-                if (Peek() == '\n') _line++;
-                Advance();
+                char current = Advance();
+                if (current == '\n')
+                    throw CreateError("BEN1002", "String literals cannot span multiple lines.");
+                if (current != '\\')
+                {
+                    value.Append(current);
+                    continue;
+                }
+
+                if (IsAtEnd()) throw CreateError("BEN1002", "Unterminated string escape sequence.");
+                value.Append(Advance() switch
+                {
+                    'n' => '\n',
+                    'r' => '\r',
+                    't' => '\t',
+                    '"' => '"',
+                    '\\' => '\\',
+                    char escape => throw CreateError("BEN1006", $"Unsupported escape sequence '\\{escape}'.")
+                });
             }
 
             if (IsAtEnd())
@@ -240,8 +270,7 @@
                 throw CreateError("BEN1002", "Unterminated string literal.");
             }
             Advance(); 
-            string value = _source.Substring(_start + 1, _current - _start - 2);
-            AddToken(TokenType.STRING_LITERAL, value);
+            AddToken(TokenType.STRING_LITERAL, value.ToString());
         }
 
         /// <summary>
@@ -251,7 +280,7 @@
         private void ScanNumberLiteral()
         {
             // Check if the number starts with a decimal point (e.g., .5)
-            if (Peek() == '.')
+            if (Peek() == '.' && IsDigit(PeekNext()))
             {
                 Advance();
             }
@@ -263,7 +292,7 @@
             }
 
             // Check for a fractional part
-            if (Peek() == '.')
+            if (Peek() == '.' && IsDigit(PeekNext()))
             {
                 Advance();
 

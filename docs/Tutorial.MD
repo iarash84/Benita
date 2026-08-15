@@ -346,6 +346,39 @@ benita> for (number i = 0; i < 3; i++) {
 
 ---
 
+### ۱۴. قواعد دقیق سینتکس و کنترل جریان
+
+تابع ورودی برنامه همیشه بدون پارامتر نوشته می‌شود: `_main_()`. نوع `void` فقط برای
+نوع خروجی تابع و `let` فقط برای تعریف متغیر قابل استفاده است؛ بنابراین `void value;`
+و پارامتر یا خروجی از نوع `let` معتبر نیستند.
+
+در تابعی که خروجی آن `void` نیست، تمام مسیرهای ممکن باید مقدار مناسب برگردانند.
+`return` می‌تواند در هر جای بدنه، از جمله داخل `if`، قرار بگیرد:
+
+```benita
+func sign(number value) -> string {
+    if (value >= 0) {
+        return "positive";
+    } else {
+        return "negative";
+    }
+}
+```
+
+دستورهای `break` و `continue` فقط داخل حلقه معتبرند. هر سه بخش حلقه‌ی `for`
+اختیاری هستند؛ برای نمونه حلقه‌ی زیر با `break` خاتمه می‌یابد:
+
+```benita
+for (;;) {
+    print("running");
+    break;
+}
+```
+
+اعداد اعشاری باید در هر دو طرف نقطه رقم داشته باشند (`0.5` و `1.0`). برای منطق
+از `&&` و `||` استفاده کنید؛ `&` و `|` تکی معتبر نیستند. رشته‌ها چندخطی نیستند و
+escapeهای `\n`، `\r`، `\t`، `\"` و `\\` را پشتیبانی می‌کنند.
+
 ## English tutorial
 
 ### 1. Your first program
@@ -668,3 +701,15 @@ See the [`Examples`](../Examples) directory for more working programs.
 
 Built-in runtime failures, such as invalid array or string indices, use the stable `BEN4101`
 diagnostic code in both file execution and the REPL.
+
+### 14. Precise syntax and control-flow rules
+
+The entry point is always written without parameters: `_main_()`. `void` is reserved for
+function return types, while `let` is reserved for variable declarations and requires an
+initializer. Every path through a non-void function must return a compatible value, and
+`return` may appear anywhere in its body. `break` and `continue` are valid only in loops.
+
+All three `for` clauses are optional, so `for (;;) { break; }` is valid. Decimal literals
+need digits on both sides of the point (`0.5`, not `.5`; `1.0`, not `1.`). Use `&&` and
+`||`, because single `&` and `|` are rejected. Strings are single-line and support `\n`,
+`\r`, `\t`, `\"`, and `\\` escapes.

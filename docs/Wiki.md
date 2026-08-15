@@ -42,6 +42,20 @@ flowchart LR
 
 </div>
 
+## Syntax consistency rules
+
+The Lexer, Parser, and Semantic Analyzer share the following language contract:
+
+- `_main_()` has no parameters.
+- `void` is limited to function return types; `let` is limited to inferred variable declarations.
+- Every path of a non-void function returns a compatible value.
+- `break` and `continue` are valid only inside loops.
+- `for` clauses are optional, including the `for (;;)` form.
+- Decimal literals use forms such as `0.5` and `1.0`; single `&` and `|` are invalid.
+- Strings are single-line and use the documented escape sequences.
+
+The normative EBNF is maintained in [Grammar.txt](Grammar.txt).
+
 ## ساختار مخزن
 
 | مسیر | مسئولیت |

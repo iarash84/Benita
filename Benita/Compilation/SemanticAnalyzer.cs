@@ -168,17 +168,7 @@
 
             // Analyze the function body
             AnalyzeBlock(function.Body, localVariables, function.ReturnType);
-
-            // Check the function's return statement
-            if (function.ReturnStatement != null)
-            {
-                var returnType = AnalyzeExpression(function.ReturnStatement.ReturnExpression, localVariables);
-                if (returnType != function.ReturnType)
-                {
-                    throw new Exception($"Return type mismatch in function '{function.Name}'. Expected '{function.ReturnType}' but got '{returnType}'.");
-                }
-            }
-            else if (function.ReturnType != "void")
+            if (function.ReturnType != "void" && !AlwaysReturns(function.Body))
             {
                 throw new Exception($"Function '{function.Name}' must return a value of type '{function.ReturnType}'.");
             }
@@ -215,17 +205,7 @@
 
             // Analyze the function body
             AnalyzeBlock(function.Body, localVariables, function.ReturnType);
-
-            // Check the function's return statement
-            if (function.ReturnStatement != null)
-            {
-                var returnType = AnalyzeExpression(function.ReturnStatement.ReturnExpression, localVariables);
-                if (returnType != function.ReturnType)
-                {
-                    throw new Exception($"Return type mismatch in function '{function.Name}'. Expected '{function.ReturnType}' but got '{returnType}'.");
-                }
-            }
-            else if (function.ReturnType != "void")
+            if (function.ReturnType != "void" && !AlwaysReturns(function.Body))
             {
                 throw new Exception($"Function '{function.Name}' must return a value of type '{function.ReturnType}'.");
             }
@@ -237,11 +217,12 @@
         /// <param name="block">The block of statements to analyze.</param>
         /// <param name="localVariables">The local variables available in the block.</param>
         /// <param name="functionReturnType">The return type of the function (if any).</param>
-        private void AnalyzeBlock(BlockNode block, Dictionary<string, string?> localVariables, string? functionReturnType = null)
+        private void AnalyzeBlock(BlockNode block, Dictionary<string, string?> localVariables,
+            string? functionReturnType = null, int loopDepth = 0)
         {
             foreach (var statement in block.Statements)
             {
-                AnalyzeStatement(statement, localVariables, functionReturnType);
+                AnalyzeStatement(statement, localVariables, functionReturnType, loopDepth);
             }
         }
 
@@ -251,7 +232,8 @@
         /// <param name="statement">The statement to analyze.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <param name="functionReturnType">The return type of the function (if any).</param>
-        private void AnalyzeStatement(StatementNode statement, Dictionary<string, string?> localVariables, string? functionReturnType = null)
+        private void AnalyzeStatement(StatementNode statement, Dictionary<string, string?> localVariables,
+            string? functionReturnType = null, int loopDepth = 0)
         {
             switch (statement)
             {
@@ -293,15 +275,19 @@
                         throw new Exception($"Undeclared variable '{compoundAssignment.Name}'.");
                     }
 
-                    if (compVariableType != compValueType)
+                    if (compVariableType != "number" || compValueType != "number")
                     {
-                        throw new Exception($"Type mismatch in compound assignment to '{compoundAssignment.Name}'. Expected '{compVariableType}' but got '{compValueType}'.");
+                        throw new Exception($"Compound assignment requires numeric operands, but '{compoundAssignment.Name}' is '{compVariableType}' and the value is '{compValueType}'.");
                     }
                     break;
                 case IncrementDecrementNode incDec:
-                    if (!localVariables.ContainsKey(incDec.Name))
+                    if (!localVariables.TryGetValue(incDec.Name, out var incrementType))
                     {
                         throw new Exception($"Undeclared variable '{incDec.Name}'.");
+                    }
+                    if (incrementType != "number")
+                    {
+                        throw new Exception($"Increment and decrement require a number, but '{incDec.Name}' is '{incrementType}'.");
                     }
                     break;
                 case ExpressionStatementNode exprStmt:
@@ -313,10 +299,10 @@
                     {
                         throw new Exception("Condition in 'if' statement must be a boolean.");
                     }
-                    AnalyzeStatement(ifStmt.ThenBranch, localVariables, functionReturnType);
+                    AnalyzeStatement(ifStmt.ThenBranch, localVariables, functionReturnType, loopDepth);
                     if (ifStmt.ElseBranch != null)
                     {
-                        AnalyzeStatement(ifStmt.ElseBranch, localVariables, functionReturnType);
+                        AnalyzeStatement(ifStmt.ElseBranch, localVariables, functionReturnType, loopDepth);
                     }
                     break;
                 case WhileStatementNode whileStmt:
@@ -325,26 +311,31 @@
                     {
                         throw new Exception("Condition in 'while' statement must be a boolean.");
                     }
-                    AnalyzeStatement(whileStmt.Body, localVariables, functionReturnType);
+                    AnalyzeStatement(whileStmt.Body, localVariables, functionReturnType, loopDepth + 1);
                     break;
 
                 case ForStatementNode forStmt:
-                    // TODO: Update this section to handle 'for' loop initialization and iteration
-                    AnalyzeStatement(forStmt.Initializer, localVariables, functionReturnType);
-                    var forConditionType = AnalyzeExpression(forStmt.Condition, localVariables);
-                    if (forConditionType != "bool")
+                    if (forStmt.Initializer != null)
+                        AnalyzeStatement(forStmt.Initializer, localVariables, functionReturnType, loopDepth);
+                    if (forStmt.Condition != null && AnalyzeExpression(forStmt.Condition, localVariables) != "bool")
                     {
                         throw new Exception("Condition in 'for' statement must be a boolean.");
                     }
-                    AnalyzeStatement(forStmt.Body, localVariables, functionReturnType);
+                    if (forStmt.Increment != null)
+                        AnalyzeStatement(forStmt.Increment, localVariables, functionReturnType, loopDepth + 1);
+                    AnalyzeStatement(forStmt.Body, localVariables, functionReturnType, loopDepth + 1);
                     break;
                 case BlockNode block:
-                    AnalyzeBlock(block, localVariables, functionReturnType);
+                    AnalyzeBlock(block, localVariables, functionReturnType, loopDepth);
                     break;
                 case ArrayAssignmentNode arrayAssignment:
                     AnalyzeArrayAssignment(arrayAssignment, localVariables);
                     break;
                 case ReturnStatementNode returnStatementNode:
+                    if (functionReturnType == null)
+                    {
+                        throw new Exception("'return' can only be used inside a function.");
+                    }
                     var resultValueType = returnStatementNode.ReturnExpression == null
                         ? "void"
                         : AnalyzeExpression(returnStatementNode.ReturnExpression, localVariables);
@@ -370,12 +361,22 @@
                     break;
                 case BreakStatementNode:
                 case ContinueStatementNode:
-                    // Do nothing
+                    if (loopDepth == 0)
+                        throw new Exception($"'{(statement is BreakStatementNode ? "break" : "continue")}' can only be used inside a loop.");
                     break;
                 default:
                     throw new Exception($"Unsupported statement type: {statement.GetType().Name}");
             }
         }
+
+        private static bool AlwaysReturns(StatementNode? statement) => statement switch
+        {
+            ReturnStatementNode => true,
+            BlockNode block => block.Statements.Any(AlwaysReturns),
+            IfStatementNode branch => branch.ElseBranch != null &&
+                                      AlwaysReturns(branch.ThenBranch) && AlwaysReturns(branch.ElseBranch),
+            _ => false
+        };
 
         /// <summary>
         /// Analyzes an array assignment statement.
