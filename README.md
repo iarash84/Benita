@@ -98,6 +98,9 @@ Options:
   dotnet run --project Benita -- repl
   ```
 
+  اجرای بدون آرگومان راهنمای CLI را نمایش می‌دهد. REPL از ورودی چندخطی، syntax highlighting،
+  تاریخچه و فرمان‌های `:help`، `:cancel`، `:reset` و `:exit` پشتیبانی می‌کند.
+
 - `help`: لوگو، نسخه، فرمان‌ها و گزینه‌های CLI را نمایش می‌دهد.
 
 #### گزینه‌ها
@@ -237,6 +240,9 @@ Options:
   ```bash
   dotnet run --project Benita -- repl
   ```
+
+  Running without arguments displays the CLI help. The REPL supports multiline input, syntax
+  highlighting, history, and the `:help`, `:cancel`, `:reset`, and `:exit` commands.
 
 - `help`: displays the logo, version, CLI actions, and available options.
 

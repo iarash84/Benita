@@ -9,6 +9,7 @@ public sealed class Repl
 {
     private readonly TextReader _input;
     private readonly TextWriter _output;
+    private readonly ConsoleLineEditor? _lineEditor;
     private readonly List<string> _history = [];
     private readonly StringBuilder _sessionSource = new();
     private CompilerClass _compiler = new();
@@ -19,6 +20,8 @@ public sealed class Repl
     {
         _input = input ?? Console.In;
         _output = output ?? Console.Out;
+        if (input is null && output is null && !Console.IsInputRedirected && !Console.IsOutputRedirected)
+            _lineEditor = new ConsoleLineEditor(_history);
     }
 
     /// <summary>حلقهٔ تعاملی را تا دریافت فرمان خروج یا پایان جریان ورودی اجرا می‌کند.</summary>
@@ -62,9 +65,29 @@ public sealed class Repl
         var submission = new StringBuilder();
         while (true)
         {
-            _output.Write(submission.Length == 0 ? "benita> " : "   ...> ");
-            string? line = _input.ReadLine();
+            bool continuation = submission.Length > 0;
+            string prompt = continuation ? "   ...> " : "benita> ";
+            string? line;
+            if (_lineEditor is null)
+            {
+                _output.Write(prompt);
+                line = _input.ReadLine();
+            }
+            else
+            {
+                line = _lineEditor.ReadLine(prompt, continuation);
+            }
             if (line is null) return submission.Length == 0 ? null : submission.ToString();
+
+            string command = line.Trim().ToLowerInvariant();
+            if (continuation && command == ":cancel")
+            {
+                _output.WriteLine("Current submission cancelled.");
+                return string.Empty;
+            }
+            if (command is ":exit" or ":quit") return command;
+            if (continuation && line.Length == 0) return submission.ToString().TrimEnd();
+
             submission.AppendLine(line);
 
             string text = submission.ToString();
@@ -85,6 +108,7 @@ public sealed class Repl
                 _output.WriteLine(":history  Show successful submissions");
                 _output.WriteLine(":clear    Clear the console");
                 _output.WriteLine(":reset    Clear variables, functions, and history");
+                _output.WriteLine(":cancel   Cancel the current multiline submission");
                 _output.WriteLine(":exit     Exit the REPL");
                 return true;
             case ":history":
@@ -100,6 +124,9 @@ public sealed class Repl
                 _compiler = new CompilerClass();
                 _interpreter = new Interpreter(preserveStateBetweenPrograms: true);
                 _output.WriteLine("Session reset.");
+                return true;
+            case ":cancel":
+                _output.WriteLine("There is no active multiline submission to cancel.");
                 return true;
             default:
                 if (command.StartsWith(':'))

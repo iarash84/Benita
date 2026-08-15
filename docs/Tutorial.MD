@@ -285,8 +285,11 @@ dotnet run --project Benita -- repl
 ```
 
 فرمان `check` مراحل Lexer، Parser و SemanticAnalyzer را اجرا می‌کند، اما برنامه را اجرا نمی‌کند.
-فرمان `repl` یک محیط تعاملی stateful باز می‌کند. متغیرها و توابع تعریف‌شده تا پایان نشست حفظ
-می‌شوند و عبارت‌هایی که بدون `;` وارد شوند، مستقیماً ارزیابی و چاپ می‌شوند:
+#### کار با محیط تعاملی REPL
+
+محیط تعاملی فقط با فرمان `repl` باز می‌شود. اجرای برنامه بدون آرگومان، راهنمای فرمان‌های
+زبان را نمایش می‌دهد. متغیرها و توابع تعریف‌شده تا پایان نشست حفظ می‌شوند و عبارت‌هایی
+که بدون `;` وارد شوند، مستقیماً ارزیابی و چاپ می‌شوند:
 
 ```text
 benita> number value = 40;
@@ -295,7 +298,39 @@ benita> value
 42
 ```
 
-فرمان‌های داخلی REPL عبارت‌اند از `:help`، `:history`، `:clear`، `:reset` و `:exit`.
+برای دستورهای چندخطی مانند `for`، `if`، `while`، تابع و بسته، خط اول را همراه `{` وارد
+کنید. prompt از `benita>` به `...>` تغییر می‌کند و پس از بسته‌شدن تمام آکولادها، دستور
+به‌صورت خودکار اجرا می‌شود:
+
+```text
+benita> for (number i = 0; i < 3; i++) {
+   ...>     print(i);
+   ...> }
+0
+1
+2
+```
+
+اگر هنگام نوشتن کد چندخطی آکولاد یا پرانتز را فراموش کردید، یکی از راه‌های زیر را به‌کار ببرید:
+
+- یک خط خالی وارد کنید تا کد فعلی parse شود، خطای syntax نمایش داده شود و prompt تازه برگردد.
+- `:cancel` را وارد کنید تا buffer فعلی بدون اجرا حذف شود.
+- در ترمینال تعاملی `Ctrl+C` بزنید؛ در ورودی چندخطی معادل `:cancel` و در prompt اصلی معادل خروج است.
+
+فرمان‌های داخلی REPL:
+
+| فرمان | کاربرد |
+| --- | --- |
+| `:help` | نمایش راهنمای فرمان‌ها |
+| `:history` | نمایش ورودی‌های موفق قبلی |
+| `:clear` | پاک‌کردن صفحهٔ ترمینال |
+| `:reset` | حذف متغیرها، توابع و تاریخچهٔ نشست |
+| `:cancel` | لغو ورودی چندخطی جاری |
+| `:exit` | خروج از REPL |
+
+در ترمینال واقعی، کلمات کلیدی، نوع‌ها، توابع داخلی، رشته‌ها، عددها و کامنت‌ها هنگام
+تایپ رنگ‌آمیزی می‌شوند. کلیدهای جهت چپ و راست، `Home`، `End`، `Backspace` و `Delete`
+برای ویرایش خط فعال‌اند؛ کلیدهای بالا و پایین نیز تاریخچه را مرور می‌کنند.
 
 گزینه‌های کاربردی:
 
@@ -588,8 +623,11 @@ dotnet run --project Benita -- repl
 ```
 
 The `check` command runs the Lexer, Parser, and SemanticAnalyzer without executing the program.
-The `repl` command starts a stateful interactive environment. Variables and functions remain
-available for the session, and expressions entered without a trailing `;` are evaluated and printed:
+#### Using the interactive REPL
+
+The interactive environment starts only with the `repl` command. Running Benita without
+arguments displays the CLI help. Variables and functions remain available for the session,
+and expressions entered without a trailing `;` are evaluated and printed:
 
 ```text
 benita> number value = 40;
@@ -598,7 +636,23 @@ benita> value
 42
 ```
 
-The available REPL commands are `:help`, `:history`, `:clear`, `:reset`, and `:exit`.
+Multiline constructs remain at the `...>` prompt until all braces are closed:
+
+```text
+benita> for (number i = 0; i < 3; i++) {
+   ...>     print(i);
+   ...> }
+0
+1
+2
+```
+
+Enter a blank line to submit an incomplete buffer and receive its syntax error, or use
+`:cancel` to discard it. In an interactive terminal, `Ctrl+C` cancels a multiline buffer and
+exits when used at the main prompt.
+
+The available commands are `:help`, `:history`, `:clear`, `:reset`, `:cancel`, and `:exit`.
+Interactive terminals also provide syntax highlighting, cursor editing, and history navigation.
 
 Useful options:
 

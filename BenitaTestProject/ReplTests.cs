@@ -38,4 +38,28 @@ public class ReplTests
         StringAssert.Contains(output.ToString(), "Session reset.");
         Assert.IsFalse(output.ToString().Contains("1: number value", StringComparison.Ordinal));
     }
+
+    [TestMethod]
+    public void Run_BlankLineSubmitsIncompleteBlockAndRecoversAfterSyntaxError()
+    {
+        const string input = "for (number i = 0; i < 2; i++) {\nprint(i);\n\n1 + 1\n:exit\n";
+        using var consoleOutput = new ConsoleOutput();
+
+        new Repl(new StringReader(input), Console.Out).Run();
+
+        StringAssert.Contains(consoleOutput.GetOuput(), "BEN2");
+        StringAssert.Contains(consoleOutput.GetOuput(), "2\r\n");
+    }
+
+    [TestMethod]
+    public void Run_CancelAbandonsMultilineSubmissionAndContinuesSession()
+    {
+        const string input = "if (true) {\n:cancel\n3 + 4\n:exit\n";
+        using var consoleOutput = new ConsoleOutput();
+
+        new Repl(new StringReader(input), Console.Out).Run();
+
+        StringAssert.Contains(consoleOutput.GetOuput(), "Current submission cancelled.");
+        StringAssert.Contains(consoleOutput.GetOuput(), "7\r\n");
+    }
 }

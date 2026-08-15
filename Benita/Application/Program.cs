@@ -31,7 +31,7 @@
         {
             if (args.Length == 0)
             {
-                new Repl().Run();
+                ShowHelp();
                 return;
             }
 
