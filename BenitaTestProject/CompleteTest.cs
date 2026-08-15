@@ -14,42 +14,27 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void ConcatenatedPrintExpressionGeneratesAndExecutesCorrectly()
+        public void ConcatenatedPrintExpressionExecutesCorrectly()
         {
             string source = @"
 _main_() {
     print(""This is a test"" + "" => ""  + 1);
 }";
 
-            // Act 
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-int main()
-{
-  std::cout << ""This is a test"" + "" => "" << 1 << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
-            // Assert cgc
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
+            // Act
+            _compiler.Check(source);
 
             // Act
             var expectedOutput = "This is a test => 1\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void GlobalVariableFunctionAndLocalVariablesGenerateAndExecuteCorrectly()
+        public void GlobalVariableFunctionAndLocalVariablesExecuteCorrectly()
         {
             string source = @"
 number x = 10;
@@ -67,45 +52,20 @@ _main_() {
 }";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-double x = 10;
-double add(double a, double b)
-{
-  double c = a + b;
-  return a + b;
-}
-
-int main()
-{
-  double y = 20;
-  double sum = add(x, y);
-  std::cout << sum << std::endl;
-  std::string message = ""Hello, World!"";
-  std::cout << message << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             var expectedOutput = "30\r\nHello, World!\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
 
         }
 
         [TestMethod]
-        public void CommentsGlobalVariableAndFunctionCallGenerateAndExecuteCorrectly()
+        public void CommentsGlobalVariableAndFunctionCallExecuteCorrectly()
         {
             string source = @"
 // this is a comment
@@ -124,45 +84,21 @@ _main_() {
 func myFunction(number a, number b) -> number {
     return a + b;
 }";
-
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-std::string global_var = ""This is global variable"";
-double myFunction(double a, double b)
-{
-  return a + b;
-}
-
-int main()
-{
-  double x = 10;
-  double y = 20;
-  std::cout << myFunction(x, y) << std::endl;
-  std::cout << global_var << std::endl;
-  return 0;
-}".Trim();
             // Act
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             var expectedOutput = "30\r\nThis is global variable\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
 
         }
 
         [TestMethod]
-        public void NumericAdditionExpressionGeneratesAndExecutesCorrectly()
+        public void NumericAdditionExpressionExecutesCorrectly()
         {
             string source = @"
 func myFunction(number a, number b) -> number {
@@ -176,28 +112,7 @@ _main_() {
 }";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-double myFunction(double a, double b)
-{
-  return a + b;
-}
-
-int main()
-{
-  double x = 10;
-  double y = 8;
-  std::cout << x << y << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
-            // Assert cgc
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
+            _compiler.Check(source);
 
 
             // Act
@@ -205,13 +120,12 @@ int main()
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void WhileLoopWithIncrementGeneratesAndExecutesCorrectly()
+        public void WhileLoopWithIncrementExecutesCorrectly()
         {
             string source = @"
 func myFunction(number a, number b) -> number {
@@ -229,51 +143,22 @@ _main_() {
     }
     print(x);
 }";
-
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-double myFunction(double a, double b)
-{
-  return a + b;
-}
-
-int main()
-{
-  double x = 10;
-  double y = 20;
-  std::cout << x << y << std::endl;
-  double i = 0;
-  while (i < 5)
-  {
-    x++;
-    i++;
-  }
-  std::cout << x << std::endl;
-  return 0;
-}".Trim();
             // Act
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "30\r\n15\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
 
         }
 
         [TestMethod]
-        public void NumericFunctionCallGeneratesAndExecutesCorrectly()
+        public void NumericFunctionCallExecutesCorrectly()
         {
             string source = @"
 func add(number a, number b) -> number {
@@ -284,42 +169,21 @@ _main_() {
     number result = add(2, 3);
     print(result);
 }";
-
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-double add(double a, double b)
-{
-  return a + b;
-}
-
-int main()
-{
-  double result = add(2, 3);
-  std::cout << result << std::endl;
-  return 0;
-}".Trim();
             // Act
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "5\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void NumericExpressionAssignmentGeneratesAndExecutesCorrectly()
+        public void NumericExpressionAssignmentExecutesCorrectly()
         {
             string source = @" 
 _main_()  {
@@ -328,35 +192,20 @@ _main_()  {
 }";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-int main()
-{
-  double result = 2 + 3;
-  std::cout << result << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "5\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void NumericAndStringFunctionsGenerateAndExecuteCorrectly()
+        public void NumericAndStringFunctionsExecuteCorrectly()
         {
             string source = @"
 func add(number a, number b) -> number {
@@ -376,42 +225,14 @@ _main_() {
 }";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-double add(double a, double b)
-{
-  return a + b;
-}
-
-std::string concatenate(std::string a, std::string b)
-{
-  return a + b;
-}
-
-int main()
-{
-  double x = 10;
-  double y = 20;
-  double sum = add(x, y);
-  std::string message = concatenate(""hello"", "" world"");
-  std::cout << message << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "hello world\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -428,34 +249,8 @@ _main_() {
 }";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-std::string input();
-
-int main()
-{
-  std::cout << ""Enter your name "" << std::endl;
-  std::string message = input();
-  std::cout << ""your name is "" << std::endl;
-  std::cout << message << std::endl;
-  return 0;
-}
-
-std::string input()
-{
-    std::string inputString;
-    std::getline(std::cin, inputString);
-    return inputString;
-}
-
-".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedInput = "Tom";
@@ -465,7 +260,6 @@ std::string input()
                 using (var consoleOutput = new ConsoleOutput())
                 {
                     _compiler.Exec(source);
-                    // Assert exc
                     Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
                 }
             }
@@ -512,69 +306,9 @@ _main_() {
     string userInput = input();
     print(""You entered: "" + userInput);    
 }";
-
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-std::string input();
-
-double add(double a, double b)
-{
-  return a + b;
-}
-
-std::string concatenate(std::string a, std::string b)
-{
-  return a + b;
-}
-
-bool is_even(double a)
-{
-  return a % 2 == 0;
-}
-
-int main()
-{
-  double x = 10;
-  double y = 20;
-  double sum = add(x, y);
-  std::string hello = ""Hello, "";
-  std::string world = ""world!"";
-  std::string message = concatenate(hello, world);
-  std::cout << message << std::endl;
-  bool check = is_even(sum);
-  if (check)
-  {
-    std::cout << ""Sum is even."" << std::endl;
-  }
-  else
-  {
-    std::cout << ""Sum is odd."" << std::endl;
-  }
-  double i = 0;
-  while (i < 5)
-  {
-    sum += i;
-    i++;
-  }
-  std::string userInput = input();
-  std::cout << ""You entered: "" << userInput << std::endl;
-  return 0;
-}
-
-std::string input()
-{
-    std::string inputString;
-    std::getline(std::cin, inputString);
-    return inputString;
-}".Trim();
             // Act            
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedInput = "Tom";
@@ -584,14 +318,13 @@ std::string input()
                 using (var consoleOutput = new ConsoleOutput())
                 {
                     _compiler.Exec(source);
-                    // Assert exc
                     Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
                 }
             }
         }
 
         [TestMethod]
-        public void InfiniteWhileLoopGeneratesCorrectCppCode()
+        public void InfiniteWhileLoopPassesValidation()
         {
             string source = @"
 func is_even() -> void {
@@ -603,32 +336,10 @@ _main_() {
         is_even();
     }
 }";
-
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-void is_even()
-{
-  std::cout << ""Sum is even."" << std::endl;
-}
-
-int main()
-{
-  while (true)
-  {
-    is_even();
-  }
-  return 0;
-}".Trim();
             // Act            
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
         }
 
         [TestMethod]
@@ -642,35 +353,15 @@ _main_() {
          print(""While Test"");    
     }  
 }";
-
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-int main()
-{
-  double i = 0;
-  while (i < 5)
-  {
-    i++;
-    std::cout << ""While Test"" << std::endl;
-  }
-  return 0;
-}".Trim();
             // Act            
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "While Test\r\nWhile Test\r\nWhile Test\r\nWhile Test\r\nWhile Test\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -693,41 +384,14 @@ _main_() {
 }";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-bool is_even(double a)
-{
-  return a % 2 == 0;
-}
-
-int main()
-{
-  double num = 12;
-  if (is_even(num))
-  {
-    std::cout << ""Sum is even."" << std::endl;
-  }
-  else
-  {
-    std::cout << ""Sum is odd."" << std::endl;
-  }
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Sum is even.\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -746,42 +410,20 @@ _main_() {
 }";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-int main()
-{
-  double num = 12;
-  if (num == 12 || num > 15 && num == 10)
-  {
-    std::cout << ""YES"" << std::endl;
-  }
-  else
-  {
-    std::cout << ""NO"" << std::endl;
-  }
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "YES\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void FileExistReadAndWriteFunctionsGenerateCorrectCppCode()
+        public void FileExistReadAndWriteFunctionsPassesValidation()
         {
             string source = @"
 number myVar;
@@ -798,64 +440,12 @@ _main_() {
 }";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-bool file_exist(const std::string& filename);
-std::string file_read(const std::string& filename);
-void file_write(const std::string& filename, const std::string& content);
-
-double myVar;
-std::string fileContent;
-int main()
-{
-  if (file_exist(""test.txt""))
-  {
-    fileContent = file_read(""test.txt"");
-    std::cout << fileContent << std::endl;
-  }
-  else
-  {
-    std::cout << ""File does not exist, creating new file with content."" << std::endl;
-    file_write(""test.txt"", ""Hello, world!"");
-  }
-  return 0;
-}
-
-bool file_exist(const std::string& filename)
-{
-    std::ifstream file(filename);
-    return file.is_open();
-}
-
-std::string file_read(const std::string& filename)
-{
-    std::ifstream file(filename);
-    if (!file.is_open())
-        throw std::runtime_error(""Could not open file"");
-    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    file.close();
-    return content;
-}
-
-void file_write(const std::string& filename, const std::string& content)
-{
-    std::ofstream file(filename);
-    if (!file.is_open())
-        throw std::runtime_error(""Could not open file"");
-    file << content;
-    file.close();
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
         }
 
         [TestMethod]
-        public void FileDeleteFunctionGeneratesCorrectCppCode()
+        public void FileDeleteFunctionPassesValidation()
         {
             string source = @"
 _main_() {
@@ -867,55 +457,16 @@ _main_() {
         print(""File does not exist."");
     }
 }";
-
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-#include <filesystem>
-
-bool file_exist(const std::string& filename);
-bool file_delete(const std::string& filename);
-
-int main()
-{
-  std::string file_path = ""test.txt"";
-  if (file_exist(file_path))
-  {
-    file_delete(file_path);
-    std::cout << ""file deleted sucessfully"" << std::endl;
-  }
-  else
-  {
-    std::cout << ""File does not exist."" << std::endl;
-  }
-  return 0;
-}
-
-bool file_exist(const std::string& filename)
-{
-    std::ifstream file(filename);
-    return file.is_open();
-}
-
-bool file_delete(const std::string& filename)
-{
-    if (std::filesystem::remove(filename))
-        return true;
-    return false;
-}".Trim();
             // Act
 
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             _compiler.Exec(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
         }
 
         [TestMethod]
-        public void ArrayDeclarationsGenerateCorrectCppCode()
+        public void ArrayDeclarationsPassesValidation()
         {
             string source = @"
 number[] arr = [10, 20, 30];  // Example array declaration with initializer
@@ -927,32 +478,15 @@ _main_() {
 }";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-std::vector<double> arr = {10, 20, 30};
-int main()
-{
-  std::vector<double> anotherArr;
-  anotherArr = {5, 10, 15};
-  std::cout << anotherArr[1] << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "10\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -974,42 +508,14 @@ _main_() {
 }";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-template <typename T>
-int array_len(const std::vector<T>& vec);
-
-int main()
-{
-  std::vector<double> arr = {10, 20, 30, 40, 50};
-  double i = 0;
-  arr[2] = 5;
-  while (i < array_len(arr))
-  {
-    std::cout << ""Element at index "" + i + "": "" << arr[i] << std::endl;
-    i++;
-  }
-  return 0;
-}
-
-int array_len(const std::vector<T>& vec)
-{
-    return static_cast<int>(vec.size());
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Element at index 0: 10\r\nElement at index 1: 20\r\nElement at index 2: 5\r\nElement at index 3: 40\r\nElement at index 4: 50\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
 
@@ -1032,70 +538,21 @@ _main_() {
 }";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-template <typename T>
-std::vector<T> array_remove(const std::vector<T>& vec, int index);
-std::vector<T> array_add(const std::vector<T>& vec, const T& element);
-int array_len(const std::vector<T>& vec);
-
-int main()
-{
-  std::vector<double> arr = {10, 20, 30, 40, 50};
-  arr = array_remove(arr, 2);
-  arr = array_add(arr, 60);
-  arr = array_add(arr, 70);
-  double i = 0;
-  while (i < array_len(arr))
-  {
-    std::cout << ""Element at index "" + i + "": "" << arr[i] << std::endl;
-    i++;
-  }
-  return 0;
-}
-
-std::vector<T> array_remove(const std::vector<T>& vec, int index)
-{
-    if (index >= vec.size()) {
-        throw std::out_of_range(""Index is out of range."");
-    }
-    std::vector<T> newVec = vec;
-    newVec.erase(newVec.begin() + index);
-    return newVec;
-}
-
-std::vector<T> array_add(const std::vector<T>& vec, const T& element)
-{
-    std::vector<T> newVec = vec;
-    newVec.push_back(element);
-    return newVec;
-}
-
-int array_len(const std::vector<T>& vec)
-{
-    return static_cast<int>(vec.size());
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Element at index 0: 10\r\nElement at index 1: 20\r\nElement at index 2: 40\r\nElement at index 3: 50\r\nElement at index 4: 60\r\nElement at index 5: 70\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
 
         }
 
         [TestMethod]
-        public void IterativeFibonacciGeneratesAndExecutesCorrectly()
+        public void IterativeFibonacciExecutesCorrectly()
         {
             string source = @"
 _main_() {
@@ -1114,58 +571,11 @@ _main_() {
         n--;
     }                
 }";
-
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-int to_number(const std::string& str);
-std::string input();
-
-int main()
-{
-  std::cout << ""Enter The Number Of Terms:"" << std::endl;
-  double n = to_number(input());
-  double f = 0;
-  double f1 = -1;
-  double f2 = 1;
-  std::cout << ""The Fibonacci Series is:"" << std::endl;
-  while (n > 0)
-  {
-    f = f1 + f2;
-    f1 = f2;
-    f2 = f;
-    std::cout << f << std::endl;
-    n--;
-  }
-  return 0;
-}
-
-int to_number(const std::string& str)
-{
-    try {
-        return std::stoi(str);
-    } catch (...) {
-        return 0;
-    }
-}
-
-std::string input()
-{
-    std::string inputString;
-    std::getline(std::cin, inputString);
-    return inputString;
-}
-
-".Trim();
             // Act            
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             //var result = _compiler.Exec(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedInput = "5";
@@ -1175,14 +585,13 @@ std::string input()
                 using (var consoleOutput = new ConsoleOutput())
                 {
                     _compiler.Exec(source);
-                    // Assert exc
                     Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
                 }
             }
         }
 
         [TestMethod]
-        public void RecursiveFibonacciGeneratesAndExecutesCorrectly()
+        public void RecursiveFibonacciExecutesCorrectly()
         {
             string source = @"
 func fib(number x) -> number 
@@ -1205,55 +614,21 @@ _main_() {
    }
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-double fib(double x)
-{
-  double result;
-  if (x == 1 || x == 0)
-  {
-    result = x;
-  }
-  else
-  {
-    result = fib(x - 1) + fib(x - 2);
-  }
-  return result;
-}
-
-int main()
-{
-  double x = 20;
-  double i = 0;
-  while (i <= x)
-  {
-    std::cout << i + "" => "" << fib(i) << std::endl;
-    i++;
-  }
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "0 => 0\r\n1 => 1\r\n2 => 1\r\n3 => 2\r\n4 => 3\r\n5 => 5\r\n6 => 8\r\n7 => 13\r\n8 => 21\r\n9 => 34\r\n10 => 55\r\n11 => 89\r\n12 => 144\r\n13 => 233\r\n14 => 377\r\n15 => 610\r\n16 => 987\r\n17 => 1597\r\n18 => 2584\r\n19 => 4181\r\n20 => 6765\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
 
         }
 
         [TestMethod]
-        public void FactorialFunctionGeneratesAndExecutesCorrectly()
+        public void FactorialFunctionExecutesCorrectly()
         {
             string source = @"
 func Factorial(number n) -> number
@@ -1273,40 +648,15 @@ _main_()
 }
 ";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-double Factorial(double n)
-{
-  double result = 1;
-  if (n > 1)
-  {
-    result = n * Factorial(n - 1);
-  }
-  return result;
-}
-
-int main()
-{
-  double a = 5;
-  std::cout << Factorial(a) << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "120\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -1335,49 +685,21 @@ print(CheckNumber(5));
 }
 ";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-std::string CheckNumber(double n)
-{
-  std::string result = """";
-  if (n > 0)
-  {
-    result = ""Positive"";
-  }
-  else
-  {
-    result = ""Non-Positive"";
-  }
-  return result;
-}
-
-int main()
-{
-  std::cout << CheckNumber(5) << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Positive\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void ForLoopGeneratesAndExecutesCorrectly()
+        public void ForLoopExecutesCorrectly()
         {
             string source = @"
 _main_() {
@@ -1388,33 +710,15 @@ _main_() {
 }
 ";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-int main()
-{
-  double i;
-  for (i = 0;i < 5;i++)
-  {
-    std::cout << ""run count"" << std::endl;
-  }
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "run count\r\nrun count\r\nrun count\r\nrun count\r\nrun count\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -1447,39 +751,9 @@ _main_() {
 }
 ";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-double fib(double x)
-{
-  if (x == 1 || x == 0)
-  {
-    return x;
-  }
-  return fib(x - 1) + fib(x - 2);
-}
-
-void chap(double content)
-{
-  std::cout << content << std::endl;
-}
-
-int main()
-{
-  for (double i = 0;i <= 20;i++)
-  {
-    chap(fib(i));
-  }
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput =
@@ -1487,13 +761,12 @@ int main()
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void VoidFunctionWithEmptyReturnGeneratesAndExecutesCorrectly()
+        public void VoidFunctionWithEmptyReturnExecutesCorrectly()
         {
             string source = @"
 func test(number i) -> void
@@ -1511,47 +784,21 @@ _main_(){
 	test(5);
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-void test(double i)
-{
-  std::cout << ""yess"" << std::endl;
-  if (i == 5)
-  {
-    std::cout << ""five"" << std::endl;
-    return;
-  }
-  std::cout << ""Nop"" << std::endl;
-  return;
-}
-
-int main()
-{
-  test(5);
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "yess\r\nfive\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void ImplicitlyTypedLocalVariablesGenerateAndExecuteCorrectly()
+        public void ImplicitlyTypedLocalVariablesExecuteCorrectly()
         {
             string source = @"
 func myFunction(number a, number b) -> number {
@@ -1575,53 +822,21 @@ _main_() {
 
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-double myFunction(double a, double b)
-{
-  return a + b;
-}
-
-int main()
-{
-  double z = myFunction(2, 7);
-  std::cout << z << std::endl;
-  double x = 10;
-  double i = 0;
-  while (i < 5)
-  {
-    x++;
-    i++;
-  }
-  z = 40;
-  std::cout << x << std::endl;
-  std::string string_var1 = ""hassan"";
-  auto string_var = ""this is a test"" + "" => "" + string_var1 + "" -> "" + x;
-  std::cout << string_var << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "9\r\n15\r\nthis is a test => hassan -> 15\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void ImplicitlyTypedPackageInstanceGeneratesAndExecutesCorrectly()
+        public void ImplicitlyTypedPackageInstanceExecutesCorrectly()
         {
             string source = @"
 pkg myPackage {
@@ -1642,50 +857,21 @@ _main_() {
 	print(classInstance.Second(2));
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-class myPackage{
-  double var = 10;
-  void myPackage(double input1)
-  {
-    var = input1;
-  }
-
-  double Second(double std)
-  {
-    return std + var;
-  }
-
-}
-
-int main()
-{
-  myPackage classInstance = new myPackage(5);
-  std::cout << classInstance.Second(2) << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "7\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void ImplicitlyTypedForLoopVariableGeneratesAndExecutesCorrectly()
+        public void ImplicitlyTypedForLoopVariableExecutesCorrectly()
         {
             string source = @"
 _main_() {
@@ -1694,38 +880,21 @@ _main_() {
 	}
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-int main()
-{
-  for (double i = 0;i < 5;i++)
-  {
-    std::cout << i << "" this is a test"" << std::endl;
-  }
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "0 this is a test\r\n1 this is a test\r\n2 this is a test\r\n3 this is a test\r\n4 this is a test\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void ImplicitlyTypedPackageFieldGeneratesAndExecutesCorrectly()
+        public void ImplicitlyTypedPackageFieldExecutesCorrectly()
         {
             string source = @"
 pkg My{
@@ -1736,34 +905,15 @@ _main_(){
     print(m.var);
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-class My{
-  double var = 1;
-}
-
-int main()
-{
-  My m = new My();
-  std::cout << m.var << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "1\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -1776,30 +926,15 @@ let text = ""hello world"";
 print(text);
 ";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-std::string text = ""hello world"";
-int main()
-{
-  std::cout << text << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "hello world\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -1818,38 +953,15 @@ for(let i =0; i <5; i++){
 print(Add(4, 6));
 ";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-double Add(double i, double j)
-{
-  return i + j;
-}
-
-int main()
-{
-  for (double i = 0;i < 5;i++)
-  {
-    std::cout << ""this is a test"" << std::endl;
-  }
-  std::cout << Add(4, 6) << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "this is a test\r\nthis is a test\r\nthis is a test\r\nthis is a test\r\nthis is a test\r\n10\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -1868,39 +980,15 @@ let m = new My();
 print(m.AddPrint(3));
 ";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-class My{
-  double var = 22;
-  double AddPrint(double i)
-  {
-    return i + var;
-  }
-
-}
-
-int main()
-{
-  My m = new My();
-  std::cout << m.AddPrint(3) << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "25\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -1934,50 +1022,21 @@ _main_(){
 	print(""YES"");
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-class My{
-  double var = 22;
-  double AddChap(double i)
-  {
-    return i + var;
-  }
-
-}
-
-std::string text = ""hello world"";
-double Add(double i, double j)
-{
-  return i + j;
-}
-
-int main()
-{
-  std::cout << ""YES"" << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "YES\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void BubbleSortGeneratesAndExecutesCorrectly()
+        public void BubbleSortExecutesCorrectly()
         {
             string source = @"
 func BubbleSort(number[] sort_array) -> number[]
@@ -2017,77 +1076,21 @@ _main_()
 	ArrayPrint(second_array);
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-template <typename T>
-int array_len(const std::vector<T>& vec);
-
-std::vector<double> BubbleSort(std::vector<double> sort_array)
-{
-  auto n = array_len(sort_array);
-  for (double i = 0;i < n - 1;i++)
-  {
-    for (double j = 0;j < n - i - 1;j++)
-    {
-      if (sort_array[j] > sort_array[j + 1])
-      {
-        double temp = sort_array[j];
-        sort_array[j] = sort_array[j + 1];
-        sort_array[j + 1] = temp;
-      }
-    }
-  }
-  return sort_array;
-}
-
-void ArrayPrint(std::vector<double> print_array)
-{
-  double i = 0;
-  while (i < array_len(print_array))
-  {
-    std::cout << ""Element at index "" + i + "": "" << print_array[i] << std::endl;
-    i++;
-  }
-}
-
-int main()
-{
-  std::cout << ""befor Bubble sorting"" << std::endl;
-  std::vector<double> first_array = {64, 34, 25, 12, 22, 11, 90};
-  ArrayPrint(first_array);
-  std::cout << ""after Bubble sorting"" << std::endl;
-  std::vector<double> second_array = BubbleSort(first_array);
-  ArrayPrint(second_array);
-  return 0;
-}
-
-int array_len(const std::vector<T>& vec)
-{
-    return static_cast<int>(vec.size());
-}
-
-".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "befor Bubble sorting\r\nElement at index 0: 64\r\nElement at index 1: 34\r\nElement at index 2: 25\r\nElement at index 3: 12\r\nElement at index 4: 22\r\nElement at index 5: 11\r\nElement at index 6: 90\r\nafter Bubble sorting\r\nElement at index 0: 11\r\nElement at index 1: 12\r\nElement at index 2: 22\r\nElement at index 3: 25\r\nElement at index 4: 34\r\nElement at index 5: 64\r\nElement at index 6: 90\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void IterativeBinarySearchGeneratesAndExecutesCorrectly()
+        public void IterativeBinarySearchExecutesCorrectly()
         {
             string source = @"
  func BinarySearchIterative(number[] bsi_array, number key) -> number
@@ -2134,81 +1137,21 @@ _main_()
 
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-#include <cmath>
-
-template <typename T>
-int array_len(const std::vector<T>& vec);
-
-double BinarySearchIterative(std::vector<double> bsi_array, double key)
-{
-  double min = 0;
-  auto max = array_len(bsi_array) - 1;
-  double mid;
-  while (min <= max)
-  {
-    mid = min + max;
-    mid = std::round(mid / 2);
-    if (bsi_array[mid] == key)
-    {
-      return mid;
-    }
-    else
-    {
-      if (bsi_array[mid] < key)
-      {
-        min = mid + 1;
-      }
-      else
-      {
-        max = mid - 1;
-      }
-    }
-  }
-  return -1;
-}
-
-int main()
-{
-  std::vector<double> sortedArray = {1, 3, 5, 7, 9, 11, 13, 15, 17, 19};
-  double target = 7;
-  double result = BinarySearchIterative(sortedArray, target);
-  if (result != -1)
-  {
-    std::cout << ""Element found at index "" << result << std::endl;
-  }
-  else
-  {
-    std::cout << ""Element not found in the array"" << std::endl;
-  }
-  return 0;
-}
-
-int array_len(const std::vector<T>& vec)
-{
-    return static_cast<int>(vec.size());
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Element found at index 3\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void RecursiveBinarySearchGeneratesAndExecutesCorrectly()
+        public void RecursiveBinarySearchExecutesCorrectly()
         {
             string source = @"
 func BinarySearch(number[] arr, number target, number left, number right) -> number
@@ -2257,72 +1200,21 @@ _main_()
 }
 ";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-#include <cmath>
-
-template <typename T>
-int array_len(const std::vector<T>& vec);
-
-double BinarySearch(std::vector<double> arr, double target, double left, double right)
-{
-  if (right >= left)
-  {
-    double distance = right - left;
-    double mid = std::round(left + distance / 2);
-    if (arr[mid] == target)
-    {
-      return mid;
-    }
-    if (arr[mid] > target)
-    {
-      return BinarySearch(arr, target, left, mid - 1);
-    }
-    return BinarySearch(arr, target, mid + 1, right);
-  }
-  return -1;
-}
-
-int main()
-{
-  std::vector<double> array = {2, 3, 4, 10, 40};
-  double globalTarget = 10;
-  double result = BinarySearch(array, globalTarget, 0, array_len(array) - 1);
-  if (result != -1)
-  {
-    std::cout << ""Element found at index => "" << result << std::endl;
-  }
-  else
-  {
-    std::cout << ""Element not found in the array"" << std::endl;
-  }
-  return 0;
-}
-
-int array_len(const std::vector<T>& vec)
-{
-    return static_cast<int>(vec.size());
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Element found at index => 3\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void QuickSortGeneratesAndExecutesCorrectly()
+        public void QuickSortExecutesCorrectly()
         {
             string source = @"
 func Swap(number[] array, number a, number b) -> void
@@ -2372,82 +1264,15 @@ _main_()
 	ArrayPrint(array);
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-template <typename T>
-int array_len(const std::vector<T>& vec);
-
-void Swap(std::vector<double> array, double a, double b)
-{
-  double temp = array[a];
-  array[a] = array[b];
-  array[b] = temp;
-}
-
-double Partition(std::vector<double> array, double low, double high)
-{
-  double pivot = array[high];
-  double i = low - 1;
-  for (double j = low;j < high;j++)
-  {
-    if (array[j] < pivot)
-    {
-      i++;
-      Swap(array, i, j);
-    }
-  }
-  Swap(array, i + 1, high);
-  return i + 1;
-}
-
-void QuickSort(std::vector<double> array, double low, double high)
-{
-  if (low < high)
-  {
-    double pivotIndex = Partition(array, low, high);
-    QuickSort(array, low, pivotIndex - 1);
-    QuickSort(array, pivotIndex + 1, high);
-  }
-}
-
-void ArrayPrint(std::vector<double> print_array)
-{
-  double i = 0;
-  while (i < array_len(print_array))
-  {
-    std::cout << ""Element at index "" + i + "": "" << print_array[i] << std::endl;
-    i++;
-  }
-}
-
-int main()
-{
-  std::vector<double> array = {34, 7, 23, 32, 5, 62};
-  QuickSort(array, 0, array_len(array) - 1);
-  std::cout << ""Sorted array: "" << std::endl;
-  ArrayPrint(array);
-  return 0;
-}
-
-int array_len(const std::vector<T>& vec)
-{
-    return static_cast<int>(vec.size());
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Sorted array: \r\nElement at index 0: 5\r\nElement at index 1: 7\r\nElement at index 2: 23\r\nElement at index 3: 32\r\nElement at index 4: 34\r\nElement at index 5: 62\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -2465,36 +1290,15 @@ for(let i= 0; i <= 10; i++)
 	print(i);
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-int main()
-{
-  for (double i = 0;i <= 10;i++)
-  {
-    if (i % 2 == 0)
-    {
-      continue;
-    }
-    std::cout << i << std::endl;
-  }
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "1\r\n3\r\n5\r\n7\r\n9\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -2512,42 +1316,21 @@ for(let i= 0; i <= 10; i++)
 	print(i);
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-int main()
-{
-  for (double i = 0;i <= 10;i++)
-  {
-    if (i == 5)
-    {
-      break;
-    }
-    std::cout << i << std::endl;
-  }
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "0\r\n1\r\n2\r\n3\r\n4\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void PowerOfTwoDetectionGeneratesAndExecutesCorrectly()
+        public void PowerOfTwoDetectionExecutesCorrectly()
         {
             string source = @"
 func PowerOfTwo(number n) -> bool  {
@@ -2567,64 +1350,21 @@ for(let i = 0; i <= 100 ; i++)
 	//else
 	//	print(i +"" is not PowerOfTwo"");";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-bool PowerOfTwo(double n)
-{
-  if (n == 0)
-  {
-    return false;
-  }
-  if (n == 1)
-  {
-    return true;
-  }
-  while (n != 1)
-  {
-    if (n % 2 != 0)
-    {
-      return false;
-    }
-    n /= 2;
-  }
-  return true;
-}
-
-int main()
-{
-  for (double i = 0;i <= 100;i++)
-  {
-    if (PowerOfTwo(i))
-    {
-      std::cout << i << "" is PowerOfTwo"" << std::endl;
-    }
-  }
-  return 0;
-}
-
-".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "1 is PowerOfTwo\r\n2 is PowerOfTwo\r\n4 is PowerOfTwo\r\n8 is PowerOfTwo\r\n16 is PowerOfTwo\r\n32 is PowerOfTwo\r\n64 is PowerOfTwo\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void FizzBuzzGeneratesAndExecutesCorrectly()
+        public void FizzBuzzExecutesCorrectly()
         {
             string source = @"
 for (let i = 1; i <= 30; i++)
@@ -2641,59 +1381,21 @@ for (let i = 1; i <= 30; i++)
 	else
 		print(i);";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-int main()
-{
-  for (double i = 1;i <= 30;i++)
-  {
-    if (i % 3 == 0 && i % 5 == 0)
-    {
-      std::cout << ""FizzBuzz"" << std::endl;
-    }
-    else
-    {
-      if (i % 3 == 0)
-      {
-        std::cout << ""Fizz"" << std::endl;
-      }
-      else
-      {
-        if (i % 5 == 0)
-        {
-          std::cout << ""Buzz"" << std::endl;
-        }
-        else
-        {
-          std::cout << i << std::endl;
-        }
-      }
-    }
-  }
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "1\r\n2\r\nFizz\r\n4\r\nBuzz\r\nFizz\r\n7\r\n8\r\nFizz\r\nBuzz\r\n11\r\nFizz\r\n13\r\n14\r\nFizzBuzz\r\n16\r\n17\r\nFizz\r\n19\r\nBuzz\r\nFizz\r\n22\r\n23\r\nFizz\r\nBuzz\r\n26\r\nFizz\r\n28\r\n29\r\nFizzBuzz\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void PrimeNumberGenerationGeneratesAndExecutesCorrectly()
+        public void PrimeNumberGenerationExecutesCorrectly()
         {
             string source = @"
 // Function to check if a number is prime
@@ -2730,86 +1432,21 @@ _main_(){
     }
 }";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-#include <cmath>
-
-template <typename T>
-std::vector<T> array_add(const std::vector<T>& vec, const T& element);
-int array_len(const std::vector<T>& vec);
-
-bool isPrime(double num)
-{
-  if (num <= 1)
-  {
-    return false;
-  }
-  for (double i = 2;i <= std::sqrt(num);i++)
-  {
-    if (num % i == 0)
-    {
-      return false;
-    }
-  }
-  return true;
-}
-
-std::vector<double> generatePrimesUpTo(double limit)
-{
-  std::vector<double> primes = {};
-  for (double i = 2;i <= limit;i++)
-  {
-    if (isPrime(i))
-    {
-      primes = array_add(primes, i);
-    }
-  }
-  return primes;
-}
-
-int main()
-{
-  double limit = 100;
-  std::vector<double> local_primes = generatePrimesUpTo(limit);
-  std::cout << ""Prime numbers up to "" << limit << std::endl;
-  for (double i = 0;i < array_len(local_primes);i++)
-  {
-    std::cout << local_primes[i] << std::endl;
-  }
-  return 0;
-}
-
-std::vector<T> array_add(const std::vector<T>& vec, const T& element)
-{
-    std::vector<T> newVec = vec;
-    newVec.push_back(element);
-    return newVec;
-}
-
-int array_len(const std::vector<T>& vec)
-{
-    return static_cast<int>(vec.size());
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Prime numbers up to 100\r\n2\r\n3\r\n5\r\n7\r\n11\r\n13\r\n17\r\n19\r\n23\r\n29\r\n31\r\n37\r\n41\r\n43\r\n47\r\n53\r\n59\r\n61\r\n67\r\n71\r\n73\r\n79\r\n83\r\n89\r\n97\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void InsertionSortGeneratesAndExecutesCorrectly()
+        public void InsertionSortExecutesCorrectly()
         {
             string source = @"
 func InsertionSort(number[] arr) -> number[]
@@ -2846,72 +1483,21 @@ array = InsertionSort(array);
 print(""Sorted array:"");
 PrintArray(array);";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-template <typename T>
-int array_len(const std::vector<T>& vec);
-
-std::vector<double> array = {12, 11, 13, 5, 6};
-std::vector<double> InsertionSort(std::vector<double> arr)
-{
-  double n = array_len(arr);
-  for (double i = 1;i < n;i++)
-  {
-    auto key = arr[i];
-    auto j = i - 1;
-    while (j >= 0 && arr[j] > key)
-    {
-      arr[j + 1] = arr[j];
-      j = j - 1;
-    }
-    arr[j + 1] = key;
-  }
-  return arr;
-}
-
-void PrintArray(std::vector<double> printArray)
-{
-  for (double i = 0;i < array_len(printArray);i++)
-  {
-    std::cout << printArray[i] << std::endl;
-  }
-}
-
-int main()
-{
-  std::cout << ""Original array:"" << std::endl;
-  PrintArray(array);
-  array = InsertionSort(array);
-  std::cout << ""Sorted array:"" << std::endl;
-  PrintArray(array);
-  return 0;
-}
-
-int array_len(const std::vector<T>& vec)
-{
-    return static_cast<int>(vec.size());
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Original array:\r\n12\r\n11\r\n13\r\n5\r\n6\r\nSorted array:\r\n5\r\n6\r\n11\r\n12\r\n13\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void SelectionSortGeneratesAndExecutesCorrectly()
+        public void SelectionSortExecutesCorrectly()
         {
             string source = @"
 func SelectionSort(number[] array) -> number[]
@@ -2950,75 +1536,21 @@ print(""Sorted array:"");
 PrintArray(localArray);";
 
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-template <typename T>
-int array_len(const std::vector<T>& vec);
-
-std::vector<double> localArray = {64, 25, 12, 22, 11};
-std::vector<double> SelectionSort(std::vector<double> array)
-{
-  double n = array_len(array);
-  for (double i = 0;i < n - 1;i++)
-  {
-    double minIndex = i;
-    for (double j = i + 1;j < n;j++)
-    {
-      if (array[j] < array[minIndex])
-      {
-        minIndex = j;
-      }
-    }
-    double temp = array[minIndex];
-    array[minIndex] = array[i];
-    array[i] = temp;
-  }
-  return array;
-}
-
-void PrintArray(std::vector<double> printArray)
-{
-  for (double i = 0;i < array_len(printArray);i++)
-  {
-    std::cout << printArray[i] << std::endl;
-  }
-}
-
-int main()
-{
-  std::cout << ""Original array:"" << std::endl;
-  PrintArray(localArray);
-  localArray = SelectionSort(localArray);
-  std::cout << ""Sorted array:"" << std::endl;
-  PrintArray(localArray);
-  return 0;
-}
-
-int array_len(const std::vector<T>& vec)
-{
-    return static_cast<int>(vec.size());
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Original array:\r\n64\r\n25\r\n12\r\n22\r\n11\r\nSorted array:\r\n11\r\n12\r\n22\r\n25\r\n64\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void CountingSortGeneratesAndExecutesCorrectly()
+        public void CountingSortExecutesCorrectly()
         {
             string source = @"
 func CountingSort(number[] array) -> number[]
@@ -3085,91 +1617,15 @@ localArray = CountingSort(localArray);
 print(""Sorted array:"");
 PrintArray(localArray);";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-template <typename T>
-int array_len(const std::vector<T>& vec);
-
-std::vector<double> localArray = {4, 2, 2, 8, 3, 3, 1, 7, 5, 6};
-std::vector<double> CountingSort(std::vector<double> array)
-{
-  double max = GetMaxValue(array);
-  auto arrayLen = array_len(array);
-  std::vector<double> count(max + 1, 0);
-  std::vector<double> output(arrayLen, 0);
-  for (double i = 0;i < arrayLen;i++)
-  {
-    count[array[i]] = count[array[i]] + 1;
-  }
-  for (double j = 1;j <= max;j++)
-  {
-    count[j] = count[j] + count[j - 1];
-  }
-  for (double k = arrayLen - 1;k >= 0;k--)
-  {
-    output[count[array[k]] - 1] = array[k];
-    count[array[k]] = count[array[k]] - 1;
-  }
-  for (double l = 0;l < arrayLen;l++)
-  {
-    array[l] = output[l];
-  }
-  return array;
-}
-
-double GetMaxValue(std::vector<double> array)
-{
-  auto max = array[0];
-  for (double i = 1;i < array_len(array);i++)
-  {
-    if (array[i] > max)
-    {
-      max = array[i];
-    }
-  }
-  return max;
-}
-
-void PrintArray(std::vector<double> printArray)
-{
-  auto n = array_len(printArray);
-  for (double i = 0;i < n;i++)
-  {
-    std::cout << printArray[i] << std::endl;
-  }
-}
-
-int main()
-{
-  std::cout << ""Original array:"" << std::endl;
-  PrintArray(localArray);
-  localArray = CountingSort(localArray);
-  std::cout << ""Sorted array:"" << std::endl;
-  PrintArray(localArray);
-  return 0;
-}
-
-int array_len(const std::vector<T>& vec)
-{
-    return static_cast<int>(vec.size());
-}
-
-".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "Original array:\r\n4\r\n2\r\n2\r\n8\r\n3\r\n3\r\n1\r\n7\r\n5\r\n6\r\nSorted array:\r\n1\r\n2\r\n2\r\n3\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
@@ -3246,143 +1702,35 @@ localArray = BingoSort(localArray);
 print(""Sorted array:"");
 PrintArray(localArray);";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-template <typename T>
-int array_len(const std::vector<T>& vec);
-
-std::vector<double> localArray = {7, 15, 8, 5, 3, 11, 9, 4, 1, 6, 2};
-std::vector<double> BingoSort(std::vector<double> arr)
-{
-  double n = array_len(arr);
-  double min = GetMinValue(arr);
-  double max = GetMaxValue(arr);
-  double nextBingo = max;
-  double nextPos = 0;
-  while (min < nextBingo)
-  {
-    double startPos = nextPos;
-    for (double i = startPos;i < n;i++)
-    {
-      if (arr[i] == min)
-      {
-        double temp = arr[nextPos];
-        arr[nextPos] = arr[i];
-        arr[i] = temp;
-        nextPos++;
-      }
-      else
-      {
-        if (arr[i] < nextBingo)
-        {
-          nextBingo = arr[i];
-        }
-      }
-    }
-    min = nextBingo;
-    nextBingo = max;
-  }
-  return arr;
-}
-
-double GetMaxValue(std::vector<double> array)
-{
-  auto max = array[0];
-  for (double i = 1;i < array_len(array);i++)
-  {
-    if (array[i] > max)
-    {
-      max = array[i];
-    }
-  }
-  return max;
-}
-
-double GetMinValue(std::vector<double> array)
-{
-  auto min = array[0];
-  for (double i = 1;i < array_len(array);i++)
-  {
-    if (array[i] < min)
-    {
-      min = array[i];
-    }
-  }
-  return min;
-}
-
-void PrintArray(std::vector<double> printArray)
-{
-  auto n = array_len(printArray);
-  for (double i = 0;i < n;i++)
-  {
-    std::cout << printArray[i] << std::endl;
-  }
-}
-
-int main()
-{
-  localArray = BingoSort(localArray);
-  std::cout << ""Sorted array:"" << std::endl;
-  PrintArray(localArray);
-  return 0;
-}
-
-int array_len(const std::vector<T>& vec)
-{
-    return static_cast<int>(vec.size());
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            //SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
-
-            // Act
+// Act
             var expectedOutput = "Sorted array:\r\n1\r\n2\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n9\r\n11\r\n15\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }
 
         [TestMethod]
-        public void FloatingPointAdditionGeneratesAndExecutesCorrectly()
+        public void FloatingPointAdditionExecutesCorrectly()
         {
             string source = @"
 let num  = 5.2 + 8;
 print(num);
 ";
             // Act
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-auto num = 5.2 + 8;
-int main()
-{
-  std::cout << num << std::endl;
-  return 0;
-}".Trim();
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "13.2\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
         }

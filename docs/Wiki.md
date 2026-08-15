@@ -6,7 +6,7 @@
   <img src="https://raw.githubusercontent.com/iarash84/Benita/main/Logo.jpg" alt="Benita Logo" width="150" height="150">
 </p>
 
-این صفحه نمایی فنی از ساختار پروژهٔ **Benita**، مراحل پردازش برنامه و روش توسعه و آزمایش آن ارائه می‌دهد. Benita یک زبان برنامه‌نویسی آموزشی است که با C# و .NET 8 پیاده‌سازی شده و می‌تواند برنامه‌های `.ben` را مستقیماً تفسیر کند یا از آن‌ها کد C++ بسازد.
+این صفحه نمایی فنی از ساختار پروژهٔ **Benita**، مراحل پردازش برنامه و روش توسعه و آزمایش آن ارائه می‌دهد. Benita یک زبان برنامه‌نویسی آموزشی و تفسیرشونده است که با C# و .NET 8 پیاده‌سازی شده است.
 
 ## فهرست مطالب
 
@@ -22,12 +22,9 @@
 
 ## نمای کلی
 
-هستهٔ Benita دو خروجی متفاوت از یک Front End مشترک ارائه می‌دهد:
+هستهٔ Benita یک خط لولهٔ تفسیر کامل دارد. کد پس از تحلیل و بهینه‌سازی اختیاری AST مستقیماً اجرا می‌شود.
 
-1. **Interpreter:** درخت نحوی را مستقیماً اجرا می‌کند.
-2. **C++ Code Generator:** درخت نحوی را به متن معادل C++ تبدیل می‌کند.
-
-پیش از هرکدام از این دو مسیر، کد منبع توکن‌سازی، Parse و از نظر معنایی بررسی می‌شود. بنابراین برنامه‌ای که خطای نحوی یا معنایی دارد، نه اجرا می‌شود و نه به C++ تبدیل خواهد شد.
+پیش از اجرا، کد منبع توکن‌سازی، Parse و از نظر معنایی بررسی می‌شود. بنابراین برنامه‌ای که خطای نحوی یا معنایی دارد اجرا نخواهد شد.
 
 <div dir="ltr" align="left">
 
@@ -38,10 +35,9 @@ flowchart LR
     Tokens --> Parser[Parser]
     Parser --> AST[Abstract Syntax Tree]
     AST --> Semantic[Semantic Analyzer]
-    Semantic --> Interpreter[Interpreter]
-    Semantic --> Generator[C++ Code Generator]
+    Semantic --> Optimizer[AST Optimizer اختیاری]
+    Optimizer --> Interpreter[Interpreter]
     Interpreter --> Result[خروجی برنامه]
-    Generator --> Cpp[فایل یا متن C++]
 ```
 
 </div>
@@ -50,7 +46,7 @@ flowchart LR
 
 | مسیر | مسئولیت |
 | --- | --- |
-| `Benita/` | پیاده‌سازی زبان، CLI، مفسر و تولیدکنندهٔ C++ |
+| `Benita/` | پیاده‌سازی زبان، CLI، تحلیل‌گرها، AST Optimizer و مفسر |
 | `BenitaTestProject/` | تست‌های واحد، یکپارچه، رگرسیون و اجرای مثال‌ها |
 | `Examples/` | برنامه‌های معتبر و نامعتبر نمونه با پسوند `.ben` |
 | `docs/Grammar.txt` | تعریف گرامر زبان |
@@ -63,15 +59,14 @@ flowchart LR
 | فایل | نقش |
 | --- | --- |
 | `Program.cs` | نقطهٔ ورود و پردازش فرمان‌های CLI |
-| `CompilerClass.cs` | هماهنگ‌کنندهٔ مراحل Lexer، Parser، تحلیل معنایی، اجرا و تولید کد |
+| `CompilerClass.cs` | هماهنگ‌کنندهٔ مراحل Lexer، Parser، تحلیل معنایی، بهینه‌سازی و اجرا |
 | `Lexer.cs` | تبدیل متن منبع به توکن‌ها و پردازش `include_once` |
 | `Token.cs` | تعریف انواع توکن و اطلاعات موقعیت آن‌ها |
 | `Parser.cs` | تبدیل توکن‌ها به AST بر اساس گرامر زبان |
 | `ASTNode.cs` | تعریف Nodeهای عبارت‌ها، دستورات، توابع، حلقه‌ها، آرایه‌ها و بسته‌ها |
 | `SemanticAnalyzer.cs` | کنترل نوع، declarationها، scopeها، توابع و قواعد معنایی |
 | `Interpreter.cs` | اجرای AST و نگهداری وضعیت زمان اجرا |
-| `CodeGenerator.cs` | تولید کد C++ از AST |
-| `FactoryClass.cs` | نگاشت توابع داخلی به پیاده‌سازی مفسر و تولیدکنندهٔ C++ |
+| `FactoryClass.cs` | نگاشت توابع داخلی به پیاده‌سازی‌های مفسر |
 | `ExceptionClass.cs` | خطاهای ساخت‌یافتهٔ Lexer، Parser، Semantic و Runtime |
 | `Editor.cs` | ویرایشگر کنسولی Benita |
 | `DebugClass.cs` | امکانات اجرای برنامه در حالت Debug |
@@ -84,11 +79,10 @@ flowchart LR
 
 ### CompilerClass
 
-`CompilerClass` نمای اصلی هستهٔ پروژه است و سه عملیات عمومی دارد:
+`CompilerClass` نمای اصلی هستهٔ پروژه است و دو عملیات عمومی دارد:
 
 - `Exec`: تحلیل کامل و سپس اجرای AST با مفسر
 - `Check`: بررسی واژگانی، نحوی و معنایی بدون اجرا
-- `GenerateCppCode`: تحلیل کامل و سپس تولید C++
 
 تمرکز این مراحل در یک کلاس باعث می‌شود تمام مسیرها قواعد یکسانی را روی کد منبع اعمال کنند.
 
@@ -127,14 +121,6 @@ flowchart LR
 
 توابع داخلی مانند `print`، `input` و عملیات فایل از طریق `FactoryClass` به کلاس مناسب در پوشهٔ `itpr_df` هدایت می‌شوند.
 
-### C++ Code Generator
-
-`CodeGenerator` همان AST تأییدشده را پیمایش می‌کند و متن C++ می‌سازد. این بخش declarationها، عبارت‌ها، شرط‌ها، حلقه‌ها، توابع و packageها را به ساختار معادل C++ تبدیل می‌کند.
-
-برای توابع داخلی، پیاده‌سازی متناظر در پوشهٔ `Cg_df` فراخوانی می‌شود. این کلاس‌ها header یا helper function لازم را نیز تنها یک بار به خروجی اضافه می‌کنند.
-
-> فرمان `ccg` کد C++ تولید می‌کند؛ کامپایل فایل خروجی به executable بر عهدهٔ یک C++ compiler جداگانه است.
-
 ## مراحل پردازش برنامه
 
 برای نمونه، کد زیر را در نظر بگیرید:
@@ -159,7 +145,6 @@ _main_() {
 2. `Parser` از Tokenها یک `FunctionNode` و یک Main Function می‌سازد.
 3. `SemanticAnalyzer` وجود تابع، تعداد آرگومان‌ها و نوع مقدار بازگشتی را کنترل می‌کند.
 4. در حالت `exc`، مفسر تابع `add` را اجرا کرده و مقدار `5` را چاپ می‌کند.
-5. در حالت `ccg`، ساختار تابع و فراخوانی آن به C++ تبدیل می‌شود.
 
 ## حالت‌های اجرای برنامه
 
@@ -208,26 +193,6 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben
 
 این فرمان فقط مراحل Lexer، Parser و Semantic Analyzer را انجام می‌دهد و برای IDE، CI و اعتبارسنجی سریع مناسب است.
 
-### تولید C++
-
-<div dir="ltr" align="left">
-
-```bash
-dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
-```
-
-</div>
-
-برای فعال‌کردن constant folding و حذف شاخه‌های ثابت غیرقابل‌دسترسی، گزینهٔ `--optimize` را اضافه کنید:
-
-<div dir="ltr" align="left">
-
-```bash
-dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp --optimize
-```
-
-</div>
-
 ### مشاهدهٔ جزئیات پردازش
 
 <div dir="ltr" align="left">
@@ -244,14 +209,13 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben -s 
 
 ## توابع داخلی و Factory
 
-توابع داخلی در `FactoryClass` به دو پیاده‌سازی نگاشت می‌شوند:
+توابع داخلی در `FactoryClass` به پیاده‌سازی مناسب Interpreter نگاشت می‌شوند:
 
 <div dir="ltr" align="left">
 
 ```text
 نام تابع داخلی
-├── itpr_df: رفتار تابع هنگام اجرای مستقیم
-└── Cg_df: کد و helperهای لازم هنگام تولید C++
+└── itpr_df: رفتار تابع هنگام اجرای مستقیم
 ```
 
 </div>
@@ -263,7 +227,7 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben -s 
 - ابزار عمومی: `print`، `input`، `to_string`، `to_number`، `round_number` و `sqrt_number`
 - رشته: `string_len`، `string_char_at`، `string_substring`، `string_contains`، `string_index_of`، `string_replace`، `string_split`، `string_trim`، `string_to_lower` و `string_to_upper`
 
-این طراحی باعث می‌شود رفتار اجرای مستقیم و خروجی C++ هر تابع داخلی کنار یکدیگر قابل توسعه و آزمایش باشند.
+این طراحی منطق توابع داخلی را از هستهٔ Interpreter جدا می‌کند و توسعه و آزمایش آن‌ها را ساده نگه می‌دارد.
 
 ## خطاها و ابزارهای عیب‌یابی
 
@@ -293,7 +257,6 @@ dotnet test Benita.sln --configuration Release
 تست‌ها چند سطح را پوشش می‌دهند:
 
 - تست مستقل Lexer، Parser، Semantic Analyzer و Interpreter
-- تست تولید کد C++
 - تست packageها، آرایه‌ها، فایل‌ها و توابع داخلی
 - تست تشخیص خطا و پیام‌های diagnostic
 - تست کامل مسیر Compile/Execute
@@ -312,23 +275,21 @@ GitHub Actions در Push و Pull Request پروژه را build کرده و مج�
 2. افزودن قاعدهٔ Parse و Node مناسب در AST
 3. تعریف قواعد اعتبارسنجی در Semantic Analyzer
 4. پیاده‌سازی رفتار در Interpreter
-5. پیاده‌سازی خروجی معادل در CodeGenerator
-6. افزودن تست واحد، یکپارچه و برنامهٔ نمونه در صورت نیاز
-7. به‌روزرسانی `Grammar.txt` و Tutorial
+5. افزودن تست واحد، یکپارچه و برنامهٔ نمونه در صورت نیاز
+6. به‌روزرسانی `Grammar.txt` و Tutorial
 
 ### افزودن یک تابع داخلی
 
-برای تابع داخلی جدید باید رفتار هر دو backend حفظ شود:
+برای افزودن تابع داخلی جدید:
 
 1. پیاده‌سازی `IInterpreterClass` برای اجرای مستقیم
-2. پیاده‌سازی `ICodeGeneratorClass` برای تولید C++
-3. ثبت نام تابع و دو کلاس متناظر در `FactoryClass.FunctionMappings`
-4. افزودن قواعد نوع و اعتبارسنجی لازم به Semantic Analyzer
-5. نوشتن تست برای اجرای مستقیم و کد تولیدشده
+2. ثبت نام تابع و کلاس متناظر در `FactoryClass.FunctionMappings`
+3. افزودن قواعد نوع و اعتبارسنجی لازم به Semantic Analyzer
+4. نوشتن تست واحد و یکپارچه برای اجرای مستقیم
 
 ### اصل مهم توسعه
 
-Interpreter و Code Generator دو مصرف‌کنندهٔ یک AST هستند. هر قابلیت جدید زبان باید، مگر آنکه صریحاً محدود شده باشد، در هر دو مسیر رفتار یکسانی داشته باشد. تست‌های یکپارچه باید هم نتیجهٔ اجرا و هم C++ تولیدشده را بررسی کنند.
+هر قابلیت جدید باید در تمام مراحل Lexer، Parser، AST، Semantic Analyzer، Optimizer و Interpreter به‌صورت هماهنگ پشتیبانی شود. تست‌های یکپارچه باید نتیجهٔ واقعی اجرای برنامه را بررسی کنند.
 
 ## منابع مرتبط
 

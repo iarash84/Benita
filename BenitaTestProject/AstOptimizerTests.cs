@@ -105,7 +105,7 @@ public class AstOptimizerTests
     }
 
     [TestMethod]
-    public void GenerateCppCode_WithOptimizationEnabled_EmitsFoldedConstant()
+    public void Exec_WithOptimizationEnabled_ExecutesFoldedConstant()
     {
         const string source = @"
 _main_() {
@@ -113,10 +113,11 @@ _main_() {
     print(result);
 }";
 
-        string generatedCode = new CompilerClass().GenerateCppCode(source, optimizeAst: true);
+        using var output = new ConsoleOutput();
 
-        StringAssert.Contains(generatedCode, "double result = 14;");
-        Assert.IsFalse(generatedCode.Contains("2 + 3 * 4", StringComparison.Ordinal));
+        new CompilerClass().Exec(source, optimizeAst: true);
+
+        Assert.AreEqual("14\r\n", output.GetOuput());
     }
 
     private static ProgramNode CreateProgram(StatementNode statement)

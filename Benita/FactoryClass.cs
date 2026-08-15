@@ -1,69 +1,45 @@
-﻿using Benita.Cg_df;
 using Benita.itpr_df;
 
 namespace Benita
 {
     /// <summary>
-    /// The FactoryClass is responsible for providing instances of interpreter and code generator classes based on function names.
+    /// Creates the interpreter implementation associated with each built-in function.
     /// </summary>
-    internal class FactoryClass
+    internal static class FactoryClass
     {
-        /// <summary>
-        /// A dictionary mapping function names to their respective interpreter and code generator types.
-        /// </summary>
-        private static readonly Dictionary<string, (Type, Type)> FunctionMappings = new()
+        private static readonly Dictionary<string, Type> FunctionMappings = new()
         {
-            { "array_len", (typeof(ArrayManagement),typeof(CgArrayManagement)) },
-            { "array_add", (typeof(ArrayManagement),typeof(CgArrayManagement)) },
-            { "array_remove", (typeof(ArrayManagement),typeof(CgArrayManagement)) },
-            { "file_read", (typeof(FileManagement),typeof(CgFileManagement)) },
-            { "file_write", (typeof(FileManagement),typeof(CgFileManagement)) },
-            { "file_exist", (typeof(FileManagement),typeof(CgFileManagement)) },
-            { "file_delete", (typeof(FileManagement),typeof(CgFileManagement)) },
-            { "print", (typeof(Utility),typeof(CgUtility)) },
-            { "input", (typeof(Utility),typeof(CgUtility)) },
-            { "to_string", (typeof(Utility),typeof(CgUtility)) },
-            { "to_number", (typeof(Utility),typeof(CgUtility)) },
-            { "round_number", (typeof(Utility),typeof(CgUtility)) },
-            { "sqrt_number", (typeof(Utility),typeof(CgUtility)) },
-            { "string_len", (typeof(StringManagement),typeof(CgStringManagement)) },
-            { "string_char_at", (typeof(StringManagement),typeof(CgStringManagement)) },
-            { "string_substring", (typeof(StringManagement),typeof(CgStringManagement)) },
-            { "string_contains", (typeof(StringManagement),typeof(CgStringManagement)) },
-            { "string_index_of", (typeof(StringManagement),typeof(CgStringManagement)) },
-            { "string_replace", (typeof(StringManagement),typeof(CgStringManagement)) },
-            { "string_split", (typeof(StringManagement),typeof(CgStringManagement)) },
-            { "string_trim", (typeof(StringManagement),typeof(CgStringManagement)) },
-            { "string_to_lower", (typeof(StringManagement),typeof(CgStringManagement)) },
-            { "string_to_upper", (typeof(StringManagement),typeof(CgStringManagement)) }
+            { "array_len", typeof(ArrayManagement) },
+            { "array_add", typeof(ArrayManagement) },
+            { "array_remove", typeof(ArrayManagement) },
+            { "file_read", typeof(FileManagement) },
+            { "file_write", typeof(FileManagement) },
+            { "file_exist", typeof(FileManagement) },
+            { "file_delete", typeof(FileManagement) },
+            { "print", typeof(Utility) },
+            { "input", typeof(Utility) },
+            { "to_string", typeof(Utility) },
+            { "to_number", typeof(Utility) },
+            { "round_number", typeof(Utility) },
+            { "sqrt_number", typeof(Utility) },
+            { "string_len", typeof(StringManagement) },
+            { "string_char_at", typeof(StringManagement) },
+            { "string_substring", typeof(StringManagement) },
+            { "string_contains", typeof(StringManagement) },
+            { "string_index_of", typeof(StringManagement) },
+            { "string_replace", typeof(StringManagement) },
+            { "string_split", typeof(StringManagement) },
+            { "string_trim", typeof(StringManagement) },
+            { "string_to_lower", typeof(StringManagement) },
+            { "string_to_upper", typeof(StringManagement) }
         };
 
-        /// <summary>
-        /// Gets an instance of the interpreter class associated with the given function name.
-        /// </summary>
-        /// <param name="functionName">The name of the function to get the interpreter class for.</param>
-        /// <returns>An instance of the interpreter class, or null if the function name is not found.</returns>
         public static IInterpreterClass? GetInterpreterClass(string? functionName)
         {
-            if (FunctionMappings.TryGetValue(functionName, out var factoryType))
-            {
-                return (IInterpreterClass)Activator.CreateInstance(factoryType.Item1)!;
-            }
-            return null;
-        }
+            if (functionName is null || !FunctionMappings.TryGetValue(functionName, out Type? implementationType))
+                return null;
 
-        /// <summary>
-        /// Gets an instance of the code generator class associated with the given function name.
-        /// </summary>
-        /// <param name="functionName">The name of the function to get the code generator class for.</param>
-        /// <returns>An instance of the code generator class, or null if the function name is not found.</returns>
-        public static ICodeGeneratorClass? GetCodeGeneratorClass(string? functionName)
-        {
-            if (FunctionMappings.TryGetValue(functionName, out var factoryType))
-            {
-                return (ICodeGeneratorClass)Activator.CreateInstance(factoryType.Item2)!;
-            }
-            return null;
+            return (IInterpreterClass)Activator.CreateInstance(implementationType)!;
         }
     }
 }

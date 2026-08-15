@@ -33,18 +33,6 @@ _main_() {
     }
 
     [TestMethod]
-    public void GenerateCppCode_WithAllStringFunctions_AddsCallsAndHelpers()
-    {
-        string code = new CompilerClass().GenerateCppCode(Source);
-
-        StringAssert.Contains(code, "int string_len(const std::string& value)");
-        StringAssert.Contains(code, "std::string string_substring(const std::string& value, int start, int length)");
-        StringAssert.Contains(code, "std::vector<std::string> string_split");
-        StringAssert.Contains(code, "std::string string_to_upper(const std::string& value)");
-        StringAssert.Contains(code, "std::vector<std::string> parts = string_split");
-    }
-
-    [TestMethod]
     public void Check_WithWrongStringFunctionArgumentType_ThrowsSemanticException()
     {
         const string invalidSource = @"

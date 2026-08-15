@@ -65,9 +65,6 @@
                     ExecuteFile(args, printTokens, printAst, printSource, compiler, true, optimizeAst);
                     Console.WriteLine("Program executed successfully.");
                     break;
-                case "ccg":
-                    GenerateCppCode(args, printTokens, printAst, printSource, compiler, optimizeAst);
-                    break;
                 case "check":
                     CheckFile(args, printTokens, printAst, printSource, compiler);
                     break;
@@ -97,33 +94,6 @@
 
             string fileContent = File.ReadAllText(filePath);
             compiler.Exec(fileContent, printTokens, printAst, printSource, debugModeAvailable, filePath, optimizeAst);
-        }
-
-        static void GenerateCppCode(string[] args, bool printTokens, bool printAst, bool printSource,
-            CompilerClass compiler, bool optimizeAst)
-        {
-            if (args.Length < 2)
-            {
-                Console.WriteLine("Error: File path is required.");
-                return;
-            }
-
-            string filePath = args[1];
-            if (!ValidateFile(filePath)) return;
-
-            string fileContent = File.ReadAllText(filePath);
-            string outputFilePath = args.Length > 2 ? args[2] : string.Empty;
-            var generatedCode = compiler.GenerateCppCode(fileContent, printTokens, printAst, printSource, filePath, optimizeAst);
-
-            if (!string.IsNullOrEmpty(outputFilePath))
-            {
-                File.WriteAllText(outputFilePath, generatedCode);
-                Console.WriteLine($"C++ code generated at: {outputFilePath}");
-            }
-            else
-            {
-                Console.WriteLine(generatedCode);
-            }
         }
 
         static void CheckFile(string[] args, bool printTokens, bool printAst, bool printSource, CompilerClass compiler)
@@ -168,11 +138,10 @@
             Console.WriteLine("        \\/     \\/     \\/              \\/          \\/    \\/     \\//_____/ ");
             Console.WriteLine("  (c) Adm, 2024");
             Console.WriteLine("  Version 0.4.3");
-            Console.WriteLine("Usage: Program <action> <filePath> [outputFilePath] [-p] [-t]");
+            Console.WriteLine("Usage: Program <action> <filePath> [options]");
             Console.WriteLine("Actions:");
             Console.WriteLine("  exc        - Execute the code in the file.");
             Console.WriteLine("  dxc       - Execute the code in the file in debug mode.");
-            Console.WriteLine("  ccg        - Generate C++ code from the file content and save to output file.");
             Console.WriteLine("  check      - Check syntax and semantics without executing the program.");
             Console.WriteLine("  edr        - Open the text editor.");
             Console.WriteLine("  help       - Show this help message.");
@@ -180,7 +149,7 @@
             Console.WriteLine("  -a         - Print the AST.");
             Console.WriteLine("  -t         - Print the tokens.");
             Console.WriteLine("  -s         - Print the Source.");
-            Console.WriteLine("  --optimize - Optimize the AST before execution or C++ generation.");
+            Console.WriteLine("  --optimize - Optimize the AST before execution.");
         }
     }
 }

@@ -236,25 +236,23 @@ _main_() {
 */
 ```
 
-### ۱۳. اجرا و تولید C++
+### ۱۳. اجرا و بررسی برنامه
 
 از ریشه مخزن:
 
 ```bash
 dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
-dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben
-dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp --optimize
 ```
 
-فرمان `check` مراحل Lexer، Parser و SemanticAnalyzer را اجرا می‌کند، اما برنامه را اجرا نمی‌کند و کد C++ نیز تولید نمی‌شود.
+فرمان `check` مراحل Lexer، Parser و SemanticAnalyzer را اجرا می‌کند، اما برنامه را اجرا نمی‌کند.
 
 گزینه‌های کاربردی:
 
 - `-t`: نمایش توکن‌ها
 - `-a`: نمایش درخت AST
 - `-s`: نمایش کد منبع پردازش‌شده
-- `--optimize`: بهینه‌سازی AST پیش از اجرا یا تولید C++
+- `--optimize`: بهینه‌سازی AST پیش از اجرا
 
 برای نمونه‌های بیشتر به پوشه [`Examples`](../Examples) مراجعه کنید.
 
@@ -492,24 +490,22 @@ _main_() {
 */
 ```
 
-### 13. Running and generating C++
+### 13. Running and validating programs
 
 From the repository root:
 
 ```bash
 dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
-dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben
-dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp --optimize
 ```
 
-The `check` command runs the Lexer, Parser, and SemanticAnalyzer, but does not execute the program or generate C++ code.
+The `check` command runs the Lexer, Parser, and SemanticAnalyzer without executing the program.
 
 Useful options:
 
 - `-t`: print tokens
 - `-a`: print the AST
 - `-s`: print the processed source
-- `--optimize`: optimize the AST before execution or C++ generation
+- `--optimize`: optimize the AST before execution
 
 See the [`Examples`](../Examples) directory for more working programs.

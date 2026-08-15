@@ -4,13 +4,6 @@ namespace BenitaTestProject
 {
     internal static class SharedFunction
     {
-        public static void AssertTextEqualIgnoringLineEndings(string expected, string actual)
-        {
-            Assert.AreEqual(
-                expected.ReplaceLineEndings("\n"),
-                actual.ReplaceLineEndings("\n"));
-        }
-
         public static bool AppendToSubstring(string value, ref StringBuilder stringBuilder)
         {
             string sbContent = stringBuilder.ToString();

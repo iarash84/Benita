@@ -27,7 +27,7 @@
         }
 
         /// <summary>
-        /// Validates lexical, syntactic, and semantic correctness without executing the program or generating code.
+        /// Validates lexical, syntactic, and semantic correctness without executing the program.
         /// </summary>
         public void Check(string sourceCode, bool lexerPrint = false, bool parserPrint = false,
             bool sourcePrint = false, string? sourceName = null)
@@ -36,33 +36,6 @@
             ProgramNode programAst = ParseCode(tokens, parserPrint);
             AnalyzeProgram(programAst);
         }
-
-        public string GenerateCppCode(string sourceCode, bool lexerPrint = false, bool parserPrint = false,
-            bool sourcePrint = false, string? sourceName = null, bool optimizeAst = false)
-        {
-            // 1. Tokenize the source code
-            List<Token> tokens = TokenizeCode(sourceCode: sourceCode, resultPrint: lexerPrint, sourcePrint: sourcePrint,
-                sourceName: sourceName);
-
-            // 2. Parse the tokens to create an AST
-            ProgramNode? programAst = ParseCode(tokens: tokens, resultPrint: parserPrint && !optimizeAst);
-
-            // 3. Analyze the AST using SemanticAnalyzer
-            AnalyzeProgram(programAst);
-
-            if (optimizeAst)
-            {
-                programAst = new AstOptimizer().Optimize(programAst);
-                if (parserPrint)
-                    PrintAst(programAst);
-            }
-
-            var codeGenerator = new CodeGenerator();
-            var generatedCode = codeGenerator.GenerateCode(program: programAst);
-
-            return generatedCode;
-        }
-
 
         private List<Token> TokenizeCode(string sourceCode, bool resultPrint = false, bool sourcePrint = false,
             string? sourceName = null)

@@ -14,7 +14,7 @@ namespace BenitaTestProject
 
 
         [TestMethod]
-        public void PackageConstructor_WithInitialValue_GeneratesAndExecutesCorrectly()
+        public void PackageConstructor_WithInitialValue_ExecutesCorrectly()
         {
             string source = @"
 pkg myPackage {
@@ -30,36 +30,11 @@ _main_(){
 	myPackage classInstance = new myPackage(5);
 	print(classInstance.var);	
 }";
-
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-class myPackage{
-  double var = 10;
-  void myPackage(double input1)
-  {
-    var = input1;
-  }
-
-}
-
-int main()
-{
-  double mn = 5;
-  myPackage classInstance = new myPackage(5);
-  std::cout << classInstance.var << std::endl;
-  return 0;
-}".Trim();
             // Act            
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             //var result = _compiler.Exec(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "5\r\n";
@@ -67,14 +42,13 @@ int main()
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
 
         }
 
         [TestMethod]
-        public void PackageMethods_WhenInvoked_GenerateAndExecuteCorrectly()
+        public void PackageMethods_WhenInvoked_ExecuteCorrectly()
         {
             string source = @"
 pkg myPackage {
@@ -94,43 +68,11 @@ _main_(){
 	classInstance.var += classInstance.Third();
 	print(classInstance.var);
 }";
-
-            string expectedCode = @"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-class myPackage{
-  double var = 10;
-  void myPackage(double input1)
-  {
-    var = input1;
-  }
-
-  double Third()
-  {
-    return 3;
-  }
-
-}
-
-int main()
-{
-  double mn = 5;
-  myPackage classInstance = new myPackage(5);
-  std::cout << classInstance.Third() << std::endl;
-  classInstance.var += classInstance.Third();
-  std::cout << classInstance.var << std::endl;
-  return 0;
-}".Trim();
             // Act            
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
             //var result = _compiler.Exec(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "3\r\n8\r\n";
@@ -138,7 +80,6 @@ int main()
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
 
@@ -146,7 +87,7 @@ int main()
 
 
         [TestMethod]
-        public void PackageMembers_WithMixedOperations_GenerateAndExecuteCorrectly()
+        public void PackageMembers_WithMixedOperations_ExecuteCorrectly()
         {
             string source = @"
 pkg myPackage {
@@ -201,75 +142,10 @@ _main_(){
 	First(8);
 	print(""this is a test"");	
 }";
-
-            string expectedCode = @"#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-
-
-class myPackage{
-  double var = 10;
-  void myPackage(double input1)
-  {
-    var = input1;
-  }
-
-  void First(double c)
-  {
-    std::cout << c << std::endl;
-  }
-
-  double Second(double std)
-  {
-    return std + var;
-  }
-
-  double Third()
-  {
-    return 3;
-  }
-
-}
-
-void First(double c)
-{
-  std::cout << c << 1 << std::endl;
-}
-
-double inc(double a)
-{
-  return a + 3;
-}
-
-int main()
-{
-  double mn = 5;
-  myPackage classInstance = new myPackage(5);
-  std::cout << classInstance.Third() << std::endl;
-  classInstance.var += classInstance.Third();
-  std::cout << classInstance.var << std::endl;
-  classInstance.var = classInstance.Third() + 3;
-  std::cout << classInstance.var << std::endl;
-  classInstance.var += 3;
-  std::cout << classInstance.var << std::endl;
-  classInstance.var = mn + 3;
-  classInstance.var = classInstance.var / 2;
-  std::cout << classInstance.var << std::endl;
-  std::cout << inc(classInstance.var) << std::endl;
-  classInstance.var = inc(classInstance.var);
-  std::cout << classInstance.var << std::endl;
-  classInstance.First(5);
-  std::cout << classInstance.Second(2) << std::endl;
-  First(8);
-  std::cout << ""this is a test"" << std::endl;
-  return 0;
-}".Trim();
             // Act            
-            var generatedCode = _compiler.GenerateCppCode(source);
+            _compiler.Check(source);
 
             // Assert
-            SharedFunction.AssertTextEqualIgnoringLineEndings(expectedCode, generatedCode.Trim());
 
             // Act
             var expectedOutput = "3\r\n8\r\n6\r\n9\r\n4\r\n7\r\n7\r\n5\r\n9\r\n9\r\nthis is a test\r\n";
@@ -277,7 +153,6 @@ int main()
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                // Assert exc
                 Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
             }
 

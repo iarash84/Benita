@@ -10,7 +10,7 @@
 
 ## فارسی
 
-بنیتا یک زبان برنامه‌نویسی آموزشی، ساده و توسعه‌پذیر است که با C# و .NET پیاده‌سازی شده است. کدهای بنیتا را می‌توان مستقیماً با مفسر اجرا کرد یا به کد C++ تبدیل نمود. نام Benita با الهام از دختر سازنده پروژه انتخاب شده است.
+بنیتا یک زبان برنامه‌نویسی آموزشی، ساده و توسعه‌پذیر است که با C# و .NET پیاده‌سازی شده است. کدهای بنیتا پس از تحلیل واژگانی، نحوی و معنایی مستقیماً توسط مفسر اجرا می‌شوند. نام Benita با الهام از دختر سازنده پروژه انتخاب شده است.
 
 ### قابلیت‌ها
 
@@ -23,7 +23,7 @@
 - ورودی و خروجی کنسول
 - عملیات خواندن، نوشتن، بررسی وجود و حذف فایل
 - دستور `include_once` برای استفاده از فایل‌های دیگر
-- اجرای مستقیم با مفسر و تولید کد C++
+- اجرای مستقیم با مفسر و بهینه‌سازی اختیاری AST
 
 ### نیازمندی‌ها
 
@@ -58,11 +58,10 @@ __________              .__  __           .____
         \/     \/     \/              \/          \/    \/     \//_____/
   (c) Adm, 2024
   Version 0.4.3
-Usage: Program <action> <filePath> [outputFilePath] [-p] [-t]
+Usage: Program <action> <filePath> [options]
 Actions:
   exc        - Execute the code in the file.
   dxc        - Execute the code in the file in debug mode.
-  ccg        - Generate C++ code from the file content and save to output file.
   check      - Check syntax and semantics without executing the program.
   edr        - Open the text editor.
   help       - Show this help message.
@@ -70,7 +69,7 @@ Options:
   -a         - Print the AST.
   -t         - Print the tokens.
   -s         - Print the Source.
-  --optimize - Optimize the AST before execution or C++ generation.
+  --optimize - Optimize the AST before execution.
 ```
 
 #### فرمان‌ها
@@ -87,13 +86,7 @@ Options:
   dotnet run --project Benita -- dxc Examples/simple-addition-expression.ben
   ```
 
-- `ccg`: برنامه را به C++ تبدیل می‌کند. مسیر خروجی اختیاری است؛ در صورت حذف آن، کد در کنسول چاپ می‌شود.
-
-  ```bash
-  dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
-  ```
-
-- `check`: مراحل Lexer، Parser و SemanticAnalyzer را بدون اجرای برنامه یا تولید C++ انجام می‌دهد.
+- `check`: مراحل Lexer، Parser و SemanticAnalyzer را بدون اجرای برنامه انجام می‌دهد.
 
   ```bash
   dotnet run --project Benita -- check Examples/simple-addition-expression.ben
@@ -112,18 +105,12 @@ Options:
 - `-a`: درخت نحوی انتزاعی یا AST را نمایش می‌دهد.
 - `-t`: توکن‌های تولیدشده توسط Lexer را نمایش می‌دهد.
 - `-s`: کد منبع پردازش‌شده، از جمله نتیجه `include_once`، را نمایش می‌دهد.
-- `--optimize`: پیش از اجرا یا تولید C++، عبارت‌های ثابت و شاخه‌های غیرقابل‌دسترسی AST را بهینه می‌کند.
+- `--optimize`: پیش از اجرا، عبارت‌های ثابت و شاخه‌های غیرقابل‌دسترسی AST را بهینه می‌کند.
 
 گزینه‌ها را می‌توان همراه فرمان‌های پردازش فایل استفاده کرد؛ برای مثال:
 
 ```bash
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben -t -a
-```
-
-برای تولید C++ بهینه‌شده:
-
-```bash
-dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp --optimize
 ```
 
 ### اجرای تست‌ها
@@ -163,7 +150,7 @@ git push origin v1.0.0
 
 ## English
 
-Benita is a simple, extensible programming language built for education and experimentation. It is implemented in C# and .NET. Benita programs can be executed directly by the interpreter or translated into C++ code. The name Benita was inspired by the project creator's daughter.
+Benita is a simple, extensible programming language built for education and experimentation. It is implemented in C# and .NET. Benita programs are lexed, parsed, semantically analyzed, and then executed directly by the interpreter. The name Benita was inspired by the project creator's daughter.
 
 ### Features
 
@@ -176,7 +163,7 @@ Benita is a simple, extensible programming language built for education and expe
 - Console input and output
 - File read, write, existence, and deletion operations
 - `include_once` support for reusable source files
-- Direct interpretation and C++ code generation
+- Direct interpretation with optional AST optimization
 
 ### Requirements
 
@@ -211,11 +198,10 @@ __________              .__  __           .____
         \/     \/     \/              \/          \/    \/     \//_____/
   (c) Adm, 2024
   Version 0.4.3
-Usage: Program <action> <filePath> [outputFilePath] [-p] [-t]
+Usage: Program <action> <filePath> [options]
 Actions:
   exc        - Execute the code in the file.
   dxc        - Execute the code in the file in debug mode.
-  ccg        - Generate C++ code from the file content and save to output file.
   check      - Check syntax and semantics without executing the program.
   edr        - Open the text editor.
   help       - Show this help message.
@@ -223,7 +209,7 @@ Options:
   -a         - Print the AST.
   -t         - Print the tokens.
   -s         - Print the Source.
-  --optimize - Optimize the AST before execution or C++ generation.
+  --optimize - Optimize the AST before execution.
 ```
 
 #### Actions
@@ -240,13 +226,7 @@ Options:
   dotnet run --project Benita -- dxc Examples/simple-addition-expression.ben
   ```
 
-- `ccg`: translates a program to C++. The output path is optional; without it, generated code is printed to the console.
-
-  ```bash
-  dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp
-  ```
-
-- `check`: runs the Lexer, Parser, and SemanticAnalyzer without executing the program or generating C++.
+- `check`: runs the Lexer, Parser, and SemanticAnalyzer without executing the program.
 
   ```bash
   dotnet run --project Benita -- check Examples/simple-addition-expression.ben
@@ -265,18 +245,12 @@ Options:
 - `-a`: prints the Abstract Syntax Tree (AST).
 - `-t`: prints tokens produced by the Lexer.
 - `-s`: prints the processed source, including the result of `include_once`.
-- `--optimize`: folds constant expressions and removes unreachable constant branches before execution or C++ generation.
+- `--optimize`: folds constant expressions and removes unreachable constant branches before execution.
 
 Options can be combined with file-processing actions. For example:
 
 ```bash
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben -t -a
-```
-
-To generate optimized C++:
-
-```bash
-dotnet run --project Benita -- ccg Examples/simple-addition-expression.ben output.cpp --optimize
 ```
 
 ### Tests
