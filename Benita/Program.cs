@@ -28,7 +28,13 @@
 
         private static void Run(string[] args)
         {
-            if (args.Length == 0 || args[0] is "-help" or "help")
+            if (args.Length == 0)
+            {
+                new Repl().Run();
+                return;
+            }
+
+            if (args[0] is "-help" or "help")
             {
                 ShowHelp();
                 return;
@@ -53,10 +59,9 @@
 
             switch (action)
             {
-                case "edr":
-                    var editor = new Editor();
-                    editor.Run(printTokens, printAst, printSource);
-                    break;
+                case "repl":
+                    new Repl().Run(printTokens, printAst, printSource, optimizeAst);
+                    return;
                 case "exc":
                     ExecuteFile(args, printTokens, printAst, printSource, compiler, optimizeAst: optimizeAst);
                     Console.WriteLine("Program executed successfully.");
@@ -138,12 +143,12 @@
             Console.WriteLine("        \\/     \\/     \\/              \\/          \\/    \\/     \\//_____/ ");
             Console.WriteLine("  (c) Adm, 2024");
             Console.WriteLine("  Version 0.5.0");
-            Console.WriteLine("Usage: Program <action> <filePath> [options]");
+            Console.WriteLine("Usage: Program [action] [filePath] [options]");
             Console.WriteLine("Actions:");
             Console.WriteLine("  exc        - Execute the code in the file.");
             Console.WriteLine("  dxc       - Execute the code in the file in debug mode.");
             Console.WriteLine("  check      - Check syntax and semantics without executing the program.");
-            Console.WriteLine("  edr        - Open the text editor.");
+            Console.WriteLine("  repl       - Start the interactive REPL.");
             Console.WriteLine("  help       - Show this help message.");
             Console.WriteLine("Options:");
             Console.WriteLine("  -a         - Print the AST.");

@@ -16,14 +16,17 @@ namespace Benita
         private readonly bool _debugMode;
         private readonly string _packageScope;
         private readonly DebugClass _debugClass;
+        private readonly bool _preserveStateBetweenPrograms;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Interpreter"/> class.
         /// </summary>
         /// <param name="packageScope">The scope of the package, default is "_main_".</param>
-        public Interpreter(bool debugMode = false, string packageScope = "Program")
+        public Interpreter(bool debugMode = false, string packageScope = "Program",
+            bool preserveStateBetweenPrograms = false)
         {
             _debugMode = debugMode;
+            _preserveStateBetweenPrograms = preserveStateBetweenPrograms;
             if (debugMode)
             {
                 _debugClass = DebugClass.Instance;
@@ -659,9 +662,12 @@ namespace Benita
         {
             DebugLog($"VisitProgramNode:", false);
 
-            Globals.GlobalVariable.Clear();
-            Globals.GlobalFunctions.Clear();
-            Globals.PackageList.Clear();
+            if (!_preserveStateBetweenPrograms)
+            {
+                Globals.GlobalVariable.Clear();
+                Globals.GlobalFunctions.Clear();
+                Globals.PackageList.Clear();
+            }
 
             foreach (var packageNode in node.Packages)
             {
@@ -686,7 +692,7 @@ namespace Benita
                 _functions[node.MainFunction.Name] = node.MainFunction;
             }
 
-            if (_functions.TryGetValue("_main_", out var mainFunction))
+            if (node.MainFunction != null && _functions.TryGetValue("_main_", out var mainFunction))
             {
                 VisitFunctionCallNode(new(mainFunction.Name, new()));
             }

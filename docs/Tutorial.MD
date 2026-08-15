@@ -281,9 +281,21 @@ _main_() {
 ```bash
 dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben
+dotnet run --project Benita -- repl
 ```
 
 فرمان `check` مراحل Lexer، Parser و SemanticAnalyzer را اجرا می‌کند، اما برنامه را اجرا نمی‌کند.
+فرمان `repl` یک محیط تعاملی stateful باز می‌کند. متغیرها و توابع تعریف‌شده تا پایان نشست حفظ
+می‌شوند و عبارت‌هایی که بدون `;` وارد شوند، مستقیماً ارزیابی و چاپ می‌شوند:
+
+```text
+benita> number value = 40;
+benita> value = value + 2;
+benita> value
+42
+```
+
+فرمان‌های داخلی REPL عبارت‌اند از `:help`، `:history`، `:clear`، `:reset` و `:exit`.
 
 گزینه‌های کاربردی:
 
@@ -572,9 +584,21 @@ From the repository root:
 ```bash
 dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben
+dotnet run --project Benita -- repl
 ```
 
 The `check` command runs the Lexer, Parser, and SemanticAnalyzer without executing the program.
+The `repl` command starts a stateful interactive environment. Variables and functions remain
+available for the session, and expressions entered without a trailing `;` are evaluated and printed:
+
+```text
+benita> number value = 40;
+benita> value = value + 2;
+benita> value
+42
+```
+
+The available REPL commands are `:help`, `:history`, `:clear`, `:reset`, and `:exit`.
 
 Useful options:
 

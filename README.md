@@ -58,12 +58,12 @@ __________              .__  __           .____
         \/     \/     \/              \/          \/    \/     \//_____/
   (c) Adm, 2024
   Version 0.5.0
-Usage: Program <action> <filePath> [options]
+Usage: Program [action] [filePath] [options]
 Actions:
   exc        - Execute the code in the file.
   dxc        - Execute the code in the file in debug mode.
   check      - Check syntax and semantics without executing the program.
-  edr        - Open the text editor.
+  repl       - Start the interactive REPL.
   help       - Show this help message.
 Options:
   -a         - Print the AST.
@@ -92,10 +92,10 @@ Options:
   dotnet run --project Benita -- check Examples/simple-addition-expression.ben
   ```
 
-- `edr`: ویرایشگر کنسولی Benita را با syntax highlighting باز می‌کند.
+- `repl`: محیط تعاملی Benita را با حفظ متغیرها و توابع میان ورودی‌ها اجرا می‌کند.
 
   ```bash
-  dotnet run --project Benita -- edr
+  dotnet run --project Benita -- repl
   ```
 
 - `help`: لوگو، نسخه، فرمان‌ها و گزینه‌های CLI را نمایش می‌دهد.
@@ -198,12 +198,12 @@ __________              .__  __           .____
         \/     \/     \/              \/          \/    \/     \//_____/
   (c) Adm, 2024
   Version 0.5.0
-Usage: Program <action> <filePath> [options]
+Usage: Program [action] [filePath] [options]
 Actions:
   exc        - Execute the code in the file.
   dxc        - Execute the code in the file in debug mode.
   check      - Check syntax and semantics without executing the program.
-  edr        - Open the text editor.
+  repl       - Start the interactive REPL.
   help       - Show this help message.
 Options:
   -a         - Print the AST.
@@ -232,10 +232,10 @@ Options:
   dotnet run --project Benita -- check Examples/simple-addition-expression.ben
   ```
 
-- `edr`: opens Benita's console editor with syntax highlighting.
+- `repl`: starts an interactive Benita session that preserves variables and functions between submissions.
 
   ```bash
-  dotnet run --project Benita -- edr
+  dotnet run --project Benita -- repl
   ```
 
 - `help`: displays the logo, version, CLI actions, and available options.

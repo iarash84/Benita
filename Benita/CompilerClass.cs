@@ -26,6 +26,24 @@
             interpreter.Visit(programAst);
         }
 
+        internal void ExecInSession(string sourceCode, string sessionSource, Interpreter interpreter,
+            bool lexerPrint = false, bool parserPrint = false, bool sourcePrint = false, bool optimizeAst = false)
+        {
+            const string noOp = "if (false) {}";
+            ProgramNode sessionAst = ParseCode(TokenizeCode($"{sessionSource}{Environment.NewLine}{noOp}"), false)!;
+            AnalyzeProgram(sessionAst);
+
+            List<Token> tokens = TokenizeCode($"{sourceCode}{Environment.NewLine}{noOp}", lexerPrint, sourcePrint, "<repl>");
+            ProgramNode programAst = ParseCode(tokens, parserPrint && !optimizeAst)!;
+            if (optimizeAst)
+            {
+                programAst = new AstOptimizer().Optimize(programAst);
+                if (parserPrint) PrintAst(programAst);
+            }
+
+            interpreter.Visit(programAst);
+        }
+
         /// <summary>
         /// Validates lexical, syntactic, and semantic correctness without executing the program.
         /// </summary>
