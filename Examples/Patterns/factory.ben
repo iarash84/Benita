@@ -1,0 +1,31 @@
+pkg Notification {
+    string channel = "";
+
+    init(string channel_name) {
+        this.channel = channel_name;
+    }
+
+    func send(string message) -> string {
+        return channel + ": " + message;
+    }
+}
+
+pkg NotificationFactory {
+    init() { }
+
+    func create(string kind) -> Notification {
+        let channel = match kind {
+            "email" => "Email",
+            "sms" => "SMS",
+            _ => "Console"
+        };
+
+        return new Notification(channel);
+    }
+}
+
+_main_() {
+    NotificationFactory factory = new NotificationFactory();
+    Notification notification = factory.create("email");
+    print(notification.send("Build finished"));
+}

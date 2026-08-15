@@ -12,10 +12,13 @@ top-level-item          ::= package-declaration
                           | statement ;
 
 package-declaration     ::= "pkg" identifier "{" package-member* "}" ;
-package-member          ::= package-variable-declaration | function-declaration ;
+package-member          ::= package-variable-declaration
+                          | initializer-declaration
+                          | function-declaration ;
 package-variable-declaration
-                         ::= (primitive-type | "let") identifier
+                         ::= (primitive-type | named-type | "let") identifier
                              ("=" expression)? ";" ;
+initializer-declaration ::= "init" "(" parameter-list? ")" block ;
 
 main-function           ::= "_main_" "(" ")" block ;
 function-declaration    ::= "func" identifier "(" parameter-list? ")"
@@ -23,10 +26,14 @@ function-declaration    ::= "func" identifier "(" parameter-list? ")"
 parameter-list          ::= parameter ("," parameter)* ;
 parameter               ::= parameter-type identifier ;
 
-variable-declaration    ::= scalar-variable-declaration | array-variable-declaration ;
+variable-declaration    ::= scalar-variable-declaration
+                          | object-variable-declaration
+                          | array-variable-declaration ;
 scalar-variable-declaration
                          ::= (primitive-type | "let") identifier
                              ("=" expression)? ";" ;
+object-variable-declaration
+                         ::= named-type identifier ("=" expression)? ";" ;
 array-variable-declaration
                          ::= array-type identifier
                              ("=" (expression | sized-array-initializer))? ";" ;
@@ -40,7 +47,6 @@ statement               ::= variable-declaration
                           | assignment-statement
                           | compound-assignment-statement
                           | increment-statement
-                          | object-instantiation
                           | expression-statement
                           | if-statement
                           | while-statement
@@ -74,8 +80,6 @@ assignment-statement    ::= assignment ";" ;
 compound-assignment-statement
                          ::= compound-assignment ";" ;
 increment-statement     ::= increment ";" ;
-object-instantiation    ::= ("let" | named-type) identifier "="
-                            "new" named-type "(" argument-list? ")" ";" ;
 assignment              ::= assignable "=" expression ;
 compound-assignment     ::= identifier ("+=" | "-=" | "*=" | "/=") expression ;
 increment               ::= identifier ("++" | "--") ;
@@ -95,12 +99,14 @@ primary                 ::= literal
                           | function-call
                           | array-access
                           | member-access
+                          | new-expression
                           | array-initializer
                           | match-expression
                           | "(" expression ")" ;
 function-call           ::= identifier "(" argument-list? ")" ;
 array-access            ::= identifier "[" expression "]" ;
-member-access           ::= identifier "." identifier member-suffix? ;
+member-access           ::= (identifier | "this") "." identifier member-suffix? ;
+new-expression          ::= "new" named-type "(" argument-list? ")" ;
 member-suffix           ::= "(" argument-list? ")"
                           | "=" expression
                           | ("+=" | "-=" | "*=" | "/=") expression
@@ -150,6 +156,13 @@ Semantic constraints
 12. The expression in a `for (item in expression)` loop must be an array. The
     iteration variable is inferred from the array element type and is scoped to
     the loop body.
+13. A package may declare at most one `init`. Its parameters define the argument
+    contract for `new`; a package without `init` only accepts zero arguments.
+14. `this` is available only in a package initializer or method and denotes the
+    current instance. Package field and method names are checked statically.
+15. Package types may be used for variables, parameters, return values, and
+    fields. Package members are currently public; inheritance, interfaces,
+    overloads, and access modifiers are not part of the language yet.
 
 Notes
 -----

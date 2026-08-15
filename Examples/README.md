@@ -20,3 +20,17 @@ dotnet run --project Benita -- exc Examples/algorithm-bubble-sort.ben
 
 دو نکته را در نظر داشته باشید: جست‌وجوی دودویی به آرایه‌ی مرتب نیاز دارد و مثال‌های
 جست‌وجو و مرتب‌سازی فعلاً برای `number[]` نوشته شده‌اند، چون زبان هنوز تابع generic ندارد.
+
+## الگوهای طراحی
+
+مثال‌های پوشهٔ `Patterns` مدل شیء را در یک کاربرد واقعی‌تر نشان می‌دهند:
+
+| الگو | فایل | نکتهٔ اصلی |
+| --- | --- | --- |
+| Builder | `Patterns/builder.ben` | تنظیم مرحله‌ای و ساخت شیء نهایی با `build` |
+| Facade | `Patterns/facade.ben` | قراردادن چند سرویس پشت یک API ساده |
+| Factory | `Patterns/factory.ben` | متمرکزکردن منطق ساخت نمونه |
+
+```bash
+dotnet run --project Benita -- exc Examples/Patterns/builder.ben
+```

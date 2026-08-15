@@ -51,6 +51,9 @@ public class ExampleProgramTests
             yield return Case("numeric-addition.ben", null, "18");
             // تعریف توابع عددی و رشته‌ای و الحاق رشته‌ها را بررسی می‌کند.
             yield return Case("numeric-and-string-functions.ben", null, "hello world");
+            yield return Case(Path.Combine("Patterns", "builder.ben"), null, "Ryzen 7 / 32 GB");
+            yield return Case(Path.Combine("Patterns", "facade.ben"), null, "Order completed");
+            yield return Case(Path.Combine("Patterns", "factory.ben"), null, "Email: Build finished");
             // فراخوانی بازگشتی فیبوناچی، بازگشت زودهنگام و پیمایش با حلقه for را بررسی می‌کند.
             yield return Case("recursive-fibonacci-for-loop.ben", null, "0", "1", "1", "2", "3", "5", "8", "13", "21", "34", "55", "89", "144", "233", "377", "610", "987", "1597", "2584", "4181", "6765");
             // فراخوانی بازگشتی فیبوناچی با متغیر نتیجه و حلقه while را بررسی می‌کند.
@@ -145,8 +148,8 @@ public class ExampleProgramTests
             ])
             .OrderBy(name => name)
             .ToArray();
-        var actualFiles = Directory.GetFiles(ExamplesDirectory, "*.ben")
-            .Select(Path.GetFileName)
+        var actualFiles = Directory.GetFiles(ExamplesDirectory, "*.ben", SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(ExamplesDirectory, path))
             .OrderBy(name => name)
             .ToArray();
 

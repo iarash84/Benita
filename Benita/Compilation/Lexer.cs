@@ -35,6 +35,8 @@
         {
             {"pkg", TokenType.PACKAGE},
             {"new", TokenType.NEW},
+            {"init", TokenType.INIT},
+            {"this", TokenType.THIS},
             {"func", TokenType.FUNC},
             {"_main_", TokenType.MAIN},
             {"return", TokenType.RETURN},

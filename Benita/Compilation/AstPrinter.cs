@@ -41,6 +41,7 @@ internal static class AstPrinter
             case ArrayAssignmentNode value: Detail(child, "Array", value.Name); Print(value.Index, child); Print(value.Value, child); break;
             case MemberAccessNode value: Detail(child, "Object", value.ObjectName); Print(value.Expression, child); break;
             case ObjectInstantiationNode value: Detail(child, "Instance", $"{value.Name}: {value.PackageName}"); PrintAll(value.Arguments, child); break;
+            case NewExpressionNode value: Detail(child, "New", value.PackageName); PrintAll(value.Arguments, child); break;
         }
     }
 

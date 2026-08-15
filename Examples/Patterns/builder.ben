@@ -1,0 +1,41 @@
+pkg Computer {
+    string cpu = "";
+    number memory = 0;
+
+    init(string cpu_name, number memory_size) {
+        this.cpu = cpu_name;
+        this.memory = memory_size;
+    }
+
+    func describe() -> string {
+        return cpu + " / " + to_string(memory) + " GB";
+    }
+}
+
+pkg ComputerBuilder {
+    string cpu = "Unknown";
+    number memory = 8;
+
+    init() { }
+
+    func set_cpu(string value) -> void {
+        this.cpu = value;
+    }
+
+    func set_memory(number value) -> void {
+        this.memory = value;
+    }
+
+    func build() -> Computer {
+        return new Computer(cpu, memory);
+    }
+}
+
+_main_() {
+    ComputerBuilder builder = new ComputerBuilder();
+    builder.set_cpu("Ryzen 7");
+    builder.set_memory(32);
+
+    Computer computer = builder.build();
+    print(computer.describe());
+}

@@ -84,6 +84,8 @@ namespace Benita
                     return VisitBlockNode(blockNode);
                 case LiteralNode literalNode:
                     return VisitLiteralNode(literalNode);
+                case RuntimeValueNode runtimeValueNode:
+                    return runtimeValueNode.Value;
                 case IdentifierNode identifierNode:
                     return VisitIdentifierNode(identifierNode);
                 case BinaryExpressionNode binaryExpressionNode:
@@ -136,6 +138,8 @@ namespace Benita
                     return VisitPackageNode(packageNode);
                 case MemberAccessNode memberAccessNode:
                     return VisitMemberAccessNode(memberAccessNode);
+                case NewExpressionNode newExpressionNode:
+                    return VisitNewExpressionNode(newExpressionNode);
                 case ObjectInstantiationNode objectInstantiationNode:
                     return VisitObjectInstantiationNode(objectInstantiationNode);
                 default:
@@ -158,7 +162,8 @@ namespace Benita
             }
 
             // Create a new package instance
-            var packageInstance = new PackageInstance(node.Name, packageNode, node.Arguments, _debugMode, _context);
+            List<object?> arguments = node.Arguments.Select(Visit).ToList();
+            var packageInstance = new PackageInstance(node.Name, packageNode, arguments, _debugMode, _context);
 
             // Optionally, you might handle constructor arguments here
             // For simplicity, we assume no arguments or default constructor logic.
@@ -168,6 +173,18 @@ namespace Benita
 
             DebugLog($"Object {node.Name} instantiated.");
             return packageInstance;
+        }
+
+        /// <summary>
+        /// یک نمونه تازه از package می‌سازد و آن را به‌عنوان مقدار expression برمی‌گرداند.
+        /// </summary>
+        private object VisitNewExpressionNode(NewExpressionNode node)
+        {
+            if (!_context.Packages.TryGetValue(node.PackageName, out PackageNode? packageNode))
+                throw new Exception($"Package '{node.PackageName}' not found.");
+
+            List<object?> arguments = node.Arguments.Select(Visit).ToList();
+            return new PackageInstance(node.PackageName, packageNode, arguments, _debugMode, _context);
         }
 
         /// <summary>
@@ -848,7 +865,7 @@ namespace Benita
         {
             DebugLog($"VisitMemberAccessNode: ObjectName = {node.ObjectName}");
 
-            if (node.ObjectName == _packageScope)
+            if (node.ObjectName == "this" || node.ObjectName == _packageScope)
                 return Visit(node.Expression);
 
             if (TryGetVariableValue(node.ObjectName, out var instance) && instance is PackageInstance packageInstance)

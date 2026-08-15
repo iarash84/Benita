@@ -119,6 +119,22 @@
         public List<ExpressionNode> Arguments { get; } = arguments;
     }
 
+    /// <summary>ساخت یک نمونهٔ package را در جایگاه expression بازنمایی می‌کند.</summary>
+    public class NewExpressionNode(string packageName, List<ExpressionNode> arguments) : ExpressionNode
+    {
+        public string PackageName { get; } = packageName;
+        public List<ExpressionNode> Arguments { get; } = arguments;
+    }
+
+    /// <summary>
+    /// مقداری که پیش از ورود به scope یک نمونه ارزیابی شده است را در اجرای داخلی حمل می‌کند.
+    /// این گره مستقیماً توسط parser ساخته نمی‌شود.
+    /// </summary>
+    internal sealed class RuntimeValueNode(object? value) : ExpressionNode
+    {
+        public object? Value { get; } = value;
+    }
+
     /// <summary>
     /// Represents an assignment node with a name and an expression.
     /// </summary>

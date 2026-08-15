@@ -242,14 +242,15 @@ values = array_clear(values);                // []
 
 ### ۸. بسته‌ها
 
-بسته‌ها متغیرها و توابع مرتبط را کنار هم نگه می‌دارند. تابعی که نامش با نام بسته برابر باشد نقش سازنده را دارد:
+بسته‌ها داده و رفتار مرتبط را در یک نوع قرار می‌دهند. بخش `init` هنگام ساخت هر نمونه اجرا
+می‌شود و `this` به همان نمونه اشاره می‌کند:
 
 ```benita
 pkg Counter {
     number value = 0;
 
-    func Counter(number initial) -> void {
-        value = initial;
+    init(number initial) {
+        this.value = initial;
     }
 
     func increment() -> void {
@@ -263,6 +264,34 @@ _main_() {
     print(counter.value);
 }
 ```
+
+`new` یک expression است؛ در نتیجه می‌توان نتیجهٔ آن را از تابع برگرداند، به تابع دیگری
+فرستاد یا با `let` نگه داشت:
+
+```benita
+func create_counter(number initial) -> Counter {
+    return new Counter(initial);
+}
+
+_main_() {
+    let counter = create_counter(10);
+    print(counter.value);
+}
+```
+
+برای composition نیز نوع یک package را به‌عنوان نوع فیلد می‌نویسیم:
+
+```benita
+pkg Dashboard {
+    Counter counter = new Counter(0);
+    init() { }
+    func next() -> void { counter.increment(); }
+}
+```
+
+آرگومان‌های `new` با پارامترهای `init` بررسی می‌شوند. اگر `init` تعریف نشده باشد، package
+فقط بدون آرگومان ساخته می‌شود. فعلاً اعضا public هستند و وراثت، interface، overload و
+modifier دسترسی نداریم. مثال‌های Builder، Facade و Factory در `Examples/Patterns` هستند.
 
 ### ۹. ورودی، تبدیل و ریاضیات
 
@@ -684,14 +713,15 @@ values = array_clear(values);                // []
 
 ### 8. Packages
 
-Packages group related variables and functions. A function whose name matches its package acts as the constructor:
+Packages place related state and behavior in one type. The `init` block runs when an
+instance is created, and `this` refers to that instance:
 
 ```benita
 pkg Counter {
     number value = 0;
 
-    func Counter(number initial) -> void {
-        value = initial;
+    init(number initial) {
+        this.value = initial;
     }
 
     func increment() -> void {
@@ -705,6 +735,35 @@ _main_() {
     print(counter.value);
 }
 ```
+
+`new` is an expression, so it can be returned, passed as an argument, or stored with
+`let`:
+
+```benita
+func create_counter(number initial) -> Counter {
+    return new Counter(initial);
+}
+
+_main_() {
+    let counter = create_counter(10);
+    print(counter.value);
+}
+```
+
+A package type can also be used for a field, which enables composition:
+
+```benita
+pkg Dashboard {
+    Counter counter = new Counter(0);
+    init() { }
+    func next() -> void { counter.increment(); }
+}
+```
+
+The analyzer checks `new` arguments against `init`. Without an `init`, a package can only
+be created without arguments. Members are currently public; inheritance, interfaces,
+overloads, and access modifiers are not supported yet. Builder, Facade, and Factory
+examples are available under `Examples/Patterns`.
 
 ### 9. Input, conversion, and mathematics
 

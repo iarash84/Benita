@@ -53,14 +53,15 @@
             _functions.Clear();
 
             foreach (var packageNode in program.Packages)
-            {
                 DeclarePackage(packageNode);
-            }
+            foreach (var packageNode in program.Packages)
+                AnalyzePackage(packageNode);
 
             // Analyze global variables and ensure they are declared
             foreach (var globalVar in program.GlobalVariables)
             {
                 var declaredType = globalVar.Type;
+                EnsureKnownType(declaredType);
                 if (globalVar.Initializer != null)
                 {
                     var initializerType = AnalyzeExpression(globalVar.Initializer, _globalVariables);
@@ -116,7 +117,6 @@
                 throw new Exception($"Package '{packageNode.Name}' is already declared.");
             }
             _packages[packageNode.Name] = packageNode;
-            AnalyzePackage(packageNode);
         }
 
         /// <summary>
@@ -125,44 +125,54 @@
         /// <param name="packageNode"></param>
         private void AnalyzePackage(PackageNode packageNode)
         {
-            Dictionary<string, string?> variableScope = new Dictionary<string, string?>();
+            Dictionary<string, string?> variableScope = new Dictionary<string, string?>
+            {
+                ["this"] = packageNode.Name
+            };
             Dictionary<string, PackageFunctionNode> packageFunctions = new Dictionary<string, PackageFunctionNode>();
 
             foreach (var packageMember in packageNode.Members)
             {
-                switch (packageMember)
+                if (packageMember is PackageVariableDeclarationNode variableDeclaration)
                 {
-                    case PackageVariableDeclarationNode variableDeclaration:
-                        if (variableScope.ContainsKey(variableDeclaration.Name))
-                        {
-                            throw new Exception($"Variable '{variableDeclaration.Name}' is already declared.");
-                        }
-                        variableScope[variableDeclaration.Name] = variableDeclaration.Type;
-                        break;
-
-                    case PackageFunctionNode functionNode:
-                        if (packageFunctions.ContainsKey(functionNode.Name))
-                        {
-                            throw new Exception($"Function '{functionNode.Name}' is already declared.");
-                        }
-
-                        packageFunctions[functionNode.Name] = functionNode;
-                        AnalyzePackageFunction(functionNode, variableScope);
-                        break;
-                    default:
-                        throw new Exception($"Unsupported statement type: {packageMember.GetType().Name}");
+                    if (variableScope.ContainsKey(variableDeclaration.Name))
+                        throw new Exception($"Variable '{variableDeclaration.Name}' is already declared.");
+                    TypeSymbol fieldType = TypeFacts.FromName(variableDeclaration.Type);
+                    if (fieldType is NamedTypeSymbol && !_packages.ContainsKey(fieldType.Name))
+                        throw new Exception($"Unknown package type '{fieldType}'.");
+                    variableScope[variableDeclaration.Name] = fieldType.Name;
                 }
+            }
+
+            foreach (var field in packageNode.Members.OfType<PackageVariableDeclarationNode>())
+            {
+                if (field.Initializer is null) continue;
+                string? initializerType = AnalyzeExpression(field.Initializer, variableScope);
+                if (!CheckType(field.Type, initializerType))
+                    throw new Exception($"Type mismatch in field '{field.Name}'. Expected '{field.Type}' but got '{initializerType}'.");
+            }
+
+            foreach (var packageMember in packageNode.Members)
+            {
+                if (packageMember is not PackageFunctionNode functionNode) continue;
+                if (!packageFunctions.TryAdd(functionNode.Name, functionNode))
+                    throw new Exception($"Function '{functionNode.Name}' is already declared.");
+                AnalyzePackageFunction(functionNode, variableScope);
             }
         }
 
         private void AnalyzePackageFunction(PackageFunctionNode function, Dictionary<string, string?> variableScope)
         {
+            EnsureKnownType(function.ReturnType, allowVoid: true);
             // Create a new scope for local variables
             var localVariables = new Dictionary<string, string?>(variableScope);
 
             // Declare function parameters in the local scope
             foreach (var param in function.Parameters)
             {
+                TypeSymbol parameterType = TypeFacts.FromName(param.Type);
+                if (parameterType is NamedTypeSymbol && !_packages.ContainsKey(parameterType.Name))
+                    throw new Exception($"Unknown package type '{parameterType}'.");
                 DeclareVariable(param.Name, param.Type, localVariables);
             }
 
@@ -194,12 +204,14 @@
         /// <param name="function">The function to analyze.</param>
         private void AnalyzeFunction(FunctionNode function)
         {
+            EnsureKnownType(function.ReturnType, allowVoid: true);
             // Create a new scope for local variables
             var localVariables = new Dictionary<string, string?>(_globalVariables);
 
             // Declare function parameters in the local scope
             foreach (var param in function.Parameters)
             {
+                EnsureKnownType(param.Type);
                 DeclareVariable(param.Name, param.Type, localVariables);
             }
 
@@ -239,6 +251,7 @@
             {
                 case VariableDeclarationNode varDecl:
                     string? declaredType = varDecl.Type;
+                    EnsureKnownType(declaredType, allowLet: true);
                     if (varDecl.Type == "let")
                     {
                         declaredType = varDecl.Initializer != null
@@ -494,11 +507,33 @@
                     return HandleLogicalExpressionNode(logical, localVariables);
                 case MemberAccessNode memberAccess:
                     return HandleMemberAccessNode(memberAccess, localVariables);
+                case NewExpressionNode creation:
+                    return AnalyzeNewExpression(creation, localVariables);
                 case MatchExpressionNode matchExpression:
                     return AnalyzeMatchExpression(matchExpression, localVariables);
                 default:
                     throw new Exception($"Unsupported expression type: {expression.GetType().Name}");
             }
+        }
+
+        private string AnalyzeNewExpression(NewExpressionNode creation,
+            Dictionary<string, string?> localVariables)
+        {
+            if (!_packages.TryGetValue(creation.PackageName, out PackageNode? package))
+                throw new Exception($"Unknown package '{creation.PackageName}'.");
+
+            IEnumerable<PackageFunctionNode> methods = package.Members.OfType<PackageFunctionNode>();
+            PackageFunctionNode? initializer = methods.FirstOrDefault(member => member.Name == "init")
+                ?? methods.FirstOrDefault(member => member.Name == package.Name);
+            if (initializer is null)
+            {
+                if (creation.Arguments.Count != 0)
+                    throw new Exception($"Package '{package.Name}' has no init constructor and accepts no arguments.");
+                return package.Name;
+            }
+
+            ValidateArguments("init", creation.Arguments, initializer.Parameters, localVariables);
+            return package.Name;
         }
 
         private string? AnalyzeMatchExpression(MatchExpressionNode match,
@@ -520,78 +555,70 @@
 
         private string? HandleMemberAccessNode(MemberAccessNode memberAccess, Dictionary<string, string?> localVariables)
         {
-            var packageName = localVariables[memberAccess.ObjectName];
-            var outPackage = _packages[packageName];
+            if (!localVariables.TryGetValue(memberAccess.ObjectName, out string? packageName) ||
+                packageName is null || !_packages.TryGetValue(packageName, out PackageNode? outPackage))
+                throw new Exception($"Member access requires a package instance, but '{memberAccess.ObjectName}' is not one.");
 
             switch (memberAccess.Expression)
             {
                 case FunctionCallNode expression:
-                    foreach (var member in outPackage.Members)
-                    {
-                        if (!(member is PackageFunctionNode callFunctionNode)) continue;
-                        if (callFunctionNode.Name == expression.FunctionName)
-                            return callFunctionNode.ReturnType;
-                    }
-
-                    // TODO: fix the error
-                    throw new Exception($"Error '{outPackage.Name}' does not contain a definition for '{expression.FunctionName}' ");
+                    PackageFunctionNode? method = outPackage.Members.OfType<PackageFunctionNode>()
+                        .FirstOrDefault(member => member.Name == expression.FunctionName);
+                    if (method is null)
+                        throw new Exception($"Package '{outPackage.Name}' has no method named '{expression.FunctionName}'.");
+                    ValidateArguments(expression.FunctionName, expression.Arguments, method.Parameters, localVariables);
+                    return method.ReturnType;
 
                 case CompoundAssignmentNode compoundAssignment:
 
                     var compValueType = AnalyzeExpression(compoundAssignment.Expression, localVariables);
-                    string? compVariableType = string.Empty;
-                    foreach (var member in outPackage.Members)
-                    {
-                        if (!(member is PackageVariableDeclarationNode variableDeclarationNode)) continue;
-                        if (variableDeclarationNode.Name == compoundAssignment.Name)
-                        {
-                            compVariableType = variableDeclarationNode.Type;
-                            break;
-                        }
-                    }
-
-                    if (string.IsNullOrEmpty(compVariableType))
-                    {
-                        throw new Exception(
-                            $"Variable {compoundAssignment.Name} has not been implemented in package {outPackage.Name}.");
-                    }
-
-                    if (compVariableType != compValueType)
-                    {
-                        throw new Exception(
-                            $"Type mismatch in compound assignment to '{compoundAssignment.Name}'. Expected '{compVariableType}' but got '{compValueType}'.");
-                    }
+                    string? compVariableType = FindPackageFieldType(outPackage, compoundAssignment.Name);
+                    if (compVariableType != "number" || compValueType != "number")
+                        throw new Exception($"Compound assignment requires numeric operands for member '{compoundAssignment.Name}'.");
                     return compValueType;
 
                 case IdentifierNode identifierNode:
-                    foreach (var member in outPackage.Members)
-                    {
-                        if (!(member is PackageVariableDeclarationNode variableDeclarationNode)) continue;
-                        if (variableDeclarationNode.Name == identifierNode.Name)
-                        {
-                            return variableDeclarationNode.Type;
-                        }
-                    }
-                    throw new Exception($"Undeclared variable '{identifierNode.Name}' in package {outPackage.Name}.");
+                    return FindPackageFieldType(outPackage, identifierNode.Name);
 
                 case AssignmentNode assignment:
-                    //var valueType = AnalyzeExpression(assignment.Expression, localVariables);
-                    //if (!localVariables.TryGetValue(assignment.Name, out var variableType))
-                    //{
-                    //    throw new Exception($"Undeclared variable '{assignment.Name}'.");
-                    //}
+                    string? fieldType = FindPackageFieldType(outPackage, assignment.Name);
+                    string? assignedType = AnalyzeExpression(assignment.Expression, localVariables);
+                    if (!CheckType(fieldType!, assignedType))
+                        throw new Exception($"Type mismatch in assignment to member '{assignment.Name}'. Expected '{fieldType}' but got '{assignedType}'.");
+                    return fieldType;
 
-                    //if (!CheckType(variableType, valueType))
-                    //{
-                    //    throw new Exception($"Type mismatch in assignment to '{assignment.Name}'. Expected '{variableType}' but got '{valueType}'.");
-                    //}
-                    //TODO : Not implemented
-                    return null;
+                case IncrementDecrementNode increment:
+                    string incrementType = FindPackageFieldType(outPackage, increment.Name);
+                    if (incrementType != "number")
+                        throw new Exception($"Increment and decrement require a numeric member, but '{increment.Name}' is '{incrementType}'.");
+                    return incrementType;
 
                 default:
                     throw new Exception($"Unsupported expression type: {memberAccess.GetType().Name}");
             }
 
+        }
+
+        private static string FindPackageFieldType(PackageNode package, string fieldName)
+        {
+            PackageVariableDeclarationNode? field = package.Members.OfType<PackageVariableDeclarationNode>()
+                .FirstOrDefault(member => member.Name == fieldName);
+            return field?.Type ?? throw new Exception(
+                $"Package '{package.Name}' has no field named '{fieldName}'.");
+        }
+
+        private void ValidateArguments(string callableName, IReadOnlyList<ExpressionNode> arguments,
+            IReadOnlyList<ParameterNode> parameters, Dictionary<string, string?> localVariables)
+        {
+            if (arguments.Count != parameters.Count)
+                throw new Exception($"'{callableName}' expects {parameters.Count} argument(s), but got {arguments.Count}.");
+            for (int index = 0; index < arguments.Count; index++)
+            {
+                string? actualType = AnalyzeExpression(arguments[index], localVariables);
+                string? expectedType = parameters[index].Type;
+                if (!CheckType(expectedType!, actualType))
+                    throw new Exception($"Type mismatch in argument {index + 1} of '{callableName}'. Expected '{expectedType}' but got '{actualType}'.");
+            }
         }
 
         /// <summary>
@@ -838,6 +865,15 @@
             TypeSymbol target = TypeFacts.FromName(firstType);
             TypeSymbol source = TypeFacts.FromName(secondType);
             return TypeFacts.IsAssignableTo(source, target);
+        }
+
+        private void EnsureKnownType(string? typeName, bool allowVoid = false, bool allowLet = false)
+        {
+            if (typeName is null) return;
+            if (allowVoid && typeName == "void" || allowLet && typeName == "let") return;
+            TypeSymbol type = TypeFacts.FromName(typeName);
+            if (type is NamedTypeSymbol named && !_packages.ContainsKey(named.Name))
+                throw new Exception($"Unknown package type '{named.Name}'.");
         }
 
         /// <summary>

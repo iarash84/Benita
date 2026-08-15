@@ -113,6 +113,12 @@
                     members.Add(new PackageFunctionNode(function.Name, function.Parameters, function.ReturnType,
                         function.Body, function.ReturnStatement));
                 }
+                else if (Match(TokenType.INIT))
+                {
+                    if (members.OfType<PackageFunctionNode>().Any(member => member.Name == "init"))
+                        throw Error("BEN2008", "A package can declare only one init constructor.");
+                    members.Add(ParsePackageInitializer());
+                }
                 else if (Match(TokenType.NUMBER, TokenType.STRING, TokenType.BOOL, TokenType.LET))
                 {
                     var type = PreviousToken().Lexeme;
@@ -155,6 +161,14 @@
                         throw Error("BEN2001", "Expected a variable or function declaration.");
                     }
                 }
+                else if (Check(TokenType.IDENTIFIER) && NextToken().Type == TokenType.IDENTIFIER)
+                {
+                    string type = Advance().Lexeme;
+                    string name = Advance().Lexeme;
+                    ExpressionNode? initializer = Match(TokenType.EQUAL) ? ParseExpression() : null;
+                    Consume(TokenType.SEMICOLON, "Expected ';' after package field declaration");
+                    members.Add(new PackageVariableDeclarationNode(type, name, initializer));
+                }
                 else
                 {
                     throw Error("BEN2001", "Unexpected token inside package.");
@@ -163,6 +177,19 @@
             Consume(TokenType.RBRACE, "Expected '}' after package body.");
 
             return new PackageNode(packageName, members);
+        }
+
+        private PackageFunctionNode ParsePackageInitializer()
+        {
+            Consume(TokenType.LPAREN, "Expected '(' after 'init'");
+            List<ParameterNode> parameters = ParseParameters();
+            Consume(TokenType.RPAREN, "Expected ')' after init parameters");
+            Consume(TokenType.LBRACE, "Expected '{' before init body");
+            List<StatementNode?> statements = new();
+            while (!IsAtEnd() && !Check(TokenType.RBRACE))
+                statements.Add(ParseStatement());
+            Consume(TokenType.RBRACE, "Expected '}' after init body");
+            return new PackageFunctionNode("init", parameters, "void", new BlockNode(statements), null);
         }
 
         /// <summary>
@@ -431,32 +458,25 @@
                 return ParseBlockStatement();
             }
 
-            if (Check(TokenType.LET) &&
-                NextToken().Type == TokenType.IDENTIFIER &&
-                NextToken(2).Type == TokenType.EQUAL &&
-                NextToken(3).Type == TokenType.NEW)
-            {
-                Consume(TokenType.LET, "Object Instantiation checked");
-                if (Match(TokenType.IDENTIFIER) && Check(TokenType.EQUAL))
-                    return ParseObjectInstantiationOrAssignment();
-            }
-
-
             if (Check(TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
             {
                 return ParseVariableDeclaration();
             }
+            if (Check(TokenType.IDENTIFIER) && NextToken().Type == TokenType.IDENTIFIER)
+            {
+                string type = Advance().Lexeme;
+                string name = Advance().Lexeme;
+                ExpressionNode? initializer = Match(TokenType.EQUAL) ? ParseExpression() : null;
+                Consume(TokenType.SEMICOLON, "Expected ';' after variable declaration");
+                return new VariableDeclarationNode(type, name, initializer);
+            }
             if (Match(TokenType.IDENTIFIER))
             {
-                if (Match(TokenType.IDENTIFIER) && Check(TokenType.EQUAL))
-                {
-                    return ParseObjectInstantiationOrAssignment();
-                }
                 return ParseExpressionStatementOrAssignment();
             }
             if (Check(TokenType.NUMBER_LITERAL, TokenType.STRING_LITERAL, TokenType.TRUE_LITERAL,
                     TokenType.FALSE_LITERAL, TokenType.LPAREN, TokenType.LSQUAREBRACE,
-                    TokenType.BANG, TokenType.MINUS))
+                    TokenType.BANG, TokenType.MINUS, TokenType.NEW, TokenType.THIS))
             {
                 ExpressionNode? expression = ParseExpression();
                 Consume(TokenType.SEMICOLON, "Expected ';' after expression");
@@ -923,6 +943,16 @@
         /// <returns>An <see cref="ExpressionNode"/> representing the primary expression.</returns>
         private ExpressionNode? ParsePrimary()
         {
+            if (Match(TokenType.NEW))
+                return ParseNewExpression();
+
+            if (Match(TokenType.THIS))
+            {
+                if (Check(TokenType.DOT))
+                    return ParseMemberAccess("this");
+                return new IdentifierNode("this");
+            }
+
             if (Match(TokenType.MATCH))
                 return ParseMatchExpression();
 
@@ -951,6 +981,22 @@
             }
 
             throw Error("BEN2001", $"Unexpected token '{CurrentToken().Lexeme}' ({CurrentToken().Type}).");
+        }
+
+        private NewExpressionNode ParseNewExpression()
+        {
+            string packageName = Consume(TokenType.IDENTIFIER, "Expected package name after 'new'").Lexeme;
+            Consume(TokenType.LPAREN, "Expected '(' after package name");
+            List<ExpressionNode?> arguments = new();
+            if (!Check(TokenType.RPAREN))
+            {
+                do
+                {
+                    arguments.Add(ParseExpression());
+                } while (Match(TokenType.COMMA));
+            }
+            Consume(TokenType.RPAREN, "Expected ')' after constructor arguments");
+            return new NewExpressionNode(packageName, arguments);
         }
 
         /// <summary>یک match مقدارساز را تجزیه می‌کند.</summary>

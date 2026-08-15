@@ -15,12 +15,12 @@
         /// <param name="packageNode">The package node that defines the package.</param>
         /// <param name="arguments">The arguments for the constructor, if any.</param>
         /// <param name="debugMode"></param>
-        public PackageInstance(string instanceName, PackageNode packageNode, List<ExpressionNode> arguments,
+        public PackageInstance(string instanceName, PackageNode packageNode, IReadOnlyList<object?> arguments,
             bool debugMode, RuntimeContext context)
         {
             _interpreter = new Interpreter(debugMode, instanceName, context: context);
 
-            bool hasConstructor = false;
+            string? initializerName = null;
             foreach (var member in packageNode.Members)
             {
                 if (member is PackageVariableDeclarationNode field)
@@ -31,8 +31,10 @@
                 }
                 else if (member is PackageFunctionNode method)
                 {
-                    if (method.Name == packageNode.Name && !hasConstructor)
-                        hasConstructor = true;
+                    if (method.Name == "init")
+                        initializerName = "init";
+                    else if (method.Name == packageNode.Name && initializerName is null)
+                        initializerName = packageNode.Name;
                     var functionNode = new FunctionNode(method.Name, method.Parameters, method.ReturnType, method.Body, method.ReturnStatement);
                     _interpreter.Visit(functionNode);
                 }
@@ -40,9 +42,10 @@
             _interpreter.SetGlobalVariable();
 
             // Execute constructor if it exists
-            if (hasConstructor)
+            if (initializerName is not null)
             {
-                var functionCallNode = new FunctionCallNode(packageNode.Name, arguments);
+                var functionCallNode = new FunctionCallNode(initializerName,
+                    arguments.Select(argument => (ExpressionNode)new RuntimeValueNode(argument)).ToList());
                 _interpreter.Visit(functionCallNode);
             }
         }

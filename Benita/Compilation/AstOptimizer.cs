@@ -139,6 +139,9 @@ namespace Benita
                     OptimizeExpression(array.SizeExpression)!),
                 MemberAccessNode member => new MemberAccessNode(
                     member.ObjectName, OptimizeMemberExpression(member.Expression)),
+                NewExpressionNode creation => new NewExpressionNode(
+                    creation.PackageName,
+                    creation.Arguments.Select(argument => OptimizeExpression(argument)!).ToList()),
                 MatchExpressionNode match => new MatchExpressionNode(
                     OptimizeExpression(match.Value)!, OptimizeMatchArms(match.Arms)),
                 _ => throw new InvalidOperationException($"Unsupported expression '{node.GetType().Name}'.")

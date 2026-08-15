@@ -19,7 +19,7 @@
 - توابع کامل رشته‌ای برای طول، جست‌وجو، برش، جایگزینی، تقسیم و تغییر حروف
 - توابع، بازگشت و فراخوانی بازگشتی
 - شرط‌های `if/else if/else`، ساختار مقدارساز/دستوری `match` و حلقه‌های `while`، `for` و `for-in`
-- بسته‌ها (`pkg`)، اعضای بسته و نمونه‌سازی
+- بسته‌ها (`pkg`)، مقداردهی با `init`، ارجاع `this`، composition و نمونه‌سازی expression-based
 - ورودی و خروجی کنسول
 - عملیات خواندن، نوشتن، بررسی وجود و حذف فایل
 - دستور `include_once` برای استفاده از فایل‌های دیگر
@@ -164,7 +164,7 @@ Benita is a small educational programming language I am building with C# and .NE
 - String operations for length, search, slicing, replacement, splitting, trimming, and letter case
 - Functions, returns, and recursion
 - `if/else if/else` conditions, value/statement `match`, and `while`/`for`/`for-in` loops
-- Packages (`pkg`), package members, and object instantiation
+- Packages (`pkg`) with `init`, `this`, composition, and expression-based object creation
 - Console input and output
 - File read, write, existence, and deletion operations
 - `include_once` support for reusable source files
