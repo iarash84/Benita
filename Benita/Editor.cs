@@ -159,7 +159,9 @@
             string[] types = { "number", "string", "bool", "void", "let" };
             string[] defaultFunctions =
             {
-                "array_len", "array_add", "array_remove", "file_read", "file_write", "file_exist", "file_delete",
+                "array_len", "array_add", "array_remove", "array_contains", "array_index_of", "array_reverse",
+                "array_clear", "array_insert", "array_slice", "array_concat", "array_sort",
+                "file_read", "file_write", "file_exist", "file_delete",
                 "print", "input", "to_string", "to_number"
             };
             string[] operatorStrings = { "(", ")", "{", "}", "->", ";" };
