@@ -213,4 +213,55 @@ _main_() { print(sign(2)); }";
 
         StringAssert.Contains(exception.Message, "pattern type mismatch");
     }
+
+    [TestMethod]
+    public void Exec_MatchStatement_SupportsMultiplePatternsAndSingleStatementBody()
+    {
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec("""
+            number value = 2;
+            match value {
+                1, 2, 3 => print("small");
+                _ => print("other");
+            }
+            """);
+
+        Assert.AreEqual("small\r\n", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void Exec_MatchExpression_SupportsInclusiveRangesAndSemicolonSeparators()
+    {
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec("""
+            number value = 10;
+            let result = match value {
+                0..10 => "low";
+                11..20 => "medium";
+                _ => "high"
+            };
+            print(result);
+            """, optimizeAst: true);
+
+        Assert.AreEqual("low\r\n", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void Lexer_RangeOperator_IsDistinctFromDecimalPoint()
+    {
+        List<Token> tokens = new Lexer("0..10").Tokenize();
+
+        CollectionAssert.AreEqual(
+            new[] { TokenType.NUMBER_LITERAL, TokenType.RANGE, TokenType.NUMBER_LITERAL, TokenType.EOF },
+            tokens.Select(token => token.Type).ToArray());
+    }
+
+    [TestMethod]
+    public void Check_RangePatternRequiresNumbers()
+    {
+        var exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check("let x = match \"b\" { \"a\"..\"z\" => 1, _ => 0 }; print(x);"));
+
+        StringAssert.Contains(exception.Message, "require a number");
+    }
 }

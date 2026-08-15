@@ -389,14 +389,31 @@
             string? valueType = AnalyzeExpression(match.Value, localVariables);
             foreach (MatchArm arm in match.Arms)
             {
-                if (!arm.IsDefault)
-                {
-                    string? patternType = AnalyzeExpression(arm.Pattern!, localVariables);
-                    if (!CheckType(valueType, patternType))
-                        throw new Exception($"Match pattern type mismatch. Expected '{valueType}' but got '{patternType}'.");
-                }
+                AnalyzeMatchPatterns(arm, valueType, localVariables);
 
                 AnalyzeStatement((StatementNode)arm.Body, localVariables, functionReturnType, loopDepth);
+            }
+        }
+
+        private void AnalyzeMatchPatterns(MatchArm arm, string? valueType,
+            Dictionary<string, string?> localVariables)
+        {
+            foreach (MatchPatternNode pattern in arm.Patterns)
+            {
+                switch (pattern)
+                {
+                    case ValueMatchPatternNode valuePattern:
+                        string? patternType = AnalyzeExpression(valuePattern.Value, localVariables);
+                        if (!CheckType(valueType, patternType))
+                            throw new Exception($"Match pattern type mismatch. Expected '{valueType}' but got '{patternType}'.");
+                        break;
+                    case RangeMatchPatternNode range:
+                        string? startType = AnalyzeExpression(range.Start, localVariables);
+                        string? endType = AnalyzeExpression(range.End, localVariables);
+                        if (valueType != "number" || startType != "number" || endType != "number")
+                            throw new Exception("Match range patterns require a number value and numeric boundaries.");
+                        break;
+                }
             }
         }
 
@@ -483,12 +500,7 @@
             string? resultType = null;
             foreach (MatchArm arm in match.Arms)
             {
-                if (!arm.IsDefault)
-                {
-                    string? patternType = AnalyzeExpression(arm.Pattern!, localVariables);
-                    if (!CheckType(valueType, patternType))
-                        throw new Exception($"Match pattern type mismatch. Expected '{valueType}' but got '{patternType}'.");
-                }
+                AnalyzeMatchPatterns(arm, valueType, localVariables);
 
                 string? armType = AnalyzeExpression((ExpressionNode)arm.Body, localVariables);
                 resultType ??= armType;

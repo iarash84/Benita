@@ -553,7 +553,7 @@
 
             while (!Check(TokenType.RBRACE) && !IsAtEnd())
             {
-                (ExpressionNode? pattern, bool isDefault) = ParseMatchPattern();
+                (List<MatchPatternNode> patterns, bool isDefault) = ParseMatchPatterns();
                 if (isDefault && hasDefault)
                     throw Error("BEN2007", "A match can contain only one default '_' arm.");
                 if (hasDefault)
@@ -561,10 +561,9 @@
                 hasDefault |= isDefault;
 
                 Consume(TokenType.FAT_ARROW, "Expected '=>' after match pattern");
-                Consume(TokenType.LBRACE, "Expected '{' before match statement arm");
-                StatementNode body = ParseBlockStatement();
-                arms.Add(new MatchArm(pattern, body, isDefault));
-                Match(TokenType.COMMA);
+                StatementNode body = ParseStatement();
+                arms.Add(new MatchArm(patterns, body, isDefault));
+                Match(TokenType.COMMA, TokenType.SEMICOLON);
             }
 
             Consume(TokenType.RBRACE, "Expected '}' after match arms");
@@ -573,17 +572,32 @@
             return new MatchStatementNode(value, arms);
         }
 
-        /// <summary>الگوی یک شاخه match یا شاخه پیش‌فرض `_` را می‌خواند.</summary>
-        private (ExpressionNode? Pattern, bool IsDefault) ParseMatchPattern()
+        /// <summary>الگوهای مقداری یا بازه‌ای یک شاخه match را می‌خواند.</summary>
+        private (List<MatchPatternNode> Patterns, bool IsDefault) ParseMatchPatterns()
         {
             if (Check(TokenType.IDENTIFIER) && CurrentToken().Lexeme == "_" &&
                 NextToken().Type == TokenType.FAT_ARROW)
             {
                 Advance();
-                return (null, true);
+                return (new List<MatchPatternNode>(), true);
             }
 
-            return (ParseExpression(), false);
+            List<MatchPatternNode> patterns = new();
+            do
+            {
+                ExpressionNode start = ParseExpression();
+                if (Match(TokenType.RANGE))
+                {
+                    ExpressionNode end = ParseExpression();
+                    patterns.Add(new RangeMatchPatternNode(start, end));
+                }
+                else
+                {
+                    patterns.Add(new ValueMatchPatternNode(start));
+                }
+            } while (Match(TokenType.COMMA));
+
+            return (patterns, false);
         }
 
         /// <summary>
@@ -939,7 +953,7 @@
 
             while (!Check(TokenType.RBRACE) && !IsAtEnd())
             {
-                (ExpressionNode? pattern, bool isDefault) = ParseMatchPattern();
+                (List<MatchPatternNode> patterns, bool isDefault) = ParseMatchPatterns();
                 if (isDefault && hasDefault)
                     throw Error("BEN2007", "A match can contain only one default '_' arm.");
                 if (hasDefault)
@@ -948,10 +962,10 @@
 
                 Consume(TokenType.FAT_ARROW, "Expected '=>' after match pattern");
                 ExpressionNode result = ParseExpression();
-                arms.Add(new MatchArm(pattern, result, isDefault));
+                arms.Add(new MatchArm(patterns, result, isDefault));
 
-                if (!Match(TokenType.COMMA) && !Check(TokenType.RBRACE))
-                    throw Error("BEN2007", "Expected ',' between match expression arms.");
+                if (!Match(TokenType.COMMA, TokenType.SEMICOLON) && !Check(TokenType.RBRACE))
+                    throw Error("BEN2007", "Expected ',' or ';' between match expression arms.");
             }
 
             Consume(TokenType.RBRACE, "Expected '}' after match arms");

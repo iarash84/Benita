@@ -168,10 +168,26 @@
         public StatementNode? ElseBranch { get; } = elseBranch;
     }
 
-    /// <summary>یک شاخه از ساختار match را همراه الگو و بدنه نگهداری می‌کند.</summary>
-    public class MatchArm(ExpressionNode? pattern, AstNode body, bool isDefault)
+    /// <summary>کلاس پایه برای الگوهای قابل استفاده در شاخه‌های match است.</summary>
+    public abstract class MatchPatternNode : AstNode;
+
+    /// <summary>یک مقدار منفرد را به‌عنوان الگوی match بازنمایی می‌کند.</summary>
+    public class ValueMatchPatternNode(ExpressionNode value) : MatchPatternNode
     {
-        public ExpressionNode? Pattern { get; } = pattern;
+        public ExpressionNode Value { get; } = value;
+    }
+
+    /// <summary>یک بازه بسته، شامل هر دو مرز، را به‌عنوان الگوی match بازنمایی می‌کند.</summary>
+    public class RangeMatchPatternNode(ExpressionNode start, ExpressionNode end) : MatchPatternNode
+    {
+        public ExpressionNode Start { get; } = start;
+        public ExpressionNode End { get; } = end;
+    }
+
+    /// <summary>یک شاخه از ساختار match را همراه الگوها و بدنه نگهداری می‌کند.</summary>
+    public class MatchArm(List<MatchPatternNode> patterns, AstNode body, bool isDefault)
+    {
+        public List<MatchPatternNode> Patterns { get; } = patterns;
         public AstNode Body { get; } = body;
         public bool IsDefault { get; } = isDefault;
     }

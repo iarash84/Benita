@@ -143,6 +143,11 @@
                 case ';': AddToken(TokenType.SEMICOLON); break;
                 case ',': AddToken(TokenType.COMMA); break;
                 case '.':
+                    if (Match('.'))
+                    {
+                        AddToken(TokenType.RANGE);
+                        break;
+                    }
                     if (IsDigit(Peek()))
                         throw CreateError("BEN1005", "Decimal literals must start with a digit; use '0.5' instead of '.5'.");
                     AddToken(TokenType.DOT);

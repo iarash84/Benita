@@ -151,12 +151,20 @@ namespace Benita
 
         private List<MatchArm> OptimizeMatchArms(IEnumerable<MatchArm> arms) => arms
             .Select(arm => new MatchArm(
-                OptimizeExpression(arm.Pattern),
+                arm.Patterns.Select(OptimizeMatchPattern).ToList(),
                 arm.Body is ExpressionNode expression
                     ? OptimizeExpression(expression)!
                     : OptimizeStatement((StatementNode)arm.Body)!,
                 arm.IsDefault))
             .ToList();
+
+        private MatchPatternNode OptimizeMatchPattern(MatchPatternNode pattern) => pattern switch
+        {
+            ValueMatchPatternNode value => new ValueMatchPatternNode(OptimizeExpression(value.Value)!),
+            RangeMatchPatternNode range => new RangeMatchPatternNode(
+                OptimizeExpression(range.Start)!, OptimizeExpression(range.End)!),
+            _ => throw new InvalidOperationException($"Unsupported match pattern '{pattern.GetType().Name}'.")
+        };
 
         private ExpressionNode OptimizeBinary(BinaryExpressionNode node)
         {

@@ -62,6 +62,8 @@ Benita supports chained `else if` branches and two forms of `match`: an
 expression form that returns a value and a statement form whose arms contain
 blocks. Match expressions require a final `_` default arm and consistent result
 types. Match statements may omit the default arm.
+An arm may contain alternative patterns such as `1, 2, 3`, an inclusive numeric
+range such as `0..10`, and either a block or a single statement body.
 
 ## ساختار مخزن
 

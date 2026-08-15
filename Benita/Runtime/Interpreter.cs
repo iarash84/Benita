@@ -735,7 +735,7 @@ namespace Benita
                     defaultArm = arm;
                     continue;
                 }
-                if (Equals(value, Visit(arm.Pattern)))
+                if (MatchArmAccepts(arm, value))
                     return Visit(arm.Body);
             }
             return Visit(defaultArm!.Body);
@@ -753,10 +753,28 @@ namespace Benita
                     defaultArm = arm;
                     continue;
                 }
-                if (Equals(value, Visit(arm.Pattern)))
+                if (MatchArmAccepts(arm, value))
                     return Visit(arm.Body);
             }
             return defaultArm is null ? null : Visit(defaultArm.Body);
+        }
+
+        private bool MatchArmAccepts(MatchArm arm, object value)
+        {
+            foreach (MatchPatternNode pattern in arm.Patterns)
+            {
+                if (pattern is ValueMatchPatternNode valuePattern && Equals(value, Visit(valuePattern.Value)))
+                    return true;
+                if (pattern is RangeMatchPatternNode range)
+                {
+                    double candidate = Convert.ToDouble(value);
+                    double start = Convert.ToDouble(Visit(range.Start));
+                    double end = Convert.ToDouble(Visit(range.End));
+                    if (candidate >= start && candidate <= end)
+                        return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

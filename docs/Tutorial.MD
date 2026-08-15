@@ -102,6 +102,28 @@ match value {
 در نوع مقدارساز، شاخه‌ی پیش‌فرض `_` اجباری است و خروجی همه‌ی شاخه‌ها باید یک نوع
 داشته باشد. در نوع دستوری `_` اختیاری است. اگر استفاده شود باید آخرین شاخه باشد.
 
+چند مقدار را می‌توان در یک شاخه با ویرگول گروه‌بندی کرد. بدنه‌ی تک‌دستوری نیز به
+آکولاد نیاز ندارد:
+
+```benita
+match value {
+    1, 2, 3 => print("small");
+    _ => print("other");
+}
+```
+
+الگوی `start..end` یک بازه‌ی عددی بسته است؛ یعنی هر دو مرز را شامل می‌شود:
+
+```benita
+let level = match value {
+    0..10 => "low";
+    11..20 => "medium";
+    _ => "high"
+};
+```
+
+شاخه‌ها از بالا به پایین بررسی می‌شوند و اولین شاخه‌ی منطبق اجرا می‌شود.
+
 ### ۵. حلقه‌ها و کنترل جریان
 
 حلقه `while`:
@@ -512,6 +534,28 @@ match value {
 
 A match expression requires a final `_` arm and all of its arms must produce the
 same type. The default arm is optional for a match statement.
+
+Comma-separated patterns in one arm are alternatives, and a single statement
+body does not require braces:
+
+```benita
+match value {
+    1, 2, 3 => print("small");
+    _ => print("other");
+}
+```
+
+`start..end` defines an inclusive numeric range:
+
+```benita
+let level = match value {
+    0..10 => "low";
+    11..20 => "medium";
+    _ => "high"
+};
+```
+
+Arms are checked from top to bottom and the first matching arm is selected.
 
 ### 5. Loops and control flow
 

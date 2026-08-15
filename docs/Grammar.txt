@@ -62,7 +62,7 @@ for-increment           ::= assignment | compound-assignment | increment ;
 variable-declaration-no-semicolon
                          ::= variable-type identifier ("=" expression)? ;
 match-statement         ::= "match" expression "{" match-statement-arm+ "}" ;
-match-statement-arm     ::= match-pattern "=>" block ","? ;
+match-statement-arm     ::= match-pattern-list "=>" statement ("," | ";")? ;
 
 return-statement        ::= "return" expression? ";" ;
 break-statement         ::= "break" ";" ;
@@ -107,9 +107,11 @@ argument-list           ::= expression ("," expression)* ;
 array-initializer       ::= "[" argument-list? "]" ;
 sized-array-initializer ::= primitive-type "[" expression "]" ;
 match-expression        ::= "match" expression "{" match-expression-arm
-                            ("," match-expression-arm)* ","? "}" ;
-match-expression-arm    ::= match-pattern "=>" expression ;
-match-pattern           ::= expression | "_" ;
+                            (("," | ";") match-expression-arm)*
+                            ("," | ";")? "}" ;
+match-expression-arm    ::= match-pattern-list "=>" expression ;
+match-pattern-list      ::= "_" | match-pattern ("," match-pattern)* ;
+match-pattern           ::= expression (".." expression)? ;
 
 literal                 ::= number-literal | string-literal | boolean-literal ;
 boolean-literal         ::= "true" | "false" ;
@@ -140,6 +142,9 @@ Semantic constraints
    The default arm of a match statement is optional, but when present it is last.
 10. Match patterns must have the same type as the matched value. Every result
     arm of a match expression must produce the same type.
+11. Multiple patterns in one arm are alternatives: `1, 2, 3` matches any of
+    those values. A numeric range `start..end` is inclusive at both boundaries.
+    Arms are tested from top to bottom and the first matching arm is selected.
 
 Notes
 -----

@@ -53,7 +53,14 @@ internal static class AstPrinter
         foreach (MatchArm arm in arms)
         {
             Console.WriteLine($"{indent}MatchArm{(arm.IsDefault ? " (default)" : string.Empty)}");
-            Print(arm.Pattern, indent + "  ");
+            foreach (MatchPatternNode pattern in arm.Patterns)
+            {
+                switch (pattern)
+                {
+                    case ValueMatchPatternNode value: Print(value.Value, indent + "  "); break;
+                    case RangeMatchPatternNode range: Print(range.Start, indent + "  "); Print(range.End, indent + "  "); break;
+                }
+            }
             Print(arm.Body, indent + "  ");
         }
     }
