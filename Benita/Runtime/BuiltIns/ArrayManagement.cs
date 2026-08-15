@@ -1,10 +1,10 @@
 ﻿namespace Benita.itpr_df
 {
     /// <summary>توابع داخلی جست‌وجو، تغییر ساختار و مرتب‌سازی آرایه‌ها را اجرا می‌کند.</summary>
-    public class ArrayManagement : IInterpreterClass
+    public class ArrayManagement : BuiltInHandler
     {
         /// <summary>تابع آرایه متناظر با نام دریافتی را اجرا می‌کند.</summary>
-        public object HandleFunctionCall(string? functionName, List<object> arguments)
+        protected override object Execute(string? functionName, List<object> arguments)
         {
             switch (functionName)
             {

@@ -27,40 +27,38 @@ Benita/
 - برای REPL و ارائه‌دهندگان built-in مستندات XML فارسی اضافه شد.
 - build با warning به‌عنوان error بررسی شد و هشدار کامپایلری مشاهده نشد.
 
-## بدهی‌های معماری باقی‌مانده
+## بدهی‌های معماری رفع‌شده
 
 ### ۱. وضعیت سراسری ایستا
 
-کلاس `Globals` وضعیت متغیرها، توابع و بسته‌ها را به‌شکل mutable و static نگهداری می‌کند.
-این طراحی اجرای هم‌زمان چند Interpreter و تست موازی را دشوار می‌کند. پیشنهاد می‌شود در
-یک تغییر مستقل، کلاس نمونه‌ای `RuntimeContext` ساخته و از طریق سازنده به Interpreter،
-PackageInstance و DebugClass تزریق شود.
+کلاس static قبلی `Globals` حذف شد. اکنون هر اجرا یک نمونهٔ مستقل `RuntimeContext` دارد که
+از طریق سازنده به `Interpreter` و `PackageInstance` تزریق و برای debugger ارسال می‌شود.
+در نتیجه چند Interpreter می‌توانند بدون اشتراک ناخواستهٔ متغیرها، توابع یا بسته‌ها اجرا شوند.
 
 ### ۲. تکرار registry توابع داخلی
 
-نام و امضای built-inها هم در `FactoryClass` و هم در `SemanticAnalyzer` تعریف شده است.
-این تکرار می‌تواند باعث ثبت‌شدن تابع در یک بخش و فراموش‌شدن آن در بخش دیگر شود. راهکار
-پیشنهادی تعریف یک `BuiltInDescriptor` مشترک شامل نام، نوع خروجی، پارامترها و handler است.
+`FactoryClass` و فهرست تکراری SemanticAnalyzer حذف شدند. `BuiltInRegistry` اکنون مجموعه‌ای
+از `BuiltInDescriptor`ها شامل نام، نوع خروجی، پارامترها و سازندهٔ handler را نگه می‌دارد.
+تحلیل معنایی و مفسر هر دو مستقیماً از همین registry استفاده می‌کنند.
 
-### ۳. اندازهٔ Parser، SemanticAnalyzer و Interpreter
+### ۳. خطاهای عمومی built-inها
 
-این کلاس‌ها visitorهای مرکزی و در حال حاضر بزرگ هستند. شکستن آن‌ها بدون مدل visitor مشترک
-ریسک regression بالایی دارد. مسیر پیشنهادی، معرفی visitor interface برای AST و انتقال تدریجی
-منطق expression، statement، function و package به فایل‌های partial یا visitorهای تخصصی است.
+تمام handlerهای داخلی از `BuiltInHandler` مشتق می‌شوند. این کلاس خطاهای داخلی .NET را به
+`BuiltInException` با کد پایدار `BEN4101` تبدیل می‌کند؛ بنابراین CLI، REPL و استفاده مستقیم
+از runtime قرارداد خطای یکسان دارند.
 
-### ۴. خطاهای عمومی built-inها
+### ۴. نسخه برنامه
 
-بخشی از توابع داخلی هنوز `Exception` یا خطاهای استاندارد .NET برمی‌گردانند. بهتر است
-تمام خطاهای runtime به کدهای تشخیصی پایدار Benita نگاشت شوند تا پیام CLI و REPL یکسان باشد.
+`AppVersion` نسخه را از assembly metadata می‌خواند. Help و REPL دیگر شماره نسخهٔ hard-coded
+ندارند و مقدار `<Version>` در فایل پروژه تنها منبع نسخهٔ برنامه است.
 
-### ۵. نسخه برنامه
+## تفکیک تدریجی visitorها
 
-نسخه هم در فایل پروژه و هم در خروجی CLI نوشته شده است. بهتر است REPL و Help نسخه را از
-assembly metadata بخوانند تا هنگام release فقط یک مقدار تغییر کند.
+قرارداد عمومی `IAstVisitor<TResult>` اضافه و Interpreter به آن متصل شده است. Parser و
+SemanticAnalyzer هنوز کلاس‌های مرکزی بزرگی هستند، زیرا parser یک recursive-descent parser و
+تحلیل‌گر دارای context نوعی وابسته به scope است. انتقال منطق آن‌ها باید تدریجی و همراه با
+تست اختصاصی هر گروه node انجام شود؛ پراکنده‌کردن صرف متدها در فایل‌های partial بدون تغییر
+مرز مسئولیت، به‌عنوان بهبود معماری در نظر گرفته نشده است.
 
-## ترتیب پیشنهادی توسعه
-
-1. ایجاد registry مشترک built-inها؛
-2. جایگزینی `Globals` با `RuntimeContext`؛
-3. یکسان‌سازی RuntimeExceptionها؛
-4. معرفی visitor interface و تفکیک تدریجی سه کلاس بزرگ.
+گام بعدی پیشنهادی، تعریف visitorهای تخصصی expression و statement روی مدل AST و انتقال هر
+گروه همراه با تست regression مستقل است.

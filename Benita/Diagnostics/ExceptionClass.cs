@@ -58,6 +58,10 @@ public sealed class SemanticException(string description, Exception? innerExcept
 public sealed class RuntimeException(string description, Exception? innerException = null)
     : BenitaException("BEN4001", description, innerException: innerException);
 
+/// <summary>خطای پایدار مربوط به اعتبارسنجی یا اجرای توابع داخلی زبان.</summary>
+public sealed class BuiltInException(string description, Exception? innerException = null)
+    : BenitaException("BEN4101", description, innerException: innerException);
+
 public class BreakException() : Exception("Break statement encountered.");
 
 public class ContinueException() : Exception("Continue statement encountered.");

@@ -1,5 +1,7 @@
 ﻿using Benita.itpr_df;
 
+using Benita;
+
 namespace BenitaTestProject.Itpr_df
 {
     [TestClass]
@@ -79,8 +81,8 @@ namespace BenitaTestProject.Itpr_df
             var arguments = new List<object>();
 
             // Act & Assert
-            var exception = Assert.ThrowsException<Exception>(() => utility.HandleFunctionCall(functionName, arguments));
-            Assert.AreEqual($"Unknown utility function '{functionName}'", exception.Message);
+            var exception = Assert.ThrowsException<BuiltInException>(() => utility.HandleFunctionCall(functionName, arguments));
+            Assert.AreEqual($"Unknown utility function '{functionName}'", exception.Description);
         }
     }
 }

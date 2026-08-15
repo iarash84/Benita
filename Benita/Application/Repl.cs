@@ -28,7 +28,7 @@ public sealed class Repl
     public void Run(bool printTokens = false, bool printAst = false, bool printSource = false,
         bool optimizeAst = false)
     {
-        _output.WriteLine("Benita REPL 0.5.0");
+        _output.WriteLine($"Benita REPL {AppVersion.Current}");
         _output.WriteLine("Type :help for commands or :exit to quit.");
 
         while (true)

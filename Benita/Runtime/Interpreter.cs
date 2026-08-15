@@ -6,7 +6,7 @@ namespace Benita
     /// It handles expression evaluation, statement execution, function management, and control flow, 
     /// effectively bringing the Benita source code to life through dynamic interpretation.
     /// </summary>
-    public class Interpreter
+    public class Interpreter : IAstVisitor<object>
     {
         private readonly Dictionary<string, FunctionNode> _functions = [];
         private Dictionary<string, object> _variables = [];
@@ -17,16 +17,18 @@ namespace Benita
         private readonly string _packageScope;
         private readonly DebugClass _debugClass;
         private readonly bool _preserveStateBetweenPrograms;
+        private readonly RuntimeContext _context;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Interpreter"/> class.
         /// </summary>
         /// <param name="packageScope">The scope of the package, default is "_main_".</param>
         public Interpreter(bool debugMode = false, string packageScope = "Program",
-            bool preserveStateBetweenPrograms = false)
+            bool preserveStateBetweenPrograms = false, RuntimeContext? context = null)
         {
             _debugMode = debugMode;
             _preserveStateBetweenPrograms = preserveStateBetweenPrograms;
+            _context = context ?? new RuntimeContext();
             if (debugMode)
             {
                 _debugClass = DebugClass.Instance;
@@ -39,7 +41,7 @@ namespace Benita
         {
             if (_debugMode)
             {
-                _debugClass.DebugLog(message, _variables, _outerScopeVariables, _functions, pressKeyWait);
+                _debugClass.DebugLog(message, _variables, _outerScopeVariables, _functions, _context, pressKeyWait);
             }
         }
 
@@ -61,7 +63,7 @@ namespace Benita
         public void SetGlobalVariable()
         {
             DebugLog("SetGlobalVariable");
-            foreach (var kvp in Globals.GlobalVariable)
+            foreach (var kvp in _context.GlobalVariables)
                 _variables.Add(kvp.Key, kvp.Value);
         }
 
@@ -143,13 +145,13 @@ namespace Benita
         {
             DebugLog($"Instantiating object {node.Name} from package {node.PackageName}", false);
             // Get the package definition from the list of packages
-            if (!Globals.PackageList.TryGetValue(node.PackageName, out var packageNode))
+            if (!_context.Packages.TryGetValue(node.PackageName, out var packageNode))
             {
                 throw new($"Package '{node.PackageName}' not found.");
             }
 
             // Create a new package instance
-            var packageInstance = new PackageInstance(node.Name, packageNode, node.Arguments, _debugMode);
+            var packageInstance = new PackageInstance(node.Name, packageNode, node.Arguments, _debugMode, _context);
 
             // Optionally, you might handle constructor arguments here
             // For simplicity, we assume no arguments or default constructor logic.
@@ -327,7 +329,7 @@ namespace Benita
             if (_functions.TryGetValue(name, out value))
                 return true;
 
-            if (Globals.GlobalFunctions.TryGetValue(name, out value))
+            if (_context.GlobalFunctions.TryGetValue(name, out value))
                 return true;
 
             return false;
@@ -390,11 +392,10 @@ namespace Benita
                 }
             }
 
-            var functionManagementClass = FactoryClass.GetInterpreterClass(node.FunctionName);
-            if (functionManagementClass != null)
+            if (BuiltInRegistry.TryGet(node.FunctionName, out BuiltInDescriptor descriptor))
             {
                 List<object> arguments = (from argument in node.Arguments select Visit(argument)).ToList();
-                return functionManagementClass.HandleFunctionCall(node.FunctionName, arguments);
+                return descriptor.HandlerFactory().HandleFunctionCall(node.FunctionName, arguments);
             }
 
             throw new($"Unknown function '{node.FunctionName}'");
@@ -416,9 +417,9 @@ namespace Benita
                 {
                     originalVariables[key] = variables[key];
                 }
-                else if (Globals.GlobalVariable.ContainsKey(key))
+                else if (_context.GlobalVariables.ContainsKey(key))
                 {
-                    Globals.GlobalVariable[key] = variables[key];
+                    _context.GlobalVariables[key] = variables[key];
                 }
             }
 
@@ -664,9 +665,10 @@ namespace Benita
 
             if (!_preserveStateBetweenPrograms)
             {
-                Globals.GlobalVariable.Clear();
-                Globals.GlobalFunctions.Clear();
-                Globals.PackageList.Clear();
+                _context.Clear();
+                _variables.Clear();
+                _functions.Clear();
+                _outerScopeVariables.Clear();
             }
 
             foreach (var packageNode in node.Packages)
@@ -684,8 +686,8 @@ namespace Benita
                 Visit(function);
             }
 
-            Globals.GlobalFunctions = _functions;
-            Globals.GlobalVariable = _variables;
+            Synchronize(_context.GlobalFunctions, _functions);
+            Synchronize(_context.GlobalVariables, _variables);
 
             if (node.MainFunction != null)
             {
@@ -711,6 +713,8 @@ namespace Benita
                 throw new("No entry point (_main_) defined.");
             }
 
+            Synchronize(_context.GlobalFunctions, _functions);
+            Synchronize(_context.GlobalVariables, _variables);
             return null;
         }
 
@@ -723,8 +727,15 @@ namespace Benita
         {
             DebugLog($"VisitPackageNode: Name = {packageNode.Name}");
 
-            Globals.PackageList[packageNode.Name] = packageNode;
+            _context.Packages[packageNode.Name] = packageNode;
             return null;
+        }
+
+        private static void Synchronize<TKey, TValue>(Dictionary<TKey, TValue> target,
+            Dictionary<TKey, TValue> source) where TKey : notnull
+        {
+            target.Clear();
+            foreach (var item in source) target[item.Key] = item.Value;
         }
 
         /// <summary>

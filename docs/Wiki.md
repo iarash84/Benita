@@ -68,7 +68,8 @@ flowchart LR
 | `Syntax/Token.cs` | تعریف انواع توکن و اطلاعات موقعیت آن‌ها |
 | `Syntax/ASTNode.cs` | تعریف Nodeهای عبارت‌ها، دستورات، توابع، حلقه‌ها، آرایه‌ها و بسته‌ها |
 | `Runtime/Interpreter.cs` | اجرای AST و نگهداری وضعیت زمان اجرا |
-| `Runtime/BuiltIns/FactoryClass.cs` | نگاشت توابع داخلی به پیاده‌سازی‌های مفسر |
+| `Runtime/RuntimeContext.cs` | وضعیت مستقل متغیرها، توابع و بسته‌های هر اجرا |
+| `Runtime/BuiltIns/BuiltInRegistry.cs` | منبع واحد نام، امضا و handler توابع داخلی |
 | `Runtime/DebugClass.cs` | امکانات اجرای برنامه در حالت Debug |
 | `Diagnostics/ExceptionClass.cs` | خطاهای ساخت‌یافتهٔ Lexer، Parser، Semantic و Runtime |
 
@@ -120,7 +121,7 @@ flowchart LR
 
 `Interpreter` با الگوی Visitor روی AST حرکت می‌کند. هنگام اجرا، مقدار متغیرها، scope توابع، آرایه‌ها و نمونه‌های package را مدیریت می‌کند و دستورات کنترلی را به‌ترتیب اجرا می‌کند.
 
-توابع داخلی مانند `print`، `input` و عملیات فایل از طریق `FactoryClass` به کلاس مناسب در پوشهٔ `itpr_df` هدایت می‌شوند.
+توابع داخلی مانند `print`، `input` و عملیات فایل از طریق `BuiltInRegistry` به handler مناسب در پوشهٔ `Runtime/BuiltIns` هدایت می‌شوند. وضعیت هر Interpreter نیز در `RuntimeContext` مستقل نگهداری می‌شود.
 
 ## مراحل پردازش برنامه
 
@@ -208,15 +209,17 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben -s 
 - `-t`: نمایش Tokenها
 - `-a`: نمایش AST
 
-## توابع داخلی و Factory
+## توابع داخلی و Registry
 
-توابع داخلی در `FactoryClass` به پیاده‌سازی مناسب Interpreter نگاشت می‌شوند:
+توابع داخلی به‌صورت descriptor در `BuiltInRegistry` ثبت می‌شوند. هر descriptor نام، نوع
+خروجی، نوع پارامترها و سازندهٔ handler را یکجا نگه می‌دارد:
 
 <div dir="ltr" align="left">
 
 ```text
-نام تابع داخلی
-└── itpr_df: رفتار تابع هنگام اجرای مستقیم
+BuiltInDescriptor
+├── Name و امضای نوعی: مورد استفاده SemanticAnalyzer
+└── HandlerFactory: مورد استفاده Interpreter
 ```
 
 </div>
@@ -283,10 +286,10 @@ GitHub Actions در Push و Pull Request پروژه را build کرده و مج�
 
 برای افزودن تابع داخلی جدید:
 
-1. پیاده‌سازی `IInterpreterClass` برای اجرای مستقیم
-2. ثبت نام تابع و کلاس متناظر در `FactoryClass.FunctionMappings`
-3. افزودن قواعد نوع و اعتبارسنجی لازم به Semantic Analyzer
-4. نوشتن تست واحد و یکپارچه برای اجرای مستقیم
+1. ایجاد یا توسعهٔ یک handler مشتق‌شده از `BuiltInHandler`
+2. افزودن یک `BuiltInDescriptor` به `BuiltInRegistry`
+3. افزودن قواعد ویژهٔ نوعی فقط در صورت نیاز؛ امضای عادی مستقیماً از registry خوانده می‌شود
+4. نوشتن تست واحد و یکپارچه و بررسی خطای پایدار `BEN4101`
 
 ### اصل مهم توسعه
 

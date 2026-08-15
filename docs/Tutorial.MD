@@ -341,6 +341,9 @@ benita> for (number i = 0; i < 3; i++) {
 
 برای نمونه‌های بیشتر به پوشه [`Examples`](../Examples) مراجعه کنید.
 
+خطاهای اجرای توابع داخلی، مانند اندیس نامعتبر آرایه یا رشته، با کد `BEN4101` گزارش می‌شوند.
+این کد در اجرای فایل و محیط REPL یکسان است.
+
 ---
 
 ## English tutorial
@@ -662,3 +665,6 @@ Useful options:
 - `--optimize`: optimize the AST before execution
 
 See the [`Examples`](../Examples) directory for more working programs.
+
+Built-in runtime failures, such as invalid array or string indices, use the stable `BEN4101`
+diagnostic code in both file execution and the REPL.

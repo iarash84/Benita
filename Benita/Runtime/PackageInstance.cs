@@ -15,9 +15,10 @@
         /// <param name="packageNode">The package node that defines the package.</param>
         /// <param name="arguments">The arguments for the constructor, if any.</param>
         /// <param name="debugMode"></param>
-        public PackageInstance(string instanceName, PackageNode packageNode, List<ExpressionNode> arguments, bool debugMode)
+        public PackageInstance(string instanceName, PackageNode packageNode, List<ExpressionNode> arguments,
+            bool debugMode, RuntimeContext context)
         {
-            _interpreter = new Interpreter(debugMode, instanceName);
+            _interpreter = new Interpreter(debugMode, instanceName, context: context);
 
             bool hasConstructor = false;
             foreach (var member in packageNode.Members)

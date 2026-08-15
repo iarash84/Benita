@@ -33,7 +33,7 @@ namespace Benita
         // Method to output the current state of the interpreter
         public void DebugLog(string message, Dictionary<string, object> variables,
             Dictionary<string, object> outerScopeVariables, Dictionary<string, FunctionNode> functions,
-            bool pressKeyWait)
+            RuntimeContext context, bool pressKeyWait)
         {
 
             SetColor(ConsoleColor.Green);
@@ -46,12 +46,12 @@ namespace Benita
                 Console.WriteLine("Formatted Date and Time: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 ResetColor();
 
-                if (Globals.GlobalVariable.Count > 0)
+                if (context.GlobalVariables.Count > 0)
                 {
                     SetColor(ConsoleColor.Yellow);
                     Console.WriteLine("Current GlobalVariable: ");
                     ResetColor();
-                    foreach (KeyValuePair<string, object> kvp in Globals.GlobalVariable)
+                    foreach (KeyValuePair<string, object> kvp in context.GlobalVariables)
                     {
                         PrintKeyValuePair(kvp);
                     }
@@ -90,12 +90,12 @@ namespace Benita
                     }
                 }
 
-                if (Globals.PackageList.Count > 0)
+                if (context.Packages.Count > 0)
                 {
                     SetColor(ConsoleColor.Yellow);
                     Console.WriteLine("Packages: ");
                     ResetColor();
-                    foreach (KeyValuePair<string, PackageNode> kvp in Globals.PackageList)
+                    foreach (KeyValuePair<string, PackageNode> kvp in context.Packages)
                     {
                         PrintKeyValuePair(kvp);
                     }

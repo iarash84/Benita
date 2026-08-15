@@ -1,10 +1,10 @@
 ﻿namespace Benita.itpr_df
 {
     /// <summary>توابع داخلی خواندن، نوشتن و مدیریت فایل را اجرا می‌کند.</summary>
-    public class FileManagement : IInterpreterClass
+    public class FileManagement : BuiltInHandler
     {
         /// <summary>عملیات فایل متناظر با نام دریافتی را اجرا می‌کند.</summary>
-        public object HandleFunctionCall(string? functionName, List<object> arguments)
+        protected override object Execute(string? functionName, List<object> arguments)
         {
             switch (functionName)
             {

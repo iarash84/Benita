@@ -1,5 +1,7 @@
 using Benita.itpr_df;
 
+using Benita;
+
 namespace BenitaTestProject.Itpr_df;
 
 [TestClass]
@@ -43,7 +45,7 @@ public class StringManagementTests
     [TestMethod]
     public void HandleFunctionCall_WithOutOfRangeCharacterIndex_ThrowsArgumentOutOfRangeException()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsException<BuiltInException>(() =>
             _strings.HandleFunctionCall("string_char_at", new List<object> { "Benita", 10 }));
     }
 }

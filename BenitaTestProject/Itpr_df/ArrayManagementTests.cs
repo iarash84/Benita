@@ -1,5 +1,7 @@
 ﻿using Benita.itpr_df;
 
+using Benita;
+
 namespace BenitaTestProject.Itpr_df
 {
     [TestClass]
@@ -71,8 +73,8 @@ namespace BenitaTestProject.Itpr_df
             var arrayManagement = new ArrayManagement();
 
             // Act & Assert
-            var exception = Assert.ThrowsException<Exception>(() => arrayManagement.HandleFunctionCall("array_len", arguments));
-            Assert.AreEqual("Argument to array_len must be an array", exception.Message);
+            var exception = Assert.ThrowsException<BuiltInException>(() => arrayManagement.HandleFunctionCall("array_len", arguments));
+            Assert.AreEqual("Argument to array_len must be an array", exception.Description);
         }
 
         [TestMethod]
@@ -83,8 +85,8 @@ namespace BenitaTestProject.Itpr_df
             var arrayManagement = new ArrayManagement();
 
             // Act & Assert
-            var exception = Assert.ThrowsException<Exception>(() => arrayManagement.HandleFunctionCall("array_add", arguments));
-            Assert.AreEqual("Argument to array_add must be an array", exception.Message);
+            var exception = Assert.ThrowsException<BuiltInException>(() => arrayManagement.HandleFunctionCall("array_add", arguments));
+            Assert.AreEqual("Argument to array_add must be an array", exception.Description);
         }
 
         [TestMethod]
@@ -95,8 +97,8 @@ namespace BenitaTestProject.Itpr_df
             var arrayManagement = new ArrayManagement();
 
             // Act & Assert
-            var exception = Assert.ThrowsException<Exception>(() => arrayManagement.HandleFunctionCall("array_remove", arguments));
-            Assert.AreEqual("Argument to array_remove must be an array", exception.Message);
+            var exception = Assert.ThrowsException<BuiltInException>(() => arrayManagement.HandleFunctionCall("array_remove", arguments));
+            Assert.AreEqual("Argument to array_remove must be an array", exception.Description);
         }
 
         [TestMethod]
@@ -110,8 +112,8 @@ namespace BenitaTestProject.Itpr_df
             var arrayManagement = new ArrayManagement();
 
             // Act & Assert
-            var exception = Assert.ThrowsException<ArgumentOutOfRangeException>(() => arrayManagement.HandleFunctionCall("array_remove", arguments));
-            Assert.AreEqual("Index is out of range. (Parameter 'index')", exception.Message);
+            var exception = Assert.ThrowsException<BuiltInException>(() => arrayManagement.HandleFunctionCall("array_remove", arguments));
+            Assert.AreEqual("Index is out of range. (Parameter 'index')", exception.Description);
         }
 
         [TestMethod]
@@ -122,8 +124,8 @@ namespace BenitaTestProject.Itpr_df
             var arguments = new List<object>();
 
             // Act & Assert
-            var exception = Assert.ThrowsException<Exception>(() => arrayManagement.HandleFunctionCall("unknown_function", arguments));
-            Assert.AreEqual("Unknown function 'unknown_function'", exception.Message);
+            var exception = Assert.ThrowsException<BuiltInException>(() => arrayManagement.HandleFunctionCall("unknown_function", arguments));
+            Assert.AreEqual("Unknown function 'unknown_function'", exception.Description);
         }
 
         [TestMethod]
@@ -163,8 +165,8 @@ namespace BenitaTestProject.Itpr_df
         {
             var service = new ArrayManagement();
             var array = new object[] { 1, 2, 3 };
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => service.HandleFunctionCall("array_insert", [array, 4, 9]));
-            Assert.ThrowsException<ArgumentOutOfRangeException>(() => service.HandleFunctionCall("array_slice", [array, 2, 2]));
+            Assert.ThrowsException<BuiltInException>(() => service.HandleFunctionCall("array_insert", [array, 4, 9]));
+            Assert.ThrowsException<BuiltInException>(() => service.HandleFunctionCall("array_slice", [array, 2, 2]));
         }
     }
 }

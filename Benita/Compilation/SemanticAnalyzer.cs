@@ -36,40 +36,10 @@
             _globalVariables = new Dictionary<string, string?>();
             _functions = new Dictionary<string, FunctionNode>();
             _packages = new Dictionary<string, PackageNode>();
-            _defaultFunctions = new Dictionary<string, (string, List<string>)>
-            {
-                { "print", ("void", ["string"]) },
-                { "input", ("string", []) },
-                { "file_read", ("string", ["string"]) },
-                { "file_write", ("void", ["string", "string"]) },
-                { "file_exist", ("bool", ["string"]) },
-                { "file_delete", ("bool", ["string"]) },
-                { "array_len", ("number", ["array"]) },
-                { "array_add", ("array", ["array", "string"]) },
-                { "array_remove", ("array", ["array", "number"]) },
-                { "array_contains", ("bool", ["array", "string"]) },
-                { "array_index_of", ("number", ["array", "string"]) },
-                { "array_reverse", ("array", ["array"]) },
-                { "array_clear", ("array", ["array"]) },
-                { "array_insert", ("array", ["array", "number", "string"]) },
-                { "array_slice", ("array", ["array", "number", "number"]) },
-                { "array_concat", ("array", ["array", "array"]) },
-                { "array_sort", ("array", ["array"]) },
-                { "to_string", ("string", ["number"]) },
-                { "to_number", ("number", ["string"]) },
-                { "round_number", ("number", ["number"]) },
-                { "sqrt_number", ("number", ["number"]) },
-                { "string_len", ("number", ["string"]) },
-                { "string_char_at", ("string", ["string", "number"]) },
-                { "string_substring", ("string", ["string", "number", "number"]) },
-                { "string_contains", ("bool", ["string", "string"]) },
-                { "string_index_of", ("number", ["string", "string"]) },
-                { "string_replace", ("string", ["string", "string", "string"]) },
-                { "string_split", ("string[]", ["string", "string"]) },
-                { "string_trim", ("string", ["string"]) },
-                { "string_to_lower", ("string", ["string"]) },
-                { "string_to_upper", ("string", ["string"]) },
-            };
+            _defaultFunctions = BuiltInRegistry.Descriptors.Values.ToDictionary(
+                descriptor => descriptor.Name,
+                descriptor => (descriptor.ReturnType, descriptor.ParameterTypes.ToList()),
+                StringComparer.Ordinal);
         }
 
         /// <summary>

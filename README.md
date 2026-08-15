@@ -24,6 +24,8 @@
 - عملیات خواندن، نوشتن، بررسی وجود و حذف فایل
 - دستور `include_once` برای استفاده از فایل‌های دیگر
 - اجرای مستقیم با مفسر و بهینه‌سازی اختیاری AST
+- context مستقل برای هر اجرا و registry واحد توابع داخلی
+- خطاهای ساخت‌یافتهٔ built-in با کد پایدار `BEN4101`
 
 ### نیازمندی‌ها
 
@@ -167,6 +169,8 @@ Benita is a simple, extensible programming language built for education and expe
 - File read, write, existence, and deletion operations
 - `include_once` support for reusable source files
 - Direct interpretation with optional AST optimization
+- Isolated runtime contexts and a single built-in function registry
+- Structured built-in diagnostics with the stable `BEN4101` error code
 
 ### Requirements
 
