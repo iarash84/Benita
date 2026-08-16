@@ -42,7 +42,7 @@ scalar-variable-declaration
                          ::= (primitive-type | "let") identifier
                              ("=" expression)? ";" ;
 object-variable-declaration
-                         ::= named-type identifier ("=" expression)? ";" ;
+                         ::= named-type identifier "=" expression ";" ;
 array-variable-declaration
                          ::= array-type identifier
                              ("=" (expression | sized-array-initializer))? ";" ;
@@ -241,6 +241,25 @@ Semantic constraints
 38. An unexpected runtime failure crossing the public execution boundary is
     reported as `BEN4001`. More specific Benita diagnostics, including built-in
     `BEN4101` and uncaught user-error codes, retain their original code.
+39. Number literals and `to_number` use the culture-independent Benita decimal
+    format. The decimal separator is always `.`, regardless of the host culture.
+40. A variable declared inside an `if` branch, loop, or `match` arm is local to
+    that control-flow body and is not available after it. Assignments to variables
+    declared in an enclosing scope remain visible.
+41. Array-preserving built-ins retain the concrete element type of their first
+    array argument, including when their result initializes a `let` variable.
+42. Variables and fields whose declared type is a package or interface must have
+    an initializer because Benita does not define a `null` reference value.
+43. A `finally` block that always returns or throws determines the completion of
+    its enclosing `try`, even when the `try` or `catch` block can fall through.
+44. Tokens expanded from `include_once` retain their original file name, line
+    number, and source line so lexer and parser diagnostics identify the included file.
+45. A REPL submission is atomic with respect to language runtime state. If execution
+    fails, variable, array, function, package-instance, and global state is restored.
+46. A `let` initializer must determine a concrete type. Placeholder types such as
+    `unknown[]` from an empty untyped array are rejected; use an explicit array type.
+47. `BEN1005` identifies a circular include dependency. A decimal literal that starts
+    with `.` is a distinct lexical error reported as `BEN1007`.
 
 Notes
 -----

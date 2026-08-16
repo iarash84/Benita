@@ -10,6 +10,7 @@
         /// </summary>
         private readonly string _source;
         private readonly string? _sourceName;
+        private readonly List<SourceLineOrigin> _sourceLineOrigins = [];
 
         /// <summary>
         /// The list to store the generated tokens.
@@ -77,7 +78,6 @@
         /// <param name="sourcePrint">Whether to print the processed source code.</param>
         public Lexer(string source, bool sourcePrint = false, string? sourceName = null)
         {
-            _source = source;
             _sourceName = sourceName;
             string baseDirectory = Environment.CurrentDirectory;
             string? rootPath = null;
@@ -86,7 +86,7 @@
                 rootPath = Path.GetFullPath(sourceName);
                 baseDirectory = Path.GetDirectoryName(rootPath) ?? baseDirectory;
             }
-            ProcessIncludes(ref _source, baseDirectory, rootPath); ///< Process included files.
+            _source = ProcessIncludes(source, baseDirectory, rootPath, _sourceLineOrigins); ///< Process included files.
             if (sourcePrint)
                 Console.WriteLine(_source);
         }
@@ -112,7 +112,8 @@
         /// Recursively processes "include_once" directives to include the contents of other files.
         /// </summary>
         /// <param name="source">The source code to process.</param>
-        private void ProcessIncludes(ref string source, string baseDirectory, string? currentPath)
+        private string ProcessIncludes(string source, string baseDirectory, string? currentPath,
+            List<SourceLineOrigin> origins)
         {
             if (currentPath is not null)
             {
@@ -126,35 +127,42 @@
                 var lines = source.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                 bool insideBlockComment = false;
 
-                foreach (var line in lines)
+                for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
                 {
+                    string line = lines[lineIndex];
                     string trimmedLine = line.Trim();
                     if (!insideBlockComment && trimmedLine.StartsWith("include_once", StringComparison.Ordinal))
                     {
-                        string includePath = ParseIncludePath(trimmedLine);
+                        string? originName = currentPath ?? _sourceName;
+                        string includePath = ParseIncludePath(trimmedLine, originName, lineIndex + 1, line);
                         string filePath = Path.GetFullPath(Path.Combine(baseDirectory, includePath));
                         if (_activeIncludes.Contains(filePath))
-                            throw CreateCircularIncludeError(filePath);
+                            throw CreateCircularIncludeError(filePath, originName, lineIndex + 1, line);
                         if (_includedFiles.Contains(filePath))
                             continue;
                         if (!File.Exists(filePath))
-                            throw CreateError("BEN1003", $"Included file '{includePath}' was not found at '{filePath}'.");
+                            throw CreateIncludeError("BEN1003",
+                                $"Included file '{includePath}' was not found at '{filePath}'.",
+                                originName, lineIndex + 1, line);
 
                         string fileContent = File.ReadAllText(filePath);
                         string includedDirectory = Path.GetDirectoryName(filePath) ?? baseDirectory;
-                        ProcessIncludes(ref fileContent, includedDirectory, filePath);
-                        includedSources.Add(fileContent);
+                        var includedOrigins = new List<SourceLineOrigin>();
+                        includedSources.Add(ProcessIncludes(fileContent, includedDirectory, filePath,
+                            includedOrigins));
+                        origins.AddRange(includedOrigins);
                     }
                     else
                     {
                         includedSources.Add(line); ///< Add the line if it's not an include directive.
+                        origins.Add(new SourceLineOrigin(currentPath ?? _sourceName, lineIndex + 1, line));
                         UpdateBlockCommentState(line, ref insideBlockComment);
                     }
                 }
 
-                source = string.Join(Environment.NewLine, includedSources); ///< Combine the processed lines.
                 if (currentPath is not null)
                     _includedFiles.Add(currentPath);
+                return string.Join(Environment.NewLine, includedSources); ///< Combine the processed lines.
             }
             finally
             {
@@ -216,33 +224,43 @@
         }
 
         /// <summary>زنجیرهٔ کامل یک وابستگی چرخه‌ای را به‌صورت diagnostic گزارش می‌کند.</summary>
-        private LexerException CreateCircularIncludeError(string repeatedPath)
+        private LexerException CreateCircularIncludeError(string repeatedPath, string? sourceName,
+            int line, string lineText)
         {
             int cycleStart = _includeStack.FindIndex(path =>
                 _activeIncludes.Comparer.Equals(path, repeatedPath));
             IEnumerable<string> cycle = _includeStack.Skip(cycleStart).Append(repeatedPath)
                 .Select(Path.GetFileName);
-            return CreateError("BEN1005", $"Circular include dependency detected: {string.Join(" -> ", cycle)}.");
+            return CreateIncludeError("BEN1005",
+                $"Circular include dependency detected: {string.Join(" -> ", cycle)}.",
+                sourceName, line, lineText);
         }
 
         /// <summary>مسیر یک directive معتبر include_once را استخراج می‌کند.</summary>
-        private string ParseIncludePath(string directive)
+        private static string ParseIncludePath(string directive, string? sourceName, int line, string lineText)
         {
             const string keyword = "include_once";
             string remainder = directive[keyword.Length..].Trim();
             if (!remainder.EndsWith(';'))
-                throw CreateError("BEN1004", "Expected ';' after include_once directive.");
+                throw CreateIncludeError("BEN1004", "Expected ';' after include_once directive.",
+                    sourceName, line, lineText);
             remainder = remainder[..^1].TrimEnd();
 
             if (remainder.Length < 2 || remainder[0] != '"' || remainder[^1] != '"' ||
                 remainder[1..^1].Contains('"'))
-                throw CreateError("BEN1004", "Expected include_once \"path\";.");
+                throw CreateIncludeError("BEN1004", "Expected include_once \"path\";.",
+                    sourceName, line, lineText);
 
             string path = remainder[1..^1];
             if (string.IsNullOrWhiteSpace(path))
-                throw CreateError("BEN1004", "The include_once path cannot be empty.");
+                throw CreateIncludeError("BEN1004", "The include_once path cannot be empty.",
+                    sourceName, line, lineText);
             return path;
         }
+
+        private static LexerException CreateIncludeError(string code, string message, string? sourceName,
+            int line, string lineText) =>
+            new(code, message, new SourceSpan(sourceName, line, 1, Math.Max(1, lineText.Length), lineText));
 
         /// <summary>
         /// Scans a single token from the source code and adds it to the _tokens list.
@@ -266,7 +284,7 @@
                         break;
                     }
                     if (IsDigit(Peek()))
-                        throw CreateError("BEN1005", "Decimal literals must start with a digit; use '0.5' instead of '.5'.");
+                        throw CreateError("BEN1007", "Decimal literals must start with a digit; use '0.5' instead of '.5'.");
                     AddToken(TokenType.DOT);
                     break;
                 case '+':
@@ -320,7 +338,7 @@
                     break;
 
                 default:
-                    if (IsDigit(c) || c == '.')
+                    if (IsDigit(c))
                     {
                         ScanNumberLiteral(); ///< Scan number literal.
                     }
@@ -402,12 +420,6 @@
         /// </summary>
         private void ScanNumberLiteral()
         {
-            // Check if the number starts with a decimal point (e.g., .5)
-            if (Peek() == '.' && IsDigit(PeekNext()))
-            {
-                Advance();
-            }
-
             // Process the integer part of the number
             while (IsDigit(Peek()))
             {
@@ -522,8 +534,17 @@
             {
                 if (_source[index] == '\n') line++;
             }
+            if (line <= _sourceLineOrigins.Count)
+            {
+                SourceLineOrigin origin = _sourceLineOrigins[line - 1];
+                return new SourceSpan(origin.SourceName, origin.Line, _start - lineStart + 1, length,
+                    origin.LineText);
+            }
             return new SourceSpan(_sourceName, line, _start - lineStart + 1, length, lineText);
         }
+
+        /// <summary>منشأ هر خط در متن گسترش‌یافته را برای diagnosticهای مراحل بعدی نگه می‌دارد.</summary>
+        private sealed record SourceLineOrigin(string? SourceName, int Line, string LineText);
 
         /// <summary>
         /// Checks if the character is a digit.

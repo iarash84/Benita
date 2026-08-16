@@ -99,6 +99,24 @@ _main_() {
         }
 
         [TestMethod]
+        public void GlobalInitializer_CanCallFunctionDeclaredLater()
+        {
+            const string source = """
+                number initial = value();
+                func value() -> number { return 7; }
+                _main_() { print(initial); }
+                """;
+
+            foreach (bool optimize in new[] { false, true })
+            {
+                using var consoleOutput = new ConsoleOutput();
+                _compiler.Check(source);
+                _compiler.Exec(source, optimizeAst: optimize);
+                Assert.AreEqual($"7{Environment.NewLine}", consoleOutput.GetOutput());
+            }
+        }
+
+        [TestMethod]
         public void WhileLoopWithIncrementExecutesCorrectly()
         {
             string source = @"

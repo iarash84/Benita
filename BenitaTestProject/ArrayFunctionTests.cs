@@ -5,6 +5,44 @@ namespace BenitaTestProject;
 [TestClass]
 public class ArrayFunctionTests
 {
+    [DataTestMethod]
+    [DataRow("array_add(source, 3)")]
+    [DataRow("array_remove(source, 0)")]
+    [DataRow("array_reverse(source)")]
+    [DataRow("array_clear(source)")]
+    [DataRow("array_insert(source, 0, 3)")]
+    [DataRow("array_slice(source, 0, 1)")]
+    [DataRow("array_concat(source, [3])")]
+    [DataRow("array_sort(source)")]
+    public void Check_LetInfersConcreteArrayTypeFromArrayPreservingBuiltIn(string expression)
+    {
+        string source = $@"
+            _main_() {{
+                number[] source = [2, 1];
+                let result = {expression};
+                for (item in result) {{ number value = item; }}
+            }}";
+
+        new CompilerClass().Check(source);
+    }
+
+    [TestMethod]
+    public void Exec_InferredArrayBuiltInResultSupportsIndexAccess()
+    {
+        const string source = """
+            _main_() {
+                number[] source = [2, 1];
+                let result = array_reverse(source);
+                print(result[0]);
+            }
+            """;
+        using var output = new ConsoleOutput();
+
+        new CompilerClass().Exec(source, optimizeAst: true);
+
+        Assert.AreEqual($"1{Environment.NewLine}", output.GetOutput());
+    }
+
     [TestMethod]
     public void Exec_WithAllArrayFunctions_ProducesExpectedOutput()
     {

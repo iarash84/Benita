@@ -62,5 +62,13 @@
             _interpreter.SetOuterScopeVariables(outerScopeVariables);
             return _interpreter.Visit(initializer);
         }
+
+        /// <summary>state داخلی package را در snapshot تراکنش REPL ثبت می‌کند.</summary>
+        internal void CaptureCheckpoint(Interpreter.InterpreterState state,
+            Interpreter.TransactionCheckpoint checkpoint) => _interpreter.CaptureState(state, checkpoint);
+
+        /// <summary>state داخلی package را پس از شکست submission بازیابی می‌کند.</summary>
+        internal void RestoreCheckpoint(Interpreter.InterpreterState state,
+            Interpreter.TransactionCheckpoint checkpoint) => _interpreter.RestoreState(state, checkpoint);
     }
 }

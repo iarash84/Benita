@@ -36,6 +36,9 @@ let total = 5.2 + 8;
 ```
 
 متغیرها می‌توانند سراسری یا محلی باشند. متغیر `let` باید مقدار اولیه داشته باشد.
+مقدار اولیهٔ `let` باید نوع مشخصی بسازد؛ برای آرایهٔ خالی از نوع صریح مانند
+`number[] values = [];` استفاده کنید و نه `let values = [];`.
+متغیر یا فیلد از نوع package/interface نیز باید هنگام تعریف مقداردهی شود؛ Benita مقدار `null` ندارد.
 تغییر یک متغیر سراسری در فراخوانی هم‌زمان تابع پس از بازگشت تابع حفظ می‌شود؛ taskهای
 ساخته‌شده با `async` همچنان scope جداگانه دارند و متغیرهای فراخواننده را تغییر نمی‌دهند.
 
@@ -56,6 +59,7 @@ sum++;
 - عملگرهای منطقی: `&&`، `||` و `!`
 
 عملگر یکانی `-` فقط روی `number` و عملگر `!` فقط روی `bool` قابل استفاده است.
+خواندن عددها مستقل از تنظیمات منطقه‌ای سیستم است و جداکنندهٔ اعشار همیشه `.` است.
 برابری `==` و `!=` برای دو مقدار هم‌نوع `number`، `string` یا `bool` مجاز است؛
 مقایسه‌های ترتیبی `<`، `>`، `<=` و `>=` فقط روی `number` کار می‌کنند.
 
@@ -162,6 +166,7 @@ for (item in values) {
 ```
 
 از `break` برای خروج از حلقه و از `continue` برای رفتن به تکرار بعدی استفاده کنید.
+متغیری که داخل شاخهٔ `if`، حلقه یا arm یک `match` تعریف شود فقط در همان بدنه در دسترس است.
 بخش increment حلقهٔ `for` پس از تکرار عادی و پیش از تکرار بعدی در `continue` اجرا
 می‌شود، اما پس از `break`، `return` یا خطایی که از بدنه خارج شود اجرا نمی‌شود.
 
@@ -460,6 +465,7 @@ _main_() {
 مسیرهای معادل canonical می‌شوند. وابستگی چرخه‌ای مجاز نیست و با خطای `BEN1005` همراه
 زنجیرهٔ فایل‌ها گزارش می‌شود.
 متن `include_once` داخل کامنت یک‌خطی یا چندخطی نادیده گرفته می‌شود.
+خطاهای فایل‌های واردشده نام همان فایل و شمارهٔ خط اصلی آن را گزارش می‌کنند.
 
 ### ۱۲. کامنت‌ها
 
@@ -483,6 +489,10 @@ dotnet run --project Benita -- repl
 
 فرمان `check` مراحل Lexer، Parser و SemanticAnalyzer را اجرا می‌کند، اما برنامه را اجرا نمی‌کند.
 #### کار با محیط تعاملی REPL
+
+هر ورودی REPL از نظر state زبان اتمی است. اگر اجرا خطا بدهد، تغییرات همان ورودی روی
+متغیرها، آرایه‌ها، توابع، globalها و نمونه‌های package بازگردانده می‌شود. اثرهای بیرونی
+که پیش از خطا رخ داده‌اند، مانند متن چاپ‌شده یا نوشتن فایل، قابل بازگردانی نیستند.
 
 برای بازکردن محیط تعاملی از فرمان `repl` استفاده کنید. اجرای برنامه بدون آرگومان فقط
 راهنمای CLI را نشان می‌دهد. متغیرها و توابعی که در REPL می‌سازید تا پایان همان نشست
@@ -576,7 +586,8 @@ for (;;) {
 }
 ```
 
-اعداد اعشاری باید در هر دو طرف نقطه رقم داشته باشند (`0.5` و `1.0`). برای منطق
+اعداد اعشاری باید در هر دو طرف نقطه رقم داشته باشند (`0.5` و `1.0`). نوشتن عدد با
+نقطهٔ ابتدایی با `BEN1007` گزارش می‌شود و با خطای چرخهٔ include یعنی `BEN1005` متفاوت است. برای منطق
 از `&&` و `||` استفاده کنید؛ `&` و `|` تکی معتبر نیستند. رشته‌ها چندخطی نیستند و
 escapeهای `\n`، `\r`، `\t`، `\"` و `\\` را پشتیبانی می‌کنند.
 
@@ -611,6 +622,9 @@ let total = 5.2 + 8;
 ```
 
 Variables may be global or local. A `let` variable must have an initializer.
+Its initializer must produce a concrete type. For an empty array, write an explicit type such as
+`number[] values = [];` instead of `let values = [];`.
+A package/interface variable or field must also be initialized because Benita has no `null` value.
 A synchronous function may update a visible global variable, and that mutation remains visible
 after the function returns. Tasks created with `async` still use an isolated scope and do not
 mutate caller variables.
@@ -632,6 +646,7 @@ sum++;
 - Logical operators: `&&`, `||`, and `!`
 
 Unary `-` accepts only a `number`, and unary `!` accepts only a `bool`.
+Number parsing is independent of the host culture and always uses `.` as the decimal separator.
 Equality (`==` and `!=`) accepts two values of the same `number`, `string`, or `bool` type.
 Ordered comparisons (`<`, `>`, `<=`, and `>=`) accept only numbers.
 
@@ -738,6 +753,7 @@ for (item in values) {
 ```
 
 Use `break` to leave a loop and `continue` to move to its next iteration.
+A variable declared inside an `if` branch, loop, or `match` arm is available only in that body.
 The `for` increment runs after a normal iteration and before the next iteration after
 `continue`; it does not run after `break`, `return`, or an error leaving the loop body.
 
@@ -1039,6 +1055,7 @@ the directory of the file containing each directive; the working directory is us
 Equivalent path spellings are normalized. Circular dependencies are rejected with `BEN1005`
 and the complete include chain.
 An `include_once` inside a line or block comment is ignored.
+Diagnostics from included files report that file and its original line number.
 
 ### 12. Comments
 
@@ -1062,6 +1079,10 @@ dotnet run --project Benita -- repl
 
 The `check` command runs the Lexer, Parser, and SemanticAnalyzer without executing the program.
 #### Using the interactive REPL
+
+Each REPL submission is atomic with respect to language state. On execution failure,
+changes to variables, arrays, functions, globals, and package instances are rolled back.
+External effects already performed, such as console output or file writes, cannot be rolled back.
 
 The interactive environment starts only with the `repl` command. Running Benita without
 arguments displays the CLI help. Variables and functions remain available for the session,
@@ -1116,6 +1137,7 @@ An unconditional `while (true)` or `for (;;)` also satisfies definite-return ana
 its body always returns or throws and no reachable `break` exits that loop.
 
 All three `for` clauses are optional, so `for (;;) { break; }` is valid. Decimal literals
-need digits on both sides of the point (`0.5`, not `.5`; `1.0`, not `1.`). Use `&&` and
+need digits on both sides of the point (`0.5`, not `.5`; `1.0`, not `1.`). A leading-dot
+literal is reported as `BEN1007`, separately from circular include error `BEN1005`. Use `&&` and
 `||`, because single `&` and `|` are rejected. Strings are single-line and support `\n`,
 `\r`, `\t`, `\"`, and `\\` escapes.

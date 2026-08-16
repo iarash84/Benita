@@ -91,4 +91,14 @@ public class ObjectModelTests
     {
         Assert.ThrowsException<SemanticException>(() => new CompilerClass().Check(source));
     }
+
+    [DataTestMethod]
+    [DataRow("pkg Counter {} Counter counter; _main_() {}")]
+    [DataRow("pkg Counter {} _main_() { Counter counter; }")]
+    [DataRow("pkg Counter {} pkg Holder { Counter counter; } _main_() {}")]
+    public void NamedTypeVariableWithoutInitializer_IsRejectedBeforeRuntime(string source)
+    {
+        var exception = Assert.ThrowsException<SemanticException>(() => new CompilerClass().Check(source));
+        StringAssert.Contains(exception.Message, "requires an initializer");
+    }
 }

@@ -24,7 +24,10 @@
                     }
                 case "to_number":
                     {
-                        var numberValue = Convert.ToDouble(arguments[0]);
+                        var numberValue = double.Parse(
+                            Convert.ToString(arguments[0], System.Globalization.CultureInfo.InvariantCulture)!,
+                            System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture);
                         return numberValue;
                     }
                 case "round_number":

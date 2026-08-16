@@ -33,7 +33,16 @@ public sealed class CompilerClass
         ProgramNode program = Parse(Tokenize($"{sourceCode}{Environment.NewLine}{noOp}",
             lexerPrint, sourcePrint, "<repl>"));
         program = OptimizeIfRequested(program, parserPrint, optimizeAst);
-        interpreter.Visit(program);
+        Interpreter.TransactionCheckpoint checkpoint = interpreter.CreateCheckpoint();
+        try
+        {
+            interpreter.Visit(program);
+        }
+        catch
+        {
+            interpreter.RestoreCheckpoint(checkpoint);
+            throw;
+        }
     }
 
     /// <summary>صحت واژگانی، نحوی و معنایی کد را بدون اجرا بررسی می‌کند.</summary>

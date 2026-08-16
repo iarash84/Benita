@@ -63,6 +63,23 @@ public class ErrorHandlingTests
     }
 
     [TestMethod]
+    public void FinallyThatAlwaysThrows_SatisfiesNonVoidControlFlow()
+    {
+        const string source = """
+            func value() -> number {
+                try { print("work"); }
+                finally { throw error("STOP", "stopped"); }
+            }
+            _main_() { value(); }
+            """;
+
+        new CompilerClass().Check(source);
+        var exception = Assert.ThrowsException<UnhandledErrorException>(() =>
+            new CompilerClass().Exec(source));
+        Assert.AreEqual("STOP", exception.Code);
+    }
+
+    [TestMethod]
     public void Finally_RunsWhenErrorContinuesToOuterCatch()
     {
         const string source = """

@@ -60,6 +60,9 @@
                 DeclareInterface(interfaceNode);
             foreach (var packageNode in program.Packages)
                 DeclarePackage(packageNode);
+            // امضاها پیش از تحلیل هر call site ثبت می‌شوند تا forward call در initializer نیز معتبر باشد.
+            foreach (var function in program.Functions)
+                DeclareFunction(function);
             foreach (InterfaceNode interfaceNode in program.Interfaces)
                 AnalyzeInterface(interfaceNode);
             foreach (var packageNode in program.Packages)
@@ -70,12 +73,14 @@
             {
                 var declaredType = globalVar.Type;
                 EnsureKnownType(declaredType);
+                RequireInitializerForNamedType(declaredType, globalVar.Initializer, globalVar.Name);
                 if (globalVar.Initializer != null)
                 {
                     var initializerType = AnalyzeExpression(globalVar.Initializer, _globalVariables);
                     if (declaredType == "let")
                     {
                         declaredType = initializerType;
+                        RequireConcreteInferredType(declaredType, globalVar.Name);
                     }
                     else if (!CheckType(declaredType!, initializerType))
                     {
@@ -83,14 +88,12 @@
                             $"Type mismatch in global variable '{globalVar.Name}'. Expected '{declaredType}' but got '{initializerType}'.");
                     }
                 }
+                else if (declaredType == "let")
+                {
+                    RequireConcreteInferredType(declaredType, globalVar.Name);
+                }
 
                 DeclareVariable(globalVar.Name, declaredType, _globalVariables);
-            }
-
-            // Register every function before analyzing bodies, allowing forward calls.
-            foreach (var function in program.Functions)
-            {
-                DeclareFunction(function);
             }
 
             foreach (var function in program.Functions)
@@ -172,15 +175,26 @@
                         throw new Exception($"Variable '{variableDeclaration.Name}' is already declared.");
                     TypeSymbol fieldType = TypeFacts.FromName(variableDeclaration.Type);
                     EnsureKnownType(fieldType.Name);
+                    RequireInitializerForNamedType(fieldType.Name, variableDeclaration.Initializer,
+                        variableDeclaration.Name);
                     variableScope[variableDeclaration.Name] = fieldType.Name;
                 }
             }
 
             foreach (var field in packageNode.Members.OfType<PackageVariableDeclarationNode>())
             {
-                if (field.Initializer is null) continue;
+                if (field.Initializer is null)
+                {
+                    if (field.Type == "let") RequireConcreteInferredType(field.Type, field.Name);
+                    continue;
+                }
                 string? initializerType = AnalyzeExpression(field.Initializer, variableScope);
-                if (!CheckType(field.Type, initializerType))
+                if (field.Type == "let")
+                {
+                    RequireConcreteInferredType(initializerType, field.Name);
+                    variableScope[field.Name] = initializerType;
+                }
+                else if (!CheckType(field.Type, initializerType))
                     throw new Exception($"Type mismatch in field '{field.Name}'. Expected '{field.Type}' but got '{initializerType}'.");
             }
 
@@ -312,11 +326,13 @@
                 case VariableDeclarationNode varDecl:
                     string? declaredType = varDecl.Type;
                     EnsureKnownType(declaredType, allowLet: true);
+                    RequireInitializerForNamedType(declaredType, varDecl.Initializer, varDecl.Name);
                     if (varDecl.Type == "let")
                     {
                         declaredType = varDecl.Initializer != null
                             ? AnalyzeExpression(varDecl.Initializer, localVariables)
                             : varDecl.Type;
+                        RequireConcreteInferredType(declaredType, varDecl.Name);
                     }
                     else if (varDecl.Initializer != null)
                     {
@@ -372,10 +388,10 @@
                     {
                         throw new Exception("Condition in 'if' statement must be a boolean.");
                     }
-                    AnalyzeStatement(ifStmt.ThenBranch, localVariables, functionReturnType, loopDepth);
+                    AnalyzeStatement(ifStmt.ThenBranch, new(localVariables), functionReturnType, loopDepth);
                     if (ifStmt.ElseBranch != null)
                     {
-                        AnalyzeStatement(ifStmt.ElseBranch, localVariables, functionReturnType, loopDepth);
+                        AnalyzeStatement(ifStmt.ElseBranch, new(localVariables), functionReturnType, loopDepth);
                     }
                     break;
                 case MatchStatementNode matchStatement:
@@ -387,19 +403,20 @@
                     {
                         throw new Exception("Condition in 'while' statement must be a boolean.");
                     }
-                    AnalyzeStatement(whileStmt.Body, localVariables, functionReturnType, loopDepth + 1);
+                    AnalyzeStatement(whileStmt.Body, new(localVariables), functionReturnType, loopDepth + 1);
                     break;
 
                 case ForStatementNode forStmt:
+                    var forScope = new Dictionary<string, string?>(localVariables);
                     if (forStmt.Initializer != null)
-                        AnalyzeStatement(forStmt.Initializer, localVariables, functionReturnType, loopDepth);
-                    if (forStmt.Condition != null && AnalyzeExpression(forStmt.Condition, localVariables) != "bool")
+                        AnalyzeStatement(forStmt.Initializer, forScope, functionReturnType, loopDepth);
+                    if (forStmt.Condition != null && AnalyzeExpression(forStmt.Condition, forScope) != "bool")
                     {
                         throw new Exception("Condition in 'for' statement must be a boolean.");
                     }
                     if (forStmt.Increment != null)
-                        AnalyzeStatement(forStmt.Increment, localVariables, functionReturnType, loopDepth + 1);
-                    AnalyzeStatement(forStmt.Body, localVariables, functionReturnType, loopDepth + 1);
+                        AnalyzeStatement(forStmt.Increment, forScope, functionReturnType, loopDepth + 1);
+                    AnalyzeStatement(forStmt.Body, forScope, functionReturnType, loopDepth + 1);
                     break;
                 case ForEachStatementNode forEach:
                     string? iterableType = AnalyzeExpression(forEach.Iterable, localVariables);
@@ -478,6 +495,7 @@
             MatchStatementNode match => match.Arms.Any(arm => arm.IsDefault) &&
                                         match.Arms.All(arm => AlwaysReturns(arm.Body as StatementNode)),
             TryStatementNode tryStatement =>
+                tryStatement.FinallyBlock is not null && AlwaysReturns(tryStatement.FinallyBlock) ||
                 AlwaysReturns(tryStatement.TryBlock) &&
                 (tryStatement.CatchBlock is null || AlwaysReturns(tryStatement.CatchBlock)),
             WhileStatementNode loop => IsAlwaysTrue(loop.Condition) &&
@@ -517,7 +535,7 @@
             {
                 AnalyzeMatchPatterns(arm, valueType, localVariables);
 
-                AnalyzeStatement((StatementNode)arm.Body, localVariables, functionReturnType, loopDepth);
+                AnalyzeStatement((StatementNode)arm.Body, new(localVariables), functionReturnType, loopDepth);
             }
         }
 
@@ -935,6 +953,12 @@
                     throw new Exception($"Type mismatch in argument {i + 1} of function call to '{functionCall.FunctionName}'. Expected '{expectedType}' but got '{argType}'.");
                 }
             }
+            bool preservesArrayType = functionCall.FunctionName is
+                "array_add" or "array_remove" or "array_reverse" or "array_clear" or
+                "array_insert" or "array_slice" or "array_concat" or "array_sort";
+            if (preservesArrayType && arrayElementType is not null)
+                return Types.ArrayOf(arrayElementType).Name;
+
             return functionInfo.ReturnType.Name;
         }
 
@@ -1063,6 +1087,32 @@
                 !_packages.ContainsKey(named.Name) && !_interfaces.ContainsKey(named.Name))
                 throw new Exception($"Unknown package or interface type '{named.Name}'.");
         }
+
+        /// <summary>Benita مقدار null ندارد؛ بنابراین reference نام‌دار باید هنگام declaration مقدار بگیرد.</summary>
+        private static void RequireInitializerForNamedType(string? typeName, ExpressionNode? initializer,
+            string variableName)
+        {
+            if (TypeFacts.FromName(typeName) is NamedTypeSymbol && initializer is null)
+                throw new Exception($"Variable '{variableName}' of named type '{typeName}' requires an initializer.");
+        }
+
+        /// <summary>از ورود نوع‌های placeholder به symbol table پس از استنتاج let جلوگیری می‌کند.</summary>
+        private static void RequireConcreteInferredType(string? typeName, string variableName)
+        {
+            TypeSymbol type = TypeFacts.FromName(typeName);
+            if (!IsConcreteInferredType(type))
+                throw new Exception(
+                    $"Cannot infer a concrete type for let variable '{variableName}'. Use an explicit type or a typed initializer.");
+        }
+
+        private static bool IsConcreteInferredType(TypeSymbol type) => type switch
+        {
+            PrimitiveTypeSymbol primitive => primitive != Types.Void,
+            NamedTypeSymbol => true,
+            ArrayTypeSymbol array => IsConcreteInferredType(array.ElementType),
+            TaskTypeSymbol task => task.ResultType == Types.Void || IsConcreteInferredType(task.ResultType),
+            _ => false
+        };
 
         /// <summary>
         /// Converts a token type to its corresponding string representation.

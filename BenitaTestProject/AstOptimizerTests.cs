@@ -1,4 +1,5 @@
 using Benita;
+using System.Globalization;
 
 namespace BenitaTestProject;
 
@@ -118,6 +119,31 @@ _main_() {
         new CompilerClass().Exec(source, optimizeAst: true);
 
         Assert.AreEqual("14\r\n", output.GetOutput());
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public void Exec_NumberLiterals_AreCultureInvariantWithAndWithoutOptimization()
+    {
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo previousUiCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de-DE");
+
+            foreach (bool optimize in new[] { false, true })
+            {
+                using var output = new ConsoleOutput();
+                new CompilerClass().Exec("_main_() { print(1.0 + 1.0); }", optimizeAst: optimize);
+                Assert.AreEqual($"2{Environment.NewLine}", output.GetOutput());
+            }
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUiCulture;
+        }
     }
 
     private static ProgramNode CreateProgram(StatementNode statement)

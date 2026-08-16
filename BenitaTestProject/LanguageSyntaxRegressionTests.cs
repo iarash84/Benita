@@ -159,6 +159,30 @@ _main_() { print(sign(2)); }";
     }
 
     [DataTestMethod]
+    [DataRow("if (false) { number value = 1; }")]
+    [DataRow("while (false) { number value = 1; }")]
+    [DataRow("for (number value = 0; value < 1; value++) {}")]
+    [DataRow("match 1 { 1 => { number value = 1; } }")]
+    public void Check_DeclarationInsideConditionalControlFlow_DoesNotEscape(string controlFlow)
+    {
+        var exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check($"_main_() {{ {controlFlow} print(value); }}"));
+
+        StringAssert.Contains(exception.Message, "Undeclared variable 'value'");
+    }
+
+    [TestMethod]
+    public void Check_ExclusiveIfBranches_CanDeclareTheSameLocalName()
+    {
+        new CompilerClass().Check("""
+            _main_() {
+                if (true) { number value = 1; }
+                else { number value = 2; }
+            }
+            """);
+    }
+
+    [DataTestMethod]
     [DataRow("_main_() { void value; }")]
     [DataRow("func value() -> let { return 1; } _main_() {}")]
     [DataRow("func value(let input) -> number { return 1; } _main_() {}")]
@@ -168,7 +192,18 @@ _main_() { print(sign(2)); }";
     }
 
     [DataTestMethod]
-    [DataRow(".5", "BEN1005")]
+    [DataRow("let values = []; _main_() {}")]
+    [DataRow("_main_() { let values = []; }")]
+    [DataRow("pkg Store { let values = []; } _main_() {}")]
+    public void Check_LetWithoutConcreteInferredType_IsRejected(string source)
+    {
+        SemanticException exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check(source));
+        StringAssert.Contains(exception.Message, "Cannot infer a concrete type");
+    }
+
+    [DataTestMethod]
+    [DataRow(".5", "BEN1007")]
     [DataRow("true & false", "BEN1001")]
     [DataRow("true | false", "BEN1001")]
     [DataRow("/* unfinished", "BEN1004")]
@@ -267,6 +302,28 @@ _main_() { print(sign(2)); }";
             using var output = new ConsoleOutput();
             new CompilerClass().Exec(source, optimizeAst: optimize);
             Assert.AreEqual($"True{Environment.NewLine}True{Environment.NewLine}", output.GetOutput());
+        }
+    }
+
+    [TestMethod]
+    public void Exec_MatchNumericPatterns_UseLanguageEqualityAcrossRuntimeRepresentations()
+    {
+        const string source = """
+            _main_() {
+                number value;
+                print(match value { 0 => "default", _ => "missed" });
+                print(match array_len([1]) { 1 => "length", _ => "missed" });
+                print(match string_len("a") { 1 => "length", _ => "missed" });
+            }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual(
+                $"default{Environment.NewLine}length{Environment.NewLine}length{Environment.NewLine}",
+                output.GetOutput());
         }
     }
 

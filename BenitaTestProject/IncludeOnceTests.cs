@@ -126,6 +126,52 @@ public class IncludeOnceTests
         }
     }
 
+    [TestMethod]
+    public void IncludedSourceDiagnostic_PreservesOriginalFileLineAndText()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string libraryPath = Path.Combine(directory, "library.ben");
+            File.WriteAllText(libraryPath, "// first line\n_main_() { @ }");
+            string rootPath = Path.Combine(directory, "main.ben");
+
+            LexerException exception = Assert.ThrowsException<LexerException>(() =>
+                new Lexer("include_once \"library.ben\";", sourceName: rootPath).Tokenize());
+
+            Assert.AreEqual(Path.GetFullPath(libraryPath), exception.Span.FileName);
+            Assert.AreEqual(2, exception.Span.Line);
+            Assert.AreEqual("_main_() { @ }", exception.Span.LineText);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void IncludedParserDiagnostic_PreservesOriginalFileLocation()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string libraryPath = Path.Combine(directory, "broken.ben");
+            File.WriteAllText(libraryPath, "func broken() -> number {\nnumber value = ;\n}");
+            string rootPath = Path.Combine(directory, "main.ben");
+
+            ParserException exception = Assert.ThrowsException<ParserException>(() =>
+                new CompilerClass().Check("include_once \"broken.ben\";\n_main_() {}", sourceName: rootPath));
+
+            Assert.AreEqual(Path.GetFullPath(libraryPath), exception.Span.FileName);
+            Assert.AreEqual(2, exception.Span.Line);
+            Assert.AreEqual("number value = ;", exception.Span.LineText);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     /// <summary>برای هر تست یک پوشهٔ موقت مستقل ایجاد می‌کند.</summary>
     private static string CreateTemporaryDirectory()
     {

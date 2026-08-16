@@ -38,6 +38,124 @@ namespace Benita
             _outerScopeVariables = new Dictionary<string, object>();
         }
 
+        /// <summary>از state قابل مشاهدهٔ مفسر snapshot می‌گیرد تا اجرای REPL قابل rollback باشد.</summary>
+        internal TransactionCheckpoint CreateCheckpoint()
+        {
+            var checkpoint = new TransactionCheckpoint();
+            CaptureState(checkpoint.RootState, checkpoint);
+            foreach (var item in _context.GlobalVariables)
+                checkpoint.GlobalVariables[item.Key] = CloneCheckpointValue(item.Value, checkpoint, true);
+            foreach (var item in _context.GlobalFunctions)
+                checkpoint.GlobalFunctions[item.Key] = item.Value;
+            foreach (var item in _context.Packages)
+                checkpoint.Packages[item.Key] = item.Value;
+            return checkpoint;
+        }
+
+        /// <summary>تمام تغییرات runtime پس از snapshot را برای نشست REPL بازمی‌گرداند.</summary>
+        internal void RestoreCheckpoint(TransactionCheckpoint checkpoint)
+        {
+            RestoreState(checkpoint.RootState, checkpoint);
+            ReplaceValues(_context.GlobalVariables, checkpoint.GlobalVariables, checkpoint);
+            ReplaceItems(_context.GlobalFunctions, checkpoint.GlobalFunctions);
+            ReplaceItems(_context.Packages, checkpoint.Packages);
+            foreach (var item in checkpoint.PackageStates)
+                item.Key.RestoreCheckpoint(item.Value, checkpoint);
+        }
+
+        internal void CaptureState(InterpreterState state, TransactionCheckpoint checkpoint)
+        {
+            foreach (var item in _variables)
+                state.Variables[item.Key] = CloneCheckpointValue(item.Value, checkpoint, true);
+            foreach (var item in _outerScopeVariables)
+                state.OuterScopeVariables[item.Key] = CloneCheckpointValue(item.Value, checkpoint, true);
+            foreach (var item in _functions)
+                state.Functions[item.Key] = item.Value;
+            state.PersistentVariableNames.UnionWith(_persistentVariableNames);
+            state.FunctionReturnFlag = _functionReturnFlag;
+        }
+
+        internal void RestoreState(InterpreterState state, TransactionCheckpoint checkpoint)
+        {
+            _variables = state.Variables.ToDictionary(item => item.Key,
+                item => CloneCheckpointValue(item.Value, checkpoint, false));
+            ReplaceValues(_outerScopeVariables, state.OuterScopeVariables, checkpoint);
+            ReplaceItems(_functions, state.Functions);
+            _persistentVariableNames.Clear();
+            _persistentVariableNames.UnionWith(state.PersistentVariableNames);
+            _functionReturnFlag = state.FunctionReturnFlag;
+        }
+
+        private static object CloneCheckpointValue(object value, TransactionCheckpoint checkpoint,
+            bool capturePackages)
+        {
+            if (value is PackageInstance package)
+            {
+                if (capturePackages) checkpoint.CapturePackage(package);
+                return package;
+            }
+            if (value is not Array array) return value;
+
+            Dictionary<object, object> clones = capturePackages
+                ? checkpoint.CapturedValues
+                : checkpoint.RestoredValues;
+            if (clones.TryGetValue(array, out object? existingCopy)) return existingCopy;
+
+            var copy = new object[array.Length];
+            clones.Add(array, copy);
+            for (int index = 0; index < array.Length; index++)
+            {
+                object? element = array.GetValue(index);
+                copy[index] = element is null ? null! : CloneCheckpointValue(element, checkpoint, capturePackages);
+            }
+            return copy;
+        }
+
+        private static void ReplaceValues(Dictionary<string, object> target,
+            Dictionary<string, object> source, TransactionCheckpoint checkpoint)
+        {
+            target.Clear();
+            foreach (var item in source)
+                target[item.Key] = CloneCheckpointValue(item.Value, checkpoint, false);
+        }
+
+        private static void ReplaceItems<T>(Dictionary<string, T> target, Dictionary<string, T> source)
+        {
+            target.Clear();
+            foreach (var item in source) target[item.Key] = item.Value;
+        }
+
+        internal sealed class TransactionCheckpoint
+        {
+            internal InterpreterState RootState { get; } = new();
+            internal Dictionary<string, object> GlobalVariables { get; } = [];
+            internal Dictionary<string, FunctionNode> GlobalFunctions { get; } = [];
+            internal Dictionary<string, PackageNode> Packages { get; } = [];
+            internal Dictionary<PackageInstance, InterpreterState> PackageStates { get; } =
+                new(ReferenceEqualityComparer.Instance);
+            internal Dictionary<object, object> CapturedValues { get; } =
+                new(ReferenceEqualityComparer.Instance);
+            internal Dictionary<object, object> RestoredValues { get; } =
+                new(ReferenceEqualityComparer.Instance);
+
+            internal void CapturePackage(PackageInstance package)
+            {
+                if (PackageStates.ContainsKey(package)) return;
+                var state = new InterpreterState();
+                PackageStates.Add(package, state);
+                package.CaptureCheckpoint(state, this);
+            }
+        }
+
+        internal sealed class InterpreterState
+        {
+            internal Dictionary<string, object> Variables { get; } = [];
+            internal Dictionary<string, object> OuterScopeVariables { get; } = [];
+            internal Dictionary<string, FunctionNode> Functions { get; } = [];
+            internal HashSet<string> PersistentVariableNames { get; } = [];
+            internal bool FunctionReturnFlag { get; set; }
+        }
+
         private void DebugLog(string message, bool pressKeyWait = true)
         {
             if (_debugMode)
@@ -213,7 +331,8 @@ namespace Benita
             DebugLog($"VisitLiteralNode: Type = {node.Type}, Value = {node.Value}");
             return node.Type switch
             {
-                TokenType.NUMBER or TokenType.NUMBER_LITERAL => Convert.ToDouble(node.Value),
+                TokenType.NUMBER or TokenType.NUMBER_LITERAL => double.Parse(node.Value,
+                    System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture),
                 TokenType.STRING or TokenType.STRING_LITERAL => node.Value,
                 TokenType.TRUE_LITERAL => true,
                 TokenType.FALSE_LITERAL => false,
@@ -459,10 +578,16 @@ namespace Benita
         /// <summary>برابری runtime را مطابق قرارداد scalar زبان محاسبه می‌کند.</summary>
         private static bool ValuesAreEqual(object left, object right)
         {
-            if (left is string && right is string || left is bool && right is bool)
-                return left.Equals(right);
-            return Convert.ToDouble(left) == Convert.ToDouble(right);
+            if (IsRuntimeNumber(left) && IsRuntimeNumber(right))
+                return Convert.ToDouble(left) == Convert.ToDouble(right);
+            return Equals(left, right);
         }
+
+        /// <summary>تمام representationهای عددی CLR را که ممکن است built-inها تولید کنند تشخیص می‌دهد.</summary>
+        private static bool IsRuntimeNumber(object value) => Type.GetTypeCode(value.GetType()) is
+            TypeCode.Byte or TypeCode.SByte or TypeCode.Int16 or TypeCode.UInt16 or
+            TypeCode.Int32 or TypeCode.UInt32 or TypeCode.Int64 or TypeCode.UInt64 or
+            TypeCode.Single or TypeCode.Double or TypeCode.Decimal;
 
         /// <summary>
         /// Visits a return statement node and sets the function return flag.
@@ -835,15 +960,16 @@ namespace Benita
                 Visit(packageNode);
             }
 
+            // تابع‌ها باید هنگام ارزیابی initializerهای سراسری قابل فراخوانی باشند.
+            foreach (var function in node.Functions)
+            {
+                Visit(function);
+            }
+
             foreach (var globalVar in node.GlobalVariables)
             {
                 Visit(globalVar);
                 _persistentVariableNames.Add(globalVar.Name);
-            }
-
-            foreach (var function in node.Functions)
-            {
-                Visit(function);
             }
 
             Synchronize(_context.GlobalFunctions, _functions);
@@ -958,7 +1084,8 @@ namespace Benita
         {
             foreach (MatchPatternNode pattern in arm.Patterns)
             {
-                if (pattern is ValueMatchPatternNode valuePattern && Equals(value, Visit(valuePattern.Value)))
+                if (pattern is ValueMatchPatternNode valuePattern &&
+                    ValuesAreEqual(value, Visit(valuePattern.Value)))
                     return true;
                 if (pattern is RangeMatchPatternNode range)
                 {
@@ -1140,7 +1267,7 @@ namespace Benita
 
             return type switch
             {
-                "number" => 0,
+                "number" => 0d,
                 "string" => string.Empty,
                 "bool" => false,
                 "number[]" or "string[]" or "bool[]" => Array.Empty<object>(),
