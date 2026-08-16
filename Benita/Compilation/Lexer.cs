@@ -19,7 +19,8 @@
         /// <summary>
         /// A set to track included files to avoid duplicate inclusion.
         /// </summary>
-        private readonly HashSet<string> _includedFiles = new();
+        private readonly HashSet<string> _includedFiles = new(
+            OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 
         /// <summary>
         /// Variables to keep track of the current position in the source code.
@@ -75,7 +76,14 @@
         {
             _source = source;
             _sourceName = sourceName;
-            ProcessIncludes(ref _source); ///< Process included files.
+            string baseDirectory = Environment.CurrentDirectory;
+            if (!string.IsNullOrWhiteSpace(sourceName) && !sourceName.StartsWith('<'))
+            {
+                string rootPath = Path.GetFullPath(sourceName);
+                _includedFiles.Add(rootPath);
+                baseDirectory = Path.GetDirectoryName(rootPath) ?? baseDirectory;
+            }
+            ProcessIncludes(ref _source, baseDirectory); ///< Process included files.
             if (sourcePrint)
                 Console.WriteLine(_source);
         }
@@ -101,35 +109,27 @@
         /// Recursively processes "include_once" directives to include the contents of other files.
         /// </summary>
         /// <param name="source">The source code to process.</param>
-        private void ProcessIncludes(ref string source)
+        private void ProcessIncludes(ref string source, string baseDirectory)
         {
             var includedSources = new List<string>();
             var lines = source.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
             foreach (var line in lines)
             {
-                if (line.Trim().StartsWith("include_once"))
+                string trimmedLine = line.Trim();
+                if (trimmedLine.StartsWith("include_once", StringComparison.Ordinal))
                 {
-                    var parts = line.Split(' ');
-                    if (parts.Length == 2)
-                    {
-                        var filePath = parts[1].Trim('\"', ' ', ';');
+                    string includePath = ParseIncludePath(trimmedLine);
+                    string filePath = Path.GetFullPath(Path.Combine(baseDirectory, includePath));
+                    if (!_includedFiles.Add(filePath))
+                        continue;
+                    if (!File.Exists(filePath))
+                        throw CreateError("BEN1003", $"Included file '{includePath}' was not found at '{filePath}'.");
 
-                        if (!_includedFiles.Contains(filePath))
-                        {
-                            _includedFiles.Add(filePath);
-                            if (File.Exists(filePath))
-                            {
-                                var fileContent = File.ReadAllText(filePath);
-                                ProcessIncludes(ref fileContent); ///< Recursively process included file.
-                                includedSources.Add(fileContent);
-                            }
-                            else
-                            {
-                                throw CreateError("BEN1003", $"Included file '{filePath}' was not found.");
-                            }
-                        }
-                    }
+                    string fileContent = File.ReadAllText(filePath);
+                    string includedDirectory = Path.GetDirectoryName(filePath) ?? baseDirectory;
+                    ProcessIncludes(ref fileContent, includedDirectory); ///< Recursively process included file.
+                    includedSources.Add(fileContent);
                 }
                 else
                 {
@@ -138,6 +138,25 @@
             }
 
             source = string.Join(Environment.NewLine, includedSources); ///< Combine the processed lines.
+        }
+
+        /// <summary>مسیر یک directive معتبر include_once را استخراج می‌کند.</summary>
+        private string ParseIncludePath(string directive)
+        {
+            const string keyword = "include_once";
+            string remainder = directive[keyword.Length..].Trim();
+            if (!remainder.EndsWith(';'))
+                throw CreateError("BEN1004", "Expected ';' after include_once directive.");
+            remainder = remainder[..^1].TrimEnd();
+
+            if (remainder.Length < 2 || remainder[0] != '"' || remainder[^1] != '"' ||
+                remainder[1..^1].Contains('"'))
+                throw CreateError("BEN1004", "Expected include_once \"path\";.");
+
+            string path = remainder[1..^1];
+            if (string.IsNullOrWhiteSpace(path))
+                throw CreateError("BEN1004", "The include_once path cannot be empty.");
+            return path;
         }
 
         /// <summary>

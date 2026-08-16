@@ -444,7 +444,9 @@ _main_() {
 }
 ```
 
-`include_once` هر فایل را حداکثر یک بار وارد می‌کند. مسیر فایل نسبت به پوشه کاری برنامه محاسبه می‌شود.
+`include_once` هر فایل را در هر بار کامپایل حداکثر یک بار وارد می‌کند. مسیر نسبی نسبت به پوشهٔ
+فایلی که directive داخل آن نوشته شده محاسبه می‌شود؛ برای source بدون نام، پوشهٔ کاری مبنا است.
+مسیرهای معادل canonical می‌شوند و includeهای چرخه‌ای نیز باعث ورود دوبارهٔ فایل نمی‌شوند.
 
 ### ۱۲. کامنت‌ها
 
@@ -1003,7 +1005,9 @@ _main_() {
 }
 ```
 
-`include_once` imports each file at most once. File paths are resolved relative to the program's working directory.
+`include_once` imports each file at most once per compilation. Relative paths are resolved from
+the directory of the file containing each directive; the working directory is used for unnamed source.
+Equivalent path spellings and circular includes are normalized and loaded only once during a compilation.
 
 ### 12. Comments
 

@@ -224,6 +224,9 @@ Notes
 
 `include_once "path";` is a preprocessing directive rather than a tokenized
 grammar production and may appear on its own source line. Directives are
-expanded before parsing. Built-in function
+expanded recursively before parsing. Relative paths are resolved from the directory of the
+file containing the directive. Canonical absolute paths are compared with platform-appropriate
+case sensitivity, so equivalent paths and circular dependencies are included only once per
+compilation. Built-in function
 names and signatures are runtime API entries, not grammar productions; their
 authoritative definitions live in `BuiltInRegistry`.
