@@ -59,29 +59,34 @@ jobs:
         run: dotnet test Benita.sln --configuration Release --no-build --no-restore --logger "console;verbosity=normal"
 
       - name: Publish platform packages
-        shell: bash
+        shell: pwsh
         run: |
-          version="${RELEASE_TAG#v}"
-          mkdir -p artifacts
+          $version = $env:RELEASE_TAG.TrimStart('v')
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
 
-          for runtime in win-x64 linux-x64 osx-x64; do
-            output="publish/$runtime"
-            dotnet publish Benita/Benita.csproj \
-              --configuration Release \
-              --runtime "$runtime" \
-              --self-contained true \
-              --output "$output" \
-              -p:Version="$version" \
-              -p:PublishSingleFile=true \
-              -p:DebugType=None \
+          foreach ($runtime in @('win-x64', 'linux-x64', 'osx-x64')) {
+            $output = Join-Path publish $runtime
+            dotnet publish Benita/Benita.csproj `
+              --configuration Release `
+              --runtime $runtime `
+              --self-contained true `
+              --output $output `
+              -p:Version=$version `
+              -p:PublishSingleFile=true `
+              -p:DebugType=None `
               -p:DebugSymbols=false
 
-            if [[ "$runtime" == "win-x64" ]]; then
-              (cd "$output" && zip -r "../../artifacts/Benita-$RELEASE_TAG-$runtime.zip" .)
-            else
-              tar -C "$output" -czf "artifacts/Benita-$RELEASE_TAG-$runtime.tar.gz" .
-            fi
-          done
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            if ($runtime -eq 'win-x64') {
+              Compress-Archive -Path (Join-Path $output '*') `
+                -DestinationPath "artifacts/Benita-$env:RELEASE_TAG-$runtime.zip" -Force
+            }
+            else {
+              tar -C $output -czf "artifacts/Benita-$env:RELEASE_TAG-$runtime.tar.gz" .
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            }
+          }
 
       - name: Create GitHub release
         shell: bash
