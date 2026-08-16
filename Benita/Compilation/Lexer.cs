@@ -124,11 +124,12 @@
             {
                 var includedSources = new List<string>();
                 var lines = source.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                bool insideBlockComment = false;
 
                 foreach (var line in lines)
                 {
                     string trimmedLine = line.Trim();
-                    if (trimmedLine.StartsWith("include_once", StringComparison.Ordinal))
+                    if (!insideBlockComment && trimmedLine.StartsWith("include_once", StringComparison.Ordinal))
                     {
                         string includePath = ParseIncludePath(trimmedLine);
                         string filePath = Path.GetFullPath(Path.Combine(baseDirectory, includePath));
@@ -147,6 +148,7 @@
                     else
                     {
                         includedSources.Add(line); ///< Add the line if it's not an include directive.
+                        UpdateBlockCommentState(line, ref insideBlockComment);
                     }
                 }
 
@@ -160,6 +162,55 @@
                 {
                     _includeStack.RemoveAt(_includeStack.Count - 1);
                     _activeIncludes.Remove(currentPath);
+                }
+            }
+        }
+
+        /// <summary>وضعیت کامنت چندخطی را بدون تفسیر markerهای داخل string به‌روز می‌کند.</summary>
+        private static void UpdateBlockCommentState(string line, ref bool insideBlockComment)
+        {
+            bool insideString = false;
+            bool escaped = false;
+            for (int index = 0; index < line.Length; index++)
+            {
+                char current = line[index];
+                char next = index + 1 < line.Length ? line[index + 1] : '\0';
+
+                if (insideBlockComment)
+                {
+                    if (current == '*' && next == '/')
+                    {
+                        insideBlockComment = false;
+                        index++;
+                    }
+                    continue;
+                }
+
+                if (insideString)
+                {
+                    if (escaped)
+                    {
+                        escaped = false;
+                        continue;
+                    }
+                    if (current == '\\')
+                    {
+                        escaped = true;
+                        continue;
+                    }
+                    if (current == '"')
+                        insideString = false;
+                    continue;
+                }
+
+                if (current == '"')
+                    insideString = true;
+                else if (current == '/' && next == '/')
+                    return;
+                else if (current == '/' && next == '*')
+                {
+                    insideBlockComment = true;
+                    index++;
                 }
             }
         }

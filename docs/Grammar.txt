@@ -163,6 +163,8 @@ Semantic constraints
    an initializer from which a concrete type can be inferred.
 4. `void` is allowed only as a function return type.
 5. Every reachable path of a non-void function must return a compatible value.
+   An unconditional `while (true)` or `for (;;)` satisfies this rule when its
+   body always returns or throws and no reachable `break` exits that loop.
 6. `break` and `continue` are valid only inside `while` or `for` loops.
 7. A decimal literal must include digits on both sides of the decimal point;
    write `0.5`, not `.5`, and `1.0`, not `1.`.
@@ -218,13 +220,35 @@ Semantic constraints
 29. Task arguments and the visible variable scope are captured when `async` is
     evaluated. Each task runs in an isolated runtime scope; assignments made by
     it do not mutate the caller's variables.
+30. A synchronous function can read and assign variables declared in its visible
+    outer scope. Such assignments remain visible after the function returns.
+31. Unary `-` accepts a `number` and produces a `number`. Unary `!` accepts a
+    `bool` and produces a `bool`.
+32. The index expression of an array access or assignment must have type `number`.
+33. An array variable declared without an initializer starts as an empty array of
+    its declared element type.
+34. A sized-array length expression must be a non-negative whole `number` within
+    the runtime-supported range. Elements start as `0`, `""`, or `false` according
+    to the declared element type.
+35. `to_string` accepts a value of any language type and returns its runtime string
+    representation.
+36. Equality operators `==` and `!=` accept two operands of the same scalar type:
+    `number`, `string`, or `bool`. Ordered comparisons `<`, `>`, `<=`, and `>=`
+    accept only `number` operands.
+37. The increment clause of a classic `for` runs after a normal iteration and
+    before the next iteration after `continue`. It does not run after `break`,
+    function `return`, or an error leaving the loop body.
+38. An unexpected runtime failure crossing the public execution boundary is
+    reported as `BEN4001`. More specific Benita diagnostics, including built-in
+    `BEN4101` and uncaught user-error codes, retain their original code.
 
 Notes
 -----
 
 `include_once "path";` is a preprocessing directive rather than a tokenized
 grammar production and may appear on its own source line. Directives are
-expanded recursively before parsing. Relative paths are resolved from the directory of the
+expanded recursively before parsing. Text inside line or block comments is never
+treated as an include directive. Relative paths are resolved from the directory of the
 file containing the directive. Canonical absolute paths are compared with platform-appropriate
 case sensitivity, so equivalent paths are included only once per compilation. A circular
 dependency is rejected with `BEN1005` and its include chain. Built-in function

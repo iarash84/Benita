@@ -150,7 +150,7 @@ namespace Benita
                     access.Name, OptimizeExpression(access.Index)),
                 ArrayInitializerNode array => new ArrayInitializerNode(
                     array.Elements.Select(element => OptimizeExpression(element)!).ToList(),
-                    OptimizeExpression(array.SizeExpression)!),
+                    OptimizeExpression(array.SizeExpression)!, array.ElementType),
                 MemberAccessNode member => new MemberAccessNode(
                     member.ObjectName, OptimizeMemberExpression(member.Expression)),
                 NewExpressionNode creation => new NewExpressionNode(
@@ -207,6 +207,19 @@ namespace Benita
             if (node.Operator == "+" && IsString(leftLiteral) && IsString(rightLiteral))
             {
                 return new LiteralNode(leftLiteral.Value + rightLiteral.Value, TokenType.STRING_LITERAL);
+            }
+
+            if (node.Operator is "==" or "!=" && IsString(leftLiteral) && IsString(rightLiteral))
+            {
+                bool equal = string.Equals(leftLiteral.Value, rightLiteral.Value, StringComparison.Ordinal);
+                return BooleanLiteral(node.Operator == "==" ? equal : !equal);
+            }
+
+            if (node.Operator is "==" or "!=" && TryGetBoolean(leftLiteral, out bool leftBool) &&
+                TryGetBoolean(rightLiteral, out bool rightBool))
+            {
+                bool equal = leftBool == rightBool;
+                return BooleanLiteral(node.Operator == "==" ? equal : !equal);
             }
 
             return new BinaryExpressionNode(left, node.Operator, right);

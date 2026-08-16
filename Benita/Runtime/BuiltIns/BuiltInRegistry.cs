@@ -44,7 +44,7 @@ internal static class BuiltInRegistry
         yield return Define<ArrayManagement>("array_slice", Types.AnyArray, Types.AnyArray, Types.Number, Types.Number);
         yield return Define<ArrayManagement>("array_concat", Types.AnyArray, Types.AnyArray, Types.AnyArray);
         yield return Define<ArrayManagement>("array_sort", Types.AnyArray, Types.AnyArray);
-        yield return Define<Utility>("to_string", Types.String, Types.Number);
+        yield return Define<Utility>("to_string", Types.String, Types.Any);
         yield return Define<Utility>("to_number", Types.Number, Types.String);
         yield return Define<Utility>("round_number", Types.Number, Types.Number);
         yield return Define<Utility>("sqrt_number", Types.Number, Types.Number);

@@ -480,6 +480,32 @@
             TryStatementNode tryStatement =>
                 AlwaysReturns(tryStatement.TryBlock) &&
                 (tryStatement.CatchBlock is null || AlwaysReturns(tryStatement.CatchBlock)),
+            WhileStatementNode loop => IsAlwaysTrue(loop.Condition) &&
+                                       AlwaysReturns(loop.Body) &&
+                                       !ContainsBreakForCurrentLoop(loop.Body),
+            ForStatementNode loop => (loop.Condition is null || IsAlwaysTrue(loop.Condition)) &&
+                                     AlwaysReturns(loop.Body) &&
+                                     !ContainsBreakForCurrentLoop(loop.Body),
+            _ => false
+        };
+
+        /// <summary>تشخیص می‌دهد شرط حلقه literal صحیح و در نتیجه ورود به آن قطعی است.</summary>
+        private static bool IsAlwaysTrue(ExpressionNode? expression) =>
+            expression is LiteralNode { Type: TokenType.TRUE_LITERAL };
+
+        /// <summary>وجود break متعلق به حلقهٔ جاری را بدون شمردن break حلقه‌های تو در تو بررسی می‌کند.</summary>
+        private static bool ContainsBreakForCurrentLoop(StatementNode? statement) => statement switch
+        {
+            BreakStatementNode => true,
+            BlockNode block => block.Statements.Any(ContainsBreakForCurrentLoop),
+            IfStatementNode branch => ContainsBreakForCurrentLoop(branch.ThenBranch) ||
+                                      ContainsBreakForCurrentLoop(branch.ElseBranch),
+            MatchStatementNode match => match.Arms.Any(arm =>
+                ContainsBreakForCurrentLoop(arm.Body as StatementNode)),
+            TryStatementNode tryStatement => ContainsBreakForCurrentLoop(tryStatement.TryBlock) ||
+                                             ContainsBreakForCurrentLoop(tryStatement.CatchBlock) ||
+                                             ContainsBreakForCurrentLoop(tryStatement.FinallyBlock),
+            WhileStatementNode or ForStatementNode or ForEachStatementNode => false,
             _ => false
         };
 
@@ -775,7 +801,12 @@
                 return HandleArithmeticOperator(binary, leftType, rightType);
             }
 
-            if (IsComparisonOperator(binary.Operator))
+            if (binary.Operator is "==" or "!=")
+            {
+                return HandleEqualityOperator(leftType, rightType);
+            }
+
+            if (IsOrderedComparisonOperator(binary.Operator))
             {
                 return HandleComparisonOperator(leftType, rightType);
             }
@@ -826,6 +857,15 @@
             return "bool"; // Comparison operators result in boolean type
         }
 
+        /// <summary>برابری را فقط برای دو مقدار scalar هم‌نوع معتبر می‌داند.</summary>
+        private static string HandleEqualityOperator(string? leftType, string? rightType)
+        {
+            bool supportedType = leftType is "number" or "string" or "bool";
+            if (!supportedType || leftType != rightType)
+                throw new Exception("Equality operands must have the same scalar type.");
+            return "bool";
+        }
+
         /// <summary>
         /// Handles unary expression nodes and determines their result type.
         /// </summary>
@@ -834,7 +874,15 @@
         /// <returns>The type of the unary expression result.</returns>
         private string? HandleUnaryExpressionNode(UnaryExpressionNode unary, Dictionary<string, string?> localVariables)
         {
-            return AnalyzeExpression(unary.Operand, localVariables);
+            string? operandType = AnalyzeExpression(unary.Operand, localVariables);
+            return unary.Operator switch
+            {
+                "-" when operandType == Types.Number.Name => Types.Number.Name,
+                "!" when operandType == Types.Bool.Name => Types.Bool.Name,
+                "-" => throw new Exception("Unary '-' requires an operand of type 'number'."),
+                "!" => throw new Exception("Unary '!' requires an operand of type 'bool'."),
+                _ => throw new Exception($"Unknown unary operator '{unary.Operator}'.")
+            };
         }
 
         /// <summary>
@@ -898,6 +946,14 @@
         /// <returns>The type of the array.</returns>
         private string? HandleArrayInitializerNode(ArrayInitializerNode arrayInit, Dictionary<string, string?> localVariables)
         {
+            if (arrayInit.ElementType is not null)
+            {
+                string? sizeType = AnalyzeExpression(arrayInit.SizeExpression, localVariables);
+                if (sizeType != Types.Number.Name)
+                    throw new Exception("Sized array length must be of type 'number'.");
+                return $"{arrayInit.ElementType}[]";
+            }
+
             var elementType = "unknown"; // Placeholder for the element type of the array
             foreach (var element in arrayInit.Elements)
             {
@@ -928,6 +984,10 @@
             }
 
             var indexType = AnalyzeExpression(arrayAccess.Index, localVariables);
+            if (indexType != Types.Number.Name)
+            {
+                throw new Exception("Array index must be of type 'number'.");
+            }
             if (!arrayType.EndsWith("[]"))
             {
                 throw new Exception($"Cannot index into non-array type '{arrayType}'.");
@@ -972,9 +1032,9 @@
         /// </summary>
         /// <param name="op">The operator to check.</param>
         /// <returns>True if the operator is a comparison operator, otherwise false.</returns>
-        private bool IsComparisonOperator(string op)
+        private bool IsOrderedComparisonOperator(string op)
         {
-            return op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!=";
+            return op == "<" || op == ">" || op == "<=" || op == ">=";
         }
 
         /// <summary>

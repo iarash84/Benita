@@ -91,6 +91,41 @@ public class IncludeOnceTests
         Assert.AreEqual("BEN1004", exception.Code);
     }
 
+    [TestMethod]
+    public void IncludeOnce_InsideBlockComment_IsIgnored()
+    {
+        const string source = """
+            /*
+            include_once "definitely-missing.ben";
+            */
+            _main_() { print("ok"); }
+            """;
+
+        new CompilerClass().Check(source);
+    }
+
+    [TestMethod]
+    public void IncludeOnce_BlockCommentMarkerInsideString_DoesNotHideFollowingDirective()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            File.WriteAllText(Path.Combine(directory, "library.ben"),
+                "func value() -> number { return 3; }");
+            const string source = """
+                string marker = "/*";
+                include_once "library.ben";
+                _main_() { print(value()); }
+                """;
+
+            new CompilerClass().Check(source, sourceName: Path.Combine(directory, "main.ben"));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     /// <summary>برای هر تست یک پوشهٔ موقت مستقل ایجاد می‌کند.</summary>
     private static string CreateTemporaryDirectory()
     {

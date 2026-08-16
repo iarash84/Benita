@@ -36,6 +36,8 @@ let total = 5.2 + 8;
 ```
 
 متغیرها می‌توانند سراسری یا محلی باشند. متغیر `let` باید مقدار اولیه داشته باشد.
+تغییر یک متغیر سراسری در فراخوانی هم‌زمان تابع پس از بازگشت تابع حفظ می‌شود؛ taskهای
+ساخته‌شده با `async` همچنان scope جداگانه دارند و متغیرهای فراخواننده را تغییر نمی‌دهند.
 
 ### ۳. عملگرها
 
@@ -52,6 +54,10 @@ sum++;
 - عملگرهای حسابی: `+`، `-`، `*`، `/` و `%`
 - عملگرهای مقایسه‌ای: `==`، `!=`، `<`، `>`، `<=` و `>=`
 - عملگرهای منطقی: `&&`، `||` و `!`
+
+عملگر یکانی `-` فقط روی `number` و عملگر `!` فقط روی `bool` قابل استفاده است.
+برابری `==` و `!=` برای دو مقدار هم‌نوع `number`، `string` یا `bool` مجاز است؛
+مقایسه‌های ترتیبی `<`، `>`، `<=` و `>=` فقط روی `number` کار می‌کنند.
 
 ### ۴. شرط‌ها
 
@@ -156,6 +162,8 @@ for (item in values) {
 ```
 
 از `break` برای خروج از حلقه و از `continue` برای رفتن به تکرار بعدی استفاده کنید.
+بخش increment حلقهٔ `for` پس از تکرار عادی و پیش از تکرار بعدی در `continue` اجرا
+می‌شود، اما پس از `break`، `return` یا خطایی که از بدنه خارج شود اجرا نمی‌شود.
 
 ### ۶. توابع و بازگشت
 
@@ -201,6 +209,9 @@ print(array_len(values));
 ```
 
 تمام عناصر یک آرایه باید نوع یکسان داشته باشند و اندیس آرایه عددی است.
+آرایه‌ای که بدون مقدار اولیه تعریف شود، به‌صورت آرایه خالی از همان نوع ایجاد می‌شود.
+در آرایهٔ سایزدار مانند `bool[3]`، اندازه باید عدد صحیح نامنفی باشد. مقدار اولیهٔ
+عناصر برای `number` برابر `0`، برای `string` رشتهٔ خالی و برای `bool` برابر `false` است.
 
 #### توابع مدیریت آرایه
 
@@ -448,6 +459,7 @@ _main_() {
 فایلی که directive داخل آن نوشته شده محاسبه می‌شود؛ برای source بدون نام، پوشهٔ کاری مبنا است.
 مسیرهای معادل canonical می‌شوند. وابستگی چرخه‌ای مجاز نیست و با خطای `BEN1005` همراه
 زنجیرهٔ فایل‌ها گزارش می‌شود.
+متن `include_once` داخل کامنت یک‌خطی یا چندخطی نادیده گرفته می‌شود.
 
 ### ۱۲. کامنت‌ها
 
@@ -528,6 +540,8 @@ benita> for (number i = 0; i < 3; i++) {
 
 خطاهای اجرای توابع داخلی، مانند اندیس نامعتبر آرایه یا رشته، با کد `BEN4101` گزارش می‌شوند.
 این کد در اجرای فایل و محیط REPL یکسان است.
+خطاهای پیش‌بینی‌نشدهٔ runtime که از مرز اجرای عمومی عبور کنند با `BEN4001` گزارش
+می‌شوند؛ exceptionهای تخصصی Benita کد اصلی خود را حفظ می‌کنند.
 
 ---
 
@@ -538,6 +552,8 @@ benita> for (number i = 0; i < 3; i++) {
 از نوع `let` معتبر نیست.
 
 در تابعی که خروجی آن `void` نیست، تمام مسیرهای ممکن باید مقدار مناسب برگردانند.
+حلقهٔ قطعی `while (true)` یا `for (;;)` نیز زمانی مسیر بازگشت کامل محسوب می‌شود که
+بدنه همیشه `return` یا `throw` کند و `break` قابل‌دسترسی برای خروج از همان حلقه نداشته باشد.
 `return` می‌تواند در هر جای بدنه، از جمله داخل `if`، قرار بگیرد:
 
 ```benita
@@ -595,6 +611,9 @@ let total = 5.2 + 8;
 ```
 
 Variables may be global or local. A `let` variable must have an initializer.
+A synchronous function may update a visible global variable, and that mutation remains visible
+after the function returns. Tasks created with `async` still use an isolated scope and do not
+mutate caller variables.
 
 ### 3. Operators
 
@@ -611,6 +630,10 @@ sum++;
 - Arithmetic operators: `+`, `-`, `*`, `/`, and `%`
 - Comparison operators: `==`, `!=`, `<`, `>`, `<=`, and `>=`
 - Logical operators: `&&`, `||`, and `!`
+
+Unary `-` accepts only a `number`, and unary `!` accepts only a `bool`.
+Equality (`==` and `!=`) accepts two values of the same `number`, `string`, or `bool` type.
+Ordered comparisons (`<`, `>`, `<=`, and `>=`) accept only numbers.
 
 ### 4. Conditions
 
@@ -715,6 +738,8 @@ for (item in values) {
 ```
 
 Use `break` to leave a loop and `continue` to move to its next iteration.
+The `for` increment runs after a normal iteration and before the next iteration after
+`continue`; it does not run after `break`, `return`, or an error leaving the loop body.
 
 ### 6. Functions and returns
 
@@ -760,6 +785,9 @@ print(array_len(values));
 ```
 
 All elements in an array must have the same type, and an array index must be numeric.
+An array declared without an initializer starts as an empty array of its declared type.
+For a sized array such as `bool[3]`, the size must be a non-negative whole number.
+The defaults are `0` for `number`, an empty string for `string`, and `false` for `bool`.
 
 #### Array management functions
 
@@ -1010,6 +1038,7 @@ _main_() {
 the directory of the file containing each directive; the working directory is used for unnamed source.
 Equivalent path spellings are normalized. Circular dependencies are rejected with `BEN1005`
 and the complete include chain.
+An `include_once` inside a line or block comment is ignored.
 
 ### 12. Comments
 
@@ -1074,6 +1103,8 @@ See the [`Examples`](../Examples) directory for more working programs.
 
 Built-in runtime failures, such as invalid array or string indices, use the stable `BEN4101`
 diagnostic code in both file execution and the REPL.
+Unexpected runtime failures crossing the public execution boundary use `BEN4001`, while
+specific Benita exceptions retain their original diagnostic code.
 
 ### 14. Precise syntax and control-flow rules
 
@@ -1081,6 +1112,8 @@ The entry point is always written without parameters: `_main_()`. `void` is rese
 function return types, while `let` is reserved for variable declarations and requires an
 initializer. Every path through a non-void function must return a compatible value, and
 `return` may appear anywhere in its body. `break` and `continue` are valid only in loops.
+An unconditional `while (true)` or `for (;;)` also satisfies definite-return analysis when
+its body always returns or throws and no reachable `break` exits that loop.
 
 All three `for` clauses are optional, so `for (;;) { break; }` is valid. Decimal literals
 need digits on both sides of the point (`0.5`, not `.5`; `1.0`, not `1.`). Use `&&` and

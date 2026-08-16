@@ -39,6 +39,65 @@ _main_() {
             }
         }
 
+        [DataTestMethod]
+        [DataRow("number[]")]
+        [DataRow("string[]")]
+        [DataRow("bool[]")]
+        public void UninitializedArray_UsesAnEmptyRuntimeArray(string arrayType)
+        {
+            string source = $"_main_() {{ {arrayType} values; print(array_len(values)); }}";
+            using var consoleOutput = new ConsoleOutput();
+
+            _compiler.Exec(source);
+
+            Assert.AreEqual($"0{Environment.NewLine}", consoleOutput.GetOutput());
+        }
+
+        [DataTestMethod]
+        [DataRow("number", "0")]
+        [DataRow("string", "")]
+        [DataRow("bool", "False")]
+        public void SizedArray_UsesTheElementTypeDefaultValue(string elementType, string expectedValue)
+        {
+            string source = $"_main_() {{ number size = 2; {elementType}[] values = {elementType}[size]; print(array_len(values)); print(values[0]); }}";
+            using var consoleOutput = new ConsoleOutput();
+
+            _compiler.Exec(source, optimizeAst: true);
+
+            Assert.AreEqual($"2{Environment.NewLine}{expectedValue}{Environment.NewLine}",
+                consoleOutput.GetOutput());
+        }
+
+        [DataTestMethod]
+        [DataRow("-1")]
+        [DataRow("1.5")]
+        public void SizedArray_WithInvalidRuntimeLength_IsRejected(string length)
+        {
+            var exception = Assert.ThrowsException<RuntimeException>(() =>
+                _compiler.Exec($"_main_() {{ number[] values = number[{length}]; }}"));
+
+            StringAssert.Contains(exception.Message, "non-negative whole number");
+        }
+
+        [TestMethod]
+        public void ToString_AcceptsEveryScalarTypeDeclaredByTheLanguage()
+        {
+            const string source = """
+                _main_() {
+                    print(to_string(12));
+                    print(to_string(true));
+                    print(to_string("Benita"));
+                }
+                """;
+            using var consoleOutput = new ConsoleOutput();
+
+            _compiler.Check(source);
+            _compiler.Exec(source);
+
+            Assert.AreEqual($"12{Environment.NewLine}True{Environment.NewLine}Benita{Environment.NewLine}",
+                consoleOutput.GetOutput());
+        }
+
         [TestMethod]
         public void WhileLoopWithIncrementExecutesCorrectly()
         {

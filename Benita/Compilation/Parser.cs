@@ -332,10 +332,11 @@
 
             List<StatementNode?> statements = new List<StatementNode?>();
 
-            while (!IsAtEnd() && !Match(TokenType.RBRACE))
+            while (!Check(TokenType.RBRACE) && !IsAtEnd())
             {
                 statements.Add(ParseStatement());
             }
+            Consume(TokenType.RBRACE, "Expected '}' after main function body");
 
             return new FunctionNode("_main_", parameters, "void", new BlockNode(statements), null);
         }
@@ -784,6 +785,7 @@
         {
             List<ExpressionNode> elements = new List<ExpressionNode>();
             ExpressionNode sizeExpression = new LiteralNode(0.ToString(), TokenType.NUMBER_LITERAL);
+            string? sizedElementType = null;
             if (Check(TokenType.LSQUAREBRACE))
             {
                 Consume(TokenType.LSQUAREBRACE, "Expected '[' to start array initializer");
@@ -794,18 +796,10 @@
             {
                 if (Check(TokenType.NUMBER, TokenType.STRING, TokenType.BOOL))
                 {
-                    var elementType = CurrentToken().Type;
+                    sizedElementType = CurrentToken().Lexeme;
                     Advance();
                     Consume(TokenType.LSQUAREBRACE, "Expected '[' to start array initializer");
                     sizeExpression = ParseExpression();
-
-                    if (sizeExpression is LiteralNode sizeToken)
-                    {
-                        for (int i = 0; i < int.Parse(sizeToken.Value); i++)
-                        {
-                            elements.Add(new LiteralNode("0", elementType));
-                        }
-                    }
                 }
                 else
                 {
@@ -819,7 +813,7 @@
             }
             Consume(TokenType.RSQUAREBRACE, "Expected ']' after array initializer");
 
-            return new ArrayInitializerNode(elements, sizeExpression);
+            return new ArrayInitializerNode(elements, sizeExpression, sizedElementType);
         }
 
         /// <summary>

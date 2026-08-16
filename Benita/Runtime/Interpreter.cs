@@ -11,6 +11,7 @@ namespace Benita
         private readonly Dictionary<string, FunctionNode> _functions = [];
         private Dictionary<string, object> _variables = [];
         private readonly Dictionary<string, object> _outerScopeVariables;
+        private readonly HashSet<string> _persistentVariableNames = [];
 
         private bool _functionReturnFlag;
         private readonly bool _debugMode;
@@ -65,6 +66,13 @@ namespace Benita
             DebugLog("SetGlobalVariable");
             foreach (var kvp in _context.GlobalVariables)
                 _variables.Add(kvp.Key, kvp.Value);
+        }
+
+        /// <summary>متغیرهای فعلی را به‌عنوان state پایدار یک instance ثبت می‌کند.</summary>
+        internal void MarkCurrentVariablesAsPersistent()
+        {
+            foreach (string name in _variables.Keys)
+                _persistentVariableNames.Add(name);
         }
 
         /// <summary>
@@ -282,18 +290,10 @@ namespace Benita
                     return Convert.ToBoolean(left) || Convert.ToBoolean(right);
 
                 case "==":
-                    if (left is string || right is string)
-                    {
-                        return left.Equals(right);
-                    }
-                    return Convert.ToDouble(left) == Convert.ToDouble(right);
+                    return ValuesAreEqual(left, right);
 
                 case "!=":
-                    if (left is string || right is string)
-                    {
-                        return !left.Equals(right);
-                    }
-                    return Convert.ToDouble(left) != Convert.ToDouble(right);
+                    return !ValuesAreEqual(left, right);
 
                 case "<":
                     return Convert.ToDouble(left) < Convert.ToDouble(right);
@@ -418,7 +418,7 @@ namespace Benita
                 finally
                 {
                     _functionReturnFlag = false;
-                    originalVariables = SyncDictionaryValues(_variables, originalVariables);
+                    SynchronizeFunctionScope(_variables, originalVariables);
                     _variables = originalVariables;
                     _functionReturnFlag = originalFunctionReturnFlag;
                 }
@@ -434,28 +434,34 @@ namespace Benita
         }
 
         /// <summary>
-        /// Synchronizes values between two dictionaries.
+        /// تغییرات متغیرهای قابل مشاهده در scope فراخواننده را پس از پایان تابع منتقل می‌کند.
         /// </summary>
         /// <param name="variables">The current variable dictionary.</param>
         /// <param name="originalVariables">The original variable dictionary.</param>
-        /// <returns>The synchronized dictionary.</returns>
-        private Dictionary<string, object> SyncDictionaryValues(Dictionary<string, object> variables, Dictionary<string, object> originalVariables)
+        private void SynchronizeFunctionScope(Dictionary<string, object> variables,
+            Dictionary<string, object> originalVariables)
         {
-            DebugLog($"SyncDictionaryValues");
+            DebugLog($"SynchronizeFunctionScope");
 
-            foreach (var key in variables.Keys.ToList())
+            foreach (string key in originalVariables.Keys.ToList())
             {
-                if (originalVariables.ContainsKey(key) && _packageScope != "Program")
+                bool isPersistent = _persistentVariableNames.Contains(key) ||
+                                    _context.GlobalVariables.ContainsKey(key);
+                if (isPersistent && variables.TryGetValue(key, out object? value))
                 {
-                    originalVariables[key] = variables[key];
-                }
-                else if (_context.GlobalVariables.ContainsKey(key))
-                {
-                    _context.GlobalVariables[key] = variables[key];
+                    originalVariables[key] = value;
+                    if (_context.GlobalVariables.ContainsKey(key))
+                        _context.GlobalVariables[key] = value;
                 }
             }
+        }
 
-            return originalVariables;
+        /// <summary>برابری runtime را مطابق قرارداد scalar زبان محاسبه می‌کند.</summary>
+        private static bool ValuesAreEqual(object left, object right)
+        {
+            if (left is string && right is string || left is bool && right is bool)
+                return left.Equals(right);
+            return Convert.ToDouble(left) == Convert.ToDouble(right);
         }
 
         /// <summary>
@@ -770,12 +776,11 @@ namespace Benita
                 }
                 catch (ContinueException)
                 {
+                    Visit(node.Increment);
                     continue; // Move to the next iteration
                 }
-                finally
-                {
-                    Visit(node.Increment);
-                }
+
+                Visit(node.Increment);
             }
 
             return null;
@@ -822,6 +827,7 @@ namespace Benita
                 _variables.Clear();
                 _functions.Clear();
                 _outerScopeVariables.Clear();
+                _persistentVariableNames.Clear();
             }
 
             foreach (var packageNode in node.Packages)
@@ -832,6 +838,7 @@ namespace Benita
             foreach (var globalVar in node.GlobalVariables)
             {
                 Visit(globalVar);
+                _persistentVariableNames.Add(globalVar.Name);
             }
 
             foreach (var function in node.Functions)
@@ -1046,27 +1053,20 @@ namespace Benita
         {
             DebugLog($"VisitArrayInitializerNode", false);
 
-            List<object> arrayValues = new();
+            if (arrayInitializerNode.ElementType is null)
+                return arrayInitializerNode.Elements.Select(Visit).ToArray();
 
-            var sizeValue = Convert.ToInt32(Visit(arrayInitializerNode.SizeExpression));
-            DebugLog($"VisitArrayInitializerNode: ArraySize = {sizeValue}, ElementsCount = {arrayInitializerNode.Elements.Count}");
-
-            if (sizeValue == arrayInitializerNode.Elements.Count)
+            double requestedSize = Convert.ToDouble(Visit(arrayInitializerNode.SizeExpression));
+            if (!double.IsFinite(requestedSize) || requestedSize < 0 || requestedSize != Math.Truncate(requestedSize) ||
+                requestedSize > int.MaxValue)
             {
-                foreach (var element in arrayInitializerNode.Elements)
-                {
-                    arrayValues.Add(Visit(element));
-                }
-            }
-            else
-            {
-                for (int i = 0; i < sizeValue; i++)
-                {
-                    arrayValues.Add(0);
-                }
+                throw new RuntimeException("Array length must be a non-negative whole number within the supported range.");
             }
 
-            return arrayValues.ToArray();
+            int size = (int)requestedSize;
+            object defaultValue = GetDefaultValue(arrayInitializerNode.ElementType);
+            DebugLog($"VisitArrayInitializerNode: ArraySize = {size}, ElementType = {arrayInitializerNode.ElementType}");
+            return Enumerable.Repeat(defaultValue, size).ToArray();
         }
 
         /// <summary>
@@ -1143,9 +1143,7 @@ namespace Benita
                 "number" => 0,
                 "string" => string.Empty,
                 "bool" => false,
-                "number[]" => new List<object>(),
-                "string[]" => new List<object>(),
-                "bool[]" => new List<object>(),
+                "number[]" or "string[]" or "bool[]" => Array.Empty<object>(),
                 _ => throw new($"Unknown type '{type}'")
             };
         }

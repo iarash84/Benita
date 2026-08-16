@@ -9,7 +9,18 @@ public sealed class CompilerClass
         bool optimizeAst = false)
     {
         ProgramNode program = Compile(sourceCode, lexerPrint, parserPrint, sourcePrint, sourceName, optimizeAst);
-        new Interpreter(debugModeAvailable).Visit(program);
+        try
+        {
+            new Interpreter(debugModeAvailable).Visit(program);
+        }
+        catch (BenitaException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            throw new RuntimeException(exception.Message, exception);
+        }
     }
 
     /// <summary>یک قطعه کد را در مفسر پایدار REPL اجرا و کل نشست را تحلیل می‌کند.</summary>

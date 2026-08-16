@@ -438,7 +438,8 @@
     /// <summary>
     /// Represents an array initializer node with a list of elements.
     /// </summary>
-    public class ArrayInitializerNode(List<ExpressionNode> elements, ExpressionNode sizeExpression) : ExpressionNode
+    public class ArrayInitializerNode(List<ExpressionNode> elements, ExpressionNode sizeExpression,
+        string? elementType = null) : ExpressionNode
     {
         /// <summary>
         /// Gets the list of elements used to initialize the array.
@@ -446,5 +447,8 @@
         public List<ExpressionNode> Elements = elements;
 
         public ExpressionNode SizeExpression = sizeExpression;
+
+        /// <summary>نوع صریح عنصر برای initializer سایزدار؛ برای literal آرایه null است.</summary>
+        public string? ElementType { get; } = elementType;
     }
 }

@@ -39,6 +39,7 @@
                     _interpreter.Visit(functionNode);
                 }
             }
+            _interpreter.MarkCurrentVariablesAsPersistent();
             _interpreter.SetGlobalVariable();
 
             // Execute constructor if it exists
