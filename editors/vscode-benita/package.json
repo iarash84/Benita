@@ -1,0 +1,53 @@
+{
+  "name": "benita-language",
+  "displayName": "Benita Language",
+  "description": "Language support for the Benita programming language.",
+  "version": "0.1.0",
+  "publisher": "iarash84",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iarash84/Benita.git",
+    "directory": "editors/vscode-benita"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "keywords": [
+    "benita",
+    "language",
+    "syntax-highlighting"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "benita",
+        "aliases": [
+          "Benita",
+          "benita"
+        ],
+        "extensions": [
+          ".ben"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "benita",
+        "scopeName": "source.benita",
+        "path": "./syntaxes/benita.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "benita",
+        "path": "./snippets/benita.json"
+      }
+    ]
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Benita",
+  "scopeName": "source.benita",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#include-directive" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#declarations" },
+    { "include": "#types" },
+    { "include": "#control-keywords" },
+    { "include": "#storage-keywords" },
+    { "include": "#constants" },
+    { "include": "#built-ins" },
+    { "include": "#special-variables" },
+    { "include": "#function-calls" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.benita",
+          "begin": "//",
+          "end": "$"
+        },
+        {
+          "name": "comment.block.benita",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "include-directive": {
+      "name": "meta.preprocessor.include.benita",
+      "begin": "\\b(include_once)\\b",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.directive.include.benita" }
+      },
+      "end": ";|$",
+      "patterns": [
+        { "include": "#strings" }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.benita",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.benita",
+          "match": "\\\\(?:[nrt\"\\\\])"
+        },
+        {
+          "name": "invalid.illegal.escape.benita",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "numbers": {
+      "name": "constant.numeric.benita",
+      "match": "(?<![A-Za-z0-9_])\\d+(?:\\.\\d+)?(?![A-Za-z0-9_])"
+    },
+    "declarations": {
+      "patterns": [
+        {
+          "match": "\\b(pkg|interface)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.benita" },
+            "2": { "name": "entity.name.type.benita" }
+          }
+        },
+        {
+          "match": "\\b(func)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.function.benita" },
+            "2": { "name": "entity.name.function.benita" }
+          }
+        },
+        {
+          "match": "\\b(init)\\b",
+          "name": "entity.name.function.constructor.benita"
+        },
+        {
+          "match": "\\b(new)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": { "name": "keyword.operator.new.benita" },
+            "2": { "name": "entity.name.type.benita" }
+          }
+        },
+        {
+          "match": "\\b(_main_)\\b",
+          "name": "entity.name.function.entry-point.benita"
+        }
+      ]
+    },
+    "types": {
+      "name": "storage.type.benita",
+      "match": "\\b(number|string|bool|void|error)\\b"
+    },
+    "control-keywords": {
+      "name": "keyword.control.benita",
+      "match": "\\b(if|else|while|for|in|match|return|break|continue|try|catch|finally|throw|async|await)\\b"
+    },
+    "storage-keywords": {
+      "name": "storage.modifier.benita",
+      "match": "\\b(public|private|let)\\b"
+    },
+    "constants": {
+      "name": "constant.language.boolean.benita",
+      "match": "\\b(true|false)\\b"
+    },
+    "built-ins": {
+      "name": "support.function.builtin.benita",
+      "match": "\\b(print|input|file_read|file_write|file_exist|file_delete|array_len|array_add|array_remove|array_contains|array_index_of|array_reverse|array_clear|array_insert|array_slice|array_concat|array_sort|to_string|to_number|round_number|sqrt_number|error|string_len|string_char_at|string_substring|string_contains|string_index_of|string_replace|string_split|string_trim|string_to_lower|string_to_upper)(?=\\s*\\()"
+    },
+    "special-variables": {
+      "name": "variable.language.this.benita",
+      "match": "\\bthis\\b"
+    },
+    "function-calls": {
+      "name": "entity.name.function.call.benita",
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*(?=\\s*\\()"
+    },
+    "operators": {
+      "name": "keyword.operator.benita",
+      "match": "=>|->|\\.\\.|\\+\\+|--|\\+=|-=|\\*=|/=|==|!=|<=|>=|&&|\\|\\||[+\\-*/%!=<>]"
+    }
+  }
+}

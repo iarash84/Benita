@@ -134,6 +134,7 @@ dotnet test Benita.sln
 - [آموزش دو‌زبانه زبان](docs/Tutorial.MD)
 - [گرامر زبان](docs/Grammar.txt)
 - [برنامه‌های نمونه](Examples)
+- [افزونهٔ Benita برای Visual Studio Code](editors/vscode-benita)
 
 ### انتشار نسخه جدید
 
@@ -290,6 +291,7 @@ Programs in the [`Examples`](Examples) directory are executed directly by the te
 - [Bilingual language tutorial](docs/Tutorial.MD)
 - [Language grammar](docs/Grammar.txt)
 - [Example programs and educational algorithms](Examples/README.md)
+- [Benita extension for Visual Studio Code](editors/vscode-benita)
 
 ### Publishing a release
 
