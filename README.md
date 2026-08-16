@@ -62,7 +62,7 @@ __________              .__  __           .____
  |______  /\___  >___|  /__||__| (____  / |_______ (____  /___|  /\___  /
         \/     \/     \/              \/          \/    \/     \//_____/
   (c) Adm, 2024
-  Version 0.6.0
+  Version 1.0.0
 Usage: Program [action] [filePath] [options]
 Actions:
   exc        - Execute the code in the file.
@@ -211,7 +211,7 @@ __________              .__  __           .____
  |______  /\___  >___|  /__||__| (____  / |_______ (____  /___|  /\___  /
         \/     \/     \/              \/          \/    \/     \//_____/
   (c) Adm, 2024
-  Version 0.6.0
+  Version 1.0.0
 Usage: Program [action] [filePath] [options]
 Actions:
   exc        - Execute the code in the file.
