@@ -21,7 +21,7 @@ concurrency:
 jobs:
   test-package-release:
     name: Test, package, and release
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     timeout-minutes: 30
     env:
       RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
