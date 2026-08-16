@@ -134,6 +134,10 @@ namespace Benita
                 case ContinueStatementNode:
                     DebugLog($"ContinueStatementNode", false);
                     throw new ContinueException();
+                case ThrowStatementNode throwStatementNode:
+                    return VisitThrowStatementNode(throwStatementNode);
+                case TryStatementNode tryStatementNode:
+                    return VisitTryStatementNode(tryStatementNode);
                 case PackageNode packageNode:
                     return VisitPackageNode(packageNode);
                 case MemberAccessNode memberAccessNode:
@@ -577,6 +581,68 @@ namespace Benita
             return null;
         }
 
+        /// <summary>مقدار error را ارزیابی و برای انتقال به نزدیک‌ترین catch پرتاب می‌کند.</summary>
+        private object VisitThrowStatementNode(ThrowStatementNode node)
+        {
+            if (Visit(node.Error) is not ErrorValue error)
+                throw new RuntimeException("A throw statement requires an error value.");
+            throw new ThrownErrorException(error);
+        }
+
+        /// <summary>شاخه‌های try، catch و finally را با حفظ درست return و خطای در حال انتشار اجرا می‌کند.</summary>
+        private object VisitTryStatementNode(TryStatementNode node)
+        {
+            object? result = null;
+            try
+            {
+                try
+                {
+                    result = Visit(node.TryBlock);
+                }
+                catch (Exception exception) when (exception is not BreakException and not ContinueException)
+                {
+                    if (node.CatchBlock is null)
+                        throw;
+
+                    ErrorValue error = exception switch
+                    {
+                        ThrownErrorException thrown => thrown.Error,
+                        BenitaException benita => new ErrorValue(benita.Code, benita.Description),
+                        _ => new ErrorValue("BEN5000", exception.Message)
+                    };
+
+                    bool hadPrevious = _variables.TryGetValue(node.CatchVariable!, out object? previous);
+                    _variables[node.CatchVariable!] = error;
+                    try
+                    {
+                        result = Visit(node.CatchBlock);
+                    }
+                    finally
+                    {
+                        if (hadPrevious)
+                            _variables[node.CatchVariable!] = previous!;
+                        else
+                            _variables.Remove(node.CatchVariable!);
+                    }
+                }
+            }
+            finally
+            {
+                if (node.FinallyBlock is not null)
+                {
+                    bool pendingReturn = _functionReturnFlag;
+                    _functionReturnFlag = false;
+                    object? finallyResult = Visit(node.FinallyBlock);
+                    if (_functionReturnFlag)
+                        result = finallyResult;
+                    else
+                        _functionReturnFlag = pendingReturn;
+                }
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Visits an if statement node and evaluates the branches.
         /// </summary>
@@ -867,6 +933,18 @@ namespace Benita
 
             if (node.ObjectName == "this" || node.ObjectName == _packageScope)
                 return Visit(node.Expression);
+
+            if (TryGetVariableValue(node.ObjectName, out var errorValue) && errorValue is ErrorValue error)
+            {
+                if (node.Expression is IdentifierNode member)
+                    return member.Name switch
+                    {
+                        "code" => error.Code,
+                        "message" => error.Message,
+                        _ => throw new RuntimeException($"Error has no member named '{member.Name}'.")
+                    };
+                throw new RuntimeException("Error members are read-only.");
+            }
 
             if (TryGetVariableValue(node.ObjectName, out var instance) && instance is PackageInstance packageInstance)
             {

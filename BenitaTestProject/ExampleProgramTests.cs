@@ -35,6 +35,7 @@ public class ExampleProgramTests
             yield return Case("concatenated-print-expression.ben", null, "This is a test => 1");
             // تابع کمکی بولی و انتخاب شاخه صحیح در ساختار if/else را بررسی می‌کند.
             yield return Case("even-number-function-if-else.ben", null, "Sum is even.");
+            yield return Case("error-handling.ben", null, "VALUE100: Value cannot be negative", "Validation finished");
             // حلقه کلاسیک و پیمایش مستقیم عناصر آرایه با for-in را بررسی می‌کند.
             yield return Case("for-loop.ben", null, "0", "1", "2", "3", "4", "10", "20", "30");
             // استفاده از متغیر سراسری داخل تابع در کنار متغیرهای محلی و رشته‌ها را بررسی می‌کند.

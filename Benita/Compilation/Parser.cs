@@ -506,6 +506,14 @@
                 Consume(TokenType.SEMICOLON, "Expected ';' after continue");
                 return new ContinueStatementNode();
             }
+            if (Match(TokenType.THROW))
+            {
+                ExpressionNode error = ParseExpression();
+                Consume(TokenType.SEMICOLON, "Expected ';' after throw expression");
+                return new ThrowStatementNode(error);
+            }
+            if (Match(TokenType.TRY))
+                return ParseTryStatement();
             if (Match(TokenType.IF))
             {
                 return ParseIfStatement();
@@ -1050,6 +1058,36 @@
             }
 
             throw Error("BEN2001", $"Unexpected token '{CurrentToken().Lexeme}' ({CurrentToken().Type}).");
+        }
+
+        /// <summary>ساختار try را با حداقل یکی از شاخه‌های catch یا finally تجزیه می‌کند.</summary>
+        private TryStatementNode ParseTryStatement()
+        {
+            Consume(TokenType.LBRACE, "Expected '{' after 'try'");
+            BlockNode tryBlock = (BlockNode)ParseBlockStatement()!;
+            string? catchVariable = null;
+            BlockNode? catchBlock = null;
+            BlockNode? finallyBlock = null;
+
+            if (Match(TokenType.CATCH))
+            {
+                Consume(TokenType.LPAREN, "Expected '(' after 'catch'");
+                catchVariable = Consume(TokenType.IDENTIFIER, "Expected error variable in catch").Lexeme;
+                Consume(TokenType.RPAREN, "Expected ')' after catch variable");
+                Consume(TokenType.LBRACE, "Expected '{' before catch block");
+                catchBlock = (BlockNode)ParseBlockStatement()!;
+            }
+
+            if (Match(TokenType.FINALLY))
+            {
+                Consume(TokenType.LBRACE, "Expected '{' before finally block");
+                finallyBlock = (BlockNode)ParseBlockStatement()!;
+            }
+
+            if (catchBlock is null && finallyBlock is null)
+                throw Error("BEN2010", "A try statement requires a catch or finally block.");
+
+            return new TryStatementNode(tryBlock, catchVariable, catchBlock, finallyBlock);
         }
 
         private NewExpressionNode ParseNewExpression()

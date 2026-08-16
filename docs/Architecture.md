@@ -113,3 +113,12 @@ initializer به نام `init` است. نوع package در پارامتر، خر
 `PackageInstance` واقعی نگهداری می‌شود، بنابراین فراخوانی از طریق interface به متد concrete
 dispatch می‌شود. نمونه‌های Strategy، Factory Method، Abstract Factory، Adapter، Decorator،
 Bridge، State و Proxy در `Examples/Patterns` و تست‌های اجرایی پوشش داده شده‌اند.
+
+## مدیریت خطا در runtime
+
+`ErrorValue` نمایش پایدار خطای قابل مشاهده در زبان است و `ThrownErrorException` فقط برای
+انتقال داخلی آن میان گره‌های AST استفاده می‌شود. `TryStatementNode` خطاهای پرتاب‌شده و
+خطاهای runtime را به `ErrorValue` تبدیل می‌کند، بدون آنکه سیگنال‌های کنترل حلقه را بگیرد.
+متغیر catch scope محدود دارد و interpreter پیش از خروج مقدار قبلی هم‌نام را بازیابی
+می‌کند. اجرای finally با نگهداری موقت flag مربوط به return انجام می‌شود تا cleanup پیش
+از تحویل مقدار تابع اجرا شود. این مدل مبنای انتقال خطای task در قابلیت async/await خواهد بود.

@@ -32,6 +32,8 @@ internal static class AstPrinter
             case ExpressionStatementNode value: Print(value.Expression, child); break;
             case FunctionCallNode value: Detail(child, "Function", value.FunctionName); PrintAll(value.Arguments, child); break;
             case ReturnStatementNode value: Print(value.ReturnExpression, child); break;
+            case ThrowStatementNode value: Print(value.Error, child); break;
+            case TryStatementNode value: Detail(child, "Catch", value.CatchVariable ?? "none"); Print(value.TryBlock, child); Print(value.CatchBlock, child); Print(value.FinallyBlock, child); break;
             case IfStatementNode value: Print(value.Condition, child); Print(value.ThenBranch, child); Print(value.ElseBranch, child); break;
             case MatchExpressionNode value: Print(value.Value, child); PrintMatchArms(value.Arms, child); break;
             case MatchStatementNode value: Print(value.Value, child); PrintMatchArms(value.Arms, child); break;

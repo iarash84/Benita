@@ -22,6 +22,7 @@
 - بسته‌ها (`pkg`)، مقداردهی با `init`، ارجاع `this`، composition و نمونه‌سازی expression-based
 - اعضای private به‌صورت پیش‌فرض و modifierهای صریح `public` و `private`
 - interfaceهای اسمی، پیاده‌سازی چند interface و چندریختی زمان اجرا
+- مدیریت خطا با `error`، `throw` و ساختار `try/catch/finally`
 - ورودی و خروجی کنسول
 - عملیات خواندن، نوشتن، بررسی وجود و حذف فایل
 - دستور `include_once` برای استفاده از فایل‌های دیگر
@@ -169,6 +170,7 @@ Benita is a small educational programming language I am building with C# and .NE
 - Packages (`pkg`) with `init`, `this`, composition, and expression-based object creation
 - Private-by-default members with explicit `public`/`private` access modifiers
 - Nominal interfaces, multiple interface implementation, and runtime polymorphism
+- Error handling with `error`, `throw`, and `try/catch/finally`
 - Console input and output
 - File read, write, existence, and deletion operations
 - `include_once` support for reusable source files

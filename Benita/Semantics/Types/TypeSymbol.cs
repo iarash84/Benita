@@ -25,6 +25,7 @@ public static class Types
     public static readonly TypeSymbol String = new PrimitiveTypeSymbol("string");
     public static readonly TypeSymbol Bool = new PrimitiveTypeSymbol("bool");
     public static readonly TypeSymbol Void = new PrimitiveTypeSymbol("void");
+    public static readonly TypeSymbol Error = new PrimitiveTypeSymbol("error");
 
     public static readonly TypeSymbol Unknown = new SpecialTypeSymbol("unknown");
     public static readonly TypeSymbol Inferred = new SpecialTypeSymbol("let");

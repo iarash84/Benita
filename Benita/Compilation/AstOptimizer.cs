@@ -84,6 +84,13 @@ namespace Benita
                     OptimizeStatement(forEach.Body)!),
                 BlockNode block => OptimizeBlock(block),
                 ReturnStatementNode returnStatement => OptimizeReturn(returnStatement),
+                ThrowStatementNode throwStatement => new ThrowStatementNode(
+                    OptimizeExpression(throwStatement.Error)!),
+                TryStatementNode tryStatement => new TryStatementNode(
+                    OptimizeBlock(tryStatement.TryBlock),
+                    tryStatement.CatchVariable,
+                    tryStatement.CatchBlock is null ? null : OptimizeBlock(tryStatement.CatchBlock),
+                    tryStatement.FinallyBlock is null ? null : OptimizeBlock(tryStatement.FinallyBlock)),
                 ObjectInstantiationNode creation => new ObjectInstantiationNode(
                     creation.Name,
                     creation.PackageName,

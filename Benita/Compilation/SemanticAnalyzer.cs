@@ -409,6 +409,22 @@
                 case ArrayAssignmentNode arrayAssignment:
                     AnalyzeArrayAssignment(arrayAssignment, localVariables);
                     break;
+                case ThrowStatementNode throwStatement:
+                    string? thrownType = AnalyzeExpression(throwStatement.Error, localVariables);
+                    if (thrownType != "error")
+                        throw new Exception($"A throw statement requires an error value, but got '{thrownType}'.");
+                    break;
+                case TryStatementNode tryStatement:
+                    AnalyzeStatement(tryStatement.TryBlock, new(localVariables), functionReturnType, loopDepth);
+                    if (tryStatement.CatchBlock is not null)
+                    {
+                        var catchScope = new Dictionary<string, string?>(localVariables);
+                        catchScope[tryStatement.CatchVariable!] = "error";
+                        AnalyzeStatement(tryStatement.CatchBlock, catchScope, functionReturnType, loopDepth);
+                    }
+                    if (tryStatement.FinallyBlock is not null)
+                        AnalyzeStatement(tryStatement.FinallyBlock, new(localVariables), functionReturnType, loopDepth);
+                    break;
                 case ReturnStatementNode returnStatementNode:
                     if (functionReturnType == null)
                     {
@@ -455,6 +471,10 @@
                                       AlwaysReturns(branch.ThenBranch) && AlwaysReturns(branch.ElseBranch),
             MatchStatementNode match => match.Arms.Any(arm => arm.IsDefault) &&
                                         match.Arms.All(arm => AlwaysReturns(arm.Body as StatementNode)),
+            TryStatementNode tryStatement =>
+                tryStatement.FinallyBlock is not null && AlwaysReturns(tryStatement.FinallyBlock) ||
+                AlwaysReturns(tryStatement.TryBlock) &&
+                (tryStatement.CatchBlock is null || AlwaysReturns(tryStatement.CatchBlock)),
             _ => false
         };
 
@@ -611,6 +631,14 @@
         {
             if (!localVariables.TryGetValue(memberAccess.ObjectName, out string? packageName) || packageName is null)
                 throw new Exception($"Member access requires a package instance, but '{memberAccess.ObjectName}' is not one.");
+
+            if (packageName == "error")
+            {
+                if (memberAccess.Expression is IdentifierNode errorMember &&
+                    errorMember.Name is "code" or "message")
+                    return "string";
+                throw new Exception("An error value exposes only the read-only members 'code' and 'message'.");
+            }
 
             if (_interfaces.TryGetValue(packageName, out InterfaceNode? outInterface))
             {

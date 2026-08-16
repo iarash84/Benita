@@ -18,6 +18,9 @@
 dotnet run --project Benita -- exc Examples/algorithm-bubble-sort.ben
 ```
 
+مثال `error-handling.ben` ساخت error، پرتاب آن، مشاهدهٔ `code` و `message` در catch و
+اجرای تضمینی finally را نمایش می‌دهد.
+
 دو نکته را در نظر داشته باشید: جست‌وجوی دودویی به آرایه‌ی مرتب نیاز دارد و مثال‌های
 جست‌وجو و مرتب‌سازی فعلاً برای `number[]` نوشته شده‌اند، چون زبان هنوز تابع generic ندارد.
 

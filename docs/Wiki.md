@@ -141,6 +141,7 @@ flowchart LR
 - ناسازگاری نوع `return` با خروجی تابع
 - قواعد مربوط به `_main_`، بسته‌ها و اعضای آن‌ها
 - کامل‌بودن قرارداد interface، تطابق امضاها و assignability چندریختی
+- نوع صحیح مقدار `throw`، scope متغیر catch و ساختار معتبر try/catch/finally
 
 ### Interpreter
 

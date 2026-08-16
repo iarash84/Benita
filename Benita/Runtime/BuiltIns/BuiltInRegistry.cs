@@ -48,6 +48,7 @@ internal static class BuiltInRegistry
         yield return Define<Utility>("to_number", Types.Number, Types.String);
         yield return Define<Utility>("round_number", Types.Number, Types.Number);
         yield return Define<Utility>("sqrt_number", Types.Number, Types.Number);
+        yield return Define<ErrorManagement>("error", Types.Error, Types.String, Types.String);
         yield return Define<StringManagement>("string_len", Types.Number, Types.String);
         yield return Define<StringManagement>("string_char_at", Types.String, Types.String, Types.Number);
         yield return Define<StringManagement>("string_substring", Types.String, Types.String, Types.Number, Types.Number);

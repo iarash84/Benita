@@ -58,6 +58,10 @@
             {"public", TokenType.PUBLIC},
             {"private", TokenType.PRIVATE},
             {"interface", TokenType.INTERFACE},
+            {"try", TokenType.TRY},
+            {"catch", TokenType.CATCH},
+            {"finally", TokenType.FINALLY},
+            {"throw", TokenType.THROW},
         };
 
         /// <summary>

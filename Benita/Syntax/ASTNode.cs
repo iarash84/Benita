@@ -96,6 +96,25 @@
     {
     }
 
+    /// <summary>پرتاب یک مقدار استاندارد error را بازنمایی می‌کند.</summary>
+    public class ThrowStatementNode(ExpressionNode error) : StatementNode
+    {
+        public ExpressionNode Error { get; } = error;
+    }
+
+    /// <summary>ساختار try را همراه catch اختیاری و finally اختیاری نگهداری می‌کند.</summary>
+    public class TryStatementNode(
+        BlockNode tryBlock,
+        string? catchVariable,
+        BlockNode? catchBlock,
+        BlockNode? finallyBlock) : StatementNode
+    {
+        public BlockNode TryBlock { get; } = tryBlock;
+        public string? CatchVariable { get; } = catchVariable;
+        public BlockNode? CatchBlock { get; } = catchBlock;
+        public BlockNode? FinallyBlock { get; } = finallyBlock;
+    }
+
     /// <summary>
     /// Represents a variable declaration node with a type, optional name, and optional initializer.
     /// </summary>

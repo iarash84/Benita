@@ -15,6 +15,7 @@ public static class TypeFacts
             "string" => Types.String,
             "bool" => Types.Bool,
             "void" => Types.Void,
+            "error" => Types.Error,
             "let" => Types.Inferred,
             "array" => Types.AnyArray,
             "any" => Types.Any,

@@ -342,6 +342,26 @@ _main_() {
 باشد. فراخوانی متد از طریق interface در زمان اجرا به implementation نمونهٔ واقعی هدایت
 می‌شود. چند interface نیز با کاما نوشته می‌شوند: `pkg Channel : Reader, Writer`.
 
+### مدیریت خطا
+
+تابع داخلی `error(code, message)` یک مقدار استاندارد خطا می‌سازد و `throw` آن را به
+نزدیک‌ترین `catch` منتقل می‌کند. متغیر catch دو عضو فقط‌خواندنی `code` و `message` دارد:
+
+```benita
+try {
+    throw error("APP100", "Operation failed");
+} catch (failure) {
+    print(failure.code + ": " + failure.message);
+} finally {
+    print("Cleanup always runs");
+}
+```
+
+وجود حداقل یکی از `catch` یا `finally` الزامی است. `finally` در پایان عادی، هنگام return
+و هنگام ادامهٔ انتشار خطا اجرا می‌شود. خطاهای runtime و توابع داخلی نیز قابل دریافت‌اند؛
+خطاهای built-in کد پایدار خود مانند `BEN4101` را حفظ می‌کنند و سایر خطاهای runtime با
+`BEN5000` در اختیار catch قرار می‌گیرند. متغیر catch بیرون از block آن قابل استفاده نیست.
+
 ### ۹. ورودی، تبدیل و ریاضیات
 
 ```benita
@@ -847,6 +867,26 @@ Interface types are valid for variables, fields, parameters, and return values. 
 package is assignable to an interface only when it explicitly lists that interface.
 Calls through the interface dynamically dispatch to the concrete package instance.
 Multiple contracts use commas: `pkg Channel : Reader, Writer`.
+
+#### Error handling
+
+The built-in `error(code, message)` creates a standard error value, and `throw` transfers
+it to the nearest catch. A catch variable exposes read-only `code` and `message` members:
+
+```benita
+try {
+    throw error("APP100", "Operation failed");
+} catch (failure) {
+    print(failure.code + ": " + failure.message);
+} finally {
+    print("Cleanup always runs");
+}
+```
+
+A try statement requires at least a catch or finally clause. Finally runs after normal
+completion, return, and continuing error propagation. Runtime and built-in failures are
+catchable; built-ins retain stable codes such as `BEN4101`, while other runtime failures
+use `BEN5000`. The catch variable is local to its catch block.
 
 ```benita
 pkg Counter {

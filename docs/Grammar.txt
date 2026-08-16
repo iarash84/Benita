@@ -46,10 +46,11 @@ object-variable-declaration
 array-variable-declaration
                          ::= array-type identifier
                              ("=" (expression | sized-array-initializer))? ";" ;
-parameter-type          ::= primitive-type | named-type | array-type ;
-return-type             ::= primitive-type | named-type | array-type | "void" ;
+parameter-type          ::= primitive-type | named-type | array-type | error-type ;
+return-type             ::= primitive-type | named-type | array-type | error-type | "void" ;
 named-type              ::= identifier ;
 primitive-type          ::= "number" | "string" | "bool" ;
+error-type              ::= "error" ;
 array-type              ::= primitive-type "[" "]" ;
 
 statement               ::= variable-declaration
@@ -64,6 +65,8 @@ statement               ::= variable-declaration
                           | return-statement
                           | break-statement
                           | continue-statement
+                          | throw-statement
+                          | try-statement
                           | block ;
 
 block                   ::= "{" statement* "}" ;
@@ -84,6 +87,10 @@ match-statement-arm     ::= match-pattern-list "=>" statement ("," | ";")? ;
 return-statement        ::= "return" expression? ";" ;
 break-statement         ::= "break" ";" ;
 continue-statement      ::= "continue" ";" ;
+throw-statement         ::= "throw" expression ";" ;
+try-statement           ::= "try" block (catch-clause finally-clause? | finally-clause) ;
+catch-clause            ::= "catch" "(" identifier ")" block ;
+finally-clause          ::= "finally" block ;
 expression-statement    ::= expression ";" ;
 assignment-statement    ::= assignment ";" ;
 compound-assignment-statement
@@ -186,6 +193,14 @@ Semantic constraints
 20. Interfaces contain method signatures only: fields, bodies, constructors,
     and access modifiers are not permitted. Class inheritance and overloads are
     not part of the language yet.
+21. `error(code, message)` creates the only value accepted by `throw`. Both
+    arguments are strings. An error exposes read-only string members `code` and
+    `message` inside a catch block.
+22. A try statement requires at least one catch or finally clause. The catch
+    variable is scoped to its catch block. A finally block runs for normal
+    completion, return, or error propagation.
+23. Runtime and built-in failures may be caught. Built-in failures retain their
+    stable code (such as `BEN4101`); other runtime failures use `BEN5000`.
 
 Notes
 -----
