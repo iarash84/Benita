@@ -1,5 +1,5 @@
-// فارسی: دو محاسبه را هم‌زمان آغاز می‌کند، نتیجه‌ها را با await می‌گیرد و انتقال خطای task به catch را نشان می‌دهد.
-// English: Starts two computations concurrently, awaits their results, and demonstrates task-error propagation to catch.
+// دو محاسبه را هم‌زمان آغاز می‌کند، نتیجه‌ها را با await می‌گیرد و انتقال خطای task به catch را نشان می‌دهد.
+// Starts two computations concurrently, awaits their results, and demonstrates task-error propagation to catch.
 
 func add(number left, number right) -> number { return left + right; }
 

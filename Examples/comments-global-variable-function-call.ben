@@ -1,5 +1,5 @@
-// فارسی: کامنت‌ها، متغیر سراسری و فراخوانی تابعی که بعدتر تعریف شده است را آزمایش می‌کند.
-// English: Tests comments, a global variable, and calling a function declared later.
+// کامنت‌ها، متغیر سراسری و فراخوانی تابعی که بعدتر تعریف شده است را آزمایش می‌کند.
+// Tests comments, a global variable, and calling a function declared later.
 // this is a comment
 /* This is Multi Line
 one line

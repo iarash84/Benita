@@ -1,5 +1,5 @@
-// فارسی: الگوی Facade سرویس‌های موجودی و پرداخت را پشت API سادهٔ checkout قرار می‌دهد.
-// English: Demonstrates Facade by placing inventory and payment services behind a simple checkout API.
+// الگوی Facade سرویس‌های موجودی و پرداخت را پشت API سادهٔ checkout قرار می‌دهد.
+// Demonstrates Facade by placing inventory and payment services behind a simple checkout API.
 pkg InventoryService {
     init() { }
 

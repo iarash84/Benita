@@ -1,5 +1,5 @@
-// فارسی: تشخیص عدد اول با تقسیم آزمایشی، شرط و حلقه را نمایش می‌دهد.
-// English: Demonstrates prime detection using trial division, conditions, and loops.
+// تشخیص عدد اول با تقسیم آزمایشی، شرط و حلقه را نمایش می‌دهد.
+// Demonstrates prime detection using trial division, conditions, and loops.
 // Prime-number test using trial division up to the square root of the value.
 func is_prime(number value) -> bool {
     if (value < 2) {

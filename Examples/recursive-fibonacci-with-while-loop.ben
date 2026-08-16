@@ -1,5 +1,5 @@
-// فارسی: محاسبهٔ بازگشتی فیبوناچی و پیمایش خروجی با while را نمایش می‌دهد.
-// English: Demonstrates recursive Fibonacci calculation and output iteration with while.
+// محاسبهٔ بازگشتی فیبوناچی و پیمایش خروجی با while را نمایش می‌دهد.
+// Demonstrates recursive Fibonacci calculation and output iteration with while.
 func fib(number x) -> number 
 {
    number result; 

@@ -10,7 +10,12 @@
 | جست‌وجوی خطی | `algorithm-linear-search.ben` | `O(n)` |
 | جست‌وجوی دودویی | `algorithm-binary-search.ben` | `O(log n)` |
 | مرتب‌سازی حبابی | `algorithm-bubble-sort.ben` | `O(n²)` |
+| مرتب‌سازی درجی | `algorithm-insertion-sort.ben` | `O(n²)` |
 | فاکتوریل بازگشتی | `algorithm-recursive-factorial.ben` | `O(n)` |
+| غربال اراتستن | `algorithm-sieve-of-eratosthenes.ben` | `O(n log log n)` |
+| توان‌رسانی سریع | `algorithm-fast-power.ben` | `O(log exponent)` |
+| تشخیص palindrome | `algorithm-palindrome-check.ben` | `O(n)` |
+| دنبالهٔ Collatz | `algorithm-collatz-sequence.ben` | وابسته به مقدار ورودی |
 
 برای اجرای یک مثال از ریشه‌ی مخزن:
 

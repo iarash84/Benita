@@ -1,0 +1,25 @@
+// توان‌رسانی سریع، باقی‌مانده و کاهش دودویی توان را برای محاسبه با تکرار کمتر آزمایش می‌کند.
+// Tests exponentiation by squaring, remainder operations, and binary exponent reduction.
+// Exponentiation by squaring computes a non-negative whole power in logarithmic iterations.
+func fast_power(number base, number exponent) -> number {
+    number result = 1;
+    number factor = base;
+    number remaining = exponent;
+
+    while (remaining > 0) {
+        if (remaining % 2 == 1) {
+            result *= factor;
+        }
+
+        factor *= factor;
+        remaining = (remaining - remaining % 2) / 2;
+    }
+
+    return result;
+}
+
+_main_() {
+    print(fast_power(2, 10));
+    print(fast_power(3, 5));
+    print(fast_power(7, 0));
+}

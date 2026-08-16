@@ -1,0 +1,26 @@
+// تولید دنبالهٔ Collatz را با شرط زوج و فرد و حلقه تا رسیدن به یک آزمایش می‌کند.
+// Tests Collatz sequence generation with even/odd branches and iteration until one.
+// Each step halves an even value or replaces an odd value with three times itself plus one.
+func collatz(number start) -> number[] {
+    number current = start;
+    number[] sequence = [current];
+
+    while (current != 1) {
+        if (current % 2 == 0) {
+            current /= 2;
+        } else {
+            current = current * 3 + 1;
+        }
+
+        sequence = array_add(sequence, current);
+    }
+
+    return sequence;
+}
+
+_main_() {
+    number[] sequence = collatz(6);
+    for (value in sequence) {
+        print(value);
+    }
+}

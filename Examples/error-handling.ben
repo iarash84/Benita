@@ -1,5 +1,5 @@
-// فارسی: پرتاب error، خواندن code و message در catch و اجرای تضمینی finally را آزمایش می‌کند.
-// English: Tests throwing an error, reading code/message in catch, and guaranteed finally execution.
+// پرتاب error، خواندن code و message در catch و اجرای تضمینی finally را آزمایش می‌کند.
+// Tests throwing an error, reading code/message in catch, and guaranteed finally execution.
 func validate(number value) -> number {
     if (value < 0) {
         throw error("VALUE100", "Value cannot be negative");

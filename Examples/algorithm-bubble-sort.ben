@@ -1,5 +1,5 @@
-// فارسی: مرتب‌سازی حبابی، دسترسی آرایه و جابه‌جایی عناصر را آزمایش می‌کند.
-// English: Tests bubble sort, array access, and swapping array elements.
+// مرتب‌سازی حبابی، دسترسی آرایه و جابه‌جایی عناصر را آزمایش می‌کند.
+// Tests bubble sort, array access, and swapping array elements.
 // Bubble sort repeatedly swaps adjacent elements that are out of order.
 func bubble_sort(number[] values) -> number[] {
     number length = array_len(values);

@@ -1,5 +1,5 @@
-// فارسی: الگوی Strategy روش پرداخت Checkout را از طریق PaymentStrategy قابل تعویض می‌کند.
-// English: Demonstrates Strategy by making Checkout payment behavior replaceable through PaymentStrategy.
+// الگوی Strategy روش پرداخت Checkout را از طریق PaymentStrategy قابل تعویض می‌کند.
+// Demonstrates Strategy by making Checkout payment behavior replaceable through PaymentStrategy.
 interface PaymentStrategy {
     func pay(number amount) -> string;
 }

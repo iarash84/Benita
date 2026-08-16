@@ -1,5 +1,5 @@
-// فارسی: وجود فایل را بررسی و در صورت موجود بودن آن را حذف می‌کند.
-// English: Checks whether a file exists and deletes it when present.
+// وجود فایل را بررسی و در صورت موجود بودن آن را حذف می‌کند.
+// Checks whether a file exists and deletes it when present.
 _main_() {
     string file_path = "test.txt";
     if (file_exist(file_path)) {

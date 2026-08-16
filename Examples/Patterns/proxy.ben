@@ -1,5 +1,5 @@
-// فارسی: الگوی Proxy دسترسی به سرویس راه‌دور را کنترل و نتیجه را cache می‌کند.
-// English: Demonstrates Proxy by controlling remote-service access and caching its result.
+// الگوی Proxy دسترسی به سرویس راه‌دور را کنترل و نتیجه را cache می‌کند.
+// Demonstrates Proxy by controlling remote-service access and caching its result.
 interface DataService { func fetch() -> string; }
 
 pkg RemoteDataService : DataService {

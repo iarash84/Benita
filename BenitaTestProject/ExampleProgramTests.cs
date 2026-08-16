@@ -15,11 +15,18 @@ public class ExampleProgramTests
             // تعریف و فراخوانی تابع جمع عددی و بازگرداندن نتیجه آن را بررسی می‌کند.
             yield return Case("algorithm-binary-search.ben", null, "4", "-1");
             yield return Case("algorithm-bubble-sort.ben", null, "1", "2", "4", "5", "8");
+            yield return Case("algorithm-collatz-sequence.ben", null,
+                "6", "3", "10", "5", "16", "8", "4", "2", "1");
             yield return Case("algorithm-euclidean-gcd.ben", null, "6");
+            yield return Case("algorithm-fast-power.ben", null, "1024", "243", "1");
+            yield return Case("algorithm-insertion-sort.ben", null, "1", "2", "3", "4", "5", "6");
             yield return Case("algorithm-linear-search.ben", null, "3", "-1");
+            yield return Case("algorithm-palindrome-check.ben", null, "True", "False", "True");
             yield return Case("algorithm-prime-check.ben", null,
                 "2 is prime", "9 is not prime", "17 is prime", "21 is not prime", "29 is prime");
             yield return Case("algorithm-recursive-factorial.ben", null, "720");
+            yield return Case("algorithm-sieve-of-eratosthenes.ben", null,
+                "2", "3", "5", "7", "11", "13", "17", "19", "23", "29");
             yield return Case("addition-function-call.ben", null, "5");
             yield return Case("async-await.ben", null, "12", "42", "ASYNC100: Background operation failed");
             // حذف و افزودن عناصر آرایه، محاسبه طول آرایه و پیمایش نتیجه را بررسی می‌کند.

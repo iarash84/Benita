@@ -1,5 +1,5 @@
-// فارسی: تغییر یک عنصر آرایه و پیمایش همهٔ عناصر با while را آزمایش می‌کند.
-// English: Tests updating an array element and iterating all elements with while.
+// تغییر یک عنصر آرایه و پیمایش همهٔ عناصر با while را آزمایش می‌کند.
+// Tests updating an array element and iterating all elements with while.
 _main_() {
     // Declare an array of numbers
     number[] arr = [10, 20, 30, 40, 50];

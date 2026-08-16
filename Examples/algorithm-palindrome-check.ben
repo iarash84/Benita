@@ -1,0 +1,24 @@
+// تشخیص palindrome را با مقایسهٔ نویسه‌های متن از ابتدا و انتها آزمایش می‌کند.
+// Tests palindrome detection by comparing characters from both ends of a string.
+// A palindrome reads identically from left to right and from right to left.
+func is_palindrome(string value) -> bool {
+    number left = 0;
+    number right = string_len(value) - 1;
+
+    while (left < right) {
+        if (string_char_at(value, left) != string_char_at(value, right)) {
+            return false;
+        }
+
+        left++;
+        right--;
+    }
+
+    return true;
+}
+
+_main_() {
+    print(is_palindrome("level"));
+    print(is_palindrome("benita"));
+    print(is_palindrome(""));
+}

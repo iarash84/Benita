@@ -1,0 +1,28 @@
+// غربال اراتستن، آرایهٔ بولی اندازه‌دار و علامت‌گذاری مضرب‌های اعداد اول را آزمایش می‌کند.
+// Tests the Sieve of Eratosthenes, sized Boolean arrays, and marking prime multiples.
+// The sieve finds every prime up to the inclusive limit without testing each value separately.
+func find_primes(number limit) -> number[] {
+    bool[] composite = bool[limit + 1];
+    number[] primes = [];
+
+    for (number candidate = 2; candidate <= limit; candidate++) {
+        if (!composite[candidate]) {
+            primes = array_add(primes, candidate);
+
+            if (candidate * candidate <= limit) {
+                for (number multiple = candidate * candidate; multiple <= limit; multiple += candidate) {
+                    composite[multiple] = true;
+                }
+            }
+        }
+    }
+
+    return primes;
+}
+
+_main_() {
+    number[] primes = find_primes(30);
+    for (prime in primes) {
+        print(prime);
+    }
+}

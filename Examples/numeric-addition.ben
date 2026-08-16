@@ -1,5 +1,5 @@
-// فارسی: جمع متغیرهای عددی و تعریف یک تابع عددی ساده را نمایش می‌دهد.
-// English: Demonstrates numeric variable addition and a simple numeric function declaration.
+// جمع متغیرهای عددی و تعریف یک تابع عددی ساده را نمایش می‌دهد.
+// Demonstrates numeric variable addition and a simple numeric function declaration.
 func myFunction(number a, number b) -> number {
     return a + b;
 }
