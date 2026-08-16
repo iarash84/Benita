@@ -278,6 +278,21 @@ Semantic constraints
     including nodes originating in a file expanded through `include_once`.
 56. A package field declared with `let` is inferred by semantic analysis from any concrete
     initializer expression; inference is not limited to literals or earlier function calls.
+57. Arguments and right-hand-side expressions in an external package member access are
+    evaluated in the caller's scope before dispatch to the package instance.
+58. Package methods and field initializers can read global variables and call global
+    functions. Updates to a global remain visible across root and package runtime scopes;
+    a package field with the same name remains independent and shadows that global internally.
+59. Package field initializers are analyzed and executed in source order. An initializer can
+    reference an earlier field, but a reference to the current or a later field is invalid.
+    Package method bodies can reference every field regardless of declaration order.
+60. `init` is the only package constructor. A regular method whose name equals the package
+    name remains an ordinary method and does not define arguments accepted by `new`.
+61. Array indices and array built-in index/length arguments must be finite whole numbers;
+    they are never rounded. Direct array access and assignment accept negative indices,
+    where `-1` denotes the final element. Array built-ins require non-negative indices.
+62. Semantic diagnostics point to the innermost analyzed expression responsible for an
+    error, including identifiers and literals nested inside binary or call expressions.
 
 Notes
 -----

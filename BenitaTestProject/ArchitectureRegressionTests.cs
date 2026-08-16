@@ -76,7 +76,7 @@ public class ArchitectureRegressionTests
     }
 
     [TestMethod]
-    public void CompilerExec_WhenRuntimeThrowsDotNetException_NormalizesItToRuntimeDiagnostic()
+    public void CompilerExec_WhenArrayIndexIsInvalid_NormalizesItToRuntimeDiagnostic()
     {
         const string source = "_main_() { number[] values = [1]; values[3] = 2; }";
 
@@ -84,7 +84,8 @@ public class ArchitectureRegressionTests
             new CompilerClass().Exec(source));
 
         Assert.AreEqual("BEN4001", exception.Code);
-        Assert.IsInstanceOfType<IndexOutOfRangeException>(exception.InnerException);
+        Assert.IsInstanceOfType<ArgumentOutOfRangeException>(exception.InnerException);
+        StringAssert.Contains(exception.Description, "out of range");
     }
 
     [TestMethod]

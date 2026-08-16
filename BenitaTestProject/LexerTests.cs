@@ -447,8 +447,21 @@ namespace BenitaTestProject
             AssertToken(tokens[87], TokenType.RBRACE, "}");
             AssertToken(tokens[88], TokenType.RBRACE, "}");
         }
+        [TestMethod]
+        public void Tokenize_LargeMultilineSource_PreservesFinalTokenLocation()
+        {
+            const int declarationCount = 5000;
+            string source = string.Join('\n', Enumerable.Range(0, declarationCount)
+                .Select(index => $"number value{index} = {index};"));
 
+            List<Token> tokens = new Lexer(source, sourceName: "large.ben").Tokenize();
+            Token finalIdentifier = tokens.Last(token => token.Type == TokenType.IDENTIFIER);
 
+            Assert.AreEqual(declarationCount, finalIdentifier.Span.Line);
+            Assert.AreEqual(8, finalIdentifier.Span.Column);
+            Assert.AreEqual($"value{declarationCount - 1}", finalIdentifier.Lexeme);
+            Assert.AreEqual(Path.GetFullPath("large.ben"), finalIdentifier.Span.FileName);
+        }
 
         private void AssertToken(Token token, TokenType expectedType, string? expectedLexeme)
         {

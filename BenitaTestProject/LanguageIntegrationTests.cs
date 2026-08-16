@@ -768,7 +768,7 @@ _main_() {
 pkg myPackage {
 	number var = 10;
 	
-	func myPackage(number input1) -> void
+	init(number input1)
 	{
 		var = input1;
 	}

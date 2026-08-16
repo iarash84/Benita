@@ -1011,6 +1011,16 @@
         /// <returns>An <see cref="ExpressionNode"/> representing the primary expression.</returns>
         private ExpressionNode? ParsePrimary()
         {
+            SourceSpan span = CurrentToken().Span;
+            ExpressionNode? expression = ParsePrimaryCore();
+            if (expression is not null && expression.Span.Line <= 0)
+                expression.Span = span;
+            return expression;
+        }
+
+        /// <summary>ساخت primary expression را انجام می‌دهد؛ wrapper موقعیت token آغازین را ثبت می‌کند.</summary>
+        private ExpressionNode? ParsePrimaryCore()
+        {
             if (Match(TokenType.NEW))
                 return ParseNewExpression();
 

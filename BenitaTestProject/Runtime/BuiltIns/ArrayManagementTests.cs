@@ -5,8 +5,8 @@ using Benita;
 namespace BenitaTestProject.Runtime.BuiltIns
 {
     [TestClass]
-    public class ArrayManagementTests
-    {
+public class ArrayManagementTests
+{
         [TestMethod]
         public void HandleFunctionCall_WithArrayLength_ReturnsElementCount()
         {
@@ -97,6 +97,17 @@ namespace BenitaTestProject.Runtime.BuiltIns
 
             var exception = Assert.ThrowsException<BuiltInException>(() => arrayManagement.HandleFunctionCall("array_remove", arguments));
             Assert.AreEqual("Index is out of range. (Parameter 'index')", exception.Description);
+        }
+
+        [TestMethod]
+        public void HandleFunctionCall_WithFractionalIndex_RejectsImplicitRounding()
+        {
+            var service = new ArrayManagement();
+
+            BuiltInException exception = Assert.ThrowsException<BuiltInException>(() =>
+                service.HandleFunctionCall("array_remove", [new object[] { 1, 2 }, 0.5]));
+
+            StringAssert.Contains(exception.Description, "whole number");
         }
 
         [TestMethod]

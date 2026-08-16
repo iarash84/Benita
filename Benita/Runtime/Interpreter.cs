@@ -16,6 +16,7 @@ namespace Benita
         private bool _functionReturnFlag;
         private readonly bool _debugMode;
         private readonly string _packageScope;
+        private readonly bool _isPackageInterpreter;
         private readonly DebugClass _debugClass;
         private readonly bool _preserveStateBetweenPrograms;
         private readonly RuntimeContext _context;
@@ -25,7 +26,8 @@ namespace Benita
         /// </summary>
         /// <param name="packageScope">The scope of the package, default is "_main_".</param>
         public Interpreter(bool debugMode = false, string packageScope = "Program",
-            bool preserveStateBetweenPrograms = false, RuntimeContext? context = null)
+            bool preserveStateBetweenPrograms = false, RuntimeContext? context = null,
+            bool packageInstanceScope = false)
         {
             _debugMode = debugMode;
             _preserveStateBetweenPrograms = preserveStateBetweenPrograms;
@@ -35,6 +37,7 @@ namespace Benita
                 _debugClass = DebugClass.Instance;
             }
             _packageScope = packageScope;
+            _isPackageInterpreter = packageInstanceScope;
             _outerScopeVariables = new Dictionary<string, object>();
         }
 
@@ -182,16 +185,22 @@ namespace Benita
         public void SetGlobalVariable()
         {
             DebugLog("SetGlobalVariable");
-            foreach (var kvp in _context.GlobalVariables)
-                _variables.Add(kvp.Key, kvp.Value);
+            RefreshVisibleGlobalsFromContext();
         }
 
-        /// <summary>متغیرهای فعلی را به‌عنوان state پایدار یک instance ثبت می‌کند.</summary>
-        internal void MarkCurrentVariablesAsPersistent()
+        /// <summary>globalهای تازه را بدون بازنویسی فیلد هم‌نام package وارد scope جاری می‌کند.</summary>
+        internal void RefreshVisibleGlobalsFromContext()
         {
-            foreach (string name in _variables.Keys)
-                _persistentVariableNames.Add(name);
+            foreach (var item in _context.GlobalVariables)
+            {
+                bool isPackageField = _isPackageInterpreter && _persistentVariableNames.Contains(item.Key);
+                if (!isPackageField)
+                    _variables[item.Key] = item.Value;
+            }
         }
+
+        /// <summary>یک فیلد declarationشده را به‌عنوان state پایدار instance ثبت می‌کند.</summary>
+        internal void MarkVariableAsPersistent(string name) => _persistentVariableNames.Add(name);
 
         /// <summary>
         /// Visits the specified AST node and executes the corresponding logic.
@@ -564,12 +573,13 @@ namespace Benita
 
             foreach (string key in originalVariables.Keys.ToList())
             {
+                bool isPackageField = _isPackageInterpreter && _persistentVariableNames.Contains(key);
                 bool isPersistent = _persistentVariableNames.Contains(key) ||
                                     _context.GlobalVariables.ContainsKey(key);
                 if (isPersistent && variables.TryGetValue(key, out object? value))
                 {
                     originalVariables[key] = value;
-                    if (_context.GlobalVariables.ContainsKey(key))
+                    if (!isPackageField && _context.GlobalVariables.ContainsKey(key))
                         _context.GlobalVariables[key] = value;
                 }
             }
@@ -767,7 +777,7 @@ namespace Benita
 
         /// <summary>یک shell خالی با تنظیمات همین مفسر برای clone داخلی package می‌سازد.</summary>
         internal Interpreter CreateTaskCloneShell(RuntimeContext context) =>
-            new(_debugMode, _packageScope, true, context);
+            new(_debugMode, _packageScope, true, context, _isPackageInterpreter);
 
         /// <summary>state داخلی مفسر package را بدون اجرای initializer به shell مقصد منتقل می‌کند.</summary>
         internal void CopyTaskStateTo(Interpreter target, TaskCloneContext context)
@@ -994,10 +1004,16 @@ namespace Benita
                 Visit(function);
             }
 
+            // PackageInstance یک Interpreter جدا دارد و تعریف توابع global را از context می‌خواند.
+            Synchronize(_context.GlobalFunctions, _functions);
+
             foreach (var globalVar in node.GlobalVariables)
             {
                 Visit(globalVar);
+                // ساخت package در initializer می‌تواند globalهای قبلی را از طریق init تغییر دهد.
+                RefreshVisibleGlobalsFromContext();
                 _persistentVariableNames.Add(globalVar.Name);
+                _context.GlobalVariables[globalVar.Name] = _variables[globalVar.Name];
             }
 
             Synchronize(_context.GlobalFunctions, _functions);
@@ -1173,11 +1189,30 @@ namespace Benita
 
             if (TryGetVariableValue(node.ObjectName, out var instance) && instance is PackageInstance packageInstance)
             {
-                return packageInstance.Visit(node.Expression, _variables);
+                AstNode expression = EvaluateExternalMemberInputs(node.Expression);
+                object result = packageInstance.Visit(expression, _variables);
+                RefreshVisibleGlobalsFromContext();
+                return result;
             }
 
             throw new Exception($"Member access on non-package instance '{instance}'");
         }
+
+        /// <summary>
+        /// آرگومان‌ها و RHS دسترسی خارجی را در scope فراخواننده ارزیابی می‌کند تا فیلد هم‌نام receiver
+        /// نتواند lookup عبارت caller را تغییر دهد.
+        /// </summary>
+        private AstNode EvaluateExternalMemberInputs(AstNode expression) => expression switch
+        {
+            FunctionCallNode call => new FunctionCallNode(call.FunctionName,
+                call.Arguments.Select(argument =>
+                    (ExpressionNode)new RuntimeValueNode(Visit(argument))).ToList()),
+            AssignmentNode assignment => new AssignmentNode(assignment.Name,
+                new RuntimeValueNode(Visit(assignment.Expression))),
+            CompoundAssignmentNode assignment => new CompoundAssignmentNode(assignment.Name,
+                assignment.Operator, new RuntimeValueNode(Visit(assignment.Expression))),
+            _ => expression
+        };
 
         /// <summary>
         /// Tries to get the value of a variable by its name.
@@ -1234,18 +1269,12 @@ namespace Benita
             DebugLog($"VisitArrayAccessNode: ArrayName = {node.Name}", false);
 
             var arrayName = node.Name;
-            var index = Convert.ToInt32(Visit(node.Index));
-
-            DebugLog($"VisitArrayAccessNode: index = {index}", false);
-
             if (TryGetVariableValue(arrayName, out var value) && value is object[] array)
             {
-                if (index < 0)
-                    index = array.Length + index;
+                int index = RuntimeIndex.Normalize(Visit(node.Index), array.Length,
+                    $"Index for array '{arrayName}'", allowNegative: true);
 
-                if (index < 0 || index >= array.Length)
-                    throw new($"Index out of bounds for array '{arrayName}'");
-
+                DebugLog($"VisitArrayAccessNode: index = {index}", false);
                 DebugLog($"VisitArrayAccessNode: value = {array[index]}", false);
                 return array[index];
             }
@@ -1264,10 +1293,6 @@ namespace Benita
 
             var arrayName = node.Name;
             var newValue = Visit(node.Value);
-            var index = Visit(node.Index);
-
-            DebugLog($"VisitArrayAssignmentNode: index = {index}, newValue = {newValue}");
-
             if (!_variables.ContainsKey(arrayName))
             {
                 throw new($"Array '{arrayName}' not found in variables.");
@@ -1276,7 +1301,10 @@ namespace Benita
             object arrayObj = _variables[arrayName];
             if (arrayObj is object[] array)
             {
-                array[Convert.ToInt32(index)] = newValue;
+                int index = RuntimeIndex.Normalize(Visit(node.Index), array.Length,
+                    $"Index for array '{arrayName}'", allowNegative: true);
+                DebugLog($"VisitArrayAssignmentNode: index = {index}, newValue = {newValue}");
+                array[index] = newValue;
                 _variables[arrayName] = array;
                 return newValue;
             }

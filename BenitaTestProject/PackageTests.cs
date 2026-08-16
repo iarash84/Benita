@@ -19,7 +19,7 @@ namespace BenitaTestProject
             string source = @"
 pkg myPackage {
 	public number var = 10;
-	func myPackage(number input1) -> void
+	init(number input1)
 	{
 		var = input1;
 	}
@@ -50,7 +50,7 @@ _main_(){
             string source = @"
 pkg myPackage {
 	public number var = 10;
-	func myPackage(number input1) -> void{
+	init(number input1) {
 		var = input1;
 	}
 	public func Third() -> number{
@@ -86,7 +86,7 @@ _main_(){
             string source = @"
 pkg myPackage {
 	public number var = 10;
-	func myPackage(number input1) -> void
+	init(number input1)
 	{
 		var = input1;
 	}

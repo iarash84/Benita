@@ -6,6 +6,30 @@ namespace BenitaTestProject;
 public class LanguageSyntaxRegressionTests
 {
     [TestMethod]
+    public void Exec_ArrayReadAndWriteShareWholeNegativeIndexSemantics()
+    {
+        const string source = """
+            _main_() {
+                number[] values = [1, 2];
+                print(values[-1]);
+                values[-1] = 9;
+                print(values[-1]);
+            }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual($"2{Environment.NewLine}9{Environment.NewLine}", output.GetOutput());
+        }
+
+        RuntimeException exception = Assert.ThrowsException<RuntimeException>(() =>
+            new CompilerClass().Exec("_main_() { number[] values = [1]; print(values[0.5]); }"));
+        StringAssert.Contains(exception.Message, "whole number");
+    }
+
+    [TestMethod]
     public void Check_SyntaxErrorAfterReturn_IsNotSkipped()
     {
         const string source = "func value() -> number { return 1; number broken = ; } _main_() {}";

@@ -57,6 +57,19 @@ submission ناموفق به تاریخچهٔ source افزوده نمی‌شو�
 `include_once`شده باشد، diagnostic به همان فایل اشاره می‌کند.
 فیلد package نیز می‌تواند با `let` تعریف شود؛ نوع آن از هر initializer دارای نوع مشخص،
 از جمله عبارت مرکب، در مرحلهٔ semantic استنتاج می‌شود.
+آرگومان متد و سمت راست assignment روی یک نمونهٔ package ابتدا در scope فراخواننده
+ارزیابی می‌شود؛ فیلد هم‌نام داخل package معنای عبارت caller را تغییر نمی‌دهد.
+متدها و initializerهای package به globalها و توابع global دسترسی دارند. تغییر global از
+داخل متد حفظ می‌شود، ولی فیلد هم‌نام package state مستقل خودش را دارد.
+initializer فیلدهای package فقط فیلدهایی را می‌بیند که بالاتر مقداردهی شده‌اند؛ ارجاع به
+فیلد جاری یا فیلد پایین‌تر خطای semantic است. این محدودیت برای بدنهٔ متدها وجود ندارد.
+تنها declaration با کلیدواژهٔ `init` سازندهٔ package است. متد هم‌نام package یک متد عادی
+است و قرارداد آرگومان‌های `new` را تغییر نمی‌دهد.
+اندیس آرایه و آرگومان‌های index/length توابع آرایه باید عدد صحیح متناهی باشند و گرد
+نمی‌شوند. در دسترسی و assignment مستقیم، `-1` به آخرین عنصر اشاره می‌کند؛ built-inها
+اندیس نامنفی می‌خواهند.
+diagnostic معنایی به داخلی‌ترین عبارت خطادار اشاره می‌کند؛ برای نمونه در `1 + missing`
+نشانگر زیر خود `missing` قرار می‌گیرد.
 
 ### ۳. عملگرها
 
@@ -665,6 +678,19 @@ Semantic diagnostics also retain the related node's file, line, and column. An e
 `include_once` file therefore points to that included file.
 A package field may also use `let`; semantic analysis infers it from any concretely typed
 initializer, including a composite expression.
+Method arguments and assignment right-hand sides on a package instance are evaluated in the
+caller's scope before dispatch; a same-named package field cannot shadow the caller expression.
+Package methods and field initializers can use globals and global functions. A global update
+inside a method is preserved, while a same-named package field keeps independent state.
+Package field initializers can reference only fields initialized earlier in source order;
+references to the current or a later field are semantic errors. Methods can use every field.
+Only an `init` declaration is a package constructor. A regular method named after the package
+does not change the argument contract of `new`.
+Array indices and array built-in index/length arguments must be finite whole numbers and are
+never rounded. Direct access and assignment use `-1` for the last element; built-ins require
+non-negative indices.
+Semantic diagnostics point to the innermost failing expression; for `1 + missing`, the marker
+is placed under `missing` itself.
 
 ### 3. Operators
 

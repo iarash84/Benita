@@ -24,7 +24,8 @@
         public PackageInstance(string instanceName, PackageNode packageNode, IReadOnlyList<object?> arguments,
             bool debugMode, RuntimeContext context)
         {
-            _interpreter = new Interpreter(debugMode, instanceName, context: context);
+            _interpreter = new Interpreter(debugMode, instanceName, context: context,
+                packageInstanceScope: true);
 
             string? initializerName = null;
             // همهٔ متدها پیش از initializer فیلدها ثبت می‌شوند تا ترتیب declaration رفتار را تغییر ندهد.
@@ -34,20 +35,19 @@
                 {
                     if (method.Name == "init")
                         initializerName = "init";
-                    else if (method.Name == packageNode.Name && initializerName is null)
-                        initializerName = packageNode.Name;
                     var functionNode = new FunctionNode(method.Name, method.Parameters, method.ReturnType, method.Body, method.ReturnStatement);
                     _interpreter.Visit(functionNode);
                 }
             }
 
+            _interpreter.RefreshVisibleGlobalsFromContext();
             foreach (PackageVariableDeclarationNode field in
                      packageNode.Members.OfType<PackageVariableDeclarationNode>())
             {
                 var declaration = new VariableDeclarationNode(field.Type, field.Name, field.Initializer);
                 _interpreter.Visit(declaration);
                 // متد فراخوانی‌شده از initializer بعدی باید تغییر فیلدهای قبلی را حفظ کند.
-                _interpreter.MarkCurrentVariablesAsPersistent();
+                _interpreter.MarkVariableAsPersistent(field.Name);
             }
             _interpreter.SetGlobalVariable();
 
@@ -68,6 +68,7 @@
         /// <returns>The result of the visit operation.</returns>
         public object Visit(AstNode? initializer, Dictionary<string, object> outerScopeVariables)
         {
+            _interpreter.RefreshVisibleGlobalsFromContext();
             _interpreter.SetOuterScopeVariables(outerScopeVariables);
             return _interpreter.Visit(initializer);
         }

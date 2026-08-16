@@ -6,6 +6,101 @@ namespace BenitaTestProject;
 public class ObjectModelTests
 {
     [TestMethod]
+    public void PackageFieldInitializer_CanReferenceOnlyPreviouslyInitializedFields()
+    {
+        const string validSource = """
+            pkg Values {
+                number first = 1;
+                public number second = first + 1;
+            }
+            _main_() { Values values = new Values(); print(values.second); }
+            """;
+        const string invalidSource = """
+            pkg Values {
+                number first = second;
+                number second = 2;
+            }
+            _main_() { Values values = new Values(); }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(validSource, optimizeAst: optimize);
+            Assert.AreEqual($"2{Environment.NewLine}", output.GetOutput());
+        }
+
+        SemanticException exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check(invalidSource));
+        StringAssert.Contains(exception.Message, "Undeclared variable 'second'");
+    }
+
+    [TestMethod]
+    public void PackageAndGlobalSymbols_AreVisibleAndSynchronizedAcrossRuntimeScopes()
+    {
+        const string source = """
+            number seed = 7;
+            number value = 10;
+            func initial() -> number { return seed; }
+
+            pkg Box {
+                public number value = initial();
+                init() { seed = seed + 1; }
+                public func readSeed() -> number { return seed; }
+                public func incrementSeed() -> void { seed = seed + 1; }
+                public func incrementField() -> void { value = value + 1; }
+            }
+
+            Box globalBox = new Box();
+            _main_() {
+                print(globalBox.value);
+                print(globalBox.readSeed());
+                globalBox.incrementSeed();
+                globalBox.incrementField();
+                print(seed);
+                print(value);
+                print(globalBox.value);
+            }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual(
+                $"7{Environment.NewLine}8{Environment.NewLine}9{Environment.NewLine}" +
+                $"10{Environment.NewLine}8{Environment.NewLine}", output.GetOutput());
+        }
+    }
+
+    [TestMethod]
+    public void ExternalMemberInputs_AreEvaluatedInCallerScope()
+    {
+        const string source = """
+            pkg Box {
+                public number value = 0;
+                public func set(number next) -> void { value = next; }
+            }
+            _main_() {
+                Box box = new Box();
+                number value = 9;
+                box.set(value);
+                print(box.value);
+                value = 12;
+                box.value = value;
+                print(box.value);
+            }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual($"9{Environment.NewLine}12{Environment.NewLine}", output.GetOutput());
+        }
+    }
+
+    [TestMethod]
     public void PackageLetField_InfersCompositeInitializerType()
     {
         const string source = """
@@ -147,6 +242,7 @@ public class ObjectModelTests
 
     [DataTestMethod]
     [DataRow("pkg A { init(number value) { } } _main_() { A a = new A(\"bad\"); }")]
+    [DataRow("pkg A { func A(number value) -> void { } } _main_() { A a = new A(1); }")]
     [DataRow("pkg A { init() { } } _main_() { A a = new A(); print(a.missing); }")]
     [DataRow("_main_() { let value = new Missing(); }")]
     [DataRow("_main_() { Missing value; }")]

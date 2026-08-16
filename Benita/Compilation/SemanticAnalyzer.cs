@@ -67,10 +67,9 @@
                 DeclareFunction(function);
             foreach (InterfaceNode interfaceNode in program.Interfaces)
                 AnalyzeInterface(interfaceNode);
-            foreach (var packageNode in program.Packages)
-                AnalyzePackage(packageNode);
 
-            // Analyze global variables and ensure they are declared
+            // globalها پیش از body بسته‌ها تحلیل می‌شوند تا همان outer scope قابل مشاهده در runtime
+            // هنگام تحلیل متدها و initializerهای package نیز در دسترس باشد.
             foreach (var globalVar in program.GlobalVariables)
             {
                 var declaredType = globalVar.Type;
@@ -97,6 +96,9 @@
 
                 DeclareVariable(globalVar.Name, declaredType, _globalVariables);
             }
+
+            foreach (var packageNode in program.Packages)
+                AnalyzePackage(packageNode);
 
             foreach (var function in program.Functions)
             {
@@ -163,42 +165,49 @@
         private void AnalyzePackage(PackageNode packageNode)
         {
             ValidateImplementedInterfaces(packageNode);
-            Dictionary<string, string?> variableScope = new Dictionary<string, string?>
+            Dictionary<string, string?> allFieldScope = new(_globalVariables)
             {
                 ["this"] = packageNode.Name
             };
             Dictionary<string, PackageFunctionNode> packageFunctions = new Dictionary<string, PackageFunctionNode>();
+            HashSet<string> fieldNames = [];
 
             foreach (var packageMember in packageNode.Members)
             {
                 if (packageMember is PackageVariableDeclarationNode variableDeclaration)
                 {
-                    if (variableScope.ContainsKey(variableDeclaration.Name))
+                    if (!fieldNames.Add(variableDeclaration.Name))
                         throw new Exception($"Variable '{variableDeclaration.Name}' is already declared.");
                     TypeSymbol fieldType = TypeFacts.FromName(variableDeclaration.Type);
                     EnsureKnownType(fieldType.Name, allowLet: true);
                     RequireInitializerForNamedType(fieldType.Name, variableDeclaration.Initializer,
                         variableDeclaration.Name);
-                    variableScope[variableDeclaration.Name] = fieldType.Name;
+                    allFieldScope[variableDeclaration.Name] = fieldType.Name;
                 }
             }
 
+            Dictionary<string, string?> initializedFieldScope = new(_globalVariables)
+            {
+                ["this"] = packageNode.Name
+            };
             foreach (var field in packageNode.Members.OfType<PackageVariableDeclarationNode>())
             {
                 if (field.Initializer is null)
                 {
                     if (field.Type == "let") RequireConcreteInferredType(field.Type, field.Name);
+                    initializedFieldScope[field.Name] = field.Type;
                     continue;
                 }
-                string? initializerType = AnalyzeExpression(field.Initializer, variableScope);
+                string? initializerType = AnalyzeExpression(field.Initializer, initializedFieldScope);
                 if (field.Type == "let")
                 {
                     RequireConcreteInferredType(initializerType, field.Name);
                     field.Type = initializerType;
-                    variableScope[field.Name] = initializerType;
+                    allFieldScope[field.Name] = initializerType;
                 }
                 else if (!CheckType(field.Type, initializerType))
                     throw new Exception($"Type mismatch in field '{field.Name}'. Expected '{field.Type}' but got '{initializerType}'.");
+                initializedFieldScope[field.Name] = field.Type;
             }
 
             foreach (var packageMember in packageNode.Members)
@@ -206,7 +215,7 @@
                 if (packageMember is not PackageFunctionNode functionNode) continue;
                 if (!packageFunctions.TryAdd(functionNode.Name, functionNode))
                     throw new Exception($"Function '{functionNode.Name}' is already declared.");
-                AnalyzePackageFunction(functionNode, variableScope);
+                AnalyzePackageFunction(functionNode, allFieldScope);
             }
         }
 
@@ -667,9 +676,8 @@
             if (!_packages.TryGetValue(creation.PackageName, out PackageNode? package))
                 throw new Exception($"Unknown package '{creation.PackageName}'.");
 
-            IEnumerable<PackageFunctionNode> methods = package.Members.OfType<PackageFunctionNode>();
-            PackageFunctionNode? initializer = methods.FirstOrDefault(member => member.Name == "init")
-                ?? methods.FirstOrDefault(member => member.Name == package.Name);
+            PackageFunctionNode? initializer = package.Members.OfType<PackageFunctionNode>()
+                .FirstOrDefault(member => member.Name == "init");
             if (initializer is null)
             {
                 if (creation.Arguments.Count != 0)

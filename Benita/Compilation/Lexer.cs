@@ -32,6 +32,9 @@
         private int _start = 0;
         private int _current = 0;
         private int _line = 1;
+        private int _lineStart;
+        private int _tokenLine = 1;
+        private int _tokenLineStart;
 
         /// <summary>
         /// A dictionary mapping keywords to their respective token types.
@@ -100,10 +103,14 @@
             while (!IsAtEnd())
             {
                 _start = _current; ///< Mark the beginning of a new token.
+                _tokenLine = _line;
+                _tokenLineStart = _lineStart;
                 ScanToken(); ///< Scan a single token.
             }
 
             _start = _current;
+            _tokenLine = _line;
+            _tokenLineStart = _lineStart;
             AddToken(TokenType.EOF, ""); ///< Add end-of-file token.
             return _tokens; ///< Return the list of tokens.
         }
@@ -343,6 +350,7 @@
                     break;
                 case '\n':
                     _line++; ///< Increment line counter on new line.
+                    _lineStart = _current;
                     break;
 
                 default:
@@ -380,7 +388,11 @@
             {
                 if (IsAtEnd())
                     throw CreateError("BEN1004", "Unterminated multiline comment.");
-                if (Advance() == '\n') _line++;
+                if (Advance() == '\n')
+                {
+                    _line++;
+                    _lineStart = _current;
+                }
             }
             _current += 2;
         }
@@ -532,23 +544,18 @@
 
         private SourceSpan GetCurrentSpan(int length)
         {
-            var lineStart = _start == 0 ? -1 : _source.LastIndexOf('\n', _start - 1);
-            lineStart = lineStart < 0 ? 0 : lineStart + 1;
             var lineEnd = _source.IndexOf('\n', _start);
             if (lineEnd < 0) lineEnd = _source.Length;
-            var lineText = _source[lineStart..lineEnd].TrimEnd('\r');
-            var line = 1;
-            for (var index = 0; index < _start; index++)
+            var lineText = _source[_tokenLineStart..lineEnd].TrimEnd('\r');
+            if (_tokenLine <= _sourceLineOrigins.Count)
             {
-                if (_source[index] == '\n') line++;
-            }
-            if (line <= _sourceLineOrigins.Count)
-            {
-                SourceLineOrigin origin = _sourceLineOrigins[line - 1];
-                return new SourceSpan(origin.SourceName, origin.Line, _start - lineStart + 1, length,
+                SourceLineOrigin origin = _sourceLineOrigins[_tokenLine - 1];
+                return new SourceSpan(origin.SourceName, origin.Line,
+                    _start - _tokenLineStart + 1, length,
                     origin.LineText);
             }
-            return new SourceSpan(_sourceName, line, _start - lineStart + 1, length, lineText);
+            return new SourceSpan(_sourceName, _tokenLine,
+                _start - _tokenLineStart + 1, length, lineText);
         }
 
         /// <summary>منشأ هر خط در متن گسترش‌یافته را برای diagnosticهای مراحل بعدی نگه می‌دارد.</summary>

@@ -46,4 +46,18 @@ public class DiagnosticTests
         Assert.AreEqual("BEN3001", exception.Code);
         StringAssert.Contains(exception.Message, "Undeclared variable 'x'");
     }
+
+    [TestMethod]
+    public void Compile_WithNestedSemanticError_PointsToFailingOperand()
+    {
+        const string source = "_main_() {\n    number value = 1 + missing;\n}";
+
+        SemanticException exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check(source, sourceName: "nested.ben"));
+
+        Assert.AreEqual(2, exception.Span.Line);
+        Assert.AreEqual(24, exception.Span.Column);
+        StringAssert.Contains(exception.Message, "nested.ben:2:24");
+        StringAssert.Contains(exception.Message, "                       ^^^^^^^");
+    }
 }

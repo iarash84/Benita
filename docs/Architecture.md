@@ -103,8 +103,7 @@ initializer به نام `init` است. نوع package در پارامتر، خر
    هدایت می‌شود.
 
 `RuntimeValueNode` جزئیات داخلی runtime برای انتقال مقدار ارزیابی‌شده به `init` است و syntax
-متناظری در زبان ندارد. سازندهٔ قدیمیِ هم‌نام package برای سازگاری با کدهای قبلی شناخته
-می‌شود، ولی کد جدید باید از `init` استفاده کند.
+متناظری در زبان ندارد. تنها `init` سازندهٔ package است و متد هم‌نام package رفتار ویژه‌ای ندارد.
 
 این مدل علاوه بر composition از interfaceهای اسمی و چندریختی نیز پشتیبانی می‌کند.
 `InterfaceNode` قرارداد متدها را نگه می‌دارد و `PackageNode.Interfaces` فهرست قراردادهای
@@ -136,7 +135,14 @@ flagهای داخلی ناسازگار نشوند. در مرز `ProgramNode` ن�
 با `GetAwaiter().GetResult()` نتیجه را بدون wrapper شدن exception دریافت می‌کند تا خطاهای
 Benita مستقیماً به catch برسند.
 
-نمونه‌های package ماهیت reference دارند و در نسخهٔ فعلی deep-clone نمی‌شوند. در نتیجه اشتراک
-و تغییر هم‌زمان یک نمونهٔ واحد میان taskها قرارداد پشتیبانی‌شده‌ای نیست. اگر در آینده shared
-mutable state لازم شود، باید primitiveهای synchronization یا channel به زبان افزوده شوند؛
-تا آن زمان الگوی توصیه‌شده، ورودی‌های مستقل و بازگرداندن نتیجه از task است.
+نمونه‌های package و آرایه‌ها هنگام capture شدن توسط task به‌صورت عمیق clone می‌شوند. clone
+aliasها و cycleها را حفظ می‌کند و `init` را دوباره اجرا نمی‌کند؛ بنابراین task state mutable
+مشترکی با caller ندارد. اگر در آینده shared mutable state لازم شود، باید primitiveهای
+synchronization یا channel به زبان افزوده شوند.
+
+## موقعیت source در Lexer
+
+Lexer شمارهٔ خط و offset آغاز خط را هم‌زمان با scan به‌روز می‌کند. موقعیت آغاز هر token
+پیش از خواندن آن snapshot می‌شود؛ بنابراین ساخت `SourceSpan` نیازمند پیمایش دوباره از ابتدای
+source نیست و هزینهٔ tokenization با اندازهٔ ورودی رشد خطی دارد. جدول origin تولیدشده توسط
+`include_once` همچنان نام فایل و شمارهٔ خط اصلی هر token را تأمین می‌کند.
