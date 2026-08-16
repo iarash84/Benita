@@ -446,7 +446,8 @@ _main_() {
 
 `include_once` هر فایل را در هر بار کامپایل حداکثر یک بار وارد می‌کند. مسیر نسبی نسبت به پوشهٔ
 فایلی که directive داخل آن نوشته شده محاسبه می‌شود؛ برای source بدون نام، پوشهٔ کاری مبنا است.
-مسیرهای معادل canonical می‌شوند و includeهای چرخه‌ای نیز باعث ورود دوبارهٔ فایل نمی‌شوند.
+مسیرهای معادل canonical می‌شوند. وابستگی چرخه‌ای مجاز نیست و با خطای `BEN1005` همراه
+زنجیرهٔ فایل‌ها گزارش می‌شود.
 
 ### ۱۲. کامنت‌ها
 
@@ -1007,7 +1008,8 @@ _main_() {
 
 `include_once` imports each file at most once per compilation. Relative paths are resolved from
 the directory of the file containing each directive; the working directory is used for unnamed source.
-Equivalent path spellings and circular includes are normalized and loaded only once during a compilation.
+Equivalent path spellings are normalized. Circular dependencies are rejected with `BEN1005`
+and the complete include chain.
 
 ### 12. Comments
 

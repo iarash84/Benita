@@ -21,6 +21,9 @@
         /// </summary>
         private readonly HashSet<string> _includedFiles = new(
             OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+        private readonly List<string> _includeStack = [];
+        private readonly HashSet<string> _activeIncludes = new(
+            OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 
         /// <summary>
         /// Variables to keep track of the current position in the source code.
@@ -77,13 +80,13 @@
             _source = source;
             _sourceName = sourceName;
             string baseDirectory = Environment.CurrentDirectory;
+            string? rootPath = null;
             if (!string.IsNullOrWhiteSpace(sourceName) && !sourceName.StartsWith('<'))
             {
-                string rootPath = Path.GetFullPath(sourceName);
-                _includedFiles.Add(rootPath);
+                rootPath = Path.GetFullPath(sourceName);
                 baseDirectory = Path.GetDirectoryName(rootPath) ?? baseDirectory;
             }
-            ProcessIncludes(ref _source, baseDirectory); ///< Process included files.
+            ProcessIncludes(ref _source, baseDirectory, rootPath); ///< Process included files.
             if (sourcePrint)
                 Console.WriteLine(_source);
         }
@@ -109,35 +112,66 @@
         /// Recursively processes "include_once" directives to include the contents of other files.
         /// </summary>
         /// <param name="source">The source code to process.</param>
-        private void ProcessIncludes(ref string source, string baseDirectory)
+        private void ProcessIncludes(ref string source, string baseDirectory, string? currentPath)
         {
-            var includedSources = new List<string>();
-            var lines = source.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-
-            foreach (var line in lines)
+            if (currentPath is not null)
             {
-                string trimmedLine = line.Trim();
-                if (trimmedLine.StartsWith("include_once", StringComparison.Ordinal))
-                {
-                    string includePath = ParseIncludePath(trimmedLine);
-                    string filePath = Path.GetFullPath(Path.Combine(baseDirectory, includePath));
-                    if (!_includedFiles.Add(filePath))
-                        continue;
-                    if (!File.Exists(filePath))
-                        throw CreateError("BEN1003", $"Included file '{includePath}' was not found at '{filePath}'.");
-
-                    string fileContent = File.ReadAllText(filePath);
-                    string includedDirectory = Path.GetDirectoryName(filePath) ?? baseDirectory;
-                    ProcessIncludes(ref fileContent, includedDirectory); ///< Recursively process included file.
-                    includedSources.Add(fileContent);
-                }
-                else
-                {
-                    includedSources.Add(line); ///< Add the line if it's not an include directive.
-                }
+                _activeIncludes.Add(currentPath);
+                _includeStack.Add(currentPath);
             }
 
-            source = string.Join(Environment.NewLine, includedSources); ///< Combine the processed lines.
+            try
+            {
+                var includedSources = new List<string>();
+                var lines = source.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+                foreach (var line in lines)
+                {
+                    string trimmedLine = line.Trim();
+                    if (trimmedLine.StartsWith("include_once", StringComparison.Ordinal))
+                    {
+                        string includePath = ParseIncludePath(trimmedLine);
+                        string filePath = Path.GetFullPath(Path.Combine(baseDirectory, includePath));
+                        if (_activeIncludes.Contains(filePath))
+                            throw CreateCircularIncludeError(filePath);
+                        if (_includedFiles.Contains(filePath))
+                            continue;
+                        if (!File.Exists(filePath))
+                            throw CreateError("BEN1003", $"Included file '{includePath}' was not found at '{filePath}'.");
+
+                        string fileContent = File.ReadAllText(filePath);
+                        string includedDirectory = Path.GetDirectoryName(filePath) ?? baseDirectory;
+                        ProcessIncludes(ref fileContent, includedDirectory, filePath);
+                        includedSources.Add(fileContent);
+                    }
+                    else
+                    {
+                        includedSources.Add(line); ///< Add the line if it's not an include directive.
+                    }
+                }
+
+                source = string.Join(Environment.NewLine, includedSources); ///< Combine the processed lines.
+                if (currentPath is not null)
+                    _includedFiles.Add(currentPath);
+            }
+            finally
+            {
+                if (currentPath is not null)
+                {
+                    _includeStack.RemoveAt(_includeStack.Count - 1);
+                    _activeIncludes.Remove(currentPath);
+                }
+            }
+        }
+
+        /// <summary>زنجیرهٔ کامل یک وابستگی چرخه‌ای را به‌صورت diagnostic گزارش می‌کند.</summary>
+        private LexerException CreateCircularIncludeError(string repeatedPath)
+        {
+            int cycleStart = _includeStack.FindIndex(path =>
+                _activeIncludes.Comparer.Equals(path, repeatedPath));
+            IEnumerable<string> cycle = _includeStack.Skip(cycleStart).Append(repeatedPath)
+                .Select(Path.GetFileName);
+            return CreateError("BEN1005", $"Circular include dependency detected: {string.Join(" -> ", cycle)}.");
         }
 
         /// <summary>مسیر یک directive معتبر include_once را استخراج می‌کند.</summary>

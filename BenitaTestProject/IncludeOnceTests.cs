@@ -55,7 +55,7 @@ public class IncludeOnceTests
     }
 
     [TestMethod]
-    public void IncludeOnce_CycleBackToRoot_DoesNotDuplicateRoot()
+    public void IncludeOnce_CycleBackToRoot_IsRejectedWithDependencyChain()
     {
         string directory = CreateTemporaryDirectory();
         try
@@ -70,9 +70,11 @@ public class IncludeOnceTests
             File.WriteAllText(Path.Combine(featureDirectory, "entry.ben"),
                 "include_once \"../main.ben\";");
 
-            List<Token> tokens = new Lexer(source, sourceName: rootPath).Tokenize();
+            LexerException exception = Assert.ThrowsException<LexerException>(() =>
+                new Lexer(source, sourceName: rootPath).Tokenize());
 
-            Assert.AreEqual(1, tokens.Count(token => token.Type == TokenType.MAIN));
+            Assert.AreEqual("BEN1005", exception.Code);
+            StringAssert.Contains(exception.Message, "main.ben -> entry.ben -> main.ben");
         }
         finally
         {
