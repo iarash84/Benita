@@ -7,6 +7,36 @@ namespace BenitaTestProject;
 public class AsyncAwaitTests
 {
     [TestMethod]
+    public void AsyncPackageArgument_IsDeeplyIsolatedFromCaller()
+    {
+        const string source = """
+            pkg Box {
+                public number value = 0;
+                public func set(number next) -> void { value = next; }
+            }
+
+            func mutate(Box box) -> number {
+                box.set(9);
+                return box.value;
+            }
+
+            _main_() {
+                Box box = new Box();
+                let operation = async mutate(box);
+                print(await operation);
+                print(box.value);
+            }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual($"9{Environment.NewLine}0{Environment.NewLine}", output.GetOutput());
+        }
+    }
+
+    [TestMethod]
     public void AsyncCalls_CanBeAwaitedInAnyOrder()
     {
         const string source = """

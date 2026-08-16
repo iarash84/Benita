@@ -57,6 +57,22 @@ _main_() { print(sign(2)); }";
         StringAssert.Contains(exception.Message, "must return");
     }
 
+    [TestMethod]
+    public void Check_UnreachableBreakDoesNotInvalidateReturningLoop()
+    {
+        const string source = """
+            func value() -> number {
+                while (true) {
+                    if (false) { break; }
+                    return 1;
+                }
+            }
+            _main_() { print(value()); }
+            """;
+
+        new CompilerClass().Check(source);
+    }
+
     [DataTestMethod]
     [DataRow("break;")]
     [DataRow("continue;")]

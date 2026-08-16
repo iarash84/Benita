@@ -41,7 +41,9 @@ public sealed class Repl
             if (TryHandleCommand(command)) continue;
 
             string source = PrepareSource(input);
-            string candidateSession = _sessionSource + Environment.NewLine + source;
+            // AppendLine پس از هر submission موفق separator را نگه می‌دارد؛ افزودن newline دیگر
+            // شماره‌خط diagnostics نشست را یک خط جلو می‌انداخت.
+            string candidateSession = string.Concat(_sessionSource, source);
             try
             {
                 _compiler.ExecInSession(source, candidateSession, _interpreter,

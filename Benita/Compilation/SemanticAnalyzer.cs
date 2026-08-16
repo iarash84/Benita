@@ -6,6 +6,8 @@
     /// </summary>
     public class SemanticAnalyzer
     {
+        /// <summary>آخرین موقعیت AST در حال تحلیل را برای تبدیل خطای داخلی به diagnostic نگه می‌دارد.</summary>
+        internal SourceSpan CurrentSpan { get; private set; } = SourceSpan.Unknown;
         /// <summary>
         /// Dictionary to store packages names and their associated PackageNode.
         /// </summary>
@@ -174,7 +176,7 @@
                     if (variableScope.ContainsKey(variableDeclaration.Name))
                         throw new Exception($"Variable '{variableDeclaration.Name}' is already declared.");
                     TypeSymbol fieldType = TypeFacts.FromName(variableDeclaration.Type);
-                    EnsureKnownType(fieldType.Name);
+                    EnsureKnownType(fieldType.Name, allowLet: true);
                     RequireInitializerForNamedType(fieldType.Name, variableDeclaration.Initializer,
                         variableDeclaration.Name);
                     variableScope[variableDeclaration.Name] = fieldType.Name;
@@ -192,6 +194,7 @@
                 if (field.Type == "let")
                 {
                     RequireConcreteInferredType(initializerType, field.Name);
+                    field.Type = initializerType;
                     variableScope[field.Name] = initializerType;
                 }
                 else if (!CheckType(field.Type, initializerType))
@@ -321,6 +324,7 @@
         private void AnalyzeStatement(StatementNode statement, Dictionary<string, string?> localVariables,
             string? functionReturnType = null, int loopDepth = 0)
         {
+            if (statement.Span.Line > 0) CurrentSpan = statement.Span;
             switch (statement)
             {
                 case VariableDeclarationNode varDecl:
@@ -511,11 +515,19 @@
         private static bool IsAlwaysTrue(ExpressionNode? expression) =>
             expression is LiteralNode { Type: TokenType.TRUE_LITERAL };
 
+        /// <summary>تشخیص می‌دهد شرط literal قطعاً نادرست است و شاخهٔ then قابل‌دسترسی نیست.</summary>
+        private static bool IsAlwaysFalse(ExpressionNode? expression) =>
+            expression is LiteralNode { Type: TokenType.FALSE_LITERAL };
+
         /// <summary>وجود break متعلق به حلقهٔ جاری را بدون شمردن break حلقه‌های تو در تو بررسی می‌کند.</summary>
         private static bool ContainsBreakForCurrentLoop(StatementNode? statement) => statement switch
         {
             BreakStatementNode => true,
             BlockNode block => block.Statements.Any(ContainsBreakForCurrentLoop),
+            IfStatementNode branch when IsAlwaysTrue(branch.Condition) =>
+                ContainsBreakForCurrentLoop(branch.ThenBranch),
+            IfStatementNode branch when IsAlwaysFalse(branch.Condition) =>
+                ContainsBreakForCurrentLoop(branch.ElseBranch),
             IfStatementNode branch => ContainsBreakForCurrentLoop(branch.ThenBranch) ||
                                       ContainsBreakForCurrentLoop(branch.ElseBranch),
             MatchStatementNode match => match.Arms.Any(arm =>
@@ -610,6 +622,7 @@
         /// <returns>The type of the expression.</returns>
         private string? AnalyzeExpression(ExpressionNode expression, Dictionary<string, string?> localVariables)
         {
+            if (expression.Span.Line > 0) CurrentSpan = expression.Span;
             switch (expression)
             {
                 case LiteralNode literal:

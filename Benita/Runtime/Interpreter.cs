@@ -577,17 +577,7 @@ namespace Benita
 
         /// <summary>برابری runtime را مطابق قرارداد scalar زبان محاسبه می‌کند.</summary>
         private static bool ValuesAreEqual(object left, object right)
-        {
-            if (IsRuntimeNumber(left) && IsRuntimeNumber(right))
-                return Convert.ToDouble(left) == Convert.ToDouble(right);
-            return Equals(left, right);
-        }
-
-        /// <summary>تمام representationهای عددی CLR را که ممکن است built-inها تولید کنند تشخیص می‌دهد.</summary>
-        private static bool IsRuntimeNumber(object value) => Type.GetTypeCode(value.GetType()) is
-            TypeCode.Byte or TypeCode.SByte or TypeCode.Int16 or TypeCode.UInt16 or
-            TypeCode.Int32 or TypeCode.UInt32 or TypeCode.Int64 or TypeCode.UInt64 or
-            TypeCode.Single or TypeCode.Double or TypeCode.Decimal;
+            => RuntimeValueComparer.AreEqual(left, right);
 
         /// <summary>
         /// Visits a return statement node and sets the function return flag.
@@ -719,13 +709,25 @@ namespace Benita
         /// <summary>آرگومان‌ها و scope فعلی را snapshot می‌گیرد و فراخوانی را روی thread pool اجرا می‌کند.</summary>
         private object VisitAsyncExpressionNode(AsyncExpressionNode node)
         {
+            var context = new RuntimeContext();
+            foreach (var item in _context.GlobalFunctions)
+                context.GlobalFunctions[item.Key] = item.Value;
+            foreach (var item in _functions)
+                context.GlobalFunctions[item.Key] = item.Value;
+            foreach (var item in _context.Packages)
+                context.Packages[item.Key] = item.Value;
+
+            var cloneContext = new TaskCloneContext(context);
+            foreach (var item in _context.GlobalVariables)
+                context.GlobalVariables[item.Key] = CloneTaskValue(item.Value, cloneContext);
+
             List<ExpressionNode> arguments = node.Call.Arguments
-                .Select(argument => (ExpressionNode)new RuntimeValueNode(CloneTaskValue(Visit(argument))))
+                .Select(argument => (ExpressionNode)new RuntimeValueNode(
+                    CloneTaskValue(Visit(argument), cloneContext)))
                 .ToList();
             var call = new FunctionCallNode(node.Call.FunctionName, arguments);
             Dictionary<string, object> variables = _variables.ToDictionary(
-                item => item.Key, item => CloneTaskValue(item.Value));
-            RuntimeContext context = CreateTaskContext();
+                item => item.Key, item => CloneTaskValue(item.Value, cloneContext));
 
             return new TaskValue(System.Threading.Tasks.Task.Run(() =>
             {
@@ -745,23 +747,49 @@ namespace Benita
             return task.Task.GetAwaiter().GetResult();
         }
 
-        /// <summary>تعاریف و مقادیر سراسری موردنیاز task را در یک context مستقل کپی می‌کند.</summary>
-        private RuntimeContext CreateTaskContext()
+        /// <summary>یک مقدار mutable را برای task با حفظ aliasها و جلوگیری از cycle clone می‌کند.</summary>
+        private static object CloneTaskValue(object value, TaskCloneContext context)
         {
-            var context = new RuntimeContext();
-            foreach (var item in _context.GlobalVariables)
-                context.GlobalVariables[item.Key] = CloneTaskValue(item.Value);
-            foreach (var item in _context.GlobalFunctions)
-                context.GlobalFunctions[item.Key] = item.Value;
-            foreach (var item in _functions)
-                context.GlobalFunctions[item.Key] = item.Value;
-            foreach (var item in _context.Packages)
-                context.Packages[item.Key] = item.Value;
-            return context;
+            if (value is PackageInstance package)
+                return package.CloneForTask(context);
+            if (value is not Array array) return value;
+            if (context.Values.TryGetValue(array, out object? existing)) return existing;
+
+            var copy = new object[array.Length];
+            context.Values.Add(array, copy);
+            for (int index = 0; index < array.Length; index++)
+            {
+                object? item = array.GetValue(index);
+                copy[index] = item is null ? null! : CloneTaskValue(item, context);
+            }
+            return copy;
         }
 
-        /// <summary>آرایه‌ها را برای جلوگیری از نوشتن مشترک مستقیم clone می‌کند.</summary>
-        private static object CloneTaskValue(object value) => value is Array array ? array.Clone() : value;
+        /// <summary>یک shell خالی با تنظیمات همین مفسر برای clone داخلی package می‌سازد.</summary>
+        internal Interpreter CreateTaskCloneShell(RuntimeContext context) =>
+            new(_debugMode, _packageScope, true, context);
+
+        /// <summary>state داخلی مفسر package را بدون اجرای initializer به shell مقصد منتقل می‌کند.</summary>
+        internal void CopyTaskStateTo(Interpreter target, TaskCloneContext context)
+        {
+            target._variables = _variables.ToDictionary(item => item.Key,
+                item => CloneTaskValue(item.Value, context));
+            foreach (var item in _outerScopeVariables)
+                target._outerScopeVariables[item.Key] = CloneTaskValue(item.Value, context);
+            foreach (var item in _functions)
+                target._functions[item.Key] = item.Value;
+            target._persistentVariableNames.UnionWith(_persistentVariableNames);
+            target._functionReturnFlag = _functionReturnFlag;
+        }
+
+        internal sealed class TaskCloneContext(RuntimeContext runtimeContext)
+        {
+            internal RuntimeContext RuntimeContext { get; } = runtimeContext;
+            internal Dictionary<object, object> Values { get; } =
+                new(ReferenceEqualityComparer.Instance);
+            internal Dictionary<PackageInstance, PackageInstance> Packages { get; } =
+                new(ReferenceEqualityComparer.Instance);
+        }
 
         /// <summary>مقدار error را ارزیابی و برای انتقال به نزدیک‌ترین catch پرتاب می‌کند.</summary>
         private object VisitThrowStatementNode(ThrowStatementNode node)

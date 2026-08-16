@@ -29,7 +29,8 @@ public sealed class CompilerClass
         bool optimizeAst = false)
     {
         const string noOp = "if (false) {}";
-        AnalyzeProgram(Parse(Tokenize($"{sessionSource}{Environment.NewLine}{noOp}")));
+        AnalyzeProgram(Parse(Tokenize($"{sessionSource}{Environment.NewLine}{noOp}",
+            sourceName: "<repl>")));
         ProgramNode program = Parse(Tokenize($"{sourceCode}{Environment.NewLine}{noOp}",
             lexerPrint, sourcePrint, "<repl>"));
         program = OptimizeIfRequested(program, parserPrint, optimizeAst);
@@ -82,8 +83,9 @@ public sealed class CompilerClass
 
     private static void AnalyzeProgram(ProgramNode program)
     {
-        try { new SemanticAnalyzer().Analyze(program); }
+        var analyzer = new SemanticAnalyzer();
+        try { analyzer.Analyze(program); }
         catch (BenitaException) { throw; }
-        catch (Exception exception) { throw new SemanticException(exception.Message, exception); }
+        catch (Exception exception) { throw new SemanticException(exception.Message, analyzer.CurrentSpan, exception); }
     }
 }

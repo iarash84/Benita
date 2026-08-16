@@ -159,7 +159,7 @@ Semantic constraints
    A private package member is accessible inside its package (including through
    `this`) but not through an instance outside that package. Write `public`
    explicitly for a package API.
-3. `let` is allowed only for local/global variable declarations and requires
+3. `let` is allowed for local/global variable declarations and package fields, and requires
    an initializer from which a concrete type can be inferred.
 4. `void` is allowed only as a function return type.
 5. Every reachable path of a non-void function must return a compatible value.
@@ -260,6 +260,24 @@ Semantic constraints
     `unknown[]` from an empty untyped array are rejected; use an explicit array type.
 47. `BEN1005` identifies a circular include dependency. A decimal literal that starts
     with `.` is a distinct lexical error reported as `BEN1007`.
+48. A top-level package or interface variable is global even when its access modifier
+    is omitted; omission means `private`, just as it does for primitive globals.
+49. Package methods are available to field initializers regardless of their textual
+    declaration order. Field initializers themselves still execute in source order.
+50. Every CLR representation produced for a Benita `number` compares as the same
+    language type in equality, `match`, array lookup, and array sorting operations.
+51. Async capture deep-clones arrays and package instances while preserving aliases and
+    cycles. Task mutation therefore cannot change mutable state visible to the caller.
+52. Definite-return analysis ignores a `break` in an unreachable literal branch such as
+    `if (false)`, but a reachable `break` still prevents an infinite loop from proving return.
+53. `include_once` is recognized as a directive only at a complete token boundary followed
+    by whitespace; names such as `include_once_helper` remain ordinary identifiers.
+54. REPL diagnostics use the virtual source name `<repl>` and line numbers relative to the
+    accepted session source; rejected submissions do not advance that source.
+55. Semantic diagnostics retain the source file, line, and column of the analyzed AST node,
+    including nodes originating in a file expanded through `include_once`.
+56. A package field declared with `let` is inferred by semantic analysis from any concrete
+    initializer expression; inference is not limited to literals or earlier function calls.
 
 Notes
 -----

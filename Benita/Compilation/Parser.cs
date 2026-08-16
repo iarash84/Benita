@@ -65,24 +65,14 @@
                 {
                     _functions.Add(ParseFunction(declaredAccess ?? AccessModifier.Private));
                 }
-                else if (Check(TokenType.LET) &&
-                    NextToken().Type == TokenType.IDENTIFIER &&
-                    NextToken(2).Type == TokenType.EQUAL &&
-                    NextToken(3).Type == TokenType.NEW)
-                {
-                    if (declaredAccess is null)
-                        statements.Add(ParseStatement());
-                    else
-                        globalVariables.Add(ParseVariableDeclaration(declaredAccess.Value));
-                }
                 else if (Check(TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
                 {
                     globalVariables.Add(ParseVariableDeclaration(declaredAccess ?? AccessModifier.Private));
                 }
-                else if (declaredAccess is not null &&
-                    Check(TokenType.IDENTIFIER) && NextToken().Type == TokenType.IDENTIFIER)
+                else if (Check(TokenType.IDENTIFIER) && NextToken().Type == TokenType.IDENTIFIER)
                 {
-                    globalVariables.Add(ParseVariableDeclaration(declaredAccess.Value, allowCustom: true));
+                    globalVariables.Add(ParseVariableDeclaration(
+                        declaredAccess ?? AccessModifier.Private, allowCustom: true));
                 }
                 else
                 {
@@ -173,28 +163,11 @@
                         {
                             initializer = ParseExpression();
                         }
-                        #region 'initilize Implicitly-typed variables'
                         if (type == "let")
                         {
-                            if (initializer != null)
-                            {
-                                if (initializer is LiteralNode literalNode)
-                                    type = ParseTokenType(literalNode.Type);
-                                else if (initializer is FunctionCallNode functionCallNode)
-                                {
-                                    foreach (var function in _functions)
-                                    {
-                                        if (function.Name == functionCallNode.FunctionName)
-                                            type = function.ReturnType;
-                                    }
-                                }
-                            }
-                            else
-                            {
+                            if (initializer is null)
                                 throw Error("BEN2004", "Implicitly-typed variables must have an initializer.");
-                            }
                         }
-                        #endregion
                         Consume(TokenType.SEMICOLON, "Expected ';' after variable declaration");
                         members.Add(new PackageVariableDeclarationNode(type, name, initializer, accessModifier));
                     }
@@ -496,6 +469,15 @@
         /// <returns>A <see cref="StatementNode"/> representing the parsed statement.</returns>
         /// <exception cref="Exception">Thrown if an unexpected token is encountered.</exception>
         private StatementNode? ParseStatement()
+        {
+            SourceSpan span = CurrentToken().Span;
+            StatementNode? statement = ParseStatementCore();
+            if (statement is not null) statement.Span = span;
+            return statement;
+        }
+
+        /// <summary>ساخت statement را انجام می‌دهد؛ wrapper موقعیت token آغازین را ثبت می‌کند.</summary>
+        private StatementNode? ParseStatementCore()
         {
             if (Match(TokenType.BREAK))
             {
@@ -883,7 +865,10 @@
         /// <returns>An <see cref="ExpressionNode"/> representing the parsed expression.</returns>
         private ExpressionNode? ParseExpression()
         {
-            return ParseLogicalOr();
+            SourceSpan span = CurrentToken().Span;
+            ExpressionNode? expression = ParseLogicalOr();
+            if (expression is not null) expression.Span = span;
+            return expression;
         }
 
         /// <summary>

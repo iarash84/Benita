@@ -76,13 +76,14 @@
         }
 
         private static object ArrayContains(List<object> arguments) =>
-            RequireArray(arguments[0], "array_contains").Cast<object?>().Any(item => Equals(item, arguments[1]));
+            RequireArray(arguments[0], "array_contains").Cast<object?>()
+                .Any(item => RuntimeValueComparer.AreEqual(item, arguments[1]));
 
         private static object ArrayIndexOf(List<object> arguments)
         {
             var array = RequireArray(arguments[0], "array_index_of");
             for (int index = 0; index < array.Length; index++)
-                if (Equals(array.GetValue(index), arguments[1])) return index;
+                if (RuntimeValueComparer.AreEqual(array.GetValue(index), arguments[1])) return index;
             return -1;
         }
 
@@ -134,7 +135,7 @@
         private static object ArraySort(List<object> arguments)
         {
             var result = Copy(RequireArray(arguments[0], "array_sort"));
-            Array.Sort(result, static (left, right) => left is IComparable comparable ? comparable.CompareTo(right) : throw new InvalidOperationException("Array elements must be comparable."));
+            Array.Sort(result, RuntimeValueComparer.Compare);
             return result;
         }
 

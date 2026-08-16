@@ -5,6 +5,31 @@ namespace BenitaTestProject;
 [TestClass]
 public class ArrayFunctionTests
 {
+    [TestMethod]
+    public void NumericLookupsAndSort_IgnoreClrNumberRepresentation()
+    {
+        const string source = """
+            _main_() {
+                number[] seed = [10, 20];
+                number[] values = [1, array_len(seed)];
+                print(array_contains(values, 2));
+                print(array_index_of(values, 2));
+                values = array_sort(values);
+                print(values[0]);
+                print(values[1]);
+            }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual(
+                $"True{Environment.NewLine}1{Environment.NewLine}1{Environment.NewLine}2{Environment.NewLine}",
+                output.GetOutput());
+        }
+    }
+
     [DataTestMethod]
     [DataRow("array_add(source, 3)")]
     [DataRow("array_remove(source, 0)")]

@@ -131,7 +131,7 @@
                 {
                     string line = lines[lineIndex];
                     string trimmedLine = line.Trim();
-                    if (!insideBlockComment && trimmedLine.StartsWith("include_once", StringComparison.Ordinal))
+                    if (!insideBlockComment && StartsWithIncludeDirective(trimmedLine))
                     {
                         string? originName = currentPath ?? _sourceName;
                         string includePath = ParseIncludePath(trimmedLine, originName, lineIndex + 1, line);
@@ -172,6 +172,14 @@
                     _activeIncludes.Remove(currentPath);
                 }
             }
+        }
+
+        /// <summary>کلیدواژهٔ include را فقط در مرز کامل token می‌پذیرد، نه به‌عنوان پیشوند شناسه.</summary>
+        private static bool StartsWithIncludeDirective(string line)
+        {
+            const string keyword = "include_once";
+            return line.StartsWith(keyword, StringComparison.Ordinal) &&
+                   (line.Length == keyword.Length || char.IsWhiteSpace(line[keyword.Length]));
         }
 
         /// <summary>وضعیت کامنت چندخطی را بدون تفسیر markerهای داخل string به‌روز می‌کند.</summary>

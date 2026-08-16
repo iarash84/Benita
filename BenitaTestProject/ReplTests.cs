@@ -6,6 +6,17 @@ namespace BenitaTestProject;
 public class ReplTests
 {
     [TestMethod]
+    public void Run_FailedSubmissionReportsItsSessionLineAndReplSource()
+    {
+        const string input = "number value = 1;\nnumber broken = ;\n:exit\n";
+        var output = new StringWriter();
+
+        new Repl(new StringReader(input), output).Run();
+
+        StringAssert.Contains(output.ToString(), "<repl>:2:");
+    }
+
+    [TestMethod]
     public void Run_PreservesVariablesBetweenSubmissionsAndPrintsExpressions()
     {
         const string input = "number value = 40;\nvalue = value + 2;\nvalue\n:exit\n";

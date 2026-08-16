@@ -8,6 +8,12 @@
         public PackageNode InstancePackageNode { get; set; }
         private readonly Interpreter _interpreter;
 
+        private PackageInstance(PackageNode packageNode, Interpreter interpreter)
+        {
+            InstancePackageNode = packageNode;
+            _interpreter = interpreter;
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PackageInstance"/> class.
         /// </summary>
@@ -21,15 +27,10 @@
             _interpreter = new Interpreter(debugMode, instanceName, context: context);
 
             string? initializerName = null;
+            // همهٔ متدها پیش از initializer فیلدها ثبت می‌شوند تا ترتیب declaration رفتار را تغییر ندهد.
             foreach (var member in packageNode.Members)
             {
-                if (member is PackageVariableDeclarationNode field)
-                {
-                    var packageVariableDeclarationNode =
-                        new VariableDeclarationNode(field.Type, field.Name, field.Initializer);
-                    _interpreter.Visit(packageVariableDeclarationNode);
-                }
-                else if (member is PackageFunctionNode method)
+                if (member is PackageFunctionNode method)
                 {
                     if (method.Name == "init")
                         initializerName = "init";
@@ -39,7 +40,15 @@
                     _interpreter.Visit(functionNode);
                 }
             }
-            _interpreter.MarkCurrentVariablesAsPersistent();
+
+            foreach (PackageVariableDeclarationNode field in
+                     packageNode.Members.OfType<PackageVariableDeclarationNode>())
+            {
+                var declaration = new VariableDeclarationNode(field.Type, field.Name, field.Initializer);
+                _interpreter.Visit(declaration);
+                // متد فراخوانی‌شده از initializer بعدی باید تغییر فیلدهای قبلی را حفظ کند.
+                _interpreter.MarkCurrentVariablesAsPersistent();
+            }
             _interpreter.SetGlobalVariable();
 
             // Execute constructor if it exists
@@ -70,5 +79,17 @@
         /// <summary>state داخلی package را پس از شکست submission بازیابی می‌کند.</summary>
         internal void RestoreCheckpoint(Interpreter.InterpreterState state,
             Interpreter.TransactionCheckpoint checkpoint) => _interpreter.RestoreState(state, checkpoint);
+
+        /// <summary>نمونه و state داخلی آن را بدون اجرای دوبارهٔ field initializer یا init برای task clone می‌کند.</summary>
+        internal PackageInstance CloneForTask(Interpreter.TaskCloneContext context)
+        {
+            if (context.Packages.TryGetValue(this, out PackageInstance? existing)) return existing;
+
+            Interpreter interpreter = _interpreter.CreateTaskCloneShell(context.RuntimeContext);
+            var clone = new PackageInstance(InstancePackageNode, interpreter);
+            context.Packages.Add(this, clone);
+            _interpreter.CopyTaskStateTo(interpreter, context);
+            return clone;
+        }
     }
 }

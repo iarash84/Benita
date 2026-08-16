@@ -39,8 +39,24 @@ let total = 5.2 + 8;
 مقدار اولیهٔ `let` باید نوع مشخصی بسازد؛ برای آرایهٔ خالی از نوع صریح مانند
 `number[] values = [];` استفاده کنید و نه `let values = [];`.
 متغیر یا فیلد از نوع package/interface نیز باید هنگام تعریف مقداردهی شود؛ Benita مقدار `null` ندارد.
+متغیر package/interface در سطح بالای فایل، حتی بدون نوشتن modifier، سراسری است و
+سطح دسترسی پیش‌فرض `private` دارد؛ بنابراین توابع و `_main_` همان برنامه آن را می‌بینند.
+initializer یک فیلد package می‌تواند متدی را که پایین‌تر نوشته شده فراخوانی کند؛ متدها
+پیش از مقداردهی فیلدها ثبت می‌شوند، ولی خود initializerهای فیلد به‌ترتیب source اجرا می‌شوند.
 تغییر یک متغیر سراسری در فراخوانی هم‌زمان تابع پس از بازگشت تابع حفظ می‌شود؛ taskهای
 ساخته‌شده با `async` همچنان scope جداگانه دارند و متغیرهای فراخواننده را تغییر نمی‌دهند.
+این جداسازی آرایه‌ها و نمونه‌های package را نیز شامل می‌شود؛ clone با حفظ alias انجام
+می‌شود و اجرای task، `init` نمونه را دوباره اجرا نمی‌کند.
+در تحلیل بازگشت تابع، `break` داخل شاخهٔ literal غیرقابل‌دسترسی مانند `if (false)` مسیر
+خروج محسوب نمی‌شود؛ اما هر `break` قابل‌دسترسی همچنان باید در مسیرهای بازگشت لحاظ شود.
+بعد از `include_once` باید فاصله باشد؛ پیشوندی مانند `include_once_helper` یک شناسهٔ عادی
+است و به‌عنوان دستور include تفسیر نمی‌شود.
+خطاهای REPL با نام مجازی `<repl>` و شماره‌خط متن پذیرفته‌شدهٔ نشست گزارش می‌شوند؛ یک
+submission ناموفق به تاریخچهٔ source افزوده نمی‌شود.
+خطاهای semantic نیز نام فایل، خط و ستون node مربوط را حفظ می‌کنند؛ اگر خطا در فایل
+`include_once`شده باشد، diagnostic به همان فایل اشاره می‌کند.
+فیلد package نیز می‌تواند با `let` تعریف شود؛ نوع آن از هر initializer دارای نوع مشخص،
+از جمله عبارت مرکب، در مرحلهٔ semantic استنتاج می‌شود.
 
 ### ۳. عملگرها
 
@@ -214,6 +230,8 @@ print(array_len(values));
 ```
 
 تمام عناصر یک آرایه باید نوع یکسان داشته باشند و اندیس آرایه عددی است.
+توابع جست‌وجو و مرتب‌سازی آرایه همهٔ مقادیر `number` را مستقل از representation داخلی
+آن‌ها مقایسه می‌کنند؛ برای نمونه خروجی `array_len` با literal عددی برابر است.
 آرایه‌ای که بدون مقدار اولیه تعریف شود، به‌صورت آرایه خالی از همان نوع ایجاد می‌شود.
 در آرایهٔ سایزدار مانند `bool[3]`، اندازه باید عدد صحیح نامنفی باشد. مقدار اولیهٔ
 عناصر برای `number` برابر `0`، برای `string` رشتهٔ خالی و برای `bool` برابر `false` است.
@@ -487,6 +505,9 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben
 dotnet run --project Benita -- repl
 ```
 
+اگر فایل وجود نداشته باشد یا پسوند آن `.ben` نباشد، CLI با exit code غیرصفر خاتمه
+می‌یابد و پیام موفقیت چاپ نمی‌کند؛ بنابراین نتیجهٔ آن در scriptها قابل اتکاست.
+
 فرمان `check` مراحل Lexer، Parser و SemanticAnalyzer را اجرا می‌کند، اما برنامه را اجرا نمی‌کند.
 #### کار با محیط تعاملی REPL
 
@@ -625,9 +646,25 @@ Variables may be global or local. A `let` variable must have an initializer.
 Its initializer must produce a concrete type. For an empty array, write an explicit type such as
 `number[] values = [];` instead of `let values = [];`.
 A package/interface variable or field must also be initialized because Benita has no `null` value.
+A top-level package/interface variable remains global when its modifier is omitted; its
+default access is `private`, and functions plus `_main_` in the same program can use it.
+A package field initializer may call a method declared later. Methods are registered before
+field initialization, while field initializers themselves still run in source order.
 A synchronous function may update a visible global variable, and that mutation remains visible
 after the function returns. Tasks created with `async` still use an isolated scope and do not
 mutate caller variables.
+Isolation also covers arrays and package instances. Their aliases are preserved inside the
+task clone, and cloning does not execute package `init` again.
+Definite-return analysis ignores a `break` in an unreachable literal branch such as
+`if (false)`. Any reachable `break` still counts as a possible exit from the loop.
+`include_once` must be followed by whitespace. A name such as `include_once_helper` is an
+ordinary identifier and is not interpreted as an include directive.
+REPL diagnostics use the virtual source name `<repl>` and accepted-session line numbers. A
+rejected submission is not appended to the session source.
+Semantic diagnostics also retain the related node's file, line, and column. An error in an
+`include_once` file therefore points to that included file.
+A package field may also use `let`; semantic analysis infers it from any concretely typed
+initializer, including a composite expression.
 
 ### 3. Operators
 
@@ -801,6 +838,8 @@ print(array_len(values));
 ```
 
 All elements in an array must have the same type, and an array index must be numeric.
+Array lookup and sorting compare every `number` by its Benita value regardless of its
+internal CLR representation; for example, an `array_len` result equals a numeric literal.
 An array declared without an initializer starts as an empty array of its declared type.
 For a sized array such as `bool[3]`, the size must be a non-negative whole number.
 The defaults are `0` for `number`, an empty string for `string`, and `false` for `bool`.
@@ -1078,6 +1117,8 @@ dotnet run --project Benita -- repl
 ```
 
 The `check` command runs the Lexer, Parser, and SemanticAnalyzer without executing the program.
+If the file does not exist or its extension is not `.ben`, the CLI exits with a non-zero
+code and does not print a success message, making its result reliable in automation scripts.
 #### Using the interactive REPL
 
 Each REPL submission is atomic with respect to language state. On execution failure,

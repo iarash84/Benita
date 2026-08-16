@@ -52,8 +52,14 @@ public sealed class LexerException(string code, string description, SourceSpan s
 public sealed class ParserException(string code, string description, SourceSpan span)
     : BenitaException(code, description, span);
 
-public sealed class SemanticException(string description, Exception? innerException = null)
-    : BenitaException("BEN3001", description, innerException: innerException);
+public sealed class SemanticException : BenitaException
+{
+    public SemanticException(string description, Exception? innerException = null)
+        : base("BEN3001", description, innerException: innerException) { }
+
+    public SemanticException(string description, SourceSpan span, Exception? innerException = null)
+        : base("BEN3001", description, span, innerException) { }
+}
 
 public sealed class RuntimeException(string description, Exception? innerException = null)
     : BenitaException("BEN4001", description, innerException: innerException);

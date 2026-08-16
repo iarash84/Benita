@@ -12,6 +12,8 @@
     /// </summary>
     public abstract class AstNode
     {
+        /// <summary>موقعیت آغاز node در source را برای diagnostics مراحل بعدی نگه می‌دارد.</summary>
+        public SourceSpan Span { get; internal set; } = SourceSpan.Unknown;
     }
 
     /// <summary>
@@ -384,7 +386,7 @@
         AccessModifier accessModifier = AccessModifier.Private)
         : PackageMemberNode
     {
-        public string? Type { get; } = type;
+        public string? Type { get; internal set; } = type;
         public string Name { get; } = name;
         public ExpressionNode? Initializer { get; } = initializer;
         public AccessModifier AccessModifier { get; } = accessModifier;

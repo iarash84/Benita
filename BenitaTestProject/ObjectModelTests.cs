@@ -6,6 +6,25 @@ namespace BenitaTestProject;
 public class ObjectModelTests
 {
     [TestMethod]
+    public void PackageLetField_InfersCompositeInitializerType()
+    {
+        const string source = """
+            pkg Counter {
+                let value = 1 + 1;
+                public func next() -> number { return value + 1; }
+            }
+            _main_() { Counter counter = new Counter(); print(counter.next()); }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual($"3{Environment.NewLine}", output.GetOutput());
+        }
+    }
+
+    [TestMethod]
     public void InitAndThis_CreateInitializedInstance()
     {
         const string source = """
@@ -80,6 +99,50 @@ public class ObjectModelTests
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
         Assert.AreEqual($"ready{Environment.NewLine}", output.GetOutput());
+    }
+
+    [TestMethod]
+    public void DefaultPrivateGlobalPackageVariable_IsVisibleToFunctionsAndMain()
+    {
+        const string source = """
+            pkg Value {
+                public number amount = 4;
+            }
+
+            Value value = new Value();
+            func read() -> number { return value.amount; }
+            _main_() { print(read()); print(value.amount); }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual($"4{Environment.NewLine}4{Environment.NewLine}", output.GetOutput());
+        }
+    }
+
+    [TestMethod]
+    public void FieldInitializer_CanCallMethodDeclaredLater()
+    {
+        const string source = """
+            pkg Counter {
+                public number value = this.initial_value();
+                private func initial_value() -> number { return 7; }
+            }
+
+            _main_() {
+                Counter counter = new Counter();
+                print(counter.value);
+            }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual($"7{Environment.NewLine}", output.GetOutput());
+        }
     }
 
     [DataTestMethod]

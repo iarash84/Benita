@@ -6,6 +6,39 @@ namespace BenitaTestProject;
 public class IncludeOnceTests
 {
     [TestMethod]
+    public void IncludeOnce_PrefixInIdentifier_IsTokenizedAsIdentifier()
+    {
+        const string source = """
+            func include_once_helper() -> number { return 1; }
+            _main_() { print(include_once_helper()); }
+            """;
+
+        new CompilerClass().Check(source);
+    }
+
+    [TestMethod]
+    public void IncludeOnce_SemanticDiagnosticPointsToIncludedFile()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string libraryPath = Path.Combine(directory, "broken.ben");
+            File.WriteAllText(libraryPath, "func broken() -> number { return missing; }");
+            const string source = "include_once \"broken.ben\";\n_main_() {}";
+
+            SemanticException exception = Assert.ThrowsException<SemanticException>(() =>
+                new CompilerClass().Check(source, sourceName: Path.Combine(directory, "main.ben")));
+
+            Assert.AreEqual(Path.GetFullPath(libraryPath), exception.Span.FileName);
+            Assert.AreEqual(1, exception.Span.Line);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void IncludeOnce_CanonicalizesEquivalentPaths()
     {
         string directory = CreateTemporaryDirectory();
