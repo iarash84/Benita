@@ -1,7 +1,7 @@
 pkg InventoryService {
     init() { }
 
-    func is_available(number count) -> bool {
+    public func is_available(number count) -> bool {
         return count > 0;
     }
 }
@@ -9,7 +9,7 @@ pkg InventoryService {
 pkg PaymentService {
     init() { }
 
-    func pay(number amount) -> bool {
+    public func pay(number amount) -> bool {
         return amount > 0;
     }
 }
@@ -20,7 +20,7 @@ pkg ShopFacade {
 
     init() { }
 
-    func checkout(number count, number amount) -> string {
+    public func checkout(number count, number amount) -> string {
         if (!inventory.is_available(count)) {
             return "Out of stock";
         }

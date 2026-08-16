@@ -847,7 +847,7 @@ pkg myPackage {
 		var = input1;
 	}
 
-	func Second(number std) -> number{
+	public func Second(number std) -> number{
 		return std + var;
 	}	
 }
@@ -898,7 +898,7 @@ _main_() {
         {
             string source = @"
 pkg My{
-    let var = 1;
+    public let var = 1;
 }
 _main_(){
     let m = new My();
@@ -972,7 +972,7 @@ print(Add(4, 6));
             string source = @"
 pkg My{
 	let var = 22;
-	func AddPrint(number i) -> number {
+	public func AddPrint(number i) -> number {
 		return i + var;
 	}
 }
@@ -999,7 +999,7 @@ print(m.AddPrint(3));
             string source = @"
 pkg My{
 	let var = 22;
-	func AddChap(number i) -> number {
+	public func AddChap(number i) -> number {
 		return i + var;
 	}
 }

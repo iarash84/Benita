@@ -7,14 +7,16 @@ This document uses EBNF. Terminals are written in quotes, `?` means optional,
 program                 ::= top-level-item* EOF ;
 
 top-level-item          ::= package-declaration
-                          | function-declaration
+                          | access-modifier? function-declaration
+                          | access-modifier? variable-declaration
                           | main-function
                           | statement ;
 
 package-declaration     ::= "pkg" identifier "{" package-member* "}" ;
-package-member          ::= package-variable-declaration
+package-member          ::= access-modifier? package-variable-declaration
                           | initializer-declaration
-                          | function-declaration ;
+                          | access-modifier? function-declaration ;
+access-modifier         ::= "public" | "private" ;
 package-variable-declaration
                          ::= (primitive-type | named-type | "let") identifier
                              ("=" expression)? ";" ;
@@ -135,34 +137,39 @@ Semantic constraints
 --------------------
 
 1. `_main_` never accepts parameters.
-2. `let` is allowed only for local/global variable declarations and requires
+   It also never accepts an access modifier: both `public _main_` and
+   `private _main_` are syntax errors.
+2. Variables and functions are `private` when no access modifier is written.
+   A private package member is accessible inside its package (including through
+   `this`) but not through an instance outside that package. Write `public`
+   explicitly for a package API.
+3. `let` is allowed only for local/global variable declarations and requires
    an initializer from which a concrete type can be inferred.
-3. `void` is allowed only as a function return type.
-4. Every reachable path of a non-void function must return a compatible value.
-5. `break` and `continue` are valid only inside `while` or `for` loops.
-6. A decimal literal must include digits on both sides of the decimal point;
+4. `void` is allowed only as a function return type.
+5. Every reachable path of a non-void function must return a compatible value.
+6. `break` and `continue` are valid only inside `while` or `for` loops.
+7. A decimal literal must include digits on both sides of the decimal point;
    write `0.5`, not `.5`, and `1.0`, not `1.`.
-7. A single `&` or `|` is invalid; logical conjunction and disjunction use
+8. A single `&` or `|` is invalid; logical conjunction and disjunction use
    `&&` and `||`.
-8. Strings cannot span physical lines. Supported escapes are `\\n`, `\\r`,
+9. Strings cannot span physical lines. Supported escapes are `\\n`, `\\r`,
    `\\t`, `\\"`, and `\\\\`.
-9. A match expression must contain exactly one default `_` arm, placed last.
+10. A match expression must contain exactly one default `_` arm, placed last.
    The default arm of a match statement is optional, but when present it is last.
-10. Match patterns must have the same type as the matched value. Every result
+11. Match patterns must have the same type as the matched value. Every result
     arm of a match expression must produce the same type.
-11. Multiple patterns in one arm are alternatives: `1, 2, 3` matches any of
+12. Multiple patterns in one arm are alternatives: `1, 2, 3` matches any of
     those values. A numeric range `start..end` is inclusive at both boundaries.
     Arms are tested from top to bottom and the first matching arm is selected.
-12. The expression in a `for (item in expression)` loop must be an array. The
+13. The expression in a `for (item in expression)` loop must be an array. The
     iteration variable is inferred from the array element type and is scoped to
     the loop body.
-13. A package may declare at most one `init`. Its parameters define the argument
+14. A package may declare at most one `init`. Its parameters define the argument
     contract for `new`; a package without `init` only accepts zero arguments.
-14. `this` is available only in a package initializer or method and denotes the
+15. `this` is available only in a package initializer or method and denotes the
     current instance. Package field and method names are checked statically.
-15. Package types may be used for variables, parameters, return values, and
-    fields. Package members are currently public; inheritance, interfaces,
-    overloads, and access modifiers are not part of the language yet.
+16. Package types may be used for variables, parameters, return values, and
+    fields. Inheritance, interfaces, and overloads are not part of the language yet.
 
 Notes
 -----

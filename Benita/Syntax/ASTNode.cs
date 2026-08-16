@@ -1,5 +1,11 @@
 ﻿namespace Benita
 {
+    public enum AccessModifier
+    {
+        Private,
+        Public
+    }
+
     /// <summary>
     /// Represents the base class for all nodes in the Abstract Syntax Tree (AST).
     /// </summary>
@@ -92,11 +98,13 @@
     /// <summary>
     /// Represents a variable declaration node with a type, optional name, and optional initializer.
     /// </summary>
-    public class VariableDeclarationNode(string? type, string name, ExpressionNode? initializer) : StatementNode
+    public class VariableDeclarationNode(string? type, string name, ExpressionNode? initializer,
+        AccessModifier accessModifier = AccessModifier.Private) : StatementNode
     {
         public string? Type { get; } = type;
         public string Name { get; } = name;
         public ExpressionNode? Initializer { get; } = initializer;
+        public AccessModifier AccessModifier { get; } = accessModifier;
     }
 
     /// <summary>
@@ -279,13 +287,15 @@
         List<ParameterNode> parameters,
         string? returnType,
         BlockNode body,
-        ReturnStatementNode? returnStatement) : AstNode
+        ReturnStatementNode? returnStatement,
+        AccessModifier accessModifier = AccessModifier.Private) : AstNode
     {
         public string Name { get; } = name;
         public List<ParameterNode> Parameters { get; } = parameters;
         public string? ReturnType { get; } = returnType;
         public BlockNode Body { get; } = body;
         public ReturnStatementNode? ReturnStatement { get; } = returnStatement;
+        public AccessModifier AccessModifier { get; } = accessModifier;
     }
 
     /// <summary>
@@ -324,12 +334,14 @@
     /// <summary>
     /// Represents a package variable declaration node with a type, optional name, and optional initializer.
     /// </summary>
-    public class PackageVariableDeclarationNode(string? type, string name, ExpressionNode? initializer)
+    public class PackageVariableDeclarationNode(string? type, string name, ExpressionNode? initializer,
+        AccessModifier accessModifier = AccessModifier.Private)
         : PackageMemberNode
     {
         public string? Type { get; } = type;
         public string Name { get; } = name;
         public ExpressionNode? Initializer { get; } = initializer;
+        public AccessModifier AccessModifier { get; } = accessModifier;
     }
 
     /// <summary>
@@ -340,13 +352,15 @@
         List<ParameterNode> parameters,
         string? returnType,
         BlockNode body,
-        ReturnStatementNode? returnStatement) : PackageMemberNode
+        ReturnStatementNode? returnStatement,
+        AccessModifier accessModifier = AccessModifier.Private) : PackageMemberNode
     {
         public string Name { get; } = name;
         public List<ParameterNode> Parameters { get; } = parameters;
         public string? ReturnType { get; } = returnType;
         public BlockNode Body { get; } = body;
         public ReturnStatementNode? ReturnStatement { get; } = returnStatement;
+        public AccessModifier AccessModifier { get; } = accessModifier;
     }
 
     /// <summary>

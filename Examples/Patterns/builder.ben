@@ -7,7 +7,7 @@ pkg Computer {
         this.memory = memory_size;
     }
 
-    func describe() -> string {
+    public func describe() -> string {
         return cpu + " / " + to_string(memory) + " GB";
     }
 }
@@ -18,15 +18,15 @@ pkg ComputerBuilder {
 
     init() { }
 
-    func set_cpu(string value) -> void {
+    public func set_cpu(string value) -> void {
         this.cpu = value;
     }
 
-    func set_memory(number value) -> void {
+    public func set_memory(number value) -> void {
         this.memory = value;
     }
 
-    func build() -> Computer {
+    public func build() -> Computer {
         return new Computer(cpu, memory);
     }
 }

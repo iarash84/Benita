@@ -559,6 +559,7 @@
                 packageName is null || !_packages.TryGetValue(packageName, out PackageNode? outPackage))
                 throw new Exception($"Member access requires a package instance, but '{memberAccess.ObjectName}' is not one.");
 
+            bool requirePublic = memberAccess.ObjectName != "this";
             switch (memberAccess.Expression)
             {
                 case FunctionCallNode expression:
@@ -566,29 +567,31 @@
                         .FirstOrDefault(member => member.Name == expression.FunctionName);
                     if (method is null)
                         throw new Exception($"Package '{outPackage.Name}' has no method named '{expression.FunctionName}'.");
+                    if (requirePublic)
+                        EnsurePublic(method.AccessModifier, outPackage.Name, expression.FunctionName);
                     ValidateArguments(expression.FunctionName, expression.Arguments, method.Parameters, localVariables);
                     return method.ReturnType;
 
                 case CompoundAssignmentNode compoundAssignment:
 
                     var compValueType = AnalyzeExpression(compoundAssignment.Expression, localVariables);
-                    string? compVariableType = FindPackageFieldType(outPackage, compoundAssignment.Name);
+                    string? compVariableType = FindPackageFieldType(outPackage, compoundAssignment.Name, requirePublic);
                     if (compVariableType != "number" || compValueType != "number")
                         throw new Exception($"Compound assignment requires numeric operands for member '{compoundAssignment.Name}'.");
                     return compValueType;
 
                 case IdentifierNode identifierNode:
-                    return FindPackageFieldType(outPackage, identifierNode.Name);
+                    return FindPackageFieldType(outPackage, identifierNode.Name, requirePublic);
 
                 case AssignmentNode assignment:
-                    string? fieldType = FindPackageFieldType(outPackage, assignment.Name);
+                    string? fieldType = FindPackageFieldType(outPackage, assignment.Name, requirePublic);
                     string? assignedType = AnalyzeExpression(assignment.Expression, localVariables);
                     if (!CheckType(fieldType!, assignedType))
                         throw new Exception($"Type mismatch in assignment to member '{assignment.Name}'. Expected '{fieldType}' but got '{assignedType}'.");
                     return fieldType;
 
                 case IncrementDecrementNode increment:
-                    string incrementType = FindPackageFieldType(outPackage, increment.Name);
+                    string incrementType = FindPackageFieldType(outPackage, increment.Name, requirePublic);
                     if (incrementType != "number")
                         throw new Exception($"Increment and decrement require a numeric member, but '{increment.Name}' is '{incrementType}'.");
                     return incrementType;
@@ -599,12 +602,21 @@
 
         }
 
-        private static string FindPackageFieldType(PackageNode package, string fieldName)
+        private static string FindPackageFieldType(PackageNode package, string fieldName, bool requirePublic = false)
         {
             PackageVariableDeclarationNode? field = package.Members.OfType<PackageVariableDeclarationNode>()
                 .FirstOrDefault(member => member.Name == fieldName);
-            return field?.Type ?? throw new Exception(
-                $"Package '{package.Name}' has no field named '{fieldName}'.");
+            if (field is null)
+                throw new Exception($"Package '{package.Name}' has no field named '{fieldName}'.");
+            if (requirePublic)
+                EnsurePublic(field.AccessModifier, package.Name, fieldName);
+            return field.Type!;
+        }
+
+        private static void EnsurePublic(AccessModifier access, string packageName, string memberName)
+        {
+            if (access == AccessModifier.Private)
+                throw new Exception($"Member '{memberName}' is private in package '{packageName}'.");
         }
 
         private void ValidateArguments(string callableName, IReadOnlyList<ExpressionNode> arguments,

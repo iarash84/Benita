@@ -38,8 +38,11 @@
 
             while (!IsAtEnd())
             {
+                AccessModifier? declaredAccess = ParseAccessModifier();
                 if (Check(TokenType.MAIN))
                 {
+                    if (declaredAccess is not null)
+                        throw Error("BEN2009", "The _main_ entry point cannot have an access modifier.");
                     if (mainFunction != null)
                         throw Error("BEN2002", "The main function is already defined.");
 
@@ -47,11 +50,13 @@
                 }
                 else if (Match(TokenType.PACKAGE))
                 {
+                    if (declaredAccess is not null)
+                        throw Error("BEN2001", "Access modifiers can only be applied to variable and function declarations.");
                     packages.Add(ParsePackage());
                 }
                 else if (Match(TokenType.FUNC))
                 {
-                    _functions.Add(ParseFunction());
+                    _functions.Add(ParseFunction(declaredAccess ?? AccessModifier.Private));
                 }
                 else if (Check(TokenType.LET) &&
                     NextToken().Type == TokenType.IDENTIFIER &&
@@ -62,10 +67,12 @@
                 }
                 else if (Check(TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
                 {
-                    globalVariables.Add(ParseVariableDeclaration());
+                    globalVariables.Add(ParseVariableDeclaration(declaredAccess ?? AccessModifier.Private));
                 }
                 else
                 {
+                    if (declaredAccess is not null)
+                        throw Error("BEN2001", "Access modifiers can only be applied to variable and function declarations.");
                     statements.Add(ParseStatement());
                 }
             }
@@ -76,6 +83,13 @@
             }
 
             return new ProgramNode(globalVariables, packages, _functions, mainFunction, statements);
+        }
+
+        private AccessModifier? ParseAccessModifier()
+        {
+            if (Match(TokenType.PUBLIC)) return AccessModifier.Public;
+            if (Match(TokenType.PRIVATE)) return AccessModifier.Private;
+            return null;
         }
 
         /// <summary>
@@ -107,14 +121,18 @@
             List<PackageMemberNode> members = new List<PackageMemberNode>();
             while (!Check(TokenType.RBRACE) && !IsAtEnd())
             {
+                AccessModifier? declaredAccess = ParseAccessModifier();
+                AccessModifier accessModifier = declaredAccess ?? AccessModifier.Private;
                 if (Match(TokenType.FUNC))
                 {
-                    var function = ParseFunction();
+                    var function = ParseFunction(accessModifier);
                     members.Add(new PackageFunctionNode(function.Name, function.Parameters, function.ReturnType,
-                        function.Body, function.ReturnStatement));
+                        function.Body, function.ReturnStatement, function.AccessModifier));
                 }
                 else if (Match(TokenType.INIT))
                 {
+                    if (declaredAccess is not null)
+                        throw Error("BEN2001", "The init constructor cannot have an access modifier.");
                     if (members.OfType<PackageFunctionNode>().Any(member => member.Name == "init"))
                         throw Error("BEN2008", "A package can declare only one init constructor.");
                     members.Add(ParsePackageInitializer());
@@ -154,7 +172,7 @@
                         }
                         #endregion
                         Consume(TokenType.SEMICOLON, "Expected ';' after variable declaration");
-                        members.Add(new PackageVariableDeclarationNode(type, name, initializer));
+                        members.Add(new PackageVariableDeclarationNode(type, name, initializer, accessModifier));
                     }
                     else
                     {
@@ -167,7 +185,7 @@
                     string name = Advance().Lexeme;
                     ExpressionNode? initializer = Match(TokenType.EQUAL) ? ParseExpression() : null;
                     Consume(TokenType.SEMICOLON, "Expected ';' after package field declaration");
-                    members.Add(new PackageVariableDeclarationNode(type, name, initializer));
+                    members.Add(new PackageVariableDeclarationNode(type, name, initializer, accessModifier));
                 }
                 else
                 {
@@ -197,7 +215,7 @@
         /// </summary>
         /// <returns>A <see cref="VariableDeclarationNode"/> representing the global variable declaration.</returns>
         /// <exception cref="Exception">Thrown if the declaration is malformed.</exception>
-        private VariableDeclarationNode ParseVariableDeclaration()
+        private VariableDeclarationNode ParseVariableDeclaration(AccessModifier accessModifier = AccessModifier.Private)
         {
             string type = ParseType(allowLet: true); ///< The type of the variable (e.g., "number[]").
             if (Check(TokenType.IDENTIFIER))
@@ -240,7 +258,7 @@
 
                 Consume(TokenType.SEMICOLON, "Expected ';' after variable declaration");
 
-                return new VariableDeclarationNode(type, name, initializer);
+                return new VariableDeclarationNode(type, name, initializer, accessModifier);
             }
 
             throw Error("BEN2001", "Expected an array or variable declaration.");
@@ -275,7 +293,7 @@
         /// Parses a function declaration.
         /// </summary>
         /// <returns>A <see cref="FunctionNode"/> representing the function declaration.</returns>
-        private FunctionNode? ParseFunction()
+        private FunctionNode? ParseFunction(AccessModifier accessModifier = AccessModifier.Private)
         {
             string name = Consume(TokenType.IDENTIFIER, "Expected function name").Lexeme;
             Consume(TokenType.LPAREN, "Expected '(' after function name");
@@ -297,7 +315,7 @@
             }
 
             Consume(TokenType.RBRACE, "Expected '}' after function body");
-            return new FunctionNode(name, parameters, returnType, new BlockNode(statements), returnExpression);
+            return new FunctionNode(name, parameters, returnType, new BlockNode(statements), returnExpression, accessModifier);
         }
 
         /// <summary>

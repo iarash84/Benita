@@ -20,7 +20,7 @@ namespace Benita
         }
 
         private VariableDeclarationNode OptimizeVariable(VariableDeclarationNode node) =>
-            new(node.Type, node.Name, OptimizeExpression(node.Initializer));
+            new(node.Type, node.Name, OptimizeExpression(node.Initializer), node.AccessModifier);
 
         private PackageNode OptimizePackage(PackageNode node) =>
             new(node.Name, node.Members.Select(OptimizePackageMember).ToList());
@@ -28,13 +28,14 @@ namespace Benita
         private PackageMemberNode OptimizePackageMember(PackageMemberNode node) => node switch
         {
             PackageVariableDeclarationNode variable => new PackageVariableDeclarationNode(
-                variable.Type, variable.Name, OptimizeExpression(variable.Initializer)),
+                variable.Type, variable.Name, OptimizeExpression(variable.Initializer), variable.AccessModifier),
             PackageFunctionNode function => new PackageFunctionNode(
                 function.Name,
                 function.Parameters,
                 function.ReturnType,
                 OptimizeBlock(function.Body),
-                OptimizeReturn(function.ReturnStatement)),
+                OptimizeReturn(function.ReturnStatement),
+                function.AccessModifier),
             _ => throw new InvalidOperationException($"Unsupported package member '{node.GetType().Name}'.")
         };
 
@@ -44,7 +45,8 @@ namespace Benita
                 node.Parameters,
                 node.ReturnType,
                 OptimizeBlock(node.Body),
-                OptimizeReturn(node.ReturnStatement));
+                OptimizeReturn(node.ReturnStatement),
+                node.AccessModifier);
 
         private BlockNode OptimizeBlock(BlockNode node) =>
             new(node.Statements.Select(statement => OptimizeStatement(statement)!).ToList());

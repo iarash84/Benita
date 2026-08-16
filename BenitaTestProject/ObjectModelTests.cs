@@ -16,7 +16,7 @@ public class ObjectModelTests
                     this.name = value;
                 }
 
-                func describe() -> string {
+                public func describe() -> string {
                     return name;
                 }
             }
@@ -37,7 +37,7 @@ public class ObjectModelTests
     {
         const string source = """
             pkg Message {
-                string text = "";
+                public string text = "";
                 init(string value) { this.text = value; }
             }
 
@@ -61,14 +61,14 @@ public class ObjectModelTests
     {
         const string source = """
             pkg Engine {
-                string state = "ready";
+                public string state = "ready";
                 init() { }
             }
 
             pkg Car {
                 Engine engine = new Engine();
                 init() { }
-                func status() -> string { return engine.state; }
+                public func status() -> string { return engine.state; }
             }
 
             _main_() {

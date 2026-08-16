@@ -55,6 +55,8 @@
             {"break", TokenType.BREAK},
             {"continue", TokenType.CONTINUE},
             {"match", TokenType.MATCH},
+            {"public", TokenType.PUBLIC},
+            {"private", TokenType.PRIVATE},
         };
 
         /// <summary>

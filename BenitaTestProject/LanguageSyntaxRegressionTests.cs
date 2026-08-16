@@ -128,8 +128,8 @@ _main_() { print(sign(2)); }";
     {
         const string source = """
             pkg Counter {
-                number value = 1;
-                func get() -> number { return value; }
+                public number value = 1;
+                public func get() -> number { return value; }
             }
             Counter counter = new Counter();
             print(counter.value);

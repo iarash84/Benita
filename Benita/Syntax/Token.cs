@@ -4,6 +4,7 @@
     {
         // Keywords
         FUNC, MAIN, RETURN, IF, ELSE, WHILE, FOR, IN, PACKAGE, NEW, INIT, THIS, BREAK, CONTINUE, MATCH,
+        PUBLIC, PRIVATE,
 
         // Types
         NUMBER, STRING, BOOL, VOID, LET,

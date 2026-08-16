@@ -13,11 +13,11 @@ internal static class AstPrinter
         {
             case ProgramNode value: PrintAll(value.GlobalVariables, child); PrintAll(value.Packages, child); PrintAll(value.Functions, child); Print(value.MainFunction, child); PrintAll(value.Statements, child); break;
             case PackageNode value: Detail(child, "Name", value.Name); PrintAll(value.Members, child); break;
-            case FunctionNode value: Detail(child, "Name", value.Name); PrintAll(value.Parameters, child); Print(value.Body, child); Print(value.ReturnStatement, child); break;
-            case PackageFunctionNode value: Detail(child, "Name", value.Name); PrintAll(value.Parameters, child); Print(value.Body, child); Print(value.ReturnStatement, child); break;
+            case FunctionNode value: Detail(child, "Name", $"{value.AccessModifier.ToString().ToLowerInvariant()} {value.Name}"); PrintAll(value.Parameters, child); Print(value.Body, child); Print(value.ReturnStatement, child); break;
+            case PackageFunctionNode value: Detail(child, "Name", $"{value.AccessModifier.ToString().ToLowerInvariant()} {value.Name}"); PrintAll(value.Parameters, child); Print(value.Body, child); Print(value.ReturnStatement, child); break;
             case BlockNode value: PrintAll(value.Statements, child); break;
-            case VariableDeclarationNode value: Detail(child, "Variable", $"{value.Type} {value.Name}"); Print(value.Initializer, child); break;
-            case PackageVariableDeclarationNode value: Detail(child, "Variable", $"{value.Type} {value.Name}"); Print(value.Initializer, child); break;
+            case VariableDeclarationNode value: Detail(child, "Variable", $"{value.AccessModifier.ToString().ToLowerInvariant()} {value.Type} {value.Name}"); Print(value.Initializer, child); break;
+            case PackageVariableDeclarationNode value: Detail(child, "Variable", $"{value.AccessModifier.ToString().ToLowerInvariant()} {value.Type} {value.Name}"); Print(value.Initializer, child); break;
             case ParameterNode value: Detail(child, "Parameter", $"{value.Type} {value.Name}"); break;
             case LiteralNode value: Detail(child, "Value", value.Value); break;
             case IdentifierNode value: Detail(child, "Name", value.Name); break;

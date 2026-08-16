@@ -5,7 +5,7 @@ pkg Notification {
         this.channel = channel_name;
     }
 
-    func send(string message) -> string {
+    public func send(string message) -> string {
         return channel + ": " + message;
     }
 }
@@ -13,7 +13,7 @@ pkg Notification {
 pkg NotificationFactory {
     init() { }
 
-    func create(string kind) -> Notification {
+    public func create(string kind) -> Notification {
         let channel = match kind {
             "email" => "Email",
             "sms" => "SMS",

@@ -290,8 +290,25 @@ pkg Dashboard {
 ```
 
 آرگومان‌های `new` با پارامترهای `init` بررسی می‌شوند. اگر `init` تعریف نشده باشد، package
-فقط بدون آرگومان ساخته می‌شود. فعلاً اعضا public هستند و وراثت، interface، overload و
-modifier دسترسی نداریم. مثال‌های Builder، Facade و Factory در `Examples/Patterns` هستند.
+فقط بدون آرگومان ساخته می‌شود. متغیرها و توابع به‌صورت پیش‌فرض `private` هستند؛ برای
+عضوی که باید از بیرون package قابل استفاده باشد، `public` را صریح می‌نویسیم و در صورت
+نیاز می‌توان `private` را نیز صریح نوشت. اعضای private داخل همان package و از مسیر
+`this` قابل استفاده‌اند، اما دسترسی از طریق نمونه در بیرون رد می‌شود. تابع `_main_`
+هیچ‌وقت access modifier نمی‌گیرد. وراثت، interface و overload هنوز پشتیبانی نمی‌شوند.
+مثال‌های Builder، Facade و Factory در `Examples/Patterns` هستند.
+
+```benita
+pkg Counter {
+    number value = 0; // پیش‌فرض private
+    private func reset() -> void { this.value = 0; }
+    public func current() -> number { return value; }
+}
+
+_main_() {
+    Counter counter = new Counter();
+    print(counter.current());
+}
+```
 
 ### ۹. ورودی، تبدیل و ریاضیات
 
@@ -761,9 +778,26 @@ pkg Dashboard {
 ```
 
 The analyzer checks `new` arguments against `init`. Without an `init`, a package can only
-be created without arguments. Members are currently public; inheritance, interfaces,
-overloads, and access modifiers are not supported yet. Builder, Facade, and Factory
-examples are available under `Examples/Patterns`.
+be created without arguments. Variables and functions are private by default. Prefix a
+declaration with `public` only when it must be part of a package's external API; `private`
+may also be written explicitly. Private package members remain available inside their
+package and through `this`, but instance access from outside is rejected. The `_main_`
+entry point must never have an access modifier. Inheritance, interfaces, and overloads
+are not supported yet. Builder, Facade, and Factory examples are available under
+`Examples/Patterns`.
+
+```benita
+pkg Counter {
+    number value = 0;                 // private by default
+    private func reset() -> void { this.value = 0; }
+    public func current() -> number { return value; }
+}
+
+_main_() {                            // never public/private
+    Counter counter = new Counter();
+    print(counter.current());
+}
+```
 
 ### 9. Input, conversion, and mathematics
 
