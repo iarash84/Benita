@@ -12,6 +12,9 @@ public sealed record PrimitiveTypeSymbol(string TypeName) : TypeSymbol(TypeName)
 /// <summary>نوع یک آرایه را همراه نوع عناصر آن نگه می‌دارد.</summary>
 public sealed record ArrayTypeSymbol(TypeSymbol ElementType) : TypeSymbol($"{ElementType.Name}[]");
 
+/// <summary>نوع یک عملیات هم‌زمان را همراه نوع نتیجهٔ نهایی آن نگهداری می‌کند.</summary>
+public sealed record TaskTypeSymbol(TypeSymbol ResultType) : TypeSymbol($"task<{ResultType.Name}>");
+
 /// <summary>نوع نام‌دار تعریف‌شده توسط کاربر، مانند package، را نشان می‌دهد.</summary>
 public sealed record NamedTypeSymbol(string TypeName) : TypeSymbol(TypeName);
 
@@ -33,4 +36,5 @@ public static class Types
     public static readonly TypeSymbol AnyArray = new SpecialTypeSymbol("array");
 
     public static ArrayTypeSymbol ArrayOf(TypeSymbol elementType) => new(elementType);
+    public static TaskTypeSymbol TaskOf(TypeSymbol resultType) => new(resultType);
 }

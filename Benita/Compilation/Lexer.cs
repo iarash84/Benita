@@ -62,6 +62,8 @@
             {"catch", TokenType.CATCH},
             {"finally", TokenType.FINALLY},
             {"throw", TokenType.THROW},
+            {"async", TokenType.ASYNC},
+            {"await", TokenType.AWAIT},
         };
 
         /// <summary>

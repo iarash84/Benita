@@ -31,6 +31,8 @@ internal static class AstPrinter
             case UnaryExpressionNode value: Detail(child, "Operator", value.Operator); Print(value.Operand, child); break;
             case ExpressionStatementNode value: Print(value.Expression, child); break;
             case FunctionCallNode value: Detail(child, "Function", value.FunctionName); PrintAll(value.Arguments, child); break;
+            case AsyncExpressionNode value: Detail(child, "Async", value.Call.FunctionName); Print(value.Call, child); break;
+            case AwaitExpressionNode value: Detail(child, "Await", "task"); Print(value.Task, child); break;
             case ReturnStatementNode value: Print(value.ReturnExpression, child); break;
             case ThrowStatementNode value: Print(value.Error, child); break;
             case TryStatementNode value: Detail(child, "Catch", value.CatchVariable ?? "none"); Print(value.TryBlock, child); Print(value.CatchBlock, child); Print(value.FinallyBlock, child); break;

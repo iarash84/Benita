@@ -142,6 +142,10 @@ namespace Benita
                 FunctionCallNode call => new FunctionCallNode(
                     call.FunctionName,
                     call.Arguments.Select(argument => OptimizeExpression(argument)!).ToList()),
+                AsyncExpressionNode asyncExpression => new AsyncExpressionNode(
+                    (FunctionCallNode)OptimizeExpression(asyncExpression.Call)!),
+                AwaitExpressionNode awaitExpression => new AwaitExpressionNode(
+                    OptimizeExpression(awaitExpression.Task)!),
                 ArrayAccessNode access => new ArrayAccessNode(
                     access.Name, OptimizeExpression(access.Index)),
                 ArrayInitializerNode array => new ArrayInitializerNode(

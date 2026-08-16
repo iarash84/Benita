@@ -124,12 +124,19 @@ Bridge، State و Proxy در `Examples/Patterns` و تست‌های اجرایی
 از تحویل مقدار تابع اجرا شود. خروج کنترلی از finally در تحلیل معنایی محدود شده است تا
 flagهای داخلی ناسازگار نشوند. در مرز `ProgramNode` نیز `ThrownErrorException` داخلی به
 `UnhandledErrorException` عمومی با code و message اصلی تبدیل می‌شود. این مدل مبنای انتقال
-خطای task در قابلیت async/await خواهد بود.
+خطای task نیز با حفظ exception اصلی در محل `await` دوباره پرتاب می‌شود و به همین سازوکار
+`try/catch` وارد می‌شود.
 
-### مرز لازم برای async/await آینده
+## معماری async/await
 
-`Interpreter` و dictionaryهای mutable در `RuntimeContext` در وضعیت فعلی thread-safe نیستند
-و نباید مستقیماً میان taskها به اشتراک گذاشته شوند. پیاده‌سازی async باید برای هر task یک
-scope اجرایی مستقل بسازد، تعریف‌های immutable تابع و package را به‌صورت read-only به اشتراک
-بگذارد و نتیجه یا `ErrorValue` را از طریق handle مربوط به task بازگرداند. هر نوع global state
-مشترک نیز پیش از فعال‌شدن اجرای هم‌زمان به synchronization یا مدل channel نیاز دارد.
+`AsyncExpressionNode` فقط یک فراخوانی تابع را می‌پذیرد و در runtime یک `TaskValue` می‌سازد.
+آرگومان‌ها پیش از شروع task ارزیابی می‌شوند و هر task یک `Interpreter` و `RuntimeContext`
+مستقل دریافت می‌کند. تعریف‌های تابع و package تغییرپذیر نیستند و به context جدید منتقل
+می‌شوند؛ dictionaryهای متغیر مشترک نیستند و آرایه‌ها نیز clone می‌شوند. `AwaitExpressionNode`
+با `GetAwaiter().GetResult()` نتیجه را بدون wrapper شدن exception دریافت می‌کند تا خطاهای
+Benita مستقیماً به catch برسند.
+
+نمونه‌های package ماهیت reference دارند و در نسخهٔ فعلی deep-clone نمی‌شوند. در نتیجه اشتراک
+و تغییر هم‌زمان یک نمونهٔ واحد میان taskها قرارداد پشتیبانی‌شده‌ای نیست. اگر در آینده shared
+mutable state لازم شود، باید primitiveهای synchronization یا channel به زبان افزوده شوند؛
+تا آن زمان الگوی توصیه‌شده، ورودی‌های مستقل و بازگرداندن نتیجه از task است.

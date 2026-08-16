@@ -553,7 +553,8 @@
             }
             if (Check(TokenType.NUMBER_LITERAL, TokenType.STRING_LITERAL, TokenType.TRUE_LITERAL,
                     TokenType.FALSE_LITERAL, TokenType.LPAREN, TokenType.LSQUAREBRACE,
-                    TokenType.BANG, TokenType.MINUS, TokenType.NEW, TokenType.THIS))
+                    TokenType.BANG, TokenType.MINUS, TokenType.NEW, TokenType.THIS,
+                    TokenType.ASYNC, TokenType.AWAIT))
             {
                 ExpressionNode? expression = ParseExpression();
                 Consume(TokenType.SEMICOLON, "Expected ';' after expression");
@@ -1005,6 +1006,17 @@
         /// <returns>An <see cref="ExpressionNode"/> representing the unary expression.</returns>
         private ExpressionNode? ParseUnary()
         {
+            if (Match(TokenType.AWAIT))
+                return new AwaitExpressionNode(ParseUnary());
+
+            if (Match(TokenType.ASYNC))
+            {
+                ExpressionNode expression = ParsePrimary();
+                if (expression is not FunctionCallNode call)
+                    throw Error("BEN2011", "'async' must be followed by a function call.");
+                return new AsyncExpressionNode(call);
+            }
+
             if (Match(TokenType.BANG, TokenType.MINUS))
             {
                 string op = PreviousToken().Lexeme;

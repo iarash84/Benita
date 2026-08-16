@@ -96,6 +96,10 @@ namespace Benita
                     return VisitLogicalExpressionNode(logicalExpressionNode);
                 case FunctionCallNode functionCallNode:
                     return VisitFunctionCallNode(functionCallNode);
+                case AsyncExpressionNode asyncExpressionNode:
+                    return VisitAsyncExpressionNode(asyncExpressionNode);
+                case AwaitExpressionNode awaitExpressionNode:
+                    return VisitAwaitExpressionNode(awaitExpressionNode);
                 case VariableDeclarationNode variableDeclarationNode:
                     return VisitVariableDeclarationNode(variableDeclarationNode);
                 case AssignmentNode assignmentNode:
@@ -580,6 +584,53 @@ namespace Benita
 
             return null;
         }
+
+        /// <summary>آرگومان‌ها و scope فعلی را snapshot می‌گیرد و فراخوانی را روی thread pool اجرا می‌کند.</summary>
+        private object VisitAsyncExpressionNode(AsyncExpressionNode node)
+        {
+            List<ExpressionNode> arguments = node.Call.Arguments
+                .Select(argument => (ExpressionNode)new RuntimeValueNode(CloneTaskValue(Visit(argument))))
+                .ToList();
+            var call = new FunctionCallNode(node.Call.FunctionName, arguments);
+            Dictionary<string, object> variables = _variables.ToDictionary(
+                item => item.Key, item => CloneTaskValue(item.Value));
+            RuntimeContext context = CreateTaskContext();
+
+            return new TaskValue(System.Threading.Tasks.Task.Run(() =>
+            {
+                var interpreter = new Interpreter(_debugMode, _packageScope, true, context)
+                {
+                    _variables = variables
+                };
+                return interpreter.VisitFunctionCallNode(call);
+            }));
+        }
+
+        /// <summary>نتیجهٔ task را بدون پوشاندن exception اصلی برمی‌گرداند.</summary>
+        private object VisitAwaitExpressionNode(AwaitExpressionNode node)
+        {
+            if (Visit(node.Task) is not TaskValue task)
+                throw new RuntimeException("'await' requires a task value.");
+            return task.Task.GetAwaiter().GetResult();
+        }
+
+        /// <summary>تعاریف و مقادیر سراسری موردنیاز task را در یک context مستقل کپی می‌کند.</summary>
+        private RuntimeContext CreateTaskContext()
+        {
+            var context = new RuntimeContext();
+            foreach (var item in _context.GlobalVariables)
+                context.GlobalVariables[item.Key] = CloneTaskValue(item.Value);
+            foreach (var item in _context.GlobalFunctions)
+                context.GlobalFunctions[item.Key] = item.Value;
+            foreach (var item in _functions)
+                context.GlobalFunctions[item.Key] = item.Value;
+            foreach (var item in _context.Packages)
+                context.Packages[item.Key] = item.Value;
+            return context;
+        }
+
+        /// <summary>آرایه‌ها را برای جلوگیری از نوشتن مشترک مستقیم clone می‌کند.</summary>
+        private static object CloneTaskValue(object value) => value is Array array ? array.Clone() : value;
 
         /// <summary>مقدار error را ارزیابی و برای انتقال به نزدیک‌ترین catch پرتاب می‌کند.</summary>
         private object VisitThrowStatementNode(ThrowStatementNode node)

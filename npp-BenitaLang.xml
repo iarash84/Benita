@@ -24,7 +24,7 @@
             <Keywords name="Folders in comment, open"></Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
-            <Keywords name="Keywords1">number string bool void public private interface try catch finally throw</Keywords>
+            <Keywords name="Keywords1">number string bool void public private interface try catch finally throw async await</Keywords>
             <Keywords name="Keywords2">= == != += -= ++ -- *= /= &lt; &gt; &lt;= &gt;+</Keywords>
             <Keywords name="Keywords3">print input file_read file_write file_exist file_delete array_len array_add array_remove</Keywords>
             <Keywords name="Keywords4"></Keywords>

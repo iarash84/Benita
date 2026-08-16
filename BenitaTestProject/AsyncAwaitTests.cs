@@ -1,0 +1,95 @@
+using Benita;
+
+namespace BenitaTestProject;
+
+[TestClass]
+[DoNotParallelize]
+public class AsyncAwaitTests
+{
+    [TestMethod]
+    public void AsyncCalls_CanBeAwaitedInAnyOrder()
+    {
+        const string source = """
+            func add(number left, number right) -> number { return left + right; }
+            _main_() {
+                let first = async add(10, 20);
+                let second = async add(1, 2);
+                print(await second);
+                print(await first);
+            }
+            """;
+
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec(source, optimizeAst: true);
+        Assert.AreEqual($"3{Environment.NewLine}30{Environment.NewLine}", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void Await_CanReadCompletedTaskMoreThanOnce()
+    {
+        const string source = """
+            func value() -> number { return 42; }
+            _main_() {
+                let operation = async value();
+                print(await operation);
+                print(await operation);
+            }
+            """;
+
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec(source);
+        Assert.AreEqual($"42{Environment.NewLine}42{Environment.NewLine}", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void Await_PropagatesTaskErrorToCatch()
+    {
+        const string source = """
+            func fail() -> number { throw error("ASYNC100", "task failed"); }
+            _main_() {
+                let operation = async fail();
+                try { number result = await operation; }
+                catch (failure) {
+                    print(failure.code);
+                    print(failure.message);
+                }
+            }
+            """;
+
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec(source);
+        Assert.AreEqual($"ASYNC100{Environment.NewLine}task failed{Environment.NewLine}", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void Async_CapturesArgumentBeforeTaskStarts()
+    {
+        const string source = """
+            func identity(number value) -> number { return value; }
+            _main_() {
+                number value = 7;
+                let operation = async identity(value);
+                value = 9;
+                print(await operation);
+            }
+            """;
+
+        using var output = new ConsoleOutput();
+        new CompilerClass().Exec(source);
+        Assert.AreEqual($"7{Environment.NewLine}", output.GetOuput());
+    }
+
+    [TestMethod]
+    public void AwaitingNonTask_IsRejected()
+    {
+        Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check("_main_() { number value = await 1; }"));
+    }
+
+    [TestMethod]
+    public void AsyncWithoutFunctionCall_IsRejected()
+    {
+        Assert.ThrowsException<ParserException>(() =>
+            new CompilerClass().Check("_main_() { let value = async 1; }"));
+    }
+}

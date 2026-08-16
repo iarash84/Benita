@@ -96,6 +96,18 @@
     {
     }
 
+    /// <summary>فراخوانی تابعی را بازنمایی می‌کند که در یک task مستقل اجرا می‌شود.</summary>
+    public class AsyncExpressionNode(FunctionCallNode call) : ExpressionNode
+    {
+        public FunctionCallNode Call { get; } = call;
+    }
+
+    /// <summary>انتظار برای تکمیل یک task و دریافت نتیجه یا خطای آن را بازنمایی می‌کند.</summary>
+    public class AwaitExpressionNode(ExpressionNode task) : ExpressionNode
+    {
+        public ExpressionNode Task { get; } = task;
+    }
+
     /// <summary>پرتاب یک مقدار استاندارد error را بازنمایی می‌کند.</summary>
     public class ThrowStatementNode(ExpressionNode error) : StatementNode
     {

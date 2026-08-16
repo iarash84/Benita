@@ -8,6 +8,8 @@ public static class TypeFacts
         if (string.IsNullOrWhiteSpace(name)) return Types.Unknown;
         if (name.EndsWith("[]", StringComparison.Ordinal))
             return Types.ArrayOf(FromName(name[..^2]));
+        if (name.StartsWith("task<", StringComparison.Ordinal) && name.EndsWith('>'))
+            return Types.TaskOf(FromName(name[5..^1]));
 
         return name switch
         {
@@ -41,6 +43,9 @@ public static class TypeFacts
         if (target == Types.Any) return source != Types.Void;
         if (target == Types.AnyArray) return source is ArrayTypeSymbol || source == Types.AnyArray;
         if (source == Types.AnyArray) return target is ArrayTypeSymbol || target == Types.AnyArray;
+
+        if (source is TaskTypeSymbol sourceTask && target is TaskTypeSymbol targetTask)
+            return IsAssignableTo(sourceTask.ResultType, targetTask.ResultType);
 
         return source is ArrayTypeSymbol sourceArray &&
                target is ArrayTypeSymbol targetArray &&

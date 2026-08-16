@@ -108,7 +108,9 @@ equality                ::= comparison (("==" | "!=") comparison)* ;
 comparison              ::= term (("<" | "<=" | ">" | ">=") term)* ;
 term                    ::= factor (("+" | "-") factor)* ;
 factor                  ::= unary (("*" | "/" | "%") unary)* ;
-unary                   ::= ("!" | "-") unary | primary ;
+unary                   ::= ("!" | "-" | "await") unary
+                          | "async" function-call
+                          | primary ;
 
 primary                 ::= literal
                           | identifier
@@ -208,6 +210,14 @@ Semantic constraints
     valid break and continue statements.
 26. An uncaught user error crosses the program boundary with its original code
     and message as an `UnhandledErrorException` diagnostic.
+27. `async` is a call-site operator and must be followed by a global or built-in
+    function call. It starts immediately and produces an inferred `task<T>` value.
+28. `await` accepts only a task and evaluates to its `T` result. A task may be
+    awaited more than once. Its failure is rethrown at each await and can be
+    handled by the existing try/catch syntax.
+29. Task arguments and the visible variable scope are captured when `async` is
+    evaluated. Each task runs in an isolated runtime scope; assignments made by
+    it do not mutate the caller's variables.
 
 Notes
 -----

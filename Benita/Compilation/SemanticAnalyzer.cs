@@ -471,6 +471,7 @@
         private static bool AlwaysReturns(StatementNode? statement) => statement switch
         {
             ReturnStatementNode => true,
+            ThrowStatementNode => true,
             BlockNode block => block.Statements.Any(AlwaysReturns),
             IfStatementNode branch => branch.ElseBranch != null &&
                                       AlwaysReturns(branch.ThenBranch) && AlwaysReturns(branch.ElseBranch),
@@ -577,6 +578,15 @@
                     return HandleUnaryExpressionNode(unary, localVariables);
                 case FunctionCallNode functionCall:
                     return HandleFunctionCallNode(functionCall, localVariables);
+                case AsyncExpressionNode asyncExpression:
+                    return Types.TaskOf(TypeFacts.FromName(
+                        HandleFunctionCallNode(asyncExpression.Call, localVariables))).Name;
+                case AwaitExpressionNode awaitExpression:
+                    TypeSymbol awaitedType = TypeFacts.FromName(
+                        AnalyzeExpression(awaitExpression.Task, localVariables));
+                    if (awaitedType is not TaskTypeSymbol taskType)
+                        throw new Exception("'await' requires a task value.");
+                    return taskType.ResultType.Name;
                 case ArrayInitializerNode arrayInit:
                     return HandleArrayInitializerNode(arrayInit, localVariables);
                 case ArrayAccessNode arrayAccess:

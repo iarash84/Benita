@@ -21,6 +21,7 @@ public class ExampleProgramTests
                 "2 is prime", "9 is not prime", "17 is prime", "21 is not prime", "29 is prime");
             yield return Case("algorithm-recursive-factorial.ben", null, "720");
             yield return Case("addition-function-call.ben", null, "5");
+            yield return Case("async-await.ben", null, "12", "42", "ASYNC100: Background operation failed");
             // حذف و افزودن عناصر آرایه، محاسبه طول آرایه و پیمایش نتیجه را بررسی می‌کند.
             yield return Case("array-add-remove-and-length.ben", null, "Element at index 0: 10", "Element at index 1: 20", "Element at index 2: 40", "Element at index 3: 50", "Element at index 4: 60", "Element at index 5: 70");
             // تعریف آرایه با و بدون مقدار اولیه، مقداردهی و دسترسی با اندیس را بررسی می‌کند.

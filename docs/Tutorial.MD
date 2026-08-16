@@ -366,6 +366,17 @@ try {
 finally تعریف شده باشد کنترل جریان معمول خود را دارد. خطای کاربر که catch نشود با همان
 code و message اصلی در مرز اجرای برنامه گزارش می‌شود.
 
+#### اجرای هم‌زمان با async و await
+
+عملگر `async` در محل فراخوانی، اجرای تابع را بلافاصله در یک task مستقل آغاز می‌کند.
+مقدار `task<T>` به‌صورت خودکار استنباط می‌شود و معمولاً آن را در یک متغیر `let` نگه
+می‌داریم. `await` نتیجهٔ نهایی را در هر expression که لازم باشد برمی‌گرداند.
+
+آرگومان‌ها و متغیرهای قابل مشاهده هنگام شروع task snapshot می‌شوند؛ بنابراین assignmentهای
+داخل task متغیرهای scope فراخواننده را تغییر نمی‌دهند. یک task را می‌توان چند بار await کرد.
+خطا نیز در محل `await` دوباره پرتاب می‌شود و با `try/catch` معمول زبان قابل مدیریت است.
+در نسخهٔ فعلی `async` فقط پیش از فراخوانی تابع سراسری یا built-in مجاز است.
+
 ### ۹. ورودی، تبدیل و ریاضیات
 
 ```benita
@@ -895,6 +906,22 @@ The `error` type and constructor name are reserved. Return and loop control targ
 outer loop cannot leave finally, although loops declared inside finally retain normal
 break/continue behavior. An uncaught user error reaches the program boundary with its
 original code and message.
+
+#### Concurrent execution with async and await
+
+The call-site `async` operator starts a function immediately in an isolated task. Store the
+inferred `task<T>` in a `let` variable and use `await` wherever its `T` result is needed:
+
+```benita
+let first = async calculate(10);
+let second = async calculate(20);
+number result = await first + await second;
+```
+
+Arguments and visible variables are captured when the task starts, and task assignments do
+not mutate the caller's scope. Tasks can be awaited repeatedly. Failures are rethrown at the
+await site and integrate with `try/catch`. The initial version permits `async` before global
+and built-in function calls only.
 
 ```benita
 pkg Counter {
