@@ -1,3 +1,5 @@
+// افزایش شمارنده و اجرای تکراری بدنهٔ while را آزمایش می‌کند.
+// Tests counter increments and repeated execution of a while-loop body.
 _main_() {
     number i = 0;
     while ( i < 5 ) {

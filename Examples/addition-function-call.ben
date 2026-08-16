@@ -1,3 +1,5 @@
+// تعریف، فراخوانی و دریافت مقدار بازگشتی یک تابع جمع را آزمایش می‌کند.
+// Tests defining, calling, and receiving the return value of an addition function.
 func add(number a, number b) -> number {
     return a + b;
 }

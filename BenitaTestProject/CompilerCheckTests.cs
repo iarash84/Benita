@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>حالت بررسی بدون اجرای Compiler و انتشار خطاهای آن را آزمایش می‌کند.</summary>
 public class CompilerCheckTests
 {
     [TestMethod]
@@ -13,7 +14,7 @@ public class CompilerCheckTests
 
         new CompilerClass().Check(source, sourceName: "valid.ben");
 
-        Assert.AreEqual(string.Empty, consoleOutput.GetOuput());
+        Assert.AreEqual(string.Empty, consoleOutput.GetOutput());
     }
 
     [TestMethod]

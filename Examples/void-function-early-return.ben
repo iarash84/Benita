@@ -1,3 +1,5 @@
+// خروج زودهنگام و return خالی در یک تابع void را آزمایش می‌کند.
+// Tests early exit and empty return statements in a void function.
 func test(number i) -> void
 {
 	print("yess");

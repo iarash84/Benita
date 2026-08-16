@@ -1,0 +1,25 @@
+// الگوی Proxy دسترسی به سرویس راه‌دور را کنترل و نتیجه را cache می‌کند.
+// Demonstrates Proxy by controlling remote-service access and caching its result.
+interface DataService { func fetch() -> string; }
+
+pkg RemoteDataService : DataService {
+    public func fetch() -> string { return "remote data"; }
+}
+
+pkg CachedDataProxy : DataService {
+    RemoteDataService service = new RemoteDataService();
+    string cache = "";
+    bool loaded = false;
+
+    public func fetch() -> string {
+        if (!loaded) {
+            this.cache = service.fetch();
+            this.loaded = true;
+        }
+        return cache;
+    }
+}
+
+func load(DataService service) -> string { return service.fetch(); }
+
+_main_() { print(load(new CachedDataProxy())); }

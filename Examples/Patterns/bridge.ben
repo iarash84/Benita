@@ -1,0 +1,29 @@
+// الگوی Bridge کنترل از راه دور را از پیاده‌سازی concrete دستگاه جدا می‌کند.
+// Demonstrates Bridge by separating remote-control abstraction from concrete devices.
+interface Device {
+    func enable() -> string;
+    func disable() -> string;
+}
+
+pkg Television : Device {
+    public func enable() -> string { return "TV on"; }
+    public func disable() -> string { return "TV off"; }
+}
+
+pkg Radio : Device {
+    public func enable() -> string { return "Radio on"; }
+    public func disable() -> string { return "Radio off"; }
+}
+
+pkg RemoteControl {
+    Device device = new Television();
+    init(Device implementation) { this.device = implementation; }
+    public func turn_on() -> string { return device.enable(); }
+    public func turn_off() -> string { return device.disable(); }
+}
+
+_main_() {
+    RemoteControl remote = new RemoteControl(new Radio());
+    print(remote.turn_on());
+    print(remote.turn_off());
+}

@@ -11,13 +11,15 @@ internal static class AstPrinter
         string child = indent + "  ";
         switch (node)
         {
-            case ProgramNode value: PrintAll(value.GlobalVariables, child); PrintAll(value.Packages, child); PrintAll(value.Functions, child); Print(value.MainFunction, child); PrintAll(value.Statements, child); break;
-            case PackageNode value: Detail(child, "Name", value.Name); PrintAll(value.Members, child); break;
-            case FunctionNode value: Detail(child, "Name", value.Name); PrintAll(value.Parameters, child); Print(value.Body, child); Print(value.ReturnStatement, child); break;
-            case PackageFunctionNode value: Detail(child, "Name", value.Name); PrintAll(value.Parameters, child); Print(value.Body, child); Print(value.ReturnStatement, child); break;
+            case ProgramNode value: PrintAll(value.Interfaces, child); PrintAll(value.GlobalVariables, child); PrintAll(value.Packages, child); PrintAll(value.Functions, child); Print(value.MainFunction, child); PrintAll(value.Statements, child); break;
+            case InterfaceNode value: Detail(child, "Name", value.Name); PrintAll(value.Methods, child); break;
+            case InterfaceMethodNode value: Detail(child, "Method", $"{value.Name} -> {value.ReturnType}"); PrintAll(value.Parameters, child); break;
+            case PackageNode value: Detail(child, "Name", value.Interfaces.Count == 0 ? value.Name : $"{value.Name} : {string.Join(", ", value.Interfaces)}"); PrintAll(value.Members, child); break;
+            case FunctionNode value: Detail(child, "Name", $"{value.AccessModifier.ToString().ToLowerInvariant()} {value.Name}"); PrintAll(value.Parameters, child); Print(value.Body, child); Print(value.ReturnStatement, child); break;
+            case PackageFunctionNode value: Detail(child, "Name", $"{value.AccessModifier.ToString().ToLowerInvariant()} {value.Name}"); PrintAll(value.Parameters, child); Print(value.Body, child); Print(value.ReturnStatement, child); break;
             case BlockNode value: PrintAll(value.Statements, child); break;
-            case VariableDeclarationNode value: Detail(child, "Variable", $"{value.Type} {value.Name}"); Print(value.Initializer, child); break;
-            case PackageVariableDeclarationNode value: Detail(child, "Variable", $"{value.Type} {value.Name}"); Print(value.Initializer, child); break;
+            case VariableDeclarationNode value: Detail(child, "Variable", $"{value.AccessModifier.ToString().ToLowerInvariant()} {value.Type} {value.Name}"); Print(value.Initializer, child); break;
+            case PackageVariableDeclarationNode value: Detail(child, "Variable", $"{value.AccessModifier.ToString().ToLowerInvariant()} {value.Type} {value.Name}"); Print(value.Initializer, child); break;
             case ParameterNode value: Detail(child, "Parameter", $"{value.Type} {value.Name}"); break;
             case LiteralNode value: Detail(child, "Value", value.Value); break;
             case IdentifierNode value: Detail(child, "Name", value.Name); break;
@@ -29,7 +31,11 @@ internal static class AstPrinter
             case UnaryExpressionNode value: Detail(child, "Operator", value.Operator); Print(value.Operand, child); break;
             case ExpressionStatementNode value: Print(value.Expression, child); break;
             case FunctionCallNode value: Detail(child, "Function", value.FunctionName); PrintAll(value.Arguments, child); break;
+            case AsyncExpressionNode value: Detail(child, "Async", value.Call.FunctionName); Print(value.Call, child); break;
+            case AwaitExpressionNode value: Detail(child, "Await", "task"); Print(value.Task, child); break;
             case ReturnStatementNode value: Print(value.ReturnExpression, child); break;
+            case ThrowStatementNode value: Print(value.Error, child); break;
+            case TryStatementNode value: Detail(child, "Catch", value.CatchVariable ?? "none"); Print(value.TryBlock, child); Print(value.CatchBlock, child); Print(value.FinallyBlock, child); break;
             case IfStatementNode value: Print(value.Condition, child); Print(value.ThenBranch, child); Print(value.ElseBranch, child); break;
             case MatchExpressionNode value: Print(value.Value, child); PrintMatchArms(value.Arms, child); break;
             case MatchStatementNode value: Print(value.Value, child); PrintMatchArms(value.Arms, child); break;
@@ -41,6 +47,7 @@ internal static class AstPrinter
             case ArrayAssignmentNode value: Detail(child, "Array", value.Name); Print(value.Index, child); Print(value.Value, child); break;
             case MemberAccessNode value: Detail(child, "Object", value.ObjectName); Print(value.Expression, child); break;
             case ObjectInstantiationNode value: Detail(child, "Instance", $"{value.Name}: {value.PackageName}"); PrintAll(value.Arguments, child); break;
+            case NewExpressionNode value: Detail(child, "New", value.PackageName); PrintAll(value.Arguments, child); break;
         }
     }
 

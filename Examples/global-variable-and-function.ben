@@ -1,3 +1,5 @@
+// استفاده از متغیر سراسری در تابع و ترکیب scope سراسری و محلی را آزمایش می‌کند.
+// Tests using a global variable in a function and combining global and local scopes.
 number x = 10;
 func add(number a, number b) -> number {
     number c = a + b;

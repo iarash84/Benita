@@ -11,10 +11,12 @@ namespace Benita
         private readonly Dictionary<string, FunctionNode> _functions = [];
         private Dictionary<string, object> _variables = [];
         private readonly Dictionary<string, object> _outerScopeVariables;
+        private readonly HashSet<string> _persistentVariableNames = [];
 
         private bool _functionReturnFlag;
         private readonly bool _debugMode;
         private readonly string _packageScope;
+        private readonly bool _isPackageInterpreter;
         private readonly DebugClass _debugClass;
         private readonly bool _preserveStateBetweenPrograms;
         private readonly RuntimeContext _context;
@@ -24,7 +26,8 @@ namespace Benita
         /// </summary>
         /// <param name="packageScope">The scope of the package, default is "_main_".</param>
         public Interpreter(bool debugMode = false, string packageScope = "Program",
-            bool preserveStateBetweenPrograms = false, RuntimeContext? context = null)
+            bool preserveStateBetweenPrograms = false, RuntimeContext? context = null,
+            bool packageInstanceScope = false)
         {
             _debugMode = debugMode;
             _preserveStateBetweenPrograms = preserveStateBetweenPrograms;
@@ -34,7 +37,126 @@ namespace Benita
                 _debugClass = DebugClass.Instance;
             }
             _packageScope = packageScope;
+            _isPackageInterpreter = packageInstanceScope;
             _outerScopeVariables = new Dictionary<string, object>();
+        }
+
+        /// <summary>از state قابل مشاهدهٔ مفسر snapshot می‌گیرد تا اجرای REPL قابل rollback باشد.</summary>
+        internal TransactionCheckpoint CreateCheckpoint()
+        {
+            var checkpoint = new TransactionCheckpoint();
+            CaptureState(checkpoint.RootState, checkpoint);
+            foreach (var item in _context.GlobalVariables)
+                checkpoint.GlobalVariables[item.Key] = CloneCheckpointValue(item.Value, checkpoint, true);
+            foreach (var item in _context.GlobalFunctions)
+                checkpoint.GlobalFunctions[item.Key] = item.Value;
+            foreach (var item in _context.Packages)
+                checkpoint.Packages[item.Key] = item.Value;
+            return checkpoint;
+        }
+
+        /// <summary>تمام تغییرات runtime پس از snapshot را برای نشست REPL بازمی‌گرداند.</summary>
+        internal void RestoreCheckpoint(TransactionCheckpoint checkpoint)
+        {
+            RestoreState(checkpoint.RootState, checkpoint);
+            ReplaceValues(_context.GlobalVariables, checkpoint.GlobalVariables, checkpoint);
+            ReplaceItems(_context.GlobalFunctions, checkpoint.GlobalFunctions);
+            ReplaceItems(_context.Packages, checkpoint.Packages);
+            foreach (var item in checkpoint.PackageStates)
+                item.Key.RestoreCheckpoint(item.Value, checkpoint);
+        }
+
+        internal void CaptureState(InterpreterState state, TransactionCheckpoint checkpoint)
+        {
+            foreach (var item in _variables)
+                state.Variables[item.Key] = CloneCheckpointValue(item.Value, checkpoint, true);
+            foreach (var item in _outerScopeVariables)
+                state.OuterScopeVariables[item.Key] = CloneCheckpointValue(item.Value, checkpoint, true);
+            foreach (var item in _functions)
+                state.Functions[item.Key] = item.Value;
+            state.PersistentVariableNames.UnionWith(_persistentVariableNames);
+            state.FunctionReturnFlag = _functionReturnFlag;
+        }
+
+        internal void RestoreState(InterpreterState state, TransactionCheckpoint checkpoint)
+        {
+            _variables = state.Variables.ToDictionary(item => item.Key,
+                item => CloneCheckpointValue(item.Value, checkpoint, false));
+            ReplaceValues(_outerScopeVariables, state.OuterScopeVariables, checkpoint);
+            ReplaceItems(_functions, state.Functions);
+            _persistentVariableNames.Clear();
+            _persistentVariableNames.UnionWith(state.PersistentVariableNames);
+            _functionReturnFlag = state.FunctionReturnFlag;
+        }
+
+        private static object CloneCheckpointValue(object value, TransactionCheckpoint checkpoint,
+            bool capturePackages)
+        {
+            if (value is PackageInstance package)
+            {
+                if (capturePackages) checkpoint.CapturePackage(package);
+                return package;
+            }
+            if (value is not Array array) return value;
+
+            Dictionary<object, object> clones = capturePackages
+                ? checkpoint.CapturedValues
+                : checkpoint.RestoredValues;
+            if (clones.TryGetValue(array, out object? existingCopy)) return existingCopy;
+
+            var copy = new object[array.Length];
+            clones.Add(array, copy);
+            for (int index = 0; index < array.Length; index++)
+            {
+                object? element = array.GetValue(index);
+                copy[index] = element is null ? null! : CloneCheckpointValue(element, checkpoint, capturePackages);
+            }
+            return copy;
+        }
+
+        private static void ReplaceValues(Dictionary<string, object> target,
+            Dictionary<string, object> source, TransactionCheckpoint checkpoint)
+        {
+            target.Clear();
+            foreach (var item in source)
+                target[item.Key] = CloneCheckpointValue(item.Value, checkpoint, false);
+        }
+
+        private static void ReplaceItems<T>(Dictionary<string, T> target, Dictionary<string, T> source)
+        {
+            target.Clear();
+            foreach (var item in source) target[item.Key] = item.Value;
+        }
+
+        internal sealed class TransactionCheckpoint
+        {
+            internal InterpreterState RootState { get; } = new();
+            internal Dictionary<string, object> GlobalVariables { get; } = [];
+            internal Dictionary<string, FunctionNode> GlobalFunctions { get; } = [];
+            internal Dictionary<string, PackageNode> Packages { get; } = [];
+            internal Dictionary<PackageInstance, InterpreterState> PackageStates { get; } =
+                new(ReferenceEqualityComparer.Instance);
+            internal Dictionary<object, object> CapturedValues { get; } =
+                new(ReferenceEqualityComparer.Instance);
+            internal Dictionary<object, object> RestoredValues { get; } =
+                new(ReferenceEqualityComparer.Instance);
+
+            internal void CapturePackage(PackageInstance package)
+            {
+                if (PackageStates.ContainsKey(package)) return;
+                var state = new InterpreterState();
+                PackageStates.Add(package, state);
+                package.CaptureCheckpoint(state, this);
+            }
+        }
+
+        internal sealed class InterpreterState
+        {
+            internal Dictionary<string, object> Variables { get; } = [];
+            internal Dictionary<string, object> OuterScopeVariables { get; } = [];
+            internal Dictionary<string, FunctionNode> Functions { get; } = [];
+            internal HashSet<string> PersistentVariableNames { get; } = [];
+            internal bool FunctionReturnFlag { get; set; }
         }
 
         private void DebugLog(string message, bool pressKeyWait = true)
@@ -63,9 +185,22 @@ namespace Benita
         public void SetGlobalVariable()
         {
             DebugLog("SetGlobalVariable");
-            foreach (var kvp in _context.GlobalVariables)
-                _variables.Add(kvp.Key, kvp.Value);
+            RefreshVisibleGlobalsFromContext();
         }
+
+        /// <summary>globalهای تازه را بدون بازنویسی فیلد هم‌نام package وارد scope جاری می‌کند.</summary>
+        internal void RefreshVisibleGlobalsFromContext()
+        {
+            foreach (var item in _context.GlobalVariables)
+            {
+                bool isPackageField = _isPackageInterpreter && _persistentVariableNames.Contains(item.Key);
+                if (!isPackageField)
+                    _variables[item.Key] = item.Value;
+            }
+        }
+
+        /// <summary>یک فیلد declarationشده را به‌عنوان state پایدار instance ثبت می‌کند.</summary>
+        internal void MarkVariableAsPersistent(string name) => _persistentVariableNames.Add(name);
 
         /// <summary>
         /// Visits the specified AST node and executes the corresponding logic.
@@ -84,6 +219,8 @@ namespace Benita
                     return VisitBlockNode(blockNode);
                 case LiteralNode literalNode:
                     return VisitLiteralNode(literalNode);
+                case RuntimeValueNode runtimeValueNode:
+                    return runtimeValueNode.Value;
                 case IdentifierNode identifierNode:
                     return VisitIdentifierNode(identifierNode);
                 case BinaryExpressionNode binaryExpressionNode:
@@ -94,6 +231,10 @@ namespace Benita
                     return VisitLogicalExpressionNode(logicalExpressionNode);
                 case FunctionCallNode functionCallNode:
                     return VisitFunctionCallNode(functionCallNode);
+                case AsyncExpressionNode asyncExpressionNode:
+                    return VisitAsyncExpressionNode(asyncExpressionNode);
+                case AwaitExpressionNode awaitExpressionNode:
+                    return VisitAwaitExpressionNode(awaitExpressionNode);
                 case VariableDeclarationNode variableDeclarationNode:
                     return VisitVariableDeclarationNode(variableDeclarationNode);
                 case AssignmentNode assignmentNode:
@@ -132,10 +273,16 @@ namespace Benita
                 case ContinueStatementNode:
                     DebugLog($"ContinueStatementNode", false);
                     throw new ContinueException();
+                case ThrowStatementNode throwStatementNode:
+                    return VisitThrowStatementNode(throwStatementNode);
+                case TryStatementNode tryStatementNode:
+                    return VisitTryStatementNode(tryStatementNode);
                 case PackageNode packageNode:
                     return VisitPackageNode(packageNode);
                 case MemberAccessNode memberAccessNode:
                     return VisitMemberAccessNode(memberAccessNode);
+                case NewExpressionNode newExpressionNode:
+                    return VisitNewExpressionNode(newExpressionNode);
                 case ObjectInstantiationNode objectInstantiationNode:
                     return VisitObjectInstantiationNode(objectInstantiationNode);
                 default:
@@ -158,7 +305,8 @@ namespace Benita
             }
 
             // Create a new package instance
-            var packageInstance = new PackageInstance(node.Name, packageNode, node.Arguments, _debugMode, _context);
+            List<object?> arguments = node.Arguments.Select(Visit).ToList();
+            var packageInstance = new PackageInstance(node.Name, packageNode, arguments, _debugMode, _context);
 
             // Optionally, you might handle constructor arguments here
             // For simplicity, we assume no arguments or default constructor logic.
@@ -171,6 +319,18 @@ namespace Benita
         }
 
         /// <summary>
+        /// یک نمونه تازه از package می‌سازد و آن را به‌عنوان مقدار expression برمی‌گرداند.
+        /// </summary>
+        private object VisitNewExpressionNode(NewExpressionNode node)
+        {
+            if (!_context.Packages.TryGetValue(node.PackageName, out PackageNode? packageNode))
+                throw new Exception($"Package '{node.PackageName}' not found.");
+
+            List<object?> arguments = node.Arguments.Select(Visit).ToList();
+            return new PackageInstance(node.PackageName, packageNode, arguments, _debugMode, _context);
+        }
+
+        /// <summary>
         /// Visits a literal node and returns its value.
         /// </summary>
         /// <param name="node">The literal node.</param>
@@ -180,7 +340,8 @@ namespace Benita
             DebugLog($"VisitLiteralNode: Type = {node.Type}, Value = {node.Value}");
             return node.Type switch
             {
-                TokenType.NUMBER or TokenType.NUMBER_LITERAL => Convert.ToDouble(node.Value),
+                TokenType.NUMBER or TokenType.NUMBER_LITERAL => double.Parse(node.Value,
+                    System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture),
                 TokenType.STRING or TokenType.STRING_LITERAL => node.Value,
                 TokenType.TRUE_LITERAL => true,
                 TokenType.FALSE_LITERAL => false,
@@ -257,18 +418,10 @@ namespace Benita
                     return Convert.ToBoolean(left) || Convert.ToBoolean(right);
 
                 case "==":
-                    if (left is string || right is string)
-                    {
-                        return left.Equals(right);
-                    }
-                    return Convert.ToDouble(left) == Convert.ToDouble(right);
+                    return ValuesAreEqual(left, right);
 
                 case "!=":
-                    if (left is string || right is string)
-                    {
-                        return !left.Equals(right);
-                    }
-                    return Convert.ToDouble(left) != Convert.ToDouble(right);
+                    return !ValuesAreEqual(left, right);
 
                 case "<":
                     return Convert.ToDouble(left) < Convert.ToDouble(right);
@@ -393,7 +546,7 @@ namespace Benita
                 finally
                 {
                     _functionReturnFlag = false;
-                    originalVariables = SyncDictionaryValues(_variables, originalVariables);
+                    SynchronizeFunctionScope(_variables, originalVariables);
                     _variables = originalVariables;
                     _functionReturnFlag = originalFunctionReturnFlag;
                 }
@@ -409,29 +562,32 @@ namespace Benita
         }
 
         /// <summary>
-        /// Synchronizes values between two dictionaries.
+        /// تغییرات متغیرهای قابل مشاهده در scope فراخواننده را پس از پایان تابع منتقل می‌کند.
         /// </summary>
         /// <param name="variables">The current variable dictionary.</param>
         /// <param name="originalVariables">The original variable dictionary.</param>
-        /// <returns>The synchronized dictionary.</returns>
-        private Dictionary<string, object> SyncDictionaryValues(Dictionary<string, object> variables, Dictionary<string, object> originalVariables)
+        private void SynchronizeFunctionScope(Dictionary<string, object> variables,
+            Dictionary<string, object> originalVariables)
         {
-            DebugLog($"SyncDictionaryValues");
+            DebugLog($"SynchronizeFunctionScope");
 
-            foreach (var key in variables.Keys.ToList())
+            foreach (string key in originalVariables.Keys.ToList())
             {
-                if (originalVariables.ContainsKey(key) && _packageScope != "Program")
+                bool isPackageField = _isPackageInterpreter && _persistentVariableNames.Contains(key);
+                bool isPersistent = _persistentVariableNames.Contains(key) ||
+                                    _context.GlobalVariables.ContainsKey(key);
+                if (isPersistent && variables.TryGetValue(key, out object? value))
                 {
-                    originalVariables[key] = variables[key];
-                }
-                else if (_context.GlobalVariables.ContainsKey(key))
-                {
-                    _context.GlobalVariables[key] = variables[key];
+                    originalVariables[key] = value;
+                    if (!isPackageField && _context.GlobalVariables.ContainsKey(key))
+                        _context.GlobalVariables[key] = value;
                 }
             }
-
-            return originalVariables;
         }
+
+        /// <summary>برابری runtime را مطابق قرارداد scalar زبان محاسبه می‌کند.</summary>
+        private static bool ValuesAreEqual(object left, object right)
+            => RuntimeValueComparer.AreEqual(left, right);
 
         /// <summary>
         /// Visits a return statement node and sets the function return flag.
@@ -560,6 +716,152 @@ namespace Benita
             return null;
         }
 
+        /// <summary>آرگومان‌ها و scope فعلی را snapshot می‌گیرد و فراخوانی را روی thread pool اجرا می‌کند.</summary>
+        private object VisitAsyncExpressionNode(AsyncExpressionNode node)
+        {
+            var context = new RuntimeContext();
+            foreach (var item in _context.GlobalFunctions)
+                context.GlobalFunctions[item.Key] = item.Value;
+            foreach (var item in _functions)
+                context.GlobalFunctions[item.Key] = item.Value;
+            foreach (var item in _context.Packages)
+                context.Packages[item.Key] = item.Value;
+
+            var cloneContext = new TaskCloneContext(context);
+            foreach (var item in _context.GlobalVariables)
+                context.GlobalVariables[item.Key] = CloneTaskValue(item.Value, cloneContext);
+
+            List<ExpressionNode> arguments = node.Call.Arguments
+                .Select(argument => (ExpressionNode)new RuntimeValueNode(
+                    CloneTaskValue(Visit(argument), cloneContext)))
+                .ToList();
+            var call = new FunctionCallNode(node.Call.FunctionName, arguments);
+            Dictionary<string, object> variables = _variables.ToDictionary(
+                item => item.Key, item => CloneTaskValue(item.Value, cloneContext));
+
+            return new TaskValue(System.Threading.Tasks.Task.Run(() =>
+            {
+                var interpreter = new Interpreter(_debugMode, _packageScope, true, context)
+                {
+                    _variables = variables
+                };
+                return interpreter.VisitFunctionCallNode(call);
+            }));
+        }
+
+        /// <summary>نتیجهٔ task را بدون پوشاندن exception اصلی برمی‌گرداند.</summary>
+        private object VisitAwaitExpressionNode(AwaitExpressionNode node)
+        {
+            if (Visit(node.Task) is not TaskValue task)
+                throw new RuntimeException("'await' requires a task value.");
+            return task.Task.GetAwaiter().GetResult();
+        }
+
+        /// <summary>یک مقدار mutable را برای task با حفظ aliasها و جلوگیری از cycle clone می‌کند.</summary>
+        private static object CloneTaskValue(object value, TaskCloneContext context)
+        {
+            if (value is PackageInstance package)
+                return package.CloneForTask(context);
+            if (value is not Array array) return value;
+            if (context.Values.TryGetValue(array, out object? existing)) return existing;
+
+            var copy = new object[array.Length];
+            context.Values.Add(array, copy);
+            for (int index = 0; index < array.Length; index++)
+            {
+                object? item = array.GetValue(index);
+                copy[index] = item is null ? null! : CloneTaskValue(item, context);
+            }
+            return copy;
+        }
+
+        /// <summary>یک shell خالی با تنظیمات همین مفسر برای clone داخلی package می‌سازد.</summary>
+        internal Interpreter CreateTaskCloneShell(RuntimeContext context) =>
+            new(_debugMode, _packageScope, true, context, _isPackageInterpreter);
+
+        /// <summary>state داخلی مفسر package را بدون اجرای initializer به shell مقصد منتقل می‌کند.</summary>
+        internal void CopyTaskStateTo(Interpreter target, TaskCloneContext context)
+        {
+            target._variables = _variables.ToDictionary(item => item.Key,
+                item => CloneTaskValue(item.Value, context));
+            foreach (var item in _outerScopeVariables)
+                target._outerScopeVariables[item.Key] = CloneTaskValue(item.Value, context);
+            foreach (var item in _functions)
+                target._functions[item.Key] = item.Value;
+            target._persistentVariableNames.UnionWith(_persistentVariableNames);
+            target._functionReturnFlag = _functionReturnFlag;
+        }
+
+        internal sealed class TaskCloneContext(RuntimeContext runtimeContext)
+        {
+            internal RuntimeContext RuntimeContext { get; } = runtimeContext;
+            internal Dictionary<object, object> Values { get; } =
+                new(ReferenceEqualityComparer.Instance);
+            internal Dictionary<PackageInstance, PackageInstance> Packages { get; } =
+                new(ReferenceEqualityComparer.Instance);
+        }
+
+        /// <summary>مقدار error را ارزیابی و برای انتقال به نزدیک‌ترین catch پرتاب می‌کند.</summary>
+        private object VisitThrowStatementNode(ThrowStatementNode node)
+        {
+            if (Visit(node.Error) is not ErrorValue error)
+                throw new RuntimeException("A throw statement requires an error value.");
+            throw new ThrownErrorException(error);
+        }
+
+        /// <summary>شاخه‌های try، catch و finally را با حفظ درست return و خطای در حال انتشار اجرا می‌کند.</summary>
+        private object VisitTryStatementNode(TryStatementNode node)
+        {
+            object? result = null;
+            try
+            {
+                try
+                {
+                    result = Visit(node.TryBlock);
+                }
+                catch (Exception exception) when (exception is not BreakException and not ContinueException)
+                {
+                    if (node.CatchBlock is null)
+                        throw;
+
+                    ErrorValue error = exception switch
+                    {
+                        ThrownErrorException thrown => thrown.Error,
+                        BenitaException benita => new ErrorValue(benita.Code, benita.Description),
+                        _ => new ErrorValue("BEN5000", exception.Message)
+                    };
+
+                    bool hadPrevious = _variables.TryGetValue(node.CatchVariable!, out object? previous);
+                    _variables[node.CatchVariable!] = error;
+                    try
+                    {
+                        result = Visit(node.CatchBlock);
+                    }
+                    finally
+                    {
+                        if (hadPrevious)
+                            _variables[node.CatchVariable!] = previous!;
+                        else
+                            _variables.Remove(node.CatchVariable!);
+                    }
+                }
+            }
+            finally
+            {
+                if (node.FinallyBlock is not null)
+                {
+                    bool pendingReturn = _functionReturnFlag;
+                    _functionReturnFlag = false;
+                    Visit(node.FinallyBlock);
+                    if (_functionReturnFlag)
+                        throw new RuntimeException("Control cannot leave a finally block with return.");
+                    _functionReturnFlag = pendingReturn;
+                }
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Visits an if statement node and evaluates the branches.
         /// </summary>
@@ -637,12 +939,11 @@ namespace Benita
                 }
                 catch (ContinueException)
                 {
+                    Visit(node.Increment);
                     continue; // Move to the next iteration
                 }
-                finally
-                {
-                    Visit(node.Increment);
-                }
+
+                Visit(node.Increment);
             }
 
             return null;
@@ -668,6 +969,19 @@ namespace Benita
         /// <returns>Null.</returns>
         private object VisitProgramNode(ProgramNode node)
         {
+            try
+            {
+                return ExecuteProgramNode(node);
+            }
+            catch (ThrownErrorException exception)
+            {
+                throw new UnhandledErrorException(exception.Error, exception);
+            }
+        }
+
+        /// <summary>گره برنامه را اجرا می‌کند؛ تبدیل خطای مدیریت‌نشده در wrapper عمومی انجام می‌شود.</summary>
+        private object ExecuteProgramNode(ProgramNode node)
+        {
             DebugLog($"VisitProgramNode:", false);
 
             if (!_preserveStateBetweenPrograms)
@@ -676,6 +990,7 @@ namespace Benita
                 _variables.Clear();
                 _functions.Clear();
                 _outerScopeVariables.Clear();
+                _persistentVariableNames.Clear();
             }
 
             foreach (var packageNode in node.Packages)
@@ -683,14 +998,22 @@ namespace Benita
                 Visit(packageNode);
             }
 
-            foreach (var globalVar in node.GlobalVariables)
-            {
-                Visit(globalVar);
-            }
-
+            // تابع‌ها باید هنگام ارزیابی initializerهای سراسری قابل فراخوانی باشند.
             foreach (var function in node.Functions)
             {
                 Visit(function);
+            }
+
+            // PackageInstance یک Interpreter جدا دارد و تعریف توابع global را از context می‌خواند.
+            Synchronize(_context.GlobalFunctions, _functions);
+
+            foreach (var globalVar in node.GlobalVariables)
+            {
+                Visit(globalVar);
+                // ساخت package در initializer می‌تواند globalهای قبلی را از طریق init تغییر دهد.
+                RefreshVisibleGlobalsFromContext();
+                _persistentVariableNames.Add(globalVar.Name);
+                _context.GlobalVariables[globalVar.Name] = _variables[globalVar.Name];
             }
 
             Synchronize(_context.GlobalFunctions, _functions);
@@ -805,7 +1128,8 @@ namespace Benita
         {
             foreach (MatchPatternNode pattern in arm.Patterns)
             {
-                if (pattern is ValueMatchPatternNode valuePattern && Equals(value, Visit(valuePattern.Value)))
+                if (pattern is ValueMatchPatternNode valuePattern &&
+                    ValuesAreEqual(value, Visit(valuePattern.Value)))
                     return true;
                 if (pattern is RangeMatchPatternNode range)
                 {
@@ -848,16 +1172,47 @@ namespace Benita
         {
             DebugLog($"VisitMemberAccessNode: ObjectName = {node.ObjectName}");
 
-            if (node.ObjectName == _packageScope)
+            if (node.ObjectName == "this" || node.ObjectName == _packageScope)
                 return Visit(node.Expression);
+
+            if (TryGetVariableValue(node.ObjectName, out var errorValue) && errorValue is ErrorValue error)
+            {
+                if (node.Expression is IdentifierNode member)
+                    return member.Name switch
+                    {
+                        "code" => error.Code,
+                        "message" => error.Message,
+                        _ => throw new RuntimeException($"Error has no member named '{member.Name}'.")
+                    };
+                throw new RuntimeException("Error members are read-only.");
+            }
 
             if (TryGetVariableValue(node.ObjectName, out var instance) && instance is PackageInstance packageInstance)
             {
-                return packageInstance.Visit(node.Expression, _variables);
+                AstNode expression = EvaluateExternalMemberInputs(node.Expression);
+                object result = packageInstance.Visit(expression, _variables);
+                RefreshVisibleGlobalsFromContext();
+                return result;
             }
 
             throw new Exception($"Member access on non-package instance '{instance}'");
         }
+
+        /// <summary>
+        /// آرگومان‌ها و RHS دسترسی خارجی را در scope فراخواننده ارزیابی می‌کند تا فیلد هم‌نام receiver
+        /// نتواند lookup عبارت caller را تغییر دهد.
+        /// </summary>
+        private AstNode EvaluateExternalMemberInputs(AstNode expression) => expression switch
+        {
+            FunctionCallNode call => new FunctionCallNode(call.FunctionName,
+                call.Arguments.Select(argument =>
+                    (ExpressionNode)new RuntimeValueNode(Visit(argument))).ToList()),
+            AssignmentNode assignment => new AssignmentNode(assignment.Name,
+                new RuntimeValueNode(Visit(assignment.Expression))),
+            CompoundAssignmentNode assignment => new CompoundAssignmentNode(assignment.Name,
+                assignment.Operator, new RuntimeValueNode(Visit(assignment.Expression))),
+            _ => expression
+        };
 
         /// <summary>
         /// Tries to get the value of a variable by its name.
@@ -888,27 +1243,20 @@ namespace Benita
         {
             DebugLog($"VisitArrayInitializerNode", false);
 
-            List<object> arrayValues = new();
+            if (arrayInitializerNode.ElementType is null)
+                return arrayInitializerNode.Elements.Select(Visit).ToArray();
 
-            var sizeValue = Convert.ToInt32(Visit(arrayInitializerNode.SizeExpression));
-            DebugLog($"VisitArrayInitializerNode: ArraySize = {sizeValue}, ElementsCount = {arrayInitializerNode.Elements.Count}");
-
-            if (sizeValue == arrayInitializerNode.Elements.Count)
+            double requestedSize = Convert.ToDouble(Visit(arrayInitializerNode.SizeExpression));
+            if (!double.IsFinite(requestedSize) || requestedSize < 0 || requestedSize != Math.Truncate(requestedSize) ||
+                requestedSize > int.MaxValue)
             {
-                foreach (var element in arrayInitializerNode.Elements)
-                {
-                    arrayValues.Add(Visit(element));
-                }
-            }
-            else
-            {
-                for (int i = 0; i < sizeValue; i++)
-                {
-                    arrayValues.Add(0);
-                }
+                throw new RuntimeException("Array length must be a non-negative whole number within the supported range.");
             }
 
-            return arrayValues.ToArray();
+            int size = (int)requestedSize;
+            object defaultValue = GetDefaultValue(arrayInitializerNode.ElementType);
+            DebugLog($"VisitArrayInitializerNode: ArraySize = {size}, ElementType = {arrayInitializerNode.ElementType}");
+            return Enumerable.Repeat(defaultValue, size).ToArray();
         }
 
         /// <summary>
@@ -921,18 +1269,12 @@ namespace Benita
             DebugLog($"VisitArrayAccessNode: ArrayName = {node.Name}", false);
 
             var arrayName = node.Name;
-            var index = Convert.ToInt32(Visit(node.Index));
-
-            DebugLog($"VisitArrayAccessNode: index = {index}", false);
-
             if (TryGetVariableValue(arrayName, out var value) && value is object[] array)
             {
-                if (index < 0)
-                    index = array.Length + index;
+                int index = RuntimeIndex.Normalize(Visit(node.Index), array.Length,
+                    $"Index for array '{arrayName}'", allowNegative: true);
 
-                if (index < 0 || index >= array.Length)
-                    throw new($"Index out of bounds for array '{arrayName}'");
-
+                DebugLog($"VisitArrayAccessNode: index = {index}", false);
                 DebugLog($"VisitArrayAccessNode: value = {array[index]}", false);
                 return array[index];
             }
@@ -951,10 +1293,6 @@ namespace Benita
 
             var arrayName = node.Name;
             var newValue = Visit(node.Value);
-            var index = Visit(node.Index);
-
-            DebugLog($"VisitArrayAssignmentNode: index = {index}, newValue = {newValue}");
-
             if (!_variables.ContainsKey(arrayName))
             {
                 throw new($"Array '{arrayName}' not found in variables.");
@@ -963,7 +1301,10 @@ namespace Benita
             object arrayObj = _variables[arrayName];
             if (arrayObj is object[] array)
             {
-                array[Convert.ToInt32(index)] = newValue;
+                int index = RuntimeIndex.Normalize(Visit(node.Index), array.Length,
+                    $"Index for array '{arrayName}'", allowNegative: true);
+                DebugLog($"VisitArrayAssignmentNode: index = {index}, newValue = {newValue}");
+                array[index] = newValue;
                 _variables[arrayName] = array;
                 return newValue;
             }
@@ -982,12 +1323,10 @@ namespace Benita
 
             return type switch
             {
-                "number" => 0,
+                "number" => 0d,
                 "string" => string.Empty,
                 "bool" => false,
-                "number[]" => new List<object>(),
-                "string[]" => new List<object>(),
-                "bool[]" => new List<object>(),
+                "number[]" or "string[]" or "bool[]" => Array.Empty<object>(),
                 _ => throw new($"Unknown type '{type}'")
             };
         }

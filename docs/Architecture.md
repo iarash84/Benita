@@ -9,6 +9,7 @@
 Benita/
 ├── Application/       نقطه ورود CLI و محیط REPL
 ├── Compilation/       Lexer، Parser، تحلیل معنایی، بهینه‌ساز و خط لوله کامپایل
+├── Semantics/         مدل نوع و قواعد سازگاری نوع‌ها
 ├── Syntax/            توکن‌ها و مدل AST
 ├── Runtime/           مفسر، scope بسته‌ها، debugger و وضعیت زمان اجرا
 │   └── BuiltIns/      توابع داخلی و سازنده‌های آن‌ها
@@ -61,3 +62,87 @@ debugger داده می‌شود تا چند مفسر اطلاعاتشان را �
 اگر بعداً بخواهم این بخش را کوچک‌تر کنم، قدم منطقی بعدی تعریف visitorهای جدا برای
 expressionها و statementها است. این جابه‌جایی باید مرحله‌ای باشد و برای هر گروه تست
 رگرسیون جدا داشته باشد.
+
+## سیستم نوع
+
+نوع‌های معنایی دیگر فقط رشته‌هایی مثل `number[]` نیستند. مدل پایه در پوشهٔ
+`Semantics/Types` قرار دارد و فعلاً این نوع‌ها را پوشش می‌دهد:
+
+- `PrimitiveTypeSymbol` برای `number`، `string`، `bool` و `void`
+- `ArrayTypeSymbol` برای آرایه و نوع عنصر آن
+- `NamedTypeSymbol` برای نوع‌های تعریف‌شده با نام، مانند packageها
+- `SpecialTypeSymbol` برای نوع‌های داخلی تحلیل‌گر مثل `unknown` و `array`
+
+`TypeFacts` تبدیل نام‌های نوشته‌شده در source و قواعد assignability را نگه می‌دارد.
+امضای توابع داخلی و بررسی آرگومان‌های آن‌ها به این مدل منتقل شده‌اند. نام نوع در AST
+هنوز رشته باقی می‌ماند، چون AST باید همان چیزی را که Parser از source خوانده نگه دارد.
+
+قدم بعدی این مهاجرت، جایگزین‌کردن جدول متغیرهای رشته‌ای `SemanticAnalyzer` با symbol table
+است. بعد از آن می‌توان `PackageTypeSymbol` و `InterfaceTypeSymbol` را بدون اضافه‌کردن شرط‌های
+رشته‌ای به تحلیل‌گر وارد کرد.
+
+## مدل شیء و چرخهٔ ساخت نمونه
+
+مدل شیء فعلی بر پایهٔ composition است. هر `pkg` یک نوع نام‌دار با فیلد، متد و حداکثر یک
+initializer به نام `init` است. نوع package در پارامتر، خروجی تابع، متغیر محلی و فیلد قابل
+استفاده است. متغیرها و توابع به‌صورت پیش‌فرض private هستند و فقط اعضایی که صریحاً
+با `public` مشخص شده‌اند از بیرون package قابل دسترسی‌اند.
+
+مسیر ساخت `new Product(args)` در لایه‌ها به این شکل است:
+
+1. Lexer کلمات `new`، `init` و `this` را به token مستقل تبدیل می‌کند.
+2. Parser برای `new` یک `NewExpressionNode` می‌سازد. در نتیجه نمونه‌سازی می‌تواند داخل
+   `return`، آرگومان تابع، مقدار اولیهٔ فیلد یا اعلان `let` قرار بگیرد.
+3. Semantic Analyzer وجود package، امضای `init`، تعداد و نوع آرگومان‌ها و دسترسی معتبر به
+   فیلدها و متدها را بررسی می‌کند. ابتدا نام همهٔ packageها ثبت و بعد بدنه‌ها تحلیل می‌شوند
+   تا ارجاع بین packageها ممکن باشد.
+4. Interpreter آرگومان‌ها را در scope فراخواننده ارزیابی می‌کند؛ آرگومان می‌تواند متغیر
+   یا نمونه‌ای از package دیگر باشد.
+5. `PackageInstance` برای هر نمونه یک scope مستقل می‌سازد، فیلدها و متدها را ثبت می‌کند و
+   سپس `init` را با مقدارهای ارزیابی‌شده اجرا می‌کند. `this.member` مستقیم به همین scope
+   هدایت می‌شود.
+
+`RuntimeValueNode` جزئیات داخلی runtime برای انتقال مقدار ارزیابی‌شده به `init` است و syntax
+متناظری در زبان ندارد. تنها `init` سازندهٔ package است و متد هم‌نام package رفتار ویژه‌ای ندارد.
+
+این مدل علاوه بر composition از interfaceهای اسمی و چندریختی نیز پشتیبانی می‌کند.
+`InterfaceNode` قرارداد متدها را نگه می‌دارد و `PackageNode.Interfaces` فهرست قراردادهای
+پیاده‌سازی‌شده را ثبت می‌کند. تحلیل‌گر تطابق کامل امضا و public بودن implementation را
+بررسی می‌کند و assignability از package به interface را می‌پذیرد. در runtime همان
+`PackageInstance` واقعی نگهداری می‌شود، بنابراین فراخوانی از طریق interface به متد concrete
+dispatch می‌شود. نمونه‌های Strategy، Factory Method، Abstract Factory، Adapter، Decorator،
+Bridge، State و Proxy در `Examples/Patterns` و تست‌های اجرایی پوشش داده شده‌اند.
+
+## مدیریت خطا در runtime
+
+`ErrorValue` نمایش پایدار خطای قابل مشاهده در زبان است و `ThrownErrorException` فقط برای
+انتقال داخلی آن میان گره‌های AST استفاده می‌شود. `TryStatementNode` خطاهای پرتاب‌شده و
+خطاهای runtime را به `ErrorValue` تبدیل می‌کند، بدون آنکه سیگنال‌های کنترل حلقه را بگیرد.
+متغیر catch scope محدود دارد و interpreter پیش از خروج مقدار قبلی هم‌نام را بازیابی
+می‌کند. اجرای finally با نگهداری موقت flag مربوط به return انجام می‌شود تا cleanup پیش
+از تحویل مقدار تابع اجرا شود. خروج کنترلی از finally در تحلیل معنایی محدود شده است تا
+flagهای داخلی ناسازگار نشوند. در مرز `ProgramNode` نیز `ThrownErrorException` داخلی به
+`UnhandledErrorException` عمومی با code و message اصلی تبدیل می‌شود. این مدل مبنای انتقال
+خطای task نیز با حفظ exception اصلی در محل `await` دوباره پرتاب می‌شود و به همین سازوکار
+`try/catch` وارد می‌شود.
+
+## معماری async/await
+
+`AsyncExpressionNode` فقط یک فراخوانی تابع را می‌پذیرد و در runtime یک `TaskValue` می‌سازد.
+آرگومان‌ها پیش از شروع task ارزیابی می‌شوند و هر task یک `Interpreter` و `RuntimeContext`
+مستقل دریافت می‌کند. تعریف‌های تابع و package تغییرپذیر نیستند و به context جدید منتقل
+می‌شوند؛ dictionaryهای متغیر مشترک نیستند و آرایه‌ها نیز clone می‌شوند. `AwaitExpressionNode`
+با `GetAwaiter().GetResult()` نتیجه را بدون wrapper شدن exception دریافت می‌کند تا خطاهای
+Benita مستقیماً به catch برسند.
+
+نمونه‌های package و آرایه‌ها هنگام capture شدن توسط task به‌صورت عمیق clone می‌شوند. clone
+aliasها و cycleها را حفظ می‌کند و `init` را دوباره اجرا نمی‌کند؛ بنابراین task state mutable
+مشترکی با caller ندارد. اگر در آینده shared mutable state لازم شود، باید primitiveهای
+synchronization یا channel به زبان افزوده شوند.
+
+## موقعیت source در Lexer
+
+Lexer شمارهٔ خط و offset آغاز خط را هم‌زمان با scan به‌روز می‌کند. موقعیت آغاز هر token
+پیش از خواندن آن snapshot می‌شود؛ بنابراین ساخت `SourceSpan` نیازمند پیمایش دوباره از ابتدای
+source نیست و هزینهٔ tokenization با اندازهٔ ورودی رشد خطی دارد. جدول origin تولیدشده توسط
+`include_once` همچنان نام فایل و شمارهٔ خط اصلی هر token را تأمین می‌کند.

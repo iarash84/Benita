@@ -1,9 +1,9 @@
 ﻿namespace Benita
 {
     /// <summary>نقطهٔ ورود برنامه و مسئول تفسیر فرمان‌ها و گزینه‌های خط فرمان است.</summary>
-    internal class Program
+    public class Program
     {
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             try
             {
@@ -75,9 +75,7 @@
                     CheckFile(args, printTokens, printAst, printSource, compiler);
                     break;
                 default:
-                    Console.WriteLine("Error: Unknown action - " + action);
-                    ShowHelp();
-                    break;
+                    throw new ArgumentException("Unknown action - " + action);
             }
             if (!Console.IsInputRedirected)
             {
@@ -91,12 +89,11 @@
         {
             if (args.Length < 2)
             {
-                Console.WriteLine("Error: File path is required.");
-                return;
+                throw new ArgumentException("A .ben file path is required for the execute command.");
             }
 
             string filePath = args[1];
-            if (!ValidateFile(filePath)) return;
+            ValidateFile(filePath);
 
             string fileContent = File.ReadAllText(filePath);
             compiler.Exec(fileContent, printTokens, printAst, printSource, debugModeAvailable, filePath, optimizeAst);
@@ -110,28 +107,21 @@
             }
 
             string filePath = args[1];
-            if (!ValidateFile(filePath)) return;
+            ValidateFile(filePath);
 
             string fileContent = File.ReadAllText(filePath);
             compiler.Check(fileContent, printTokens, printAst, printSource, filePath);
             Console.WriteLine($"Check passed: {filePath}");
         }
 
-        static bool ValidateFile(string filePath)
+        static void ValidateFile(string filePath)
         {
             if (!File.Exists(filePath))
-            {
-                Console.WriteLine("Error: File not found - " + filePath);
-                return false;
-            }
+                throw new FileNotFoundException("File not found.", filePath);
 
-            if (Path.GetExtension(filePath).ToLower() != ".ben")
-            {
-                Console.WriteLine("Error: Invalid file extension. Only .ben files are allowed.");
-                return false;
-            }
-
-            return true;
+            if (!string.Equals(Path.GetExtension(filePath), ".ben", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Invalid file extension. Only .ben files are allowed.",
+                    nameof(filePath));
         }
 
         static void ShowHelp()

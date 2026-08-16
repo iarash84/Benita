@@ -3,7 +3,8 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
-public class ReviewRegressionTests
+/// <summary>لبه‌های مشترک تحلیل معنایی و runtime را که در تست‌های happy path دیده نمی‌شوند پوشش می‌دهد.</summary>
+public class SemanticAndRuntimeEdgeCaseTests
 {
     [TestMethod]
     public void Visit_WithFalseAndExpression_DoesNotEvaluateRightOperand()

@@ -1,3 +1,5 @@
+// دریافت یک رشته از ورودی استاندارد و چاپ دوبارهٔ آن را نمایش می‌دهد.
+// Demonstrates reading a string from standard input and printing it back.
 _main_() {
     print("Enter your name ");
     string message = input();

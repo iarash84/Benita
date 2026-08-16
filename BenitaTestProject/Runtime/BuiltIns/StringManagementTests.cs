@@ -2,9 +2,10 @@ using Benita.itpr_df;
 
 using Benita;
 
-namespace BenitaTestProject.Itpr_df;
+namespace BenitaTestProject.Runtime.BuiltIns;
 
 [TestClass]
+/// <summary>پیاده‌سازی زمان اجرای عملیات رشته‌ای و حالت‌های مرزی آن را بررسی می‌کند.</summary>
 public class StringManagementTests
 {
     private readonly StringManagement _strings = new();

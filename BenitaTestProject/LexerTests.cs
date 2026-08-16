@@ -3,19 +3,17 @@ using Benita;
 namespace BenitaTestProject
 {
     [TestClass]
-    public class LexerTest
+    /// <summary>توکن‌سازی کلیدواژه‌ها، مقادیر، عملگرها و خطاهای واژگانی را بررسی می‌کند.</summary>
+    public class LexerTests
     {
         [TestMethod]
         public void Tokenize_SimpleCode_ReturnsCorrectTokens()
         {
-            // Arrange
             string code = "_main_() { return 42; }";
             Lexer lexer = new Lexer(code);
 
-            // Act
             List<Token> tokens = lexer.Tokenize();
 
-            // Assert
             Assert.AreEqual(9, tokens.Count);
             Assert.AreEqual(TokenType.MAIN, tokens[0].Type);
             Assert.AreEqual(TokenType.LPAREN, tokens[1].Type);
@@ -31,14 +29,11 @@ namespace BenitaTestProject
         [TestMethod]
         public void Tokenize_IfElseCode_ReturnsCorrectTokens()
         {
-            // Arrange
             string code = "if (true) { return 1; } else { return 0; }";
             Lexer lexer = new Lexer(code);
 
-            // Act
             List<Token> tokens = lexer.Tokenize();
 
-            // Assert
             Assert.AreEqual(16, tokens.Count);
             Assert.AreEqual(TokenType.IF, tokens[0].Type);
             Assert.AreEqual(TokenType.LPAREN, tokens[1].Type);
@@ -62,14 +57,11 @@ namespace BenitaTestProject
         [TestMethod]
         public void Tokenize_StringLiteral_ReturnsCorrectToken()
         {
-            // Arrange
             string code = "string str = \"hello world\";";
             Lexer lexer = new Lexer(code);
 
-            // Act
             List<Token> tokens = lexer.Tokenize();
 
-            // Assert
             Assert.AreEqual(6, tokens.Count);
             Assert.AreEqual(TokenType.STRING, tokens[0].Type);
             Assert.AreEqual(TokenType.IDENTIFIER, tokens[1].Type);
@@ -82,14 +74,11 @@ namespace BenitaTestProject
         [TestMethod]
         public void Tokenize_Comment_ShouldSkipComment()
         {
-            // Arrange
             string code = "_main_() { // this is a comment\n return 42; }";
             Lexer lexer = new Lexer(code);
 
-            // Act
             List<Token> tokens = lexer.Tokenize();
 
-            // Assert
             Assert.AreEqual(9, tokens.Count);
             Assert.AreEqual(TokenType.MAIN, tokens[0].Type);
             Assert.AreEqual(TokenType.LPAREN, tokens[1].Type);
@@ -105,14 +94,11 @@ namespace BenitaTestProject
         [TestMethod]
         public void Tokenize_MultiLineComment_ShouldSkipMultiLineComment()
         {
-            // Arrange
             string code = "_main_() { /* multi\nline\ncomment */ return 42; }";
             Lexer lexer = new Lexer(code);
 
-            // Act
             List<Token> tokens = lexer.Tokenize();
 
-            // Assert
             Assert.AreEqual(9, tokens.Count);
             Assert.AreEqual(TokenType.MAIN, tokens[0].Type);
             Assert.AreEqual(TokenType.LPAREN, tokens[1].Type);
@@ -128,7 +114,6 @@ namespace BenitaTestProject
         [TestMethod]
         public void Tokenize_WithUnterminatedStringLiteral_ThrowsInvalidOperationException()
         {
-            // Arrange
             string code = "string str = \"hello world";
             Lexer lexer = new Lexer(code);
 
@@ -138,14 +123,11 @@ namespace BenitaTestProject
         [TestMethod]
         public void Tokenize_WhileLoop_ReturnsCorrectTokens()
         {
-            // Arrange
             string code = "while (true) { return 42; }";
             Lexer lexer = new Lexer(code);
 
-            // Act
             List<Token> tokens = lexer.Tokenize();
 
-            // Assert
             Assert.AreEqual(10, tokens.Count);
             Assert.AreEqual(TokenType.WHILE, tokens[0].Type);
             Assert.AreEqual(TokenType.LPAREN, tokens[1].Type);
@@ -163,7 +145,6 @@ namespace BenitaTestProject
         [TestMethod]
         public void Tokenize_ComplexCode_ReturnsCorrectTokens()
         {
-            // Arrange
             string code = @"
                 func add(number a, number b) -> number {
                     return a + b;
@@ -197,10 +178,8 @@ namespace BenitaTestProject
 
             Lexer lexer = new Lexer(code);
 
-            // Act
             List<Token> tokens = lexer.Tokenize();
 
-            // Assert
             Assert.AreEqual(123, tokens.Count); // Adjusted based on the actual token count in the code
 
             // Validate specific tokens and their types
@@ -345,7 +324,6 @@ namespace BenitaTestProject
         [TestMethod]
         public void Tokenize_FibonacciCode_ReturnsCorrectTokens()
         {
-            // Arrange
             string code = @"
                 func fib(number x) -> number 
                 {
@@ -371,10 +349,8 @@ namespace BenitaTestProject
 
             Lexer lexer = new Lexer(code);
 
-            // Act
             List<Token> tokens = lexer.Tokenize();
 
-            // Assert
             Assert.AreEqual(90, tokens.Count); // Adjusted based on the actual token count in the code
 
             // Validate specific tokens and their types
@@ -472,8 +448,21 @@ namespace BenitaTestProject
             AssertToken(tokens[87], TokenType.RBRACE, "}");
             AssertToken(tokens[88], TokenType.RBRACE, "}");
         }
+        [TestMethod]
+        public void Tokenize_LargeMultilineSource_PreservesFinalTokenLocation()
+        {
+            const int declarationCount = 5000;
+            string source = string.Join('\n', Enumerable.Range(0, declarationCount)
+                .Select(index => $"number value{index} = {index};"));
 
+            List<Token> tokens = new Lexer(source, sourceName: "large.ben").Tokenize();
+            Token finalIdentifier = tokens.Last(token => token.Type == TokenType.IDENTIFIER);
 
+            Assert.AreEqual(declarationCount, finalIdentifier.Span.Line);
+            Assert.AreEqual(8, finalIdentifier.Span.Column);
+            Assert.AreEqual($"value{declarationCount - 1}", finalIdentifier.Lexeme);
+            Assert.AreEqual(Path.GetFullPath("large.ben"), finalIdentifier.Span.FileName);
+        }
 
         private void AssertToken(Token token, TokenType expectedType, string? expectedLexeme)
         {

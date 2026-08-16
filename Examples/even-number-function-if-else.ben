@@ -1,3 +1,5 @@
+// تابع بولی تشخیص زوج بودن و انتخاب شاخهٔ if/else را آزمایش می‌کند.
+// Tests a Boolean even-number function and if/else branch selection.
 func is_even(number a) -> bool {
     return a % 2 == 0;
 }

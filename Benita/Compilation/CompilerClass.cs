@@ -9,7 +9,18 @@ public sealed class CompilerClass
         bool optimizeAst = false)
     {
         ProgramNode program = Compile(sourceCode, lexerPrint, parserPrint, sourcePrint, sourceName, optimizeAst);
-        new Interpreter(debugModeAvailable).Visit(program);
+        try
+        {
+            new Interpreter(debugModeAvailable).Visit(program);
+        }
+        catch (BenitaException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            throw new RuntimeException(exception.Message, exception);
+        }
     }
 
     /// <summary>یک قطعه کد را در مفسر پایدار REPL اجرا و کل نشست را تحلیل می‌کند.</summary>
@@ -18,11 +29,21 @@ public sealed class CompilerClass
         bool optimizeAst = false)
     {
         const string noOp = "if (false) {}";
-        AnalyzeProgram(Parse(Tokenize($"{sessionSource}{Environment.NewLine}{noOp}")));
+        AnalyzeProgram(Parse(Tokenize($"{sessionSource}{Environment.NewLine}{noOp}",
+            sourceName: "<repl>")));
         ProgramNode program = Parse(Tokenize($"{sourceCode}{Environment.NewLine}{noOp}",
             lexerPrint, sourcePrint, "<repl>"));
         program = OptimizeIfRequested(program, parserPrint, optimizeAst);
-        interpreter.Visit(program);
+        Interpreter.TransactionCheckpoint checkpoint = interpreter.CreateCheckpoint();
+        try
+        {
+            interpreter.Visit(program);
+        }
+        catch
+        {
+            interpreter.RestoreCheckpoint(checkpoint);
+            throw;
+        }
     }
 
     /// <summary>صحت واژگانی، نحوی و معنایی کد را بدون اجرا بررسی می‌کند.</summary>
@@ -62,8 +83,9 @@ public sealed class CompilerClass
 
     private static void AnalyzeProgram(ProgramNode program)
     {
-        try { new SemanticAnalyzer().Analyze(program); }
+        var analyzer = new SemanticAnalyzer();
+        try { analyzer.Analyze(program); }
         catch (BenitaException) { throw; }
-        catch (Exception exception) { throw new SemanticException(exception.Message, exception); }
+        catch (Exception exception) { throw new SemanticException(exception.Message, analyzer.CurrentSpan, exception); }
     }
 }

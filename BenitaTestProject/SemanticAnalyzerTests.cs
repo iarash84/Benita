@@ -1,32 +1,57 @@
-﻿using Benita;
+using Benita;
 
 namespace BenitaTestProject
 {
     [TestClass]
+    /// <summary>ثبت نمادها و تشخیص خطاهای پایه توسط تحلیل‌گر معنایی را بررسی می‌کند.</summary>
     public class SemanticAnalyzerTests
     {
         [TestMethod]
         public void Analyze_WithGlobalVariables_CompletesSuccessfully()
         {
-            // TODO : Notimpelimented
+            const string source = """
+                number answer = 42;
+                _main_() { print(answer); }
+                """;
+            var program = new Parser(new Lexer(source).Tokenize()).Parse();
+
+            new SemanticAnalyzer().Analyze(program);
         }
 
         [TestMethod]
         public void Analyze_WithFunctions_CompletesSuccessfully()
         {
-            // TODO : Notimpelimented
+            const string source = """
+                func add(number left, number right) -> number {
+                    return left + right;
+                }
+
+                _main_() { number result = add(20, 22); }
+                """;
+            var program = new Parser(new Lexer(source).Tokenize()).Parse();
+
+            new SemanticAnalyzer().Analyze(program);
         }
 
         [TestMethod]
         public void Analyze_WithDuplicateFunction_ThrowsException()
         {
-            // TODO : Notimpelimented
+            const string source = """
+                func calculate() -> number { return 1; }
+                func calculate() -> number { return 2; }
+                _main_() { }
+                """;
+            var program = new Parser(new Lexer(source).Tokenize()).Parse();
+            var analyzer = new SemanticAnalyzer();
+
+            var exception = Assert.ThrowsException<Exception>(() => analyzer.Analyze(program));
+
+            StringAssert.Contains(exception.Message, "Function 'calculate' is already declared");
         }
 
         [TestMethod]
         public void Analyze_WithValidMainFunction_CompletesSuccessfully()
         {
-            // Arrange
             var semanticAnalyzer = new SemanticAnalyzer();
             var mainFunction = new FunctionNode("main", new List<ParameterNode>(), "void", new BlockNode(new List<StatementNode>()), null);
             var program = new ProgramNode(
@@ -37,14 +62,12 @@ namespace BenitaTestProject
                 statements: null
             );
 
-            // Act & Assert (no exception expected)
             semanticAnalyzer.Analyze(program);
         }
 
         [TestMethod]
         public void Analyze_WithMismatchedReturnType_ThrowsException()
         {
-            // Arrange
             var semanticAnalyzer = new SemanticAnalyzer();
             var program = new ProgramNode(
                 new List<VariableDeclarationNode?>(),
@@ -59,14 +82,12 @@ namespace BenitaTestProject
                 statements: null
             );
 
-            // Act & Assert (expecting an exception)
             Assert.ThrowsException<Exception>(() => semanticAnalyzer.Analyze(program));
         }
 
         [TestMethod]
         public void Analyze_WithUndeclaredVariable_ThrowsException()
         {
-            // Arrange
             var semanticAnalyzer = new SemanticAnalyzer();
             var program = new ProgramNode(
                 new List<VariableDeclarationNode?>(),
@@ -82,7 +103,6 @@ namespace BenitaTestProject
                 statements: null
             );
 
-            // Act & Assert (expecting an exception)
             Assert.ThrowsException<Exception>(() => semanticAnalyzer.Analyze(program));
         }
 

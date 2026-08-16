@@ -19,7 +19,10 @@
 - توابع کامل رشته‌ای برای طول، جست‌وجو، برش، جایگزینی، تقسیم و تغییر حروف
 - توابع، بازگشت و فراخوانی بازگشتی
 - شرط‌های `if/else if/else`، ساختار مقدارساز/دستوری `match` و حلقه‌های `while`، `for` و `for-in`
-- بسته‌ها (`pkg`)، اعضای بسته و نمونه‌سازی
+- بسته‌ها (`pkg`)، مقداردهی با `init`، ارجاع `this`، composition و نمونه‌سازی expression-based
+- اعضای private به‌صورت پیش‌فرض و modifierهای صریح `public` و `private`
+- interfaceهای اسمی، پیاده‌سازی چند interface و چندریختی زمان اجرا
+- مدیریت خطا با `error`، `throw` و ساختار `try/catch/finally`
 - ورودی و خروجی کنسول
 - عملیات خواندن، نوشتن، بررسی وجود و حذف فایل
 - دستور `include_once` برای استفاده از فایل‌های دیگر
@@ -59,7 +62,7 @@ __________              .__  __           .____
  |______  /\___  >___|  /__||__| (____  / |_______ (____  /___|  /\___  /
         \/     \/     \/              \/          \/    \/     \//_____/
   (c) Adm, 2024
-  Version 0.6.0
+  Version 1.0.0
 Usage: Program [action] [filePath] [options]
 Actions:
   exc        - Execute the code in the file.
@@ -131,6 +134,7 @@ dotnet test Benita.sln
 - [آموزش دو‌زبانه زبان](docs/Tutorial.MD)
 - [گرامر زبان](docs/Grammar.txt)
 - [برنامه‌های نمونه](Examples)
+- [افزونهٔ Benita برای Visual Studio Code](editors/vscode-benita)
 
 ### انتشار نسخه جدید
 
@@ -164,7 +168,10 @@ Benita is a small educational programming language I am building with C# and .NE
 - String operations for length, search, slicing, replacement, splitting, trimming, and letter case
 - Functions, returns, and recursion
 - `if/else if/else` conditions, value/statement `match`, and `while`/`for`/`for-in` loops
-- Packages (`pkg`), package members, and object instantiation
+- Packages (`pkg`) with `init`, `this`, composition, and expression-based object creation
+- Private-by-default members with explicit `public`/`private` access modifiers
+- Nominal interfaces, multiple interface implementation, and runtime polymorphism
+- Error handling with `error`, `throw`, and `try/catch/finally`
 - Console input and output
 - File read, write, existence, and deletion operations
 - `include_once` support for reusable source files
@@ -204,7 +211,7 @@ __________              .__  __           .____
  |______  /\___  >___|  /__||__| (____  / |_______ (____  /___|  /\___  /
         \/     \/     \/              \/          \/    \/     \//_____/
   (c) Adm, 2024
-  Version 0.6.0
+  Version 1.0.0
 Usage: Program [action] [filePath] [options]
 Actions:
   exc        - Execute the code in the file.
@@ -284,6 +291,7 @@ Programs in the [`Examples`](Examples) directory are executed directly by the te
 - [Bilingual language tutorial](docs/Tutorial.MD)
 - [Language grammar](docs/Grammar.txt)
 - [Example programs and educational algorithms](Examples/README.md)
+- [Benita extension for Visual Studio Code](editors/vscode-benita)
 
 ### Publishing a release
 

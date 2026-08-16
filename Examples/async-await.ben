@@ -1,0 +1,19 @@
+// دو محاسبه را هم‌زمان آغاز می‌کند، نتیجه‌ها را با await می‌گیرد و انتقال خطای task به catch را نشان می‌دهد.
+// Starts two computations concurrently, awaits their results, and demonstrates task-error propagation to catch.
+
+func add(number left, number right) -> number { return left + right; }
+
+func fail() -> number {
+    throw error("ASYNC100", "Background operation failed");
+}
+
+_main_() {
+    let first = async add(20, 22);
+    let second = async add(5, 7);
+    print(await second);
+    print(await first);
+
+    let failing = async fail();
+    try { number unused = await failing; }
+    catch (failure) { print(failure.code + ": " + failure.message); }
+}

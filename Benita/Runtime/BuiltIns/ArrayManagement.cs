@@ -54,13 +54,9 @@
         private object ArrayRemove(List<object> arguments)
         {
             var array = arguments[0];
-            var index = Convert.ToInt32(arguments[1]);
             if (array is Array arr)
             {
-                if (index < 0 || index >= arr.Length)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
-                }
+                int index = RuntimeIndex.Normalize(arguments[1], arr.Length, "index");
 
                 object[] newArray = new object[arr.Length - 1];
                 int newArrayIndex = 0;
@@ -76,13 +72,14 @@
         }
 
         private static object ArrayContains(List<object> arguments) =>
-            RequireArray(arguments[0], "array_contains").Cast<object?>().Any(item => Equals(item, arguments[1]));
+            RequireArray(arguments[0], "array_contains").Cast<object?>()
+                .Any(item => RuntimeValueComparer.AreEqual(item, arguments[1]));
 
         private static object ArrayIndexOf(List<object> arguments)
         {
             var array = RequireArray(arguments[0], "array_index_of");
             for (int index = 0; index < array.Length; index++)
-                if (Equals(array.GetValue(index), arguments[1])) return index;
+                if (RuntimeValueComparer.AreEqual(array.GetValue(index), arguments[1])) return index;
             return -1;
         }
 
@@ -102,8 +99,7 @@
         private static object ArrayInsert(List<object> arguments)
         {
             var array = RequireArray(arguments[0], "array_insert");
-            int index = Convert.ToInt32(arguments[1]);
-            if (index < 0 || index > array.Length) throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+            int index = RuntimeIndex.Normalize(arguments[1], array.Length, "index", allowEnd: true);
             var result = new object[array.Length + 1];
             for (int source = 0, target = 0; target < result.Length; target++)
                 result[target] = target == index ? arguments[2] : array.GetValue(source++)!;
@@ -113,9 +109,10 @@
         private static object ArraySlice(List<object> arguments)
         {
             var array = RequireArray(arguments[0], "array_slice");
-            int start = Convert.ToInt32(arguments[1]);
-            int length = Convert.ToInt32(arguments[2]);
-            if (start < 0 || length < 0 || start > array.Length - length) throw new ArgumentOutOfRangeException(nameof(start), "Slice range is out of bounds.");
+            int start = RuntimeIndex.Normalize(arguments[1], array.Length, "start", allowEnd: true);
+            int length = RuntimeIndex.NonNegativeWhole(arguments[2], "length");
+            if (length > array.Length - start)
+                throw new ArgumentOutOfRangeException(nameof(length), "Slice range is out of bounds.");
             var result = new object[length];
             for (int index = 0; index < length; index++) result[index] = array.GetValue(start + index)!;
             return result;
@@ -134,7 +131,7 @@
         private static object ArraySort(List<object> arguments)
         {
             var result = Copy(RequireArray(arguments[0], "array_sort"));
-            Array.Sort(result, static (left, right) => left is IComparable comparable ? comparable.CompareTo(right) : throw new InvalidOperationException("Array elements must be comparable."));
+            Array.Sort(result, RuntimeValueComparer.Compare);
             return result;
         }
 

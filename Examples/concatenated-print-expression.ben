@@ -1,3 +1,5 @@
+// الحاق رشته و عدد در یک عبارت print را نمایش می‌دهد.
+// Demonstrates concatenating strings and a number in one print expression.
 _main_() {
     print("This is a test" + " => "  + 1);
 }

@@ -1,3 +1,5 @@
+// حذف و افزودن عناصر آرایه، محاسبهٔ طول و پیمایش نتیجه را آزمایش می‌کند.
+// Tests removing and adding array elements, measuring length, and iterating the result.
 _main_() {                                        
     number[] arr = [10, 20, 30, 40, 50];
     arr = array_remove(arr , 2);

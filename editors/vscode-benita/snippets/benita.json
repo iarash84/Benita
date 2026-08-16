@@ -1,0 +1,96 @@
+{
+  "Main function": {
+    "prefix": "main",
+    "body": [
+      "_main_() {",
+      "    ${0}",
+      "}"
+    ],
+    "description": "Create the Benita entry point"
+  },
+  "Function": {
+    "prefix": "func",
+    "body": [
+      "func ${1:name}(${2}) -> ${3:void} {",
+      "    ${0}",
+      "}"
+    ],
+    "description": "Declare a Benita function"
+  },
+  "Package": {
+    "prefix": "pkg",
+    "body": [
+      "pkg ${1:Name} {",
+      "    init(${2}) {",
+      "        ${0}",
+      "    }",
+      "}"
+    ],
+    "description": "Declare a Benita package"
+  },
+  "Interface": {
+    "prefix": "interface",
+    "body": [
+      "interface ${1:Name} {",
+      "    func ${2:method}(${3}) -> ${4:void};",
+      "}"
+    ],
+    "description": "Declare a Benita interface"
+  },
+  "If statement": {
+    "prefix": "if",
+    "body": [
+      "if (${1:condition}) {",
+      "    ${0}",
+      "}"
+    ],
+    "description": "Create an if statement"
+  },
+  "For-in loop": {
+    "prefix": "forin",
+    "body": [
+      "for (${1:item} in ${2:items}) {",
+      "    ${0}",
+      "}"
+    ],
+    "description": "Iterate over an array"
+  },
+  "Match expression": {
+    "prefix": "match",
+    "body": [
+      "match ${1:value} {",
+      "    ${2:pattern} => ${3:result},",
+      "    _ => ${0:defaultResult}",
+      "}"
+    ],
+    "description": "Create a match expression"
+  },
+  "Try-catch-finally": {
+    "prefix": "try",
+    "body": [
+      "try {",
+      "    ${1}",
+      "} catch (${2:failure}) {",
+      "    ${3}",
+      "} finally {",
+      "    ${0}",
+      "}"
+    ],
+    "description": "Handle a Benita error"
+  },
+  "Async call": {
+    "prefix": "async",
+    "body": "let ${1:task} = async ${2:functionName}(${3});",
+    "description": "Start an asynchronous function call"
+  },
+  "Await task": {
+    "prefix": "await",
+    "body": "${1:let result = }await ${2:task};",
+    "description": "Await a task result"
+  },
+  "Include once": {
+    "prefix": "include",
+    "body": "include_once \"${1:path}\";",
+    "description": "Include a Benita source file once"
+  }
+}

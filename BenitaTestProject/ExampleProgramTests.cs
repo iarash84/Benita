@@ -15,12 +15,20 @@ public class ExampleProgramTests
             // تعریف و فراخوانی تابع جمع عددی و بازگرداندن نتیجه آن را بررسی می‌کند.
             yield return Case("algorithm-binary-search.ben", null, "4", "-1");
             yield return Case("algorithm-bubble-sort.ben", null, "1", "2", "4", "5", "8");
+            yield return Case("algorithm-collatz-sequence.ben", null,
+                "6", "3", "10", "5", "16", "8", "4", "2", "1");
             yield return Case("algorithm-euclidean-gcd.ben", null, "6");
+            yield return Case("algorithm-fast-power.ben", null, "1024", "243", "1");
+            yield return Case("algorithm-insertion-sort.ben", null, "1", "2", "3", "4", "5", "6");
             yield return Case("algorithm-linear-search.ben", null, "3", "-1");
+            yield return Case("algorithm-palindrome-check.ben", null, "True", "False", "True");
             yield return Case("algorithm-prime-check.ben", null,
                 "2 is prime", "9 is not prime", "17 is prime", "21 is not prime", "29 is prime");
             yield return Case("algorithm-recursive-factorial.ben", null, "720");
+            yield return Case("algorithm-sieve-of-eratosthenes.ben", null,
+                "2", "3", "5", "7", "11", "13", "17", "19", "23", "29");
             yield return Case("addition-function-call.ben", null, "5");
+            yield return Case("async-await.ben", null, "12", "42", "ASYNC100: Background operation failed");
             // حذف و افزودن عناصر آرایه، محاسبه طول آرایه و پیمایش نتیجه را بررسی می‌کند.
             yield return Case("array-add-remove-and-length.ben", null, "Element at index 0: 10", "Element at index 1: 20", "Element at index 2: 40", "Element at index 3: 50", "Element at index 4: 60", "Element at index 5: 70");
             // تعریف آرایه با و بدون مقدار اولیه، مقداردهی و دسترسی با اندیس را بررسی می‌کند.
@@ -35,6 +43,7 @@ public class ExampleProgramTests
             yield return Case("concatenated-print-expression.ben", null, "This is a test => 1");
             // تابع کمکی بولی و انتخاب شاخه صحیح در ساختار if/else را بررسی می‌کند.
             yield return Case("even-number-function-if-else.ben", null, "Sum is even.");
+            yield return Case("error-handling.ben", null, "VALUE100: Value cannot be negative", "Validation finished");
             // حلقه کلاسیک و پیمایش مستقیم عناصر آرایه با for-in را بررسی می‌کند.
             yield return Case("for-loop.ben", null, "0", "1", "2", "3", "4", "10", "20", "30");
             // استفاده از متغیر سراسری داخل تابع در کنار متغیرهای محلی و رشته‌ها را بررسی می‌کند.
@@ -51,6 +60,17 @@ public class ExampleProgramTests
             yield return Case("numeric-addition.ben", null, "18");
             // تعریف توابع عددی و رشته‌ای و الحاق رشته‌ها را بررسی می‌کند.
             yield return Case("numeric-and-string-functions.ben", null, "hello world");
+            yield return Case(Path.Combine("Patterns", "builder.ben"), null, "Ryzen 7 / 32 GB");
+            yield return Case(Path.Combine("Patterns", "facade.ben"), null, "Order completed");
+            yield return Case(Path.Combine("Patterns", "factory.ben"), null, "Email: Build finished");
+            yield return Case(Path.Combine("Patterns", "strategy.ben"), null, "Card: 120");
+            yield return Case(Path.Combine("Patterns", "factory-method.ben"), null, "Report document", "Invoice document");
+            yield return Case(Path.Combine("Patterns", "abstract-factory.ben"), null, "Dark button / Dark checkbox");
+            yield return Case(Path.Combine("Patterns", "adapter.ben"), null, "Legacy: adapted");
+            yield return Case(Path.Combine("Patterns", "decorator.ben"), null, "encrypted(timestamped(hello))");
+            yield return Case(Path.Combine("Patterns", "bridge.ben"), null, "Radio on", "Radio off");
+            yield return Case(Path.Combine("Patterns", "state.ben"), null, "playing", "paused");
+            yield return Case(Path.Combine("Patterns", "proxy.ben"), null, "remote data");
             // فراخوانی بازگشتی فیبوناچی، بازگشت زودهنگام و پیمایش با حلقه for را بررسی می‌کند.
             yield return Case("recursive-fibonacci-for-loop.ben", null, "0", "1", "1", "2", "3", "5", "8", "13", "21", "34", "55", "89", "144", "233", "377", "610", "987", "1597", "2584", "4181", "6765");
             // فراخوانی بازگشتی فیبوناچی با متغیر نتیجه و حلقه while را بررسی می‌کند.
@@ -87,7 +107,7 @@ public class ExampleProgramTests
 
             new CompilerClass().Exec(source);
 
-            Assert.AreEqual(expectedOutput, NormalizeLineEndings(consoleOutput.GetOuput()));
+            Assert.AreEqual(expectedOutput, NormalizeLineEndings(consoleOutput.GetOutput()));
         }
         finally
         {
@@ -145,8 +165,8 @@ public class ExampleProgramTests
             ])
             .OrderBy(name => name)
             .ToArray();
-        var actualFiles = Directory.GetFiles(ExamplesDirectory, "*.ben")
-            .Select(Path.GetFileName)
+        var actualFiles = Directory.GetFiles(ExamplesDirectory, "*.ben", SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(ExamplesDirectory, path))
             .OrderBy(name => name)
             .ToArray();
 
@@ -160,7 +180,7 @@ public class ExampleProgramTests
     {
         using var consoleOutput = new ConsoleOutput();
         new CompilerClass().Exec(File.ReadAllText(Path.Combine(ExamplesDirectory, fileName)));
-        return NormalizeLineEndings(consoleOutput.GetOuput());
+        return NormalizeLineEndings(consoleOutput.GetOutput());
     }
 
     private static string CreateTemporaryExamplesDirectory()

@@ -3,8 +3,33 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>قواعد نحوی و معنایی اصلاح‌شده را در برابر بازگشت باگ‌ها تثبیت می‌کند.</summary>
 public class LanguageSyntaxRegressionTests
 {
+    [TestMethod]
+    public void Exec_ArrayReadAndWriteShareWholeNegativeIndexSemantics()
+    {
+        const string source = """
+            _main_() {
+                number[] values = [1, 2];
+                print(values[-1]);
+                values[-1] = 9;
+                print(values[-1]);
+            }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual($"2{Environment.NewLine}9{Environment.NewLine}", output.GetOutput());
+        }
+
+        RuntimeException exception = Assert.ThrowsException<RuntimeException>(() =>
+            new CompilerClass().Exec("_main_() { number[] values = [1]; print(values[0.5]); }"));
+        StringAssert.Contains(exception.Message, "whole number");
+    }
+
     [TestMethod]
     public void Check_SyntaxErrorAfterReturn_IsNotSkipped()
     {
@@ -32,6 +57,48 @@ _main_() { print(sign(2)); }";
     }
 
     [DataTestMethod]
+    [DataRow("while (true) { return 1; }")]
+    [DataRow("for (;;) { return 1; }")]
+    [DataRow("while (true) { while (true) { break; } return 1; }")]
+    public void Check_NonVoidFunctionWithReturningUnconditionalLoop_IsValid(string loop)
+    {
+        new CompilerClass().Check($"func value() -> number {{ {loop} }} _main_() {{ print(value()); }}");
+    }
+
+    [TestMethod]
+    public void Check_NonVoidFunctionWithBreakFromReturningLoop_IsRejected()
+    {
+        const string source = """
+            func value(bool stop) -> number {
+                while (true) {
+                    if (stop) { break; }
+                    return 1;
+                }
+            }
+            _main_() {}
+            """;
+
+        var exception = Assert.ThrowsException<SemanticException>(() => new CompilerClass().Check(source));
+        StringAssert.Contains(exception.Message, "must return");
+    }
+
+    [TestMethod]
+    public void Check_UnreachableBreakDoesNotInvalidateReturningLoop()
+    {
+        const string source = """
+            func value() -> number {
+                while (true) {
+                    if (false) { break; }
+                    return 1;
+                }
+            }
+            _main_() { print(value()); }
+            """;
+
+        new CompilerClass().Check(source);
+    }
+
+    [DataTestMethod]
     [DataRow("break;")]
     [DataRow("continue;")]
     public void Check_LoopControlOutsideLoop_IsRejected(string statement)
@@ -54,7 +121,66 @@ _main_() { print(sign(2)); }";
         const string source = "_main_() { for (;;) { print(1); break; } }";
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual("1\r\n", output.GetOuput());
+        Assert.AreEqual("1\r\n", output.GetOutput());
+    }
+
+    [TestMethod]
+    public void Exec_ForIncrement_RunsAfterContinueButNotAfterBreak()
+    {
+        const string source = """
+            _main_() {
+                number continued = 0;
+                for (; continued < 2; continued++) { continue; }
+                number broken = 0;
+                for (;; broken++) { break; }
+                print(continued);
+                print(broken);
+            }
+            """;
+        using var output = new ConsoleOutput();
+
+        new CompilerClass().Exec(source);
+
+        Assert.AreEqual($"2{Environment.NewLine}0{Environment.NewLine}", output.GetOutput());
+    }
+
+    [TestMethod]
+    public void Exec_ForIncrement_DoesNotRunAfterFunctionReturn()
+    {
+        const string source = """
+            number increments = 0;
+            func value() -> number {
+                for (;; increments++) { return 7; }
+            }
+            _main_() {
+                print(value());
+                print(increments);
+            }
+            """;
+        using var output = new ConsoleOutput();
+
+        new CompilerClass().Exec(source);
+
+        Assert.AreEqual($"7{Environment.NewLine}0{Environment.NewLine}", output.GetOutput());
+    }
+
+    [TestMethod]
+    public void Exec_ForIncrement_DoesNotRunAfterThrownError()
+    {
+        const string source = """
+            _main_() {
+                number increments = 0;
+                try {
+                    for (;; increments++) { throw error("STOP", "stop"); }
+                } catch (failure) {}
+                print(increments);
+            }
+            """;
+        using var output = new ConsoleOutput();
+
+        new CompilerClass().Exec(source);
+
+        Assert.AreEqual($"0{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]
@@ -62,6 +188,39 @@ _main_() { print(sign(2)); }";
     {
         Assert.ThrowsException<ParserException>(() =>
             new CompilerClass().Check("_main_(number value) {}"));
+    }
+
+    [TestMethod]
+    public void Check_MainWithoutClosingBrace_IsRejectedAtEndOfFile()
+    {
+        var exception = Assert.ThrowsException<ParserException>(() =>
+            new CompilerClass().Check("_main_() { print(1);"));
+
+        StringAssert.Contains(exception.Message, "Expected '}' after main function body");
+    }
+
+    [DataTestMethod]
+    [DataRow("if (false) { number value = 1; }")]
+    [DataRow("while (false) { number value = 1; }")]
+    [DataRow("for (number value = 0; value < 1; value++) {}")]
+    [DataRow("match 1 { 1 => { number value = 1; } }")]
+    public void Check_DeclarationInsideConditionalControlFlow_DoesNotEscape(string controlFlow)
+    {
+        var exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check($"_main_() {{ {controlFlow} print(value); }}"));
+
+        StringAssert.Contains(exception.Message, "Undeclared variable 'value'");
+    }
+
+    [TestMethod]
+    public void Check_ExclusiveIfBranches_CanDeclareTheSameLocalName()
+    {
+        new CompilerClass().Check("""
+            _main_() {
+                if (true) { number value = 1; }
+                else { number value = 2; }
+            }
+            """);
     }
 
     [DataTestMethod]
@@ -74,7 +233,18 @@ _main_() { print(sign(2)); }";
     }
 
     [DataTestMethod]
-    [DataRow(".5", "BEN1005")]
+    [DataRow("let values = []; _main_() {}")]
+    [DataRow("_main_() { let values = []; }")]
+    [DataRow("pkg Store { let values = []; } _main_() {}")]
+    public void Check_LetWithoutConcreteInferredType_IsRejected(string source)
+    {
+        SemanticException exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check(source));
+        StringAssert.Contains(exception.Message, "Cannot infer a concrete type");
+    }
+
+    [DataTestMethod]
+    [DataRow(".5", "BEN1007")]
     [DataRow("true & false", "BEN1001")]
     [DataRow("true | false", "BEN1001")]
     [DataRow("/* unfinished", "BEN1004")]
@@ -108,13 +278,103 @@ _main_() { print(sign(2)); }";
         StringAssert.Contains(exception.Message, expectedMessage);
     }
 
+    [DataTestMethod]
+    [DataRow("number value = -1;")]
+    [DataRow("bool value = !true;")]
+    public void Check_UnaryOperatorWithCompatibleOperand_IsAccepted(string declaration)
+    {
+        new CompilerClass().Check($"_main_() {{ {declaration} }}");
+    }
+
+    [DataTestMethod]
+    [DataRow("number value = !1;", "Unary '!'", "bool")]
+    [DataRow("number value = -true;", "Unary '-'", "number")]
+    [DataRow("string value = -\"text\";", "Unary '-'", "number")]
+    public void Check_UnaryOperatorWithIncompatibleOperand_IsRejected(
+        string declaration, string operatorMessage, string expectedType)
+    {
+        var exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check($"_main_() {{ {declaration} }}"));
+
+        StringAssert.Contains(exception.Message, operatorMessage);
+        StringAssert.Contains(exception.Message, expectedType);
+    }
+
+    [DataTestMethod]
+    [DataRow("print(values[\"bad\"]);")]
+    [DataRow("print(values[true]);")]
+    [DataRow("values[\"bad\"] = 2;")]
+    [DataRow("values[false] = 2;")]
+    public void Check_ArrayOperationWithNonNumericIndex_IsRejected(string operation)
+    {
+        var exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check($"_main_() {{ number[] values = [1]; {operation} }}"));
+
+        StringAssert.Contains(exception.Message, "Array index must be of type 'number'.");
+    }
+
+    [DataTestMethod]
+    [DataRow("1 == 1")]
+    [DataRow("\"a\" != \"b\"")]
+    [DataRow("true == false")]
+    public void Check_EqualityWithMatchingScalarTypes_IsAccepted(string expression)
+    {
+        new CompilerClass().Check($"_main_() {{ bool result = {expression}; }}");
+    }
+
+    [DataTestMethod]
+    [DataRow("1 == true", "same scalar type")]
+    [DataRow("\"1\" != 1", "same scalar type")]
+    [DataRow("\"a\" < \"b\"", "number")]
+    public void Check_ComparisonWithUnsupportedOperands_IsRejected(string expression, string message)
+    {
+        var exception = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check($"_main_() {{ bool result = {expression}; }}"));
+
+        StringAssert.Contains(exception.Message, message);
+    }
+
+    [TestMethod]
+    public void Exec_StringAndBooleanEquality_MatchesWithAndWithoutOptimization()
+    {
+        const string source = "_main_() { print(\"a\" == \"a\"); print(true != false); }";
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual($"True{Environment.NewLine}True{Environment.NewLine}", output.GetOutput());
+        }
+    }
+
+    [TestMethod]
+    public void Exec_MatchNumericPatterns_UseLanguageEqualityAcrossRuntimeRepresentations()
+    {
+        const string source = """
+            _main_() {
+                number value;
+                print(match value { 0 => "default", _ => "missed" });
+                print(match array_len([1]) { 1 => "length", _ => "missed" });
+                print(match string_len("a") { 1 => "length", _ => "missed" });
+            }
+            """;
+
+        foreach (bool optimize in new[] { false, true })
+        {
+            using var output = new ConsoleOutput();
+            new CompilerClass().Exec(source, optimizeAst: optimize);
+            Assert.AreEqual(
+                $"default{Environment.NewLine}length{Environment.NewLine}length{Environment.NewLine}",
+                output.GetOutput());
+        }
+    }
+
     [TestMethod]
     public void Exec_ParenthesizedExpression_PreservesGrouping()
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("print((2 + 3) * 4);");
 
-        Assert.AreEqual("20\r\n", output.GetOuput());
+        Assert.AreEqual("20\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -128,8 +388,8 @@ _main_() { print(sign(2)); }";
     {
         const string source = """
             pkg Counter {
-                number value = 1;
-                func get() -> number { return value; }
+                public number value = 1;
+                public func get() -> number { return value; }
             }
             Counter counter = new Counter();
             print(counter.value);
@@ -150,7 +410,7 @@ _main_() { print(sign(2)); }";
             else { print("small"); }
             """);
 
-        Assert.AreEqual("medium\r\n", output.GetOuput());
+        Assert.AreEqual("medium\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -170,7 +430,7 @@ _main_() { print(sign(2)); }";
             print(result);
             """);
 
-        Assert.AreEqual("Excellent\r\n", output.GetOuput());
+        Assert.AreEqual("Excellent\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -186,7 +446,7 @@ _main_() { print(sign(2)); }";
             }
             """);
 
-        Assert.AreEqual("two\r\n", output.GetOuput());
+        Assert.AreEqual("two\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -226,7 +486,7 @@ _main_() { print(sign(2)); }";
             }
             """);
 
-        Assert.AreEqual("small\r\n", output.GetOuput());
+        Assert.AreEqual("small\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -243,7 +503,7 @@ _main_() { print(sign(2)); }";
             print(result);
             """, optimizeAst: true);
 
-        Assert.AreEqual("low\r\n", output.GetOuput());
+        Assert.AreEqual("low\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -276,7 +536,7 @@ _main_() { print(sign(2)); }";
             }
             """, optimizeAst: true);
 
-        Assert.AreEqual("1\r\n2\r\n3\r\n", output.GetOuput());
+        Assert.AreEqual("1\r\n2\r\n3\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -292,7 +552,7 @@ _main_() { print(sign(2)); }";
             }
             """);
 
-        Assert.AreEqual("1\r\n3\r\n", output.GetOuput());
+        Assert.AreEqual("1\r\n3\r\n", output.GetOutput());
     }
 
     [TestMethod]

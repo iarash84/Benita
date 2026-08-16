@@ -1,3 +1,5 @@
+// تقدم عملگرهای منطقی AND و OR را در شرط if/else آزمایش می‌کند.
+// Tests AND/OR logical precedence in an if/else condition.
 _main_() {
     number num = 12;           
     if (num == 12 || num > 15 && num == 10) {

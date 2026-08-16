@@ -1,3 +1,5 @@
+// ترکیب تابع، شرط، حلقه، ورودی کاربر و عملیات عددی و رشته‌ای را آزمایش می‌کند.
+// Tests functions, conditions, loops, user input, and numeric/string operations together.
 func add(number a, number b) -> number {
     return a + b;
 }

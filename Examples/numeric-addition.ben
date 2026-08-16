@@ -1,3 +1,5 @@
+// جمع متغیرهای عددی و تعریف یک تابع عددی ساده را نمایش می‌دهد.
+// Demonstrates numeric variable addition and a simple numeric function declaration.
 func myFunction(number a, number b) -> number {
     return a + b;
 }

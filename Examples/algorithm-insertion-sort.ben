@@ -1,0 +1,26 @@
+// مرتب‌سازی درجی و جابه‌جایی عناصر آرایه را با حرکت دادن مقادیر بزرگ‌تر آزمایش می‌کند.
+// Tests insertion sort and array mutation by shifting larger values to the right.
+// Insertion sort grows a sorted prefix by inserting each value into its proper position.
+func insertion_sort(number[] values) -> number[] {
+    for (number index = 1; index < array_len(values); index++) {
+        number current = values[index];
+        number position = index - 1;
+
+        while (position >= 0 && values[position] > current) {
+            values[position + 1] = values[position];
+            position--;
+        }
+
+        values[position + 1] = current;
+    }
+
+    return values;
+}
+
+_main_() {
+    number[] values = [6, 3, 5, 1, 4, 2];
+    number[] sorted = insertion_sort(values);
+    for (value in sorted) {
+        print(value);
+    }
+}

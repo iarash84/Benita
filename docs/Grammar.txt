@@ -7,15 +7,27 @@ This document uses EBNF. Terminals are written in quotes, `?` means optional,
 program                 ::= top-level-item* EOF ;
 
 top-level-item          ::= package-declaration
-                          | function-declaration
+                          | interface-declaration
+                          | access-modifier? function-declaration
+                          | access-modifier? variable-declaration
                           | main-function
                           | statement ;
 
-package-declaration     ::= "pkg" identifier "{" package-member* "}" ;
-package-member          ::= package-variable-declaration | function-declaration ;
+package-declaration     ::= "pkg" identifier implementation-list?
+                            "{" package-member* "}" ;
+implementation-list    ::= ":" identifier ("," identifier)* ;
+interface-declaration  ::= "interface" identifier
+                            "{" interface-method* "}" ;
+interface-method       ::= "func" identifier "(" parameter-list? ")"
+                            "->" return-type ";" ;
+package-member          ::= access-modifier? package-variable-declaration
+                          | initializer-declaration
+                          | access-modifier? function-declaration ;
+access-modifier         ::= "public" | "private" ;
 package-variable-declaration
-                         ::= (primitive-type | "let") identifier
+                         ::= (primitive-type | named-type | "let") identifier
                              ("=" expression)? ";" ;
+initializer-declaration ::= "init" "(" parameter-list? ")" block ;
 
 main-function           ::= "_main_" "(" ")" block ;
 function-declaration    ::= "func" identifier "(" parameter-list? ")"
@@ -23,24 +35,28 @@ function-declaration    ::= "func" identifier "(" parameter-list? ")"
 parameter-list          ::= parameter ("," parameter)* ;
 parameter               ::= parameter-type identifier ;
 
-variable-declaration    ::= scalar-variable-declaration | array-variable-declaration ;
+variable-declaration    ::= scalar-variable-declaration
+                          | object-variable-declaration
+                          | array-variable-declaration ;
 scalar-variable-declaration
                          ::= (primitive-type | "let") identifier
                              ("=" expression)? ";" ;
+object-variable-declaration
+                         ::= named-type identifier "=" expression ";" ;
 array-variable-declaration
                          ::= array-type identifier
                              ("=" (expression | sized-array-initializer))? ";" ;
-parameter-type          ::= primitive-type | named-type | array-type ;
-return-type             ::= primitive-type | named-type | array-type | "void" ;
+parameter-type          ::= primitive-type | named-type | array-type | error-type ;
+return-type             ::= primitive-type | named-type | array-type | error-type | "void" ;
 named-type              ::= identifier ;
 primitive-type          ::= "number" | "string" | "bool" ;
+error-type              ::= "error" ;
 array-type              ::= primitive-type "[" "]" ;
 
 statement               ::= variable-declaration
                           | assignment-statement
                           | compound-assignment-statement
                           | increment-statement
-                          | object-instantiation
                           | expression-statement
                           | if-statement
                           | while-statement
@@ -49,6 +65,8 @@ statement               ::= variable-declaration
                           | return-statement
                           | break-statement
                           | continue-statement
+                          | throw-statement
+                          | try-statement
                           | block ;
 
 block                   ::= "{" statement* "}" ;
@@ -69,13 +87,15 @@ match-statement-arm     ::= match-pattern-list "=>" statement ("," | ";")? ;
 return-statement        ::= "return" expression? ";" ;
 break-statement         ::= "break" ";" ;
 continue-statement      ::= "continue" ";" ;
+throw-statement         ::= "throw" expression ";" ;
+try-statement           ::= "try" block (catch-clause finally-clause? | finally-clause) ;
+catch-clause            ::= "catch" "(" identifier ")" block ;
+finally-clause          ::= "finally" block ;
 expression-statement    ::= expression ";" ;
 assignment-statement    ::= assignment ";" ;
 compound-assignment-statement
                          ::= compound-assignment ";" ;
 increment-statement     ::= increment ";" ;
-object-instantiation    ::= ("let" | named-type) identifier "="
-                            "new" named-type "(" argument-list? ")" ";" ;
 assignment              ::= assignable "=" expression ;
 compound-assignment     ::= identifier ("+=" | "-=" | "*=" | "/=") expression ;
 increment               ::= identifier ("++" | "--") ;
@@ -88,19 +108,23 @@ equality                ::= comparison (("==" | "!=") comparison)* ;
 comparison              ::= term (("<" | "<=" | ">" | ">=") term)* ;
 term                    ::= factor (("+" | "-") factor)* ;
 factor                  ::= unary (("*" | "/" | "%") unary)* ;
-unary                   ::= ("!" | "-") unary | primary ;
+unary                   ::= ("!" | "-" | "await") unary
+                          | "async" function-call
+                          | primary ;
 
 primary                 ::= literal
                           | identifier
                           | function-call
                           | array-access
                           | member-access
+                          | new-expression
                           | array-initializer
                           | match-expression
                           | "(" expression ")" ;
 function-call           ::= identifier "(" argument-list? ")" ;
 array-access            ::= identifier "[" expression "]" ;
-member-access           ::= identifier "." identifier member-suffix? ;
+member-access           ::= (identifier | "this") "." identifier member-suffix? ;
+new-expression          ::= "new" named-type "(" argument-list? ")" ;
 member-suffix           ::= "(" argument-list? ")"
                           | "=" expression
                           | ("+=" | "-=" | "*=" | "/=") expression
@@ -129,33 +153,318 @@ Semantic constraints
 --------------------
 
 1. `_main_` never accepts parameters.
-2. `let` is allowed only for local/global variable declarations and requires
+   It also never accepts an access modifier: both `public _main_` and
+   `private _main_` are syntax errors.
+2. Variables and functions are `private` when no access modifier is written.
+   A private package member is accessible inside its package (including through
+   `this`) but not through an instance outside that package. Write `public`
+   explicitly for a package API.
+3. `let` is allowed for local/global variable declarations and package fields, and requires
    an initializer from which a concrete type can be inferred.
-3. `void` is allowed only as a function return type.
-4. Every reachable path of a non-void function must return a compatible value.
-5. `break` and `continue` are valid only inside `while` or `for` loops.
-6. A decimal literal must include digits on both sides of the decimal point;
+4. `void` is allowed only as a function return type.
+5. Every reachable path of a non-void function must return a compatible value.
+   An unconditional `while (true)` or `for (;;)` satisfies this rule when its
+   body always returns or throws and no reachable `break` exits that loop.
+6. `break` and `continue` are valid only inside `while` or `for` loops.
+7. A decimal literal must include digits on both sides of the decimal point;
    write `0.5`, not `.5`, and `1.0`, not `1.`.
-7. A single `&` or `|` is invalid; logical conjunction and disjunction use
+8. A single `&` or `|` is invalid; logical conjunction and disjunction use
    `&&` and `||`.
-8. Strings cannot span physical lines. Supported escapes are `\\n`, `\\r`,
+9. Strings cannot span physical lines. Supported escapes are `\\n`, `\\r`,
    `\\t`, `\\"`, and `\\\\`.
-9. A match expression must contain exactly one default `_` arm, placed last.
+10. A match expression must contain exactly one default `_` arm, placed last.
    The default arm of a match statement is optional, but when present it is last.
-10. Match patterns must have the same type as the matched value. Every result
+11. Match patterns must have the same type as the matched value. Every result
     arm of a match expression must produce the same type.
-11. Multiple patterns in one arm are alternatives: `1, 2, 3` matches any of
+12. Multiple patterns in one arm are alternatives: `1, 2, 3` matches any of
     those values. A numeric range `start..end` is inclusive at both boundaries.
     Arms are tested from top to bottom and the first matching arm is selected.
-12. The expression in a `for (item in expression)` loop must be an array. The
+13. The expression in a `for (item in expression)` loop must be an array. The
     iteration variable is inferred from the array element type and is scoped to
     the loop body.
+14. A package may declare at most one `init`. Its parameters define the argument
+    contract for `new`; a package without `init` only accepts zero arguments.
+15. `this` is available only in a package initializer or method and denotes the
+    current instance. Package field and method names are checked statically.
+16. Package and interface types may be used for variables, parameters, return
+    values, and fields.
+17. A package implements interfaces nominally with `pkg Name : A, B`. Merely
+    having compatible methods without listing the interface is not sufficient.
+18. Every interface method must have one matching public package method. Name,
+    parameter count, parameter types, and return type must match exactly.
+19. An implementing package value is assignable to its interface type. Calls
+    through that interface dispatch to the concrete package instance at runtime.
+20. Interfaces contain method signatures only: fields, bodies, constructors,
+    and access modifiers are not permitted. Class inheritance and overloads are
+    not part of the language yet.
+21. `error(code, message)` creates the only value accepted by `throw`. Both
+    arguments are strings. An error exposes read-only string members `code` and
+    `message` inside a catch block.
+22. A try statement requires at least one catch or finally clause. The catch
+    variable is scoped to its catch block. A finally block runs for normal
+    completion, return, or error propagation.
+23. Runtime and built-in failures may be caught. Built-in failures retain their
+    stable code (such as `BEN4101`); other runtime failures use `BEN5000`.
+24. `error` is a reserved type and built-in function name; packages, interfaces,
+    and global functions cannot redeclare it.
+25. `return`, or a `break`/`continue` targeting a loop outside the finally block,
+    cannot leave a finally block. Loops declared inside finally retain their own
+    valid break and continue statements.
+26. An uncaught user error crosses the program boundary with its original code
+    and message as an `UnhandledErrorException` diagnostic.
+27. `async` is a call-site operator and must be followed by a global or built-in
+    function call. It starts immediately and produces an inferred `task<T>` value.
+28. `await` accepts only a task and evaluates to its `T` result. A task may be
+    awaited more than once. Its failure is rethrown at each await and can be
+    handled by the existing try/catch syntax.
+29. Task arguments and the visible variable scope are captured when `async` is
+    evaluated. Each task runs in an isolated runtime scope; assignments made by
+    it do not mutate the caller's variables.
+30. A synchronous function can read and assign variables declared in its visible
+    outer scope. Such assignments remain visible after the function returns.
+31. Unary `-` accepts a `number` and produces a `number`. Unary `!` accepts a
+    `bool` and produces a `bool`.
+32. The index expression of an array access or assignment must have type `number`.
+33. An array variable declared without an initializer starts as an empty array of
+    its declared element type.
+34. A sized-array length expression must be a non-negative whole `number` within
+    the runtime-supported range. Elements start as `0`, `""`, or `false` according
+    to the declared element type.
+35. `to_string` accepts a value of any language type and returns its runtime string
+    representation.
+36. Equality operators `==` and `!=` accept two operands of the same scalar type:
+    `number`, `string`, or `bool`. Ordered comparisons `<`, `>`, `<=`, and `>=`
+    accept only `number` operands.
+37. The increment clause of a classic `for` runs after a normal iteration and
+    before the next iteration after `continue`. It does not run after `break`,
+    function `return`, or an error leaving the loop body.
+38. An unexpected runtime failure crossing the public execution boundary is
+    reported as `BEN4001`. More specific Benita diagnostics, including built-in
+    `BEN4101` and uncaught user-error codes, retain their original code.
+39. Number literals and `to_number` use the culture-independent Benita decimal
+    format. The decimal separator is always `.`, regardless of the host culture.
+40. A variable declared inside an `if` branch, loop, or `match` arm is local to
+    that control-flow body and is not available after it. Assignments to variables
+    declared in an enclosing scope remain visible.
+41. Array-preserving built-ins retain the concrete element type of their first
+    array argument, including when their result initializes a `let` variable.
+42. Variables and fields whose declared type is a package or interface must have
+    an initializer because Benita does not define a `null` reference value.
+43. A `finally` block that always returns or throws determines the completion of
+    its enclosing `try`, even when the `try` or `catch` block can fall through.
+44. Tokens expanded from `include_once` retain their original file name, line
+    number, and source line so lexer and parser diagnostics identify the included file.
+45. A REPL submission is atomic with respect to language runtime state. If execution
+    fails, variable, array, function, package-instance, and global state is restored.
+46. A `let` initializer must determine a concrete type. Placeholder types such as
+    `unknown[]` from an empty untyped array are rejected; use an explicit array type.
+47. `BEN1005` identifies a circular include dependency. A decimal literal that starts
+    with `.` is a distinct lexical error reported as `BEN1007`.
+48. A top-level package or interface variable is global even when its access modifier
+    is omitted; omission means `private`, just as it does for primitive globals.
+49. Package methods are available to field initializers regardless of their textual
+    declaration order. Field initializers themselves still execute in source order.
+50. Every CLR representation produced for a Benita `number` compares as the same
+    language type in equality, `match`, array lookup, and array sorting operations.
+51. Async capture deep-clones arrays and package instances while preserving aliases and
+    cycles. Task mutation therefore cannot change mutable state visible to the caller.
+52. Definite-return analysis ignores a `break` in an unreachable literal branch such as
+    `if (false)`, but a reachable `break` still prevents an infinite loop from proving return.
+53. `include_once` is recognized as a directive only at a complete token boundary followed
+    by whitespace; names such as `include_once_helper` remain ordinary identifiers.
+54. REPL diagnostics use the virtual source name `<repl>` and line numbers relative to the
+    accepted session source; rejected submissions do not advance that source.
+55. Semantic diagnostics retain the source file, line, and column of the analyzed AST node,
+    including nodes originating in a file expanded through `include_once`.
+56. A package field declared with `let` is inferred by semantic analysis from any concrete
+    initializer expression; inference is not limited to literals or earlier function calls.
+57. Arguments and right-hand-side expressions in an external package member access are
+    evaluated in the caller's scope before dispatch to the package instance.
+58. Package methods and field initializers can read global variables and call global
+    functions. Updates to a global remain visible across root and package runtime scopes;
+    a package field with the same name remains independent and shadows that global internally.
+59. Package field initializers are analyzed and executed in source order. An initializer can
+    reference an earlier field, but a reference to the current or a later field is invalid.
+    Package method bodies can reference every field regardless of declaration order.
+60. `init` is the only package constructor. A regular method whose name equals the package
+    name remains an ordinary method and does not define arguments accepted by `new`.
+61. Array indices and array built-in index/length arguments must be finite whole numbers;
+    they are never rounded. Direct array access and assignment accept negative indices,
+    where `-1` denotes the final element. Array built-ins require non-negative indices.
+62. Semantic diagnostics point to the innermost analyzed expression responsible for an
+    error, including identifiers and literals nested inside binary or call expressions.
+
+محدودیت‌های معنایی (فارسی)
+-------------------------
+
+1. تابع `_main_` هرگز پارامتر نمی‌پذیرد.
+   همچنین این تابع هیچ‌گاه نمی‌تواند دارای اصلاح‌گر دسترسی باشد؛ هر دو شکل
+   `public _main_` و `private _main_` خطای نحوی هستند.
+2. اگر برای متغیرها و توابع اصلاح‌گر دسترسی نوشته نشود، دسترسی آن‌ها `private` است.
+   عضو خصوصی یک پکیج درون همان پکیج (از جمله از طریق `this`) قابل دسترسی است،
+   اما از طریق یک نمونه در بیرون از آن پکیج قابل دسترسی نیست. برای API پکیج باید
+   `public` به‌صورت صریح نوشته شود.
+3. استفاده از `let` برای تعریف متغیرهای محلی و سراسری و فیلدهای پکیج مجاز است و
+   به مقدار اولیه‌ای نیاز دارد که بتوان یک نوع مشخص را از آن استنتاج کرد.
+4. نوع `void` فقط به‌عنوان نوع بازگشتی تابع مجاز است.
+5. تمام مسیرهای قابل دسترسی در یک تابع غیر `void` باید مقداری سازگار بازگردانند.
+   یک حلقهٔ بدون شرط `while (true)` یا `for (;;)` زمانی این قاعده را برآورده می‌کند
+   که بدنهٔ آن همیشه مقداری بازگرداند یا خطایی پرتاب کند و هیچ `break` قابل دسترسی
+   از حلقه خارج نشود.
+6. استفاده از `break` و `continue` فقط درون حلقه‌های `while` یا `for` معتبر است.
+7. یک مقدار اعشاری باید در هر دو سمت ممیز رقم داشته باشد؛ به‌جای `.5` باید `0.5`
+   و به‌جای `1.` باید `1.0` نوشته شود.
+8. نویسهٔ منفرد `&` یا `|` نامعتبر است؛ برای «و» و «یا»ی منطقی از `&&` و `||`
+   استفاده می‌شود.
+9. رشته‌ها نمی‌توانند در چند خط فیزیکی ادامه پیدا کنند. نویسه‌های گریز پشتیبانی‌شده
+   عبارت‌اند از `\\n`، `\\r`، `\\t`، `\\"` و `\\\\`.
+10. عبارت `match` باید دقیقاً یک شاخهٔ پیش‌فرض `_` داشته باشد که در انتها قرار می‌گیرد.
+    شاخهٔ پیش‌فرض در دستور `match` اختیاری است، اما در صورت وجود باید آخرین شاخه باشد.
+11. نوع الگوهای `match` باید با نوع مقدار مورد تطبیق یکسان باشد. تمام شاخه‌های نتیجه
+    در یک عبارت `match` نیز باید مقداری از یک نوع یکسان تولید کنند.
+12. چند الگو در یک شاخه، گزینه‌های جایگزین هستند؛ `1, 2, 3` با هر یک از این مقادیر
+    تطبیق پیدا می‌کند. بازهٔ عددی `start..end` هر دو مرز را شامل می‌شود. شاخه‌ها از
+    بالا به پایین بررسی می‌شوند و نخستین شاخهٔ منطبق انتخاب می‌شود.
+13. عبارت موجود در حلقهٔ `for (item in expression)` باید آرایه باشد. نوع متغیر تکرار
+    از نوع عناصر آرایه استنتاج می‌شود و دامنهٔ آن به بدنهٔ حلقه محدود است.
+14. هر پکیج حداکثر می‌تواند یک `init` تعریف کند. پارامترهای آن قرارداد آرگومان‌های
+    `new` را مشخص می‌کنند؛ پکیجی که `init` ندارد فقط بدون آرگومان ساخته می‌شود.
+15. `this` فقط در مقداردهی اولیه یا متد یک پکیج در دسترس است و به نمونهٔ جاری اشاره
+    می‌کند. نام فیلدها و متدهای پکیج به‌صورت ایستا بررسی می‌شوند.
+16. انواع پکیج و اینترفیس را می‌توان برای متغیرها، پارامترها، مقادیر بازگشتی و فیلدها
+    به کار برد.
+17. یک پکیج اینترفیس‌ها را به‌صورت اسمی و با `pkg Name : A, B` پیاده‌سازی می‌کند.
+    صرفاً داشتن متدهای سازگار، بدون ذکر اینترفیس، کافی نیست.
+18. برای هر متد اینترفیس باید دقیقاً یک متد `public` متناظر در پکیج وجود داشته باشد.
+    نام، تعداد پارامترها، نوع پارامترها و نوع بازگشتی باید کاملاً یکسان باشند.
+19. مقدار یک پکیج پیاده‌ساز را می‌توان به نوع اینترفیس آن نسبت داد. فراخوانی از طریق
+    اینترفیس در زمان اجرا به نمونهٔ واقعی پکیج هدایت می‌شود.
+20. اینترفیس‌ها فقط شامل امضای متدها هستند؛ فیلد، بدنه، سازنده و اصلاح‌گر دسترسی در
+    آن‌ها مجاز نیست. وراثت کلاسی و سربارگذاری هنوز بخشی از زبان نیستند.
+21. `error(code, message)` تنها مقداری را ایجاد می‌کند که `throw` می‌پذیرد. هر دو
+    آرگومان رشته هستند. یک خطا درون بلوک `catch` اعضای رشته‌ای و فقط‌خواندنی `code`
+    و `message` را در اختیار می‌گذارد.
+22. دستور `try` باید دست‌کم یک بند `catch` یا `finally` داشته باشد. دامنهٔ متغیر
+    `catch` به بلوک همان `catch` محدود است. بلوک `finally` در پایان عادی، هنگام
+    `return` یا در زمان انتشار خطا اجرا می‌شود.
+23. خطاهای زمان اجرا و توابع داخلی قابل دریافت هستند. خطاهای توابع داخلی کد پایدار
+    خود (مانند `BEN4101`) را حفظ می‌کنند؛ سایر خطاهای زمان اجرا از `BEN5000` استفاده می‌کنند.
+24. `error` نام رزروشدهٔ یک نوع و تابع داخلی است؛ پکیج‌ها، اینترفیس‌ها و توابع سراسری
+    نمی‌توانند آن را دوباره تعریف کنند.
+25. یک `return` یا `break`/`continue` که حلقه‌ای بیرون از بلوک `finally` را هدف گرفته
+    است، نمی‌تواند از بلوک `finally` خارج شود. حلقه‌های تعریف‌شده درون `finally`
+    همچنان می‌توانند دستورهای معتبر `break` و `continue` خود را داشته باشند.
+26. خطای کاربر که دریافت نشده باشد، با کد و پیام اصلی خود و به‌شکل عیب‌یابی
+    `UnhandledErrorException` از مرز برنامه عبور می‌کند.
+27. `async` یک عملگر در محل فراخوانی است و باید پیش از فراخوانی یک تابع سراسری یا
+    داخلی قرار گیرد. اجرا بلافاصله آغاز می‌شود و مقداری با نوع استنتاج‌شدهٔ `task<T>`
+    تولید می‌کند.
+28. `await` فقط یک task را می‌پذیرد و نتیجهٔ `T` آن را برمی‌گرداند. می‌توان بیش از
+    یک بار منتظر یک task ماند. شکست آن در هر `await` دوباره پرتاب می‌شود و با سازوکار
+    موجود `try/catch` قابل مدیریت است.
+29. آرگومان‌های task و دامنهٔ متغیرهای قابل مشاهده هنگام ارزیابی `async` ثبت می‌شوند.
+    هر task در یک دامنهٔ زمان اجرای جداگانه اجرا می‌شود؛ انتساب‌های آن متغیرهای
+    فراخواننده را تغییر نمی‌دهند.
+30. یک تابع همگام می‌تواند متغیرهای تعریف‌شده در دامنهٔ بیرونی قابل مشاهدهٔ خود را
+    بخواند و تغییر دهد. این تغییرات پس از بازگشت تابع نیز قابل مشاهده باقی می‌مانند.
+31. عملگر یکانی `-` یک `number` می‌پذیرد و یک `number` تولید می‌کند. عملگر یکانی `!`
+    یک `bool` می‌پذیرد و یک `bool` تولید می‌کند.
+32. نوع عبارت اندیس در دسترسی یا انتساب آرایه باید `number` باشد.
+33. متغیر آرایه‌ای که بدون مقدار اولیه تعریف شده باشد، به‌صورت یک آرایهٔ خالی از نوع
+    عنصر اعلام‌شده آغاز می‌شود.
+34. عبارت طول آرایهٔ اندازه‌دار باید یک `number` صحیح، نامنفی و در محدودهٔ پشتیبانی‌شده
+    در زمان اجرا باشد. عناصر بر اساس نوع اعلام‌شده با `0`، `""` یا `false` آغاز می‌شوند.
+35. `to_string` مقداری از هر نوع زبان را می‌پذیرد و نمایش رشته‌ای آن در زمان اجرا را
+    بازمی‌گرداند.
+36. عملگرهای برابری `==` و `!=` دو عملوند با نوع اسکالر یکسان، یعنی `number`، `string`
+    یا `bool`، می‌پذیرند. مقایسه‌های ترتیبی `<`، `>`، `<=` و `>=` فقط عملوندهای
+    `number` را می‌پذیرند.
+37. بند افزایش در `for` کلاسیک پس از تکرار عادی و پیش از تکرار بعدی در اثر `continue`
+    اجرا می‌شود. این بند پس از `break`، `return` تابع یا خطایی که از بدنهٔ حلقه خارج
+    می‌شود اجرا نمی‌شود.
+38. یک شکست غیرمنتظرهٔ زمان اجرا که از مرز عمومی اجرای برنامه عبور کند با `BEN4001`
+    گزارش می‌شود. عیب‌یابی‌های اختصاصی‌تر Benita، از جمله `BEN4101` توابع داخلی و
+    کدهای خطای دریافت‌نشدهٔ کاربر، کد اصلی خود را حفظ می‌کنند.
+39. مقادیر عددی و `to_number` از قالب اعشاری مستقل از فرهنگ Benita استفاده می‌کنند.
+    جداکنندهٔ اعشار بدون توجه به فرهنگ میزبان همیشه `.` است.
+40. متغیری که در شاخهٔ `if`، حلقه یا شاخهٔ `match` تعریف می‌شود، محلی همان بدنهٔ
+    کنترل جریان است و پس از آن در دسترس نیست. انتساب به متغیرهای تعریف‌شده در دامنهٔ
+    بیرونی همچنان قابل مشاهده باقی می‌ماند.
+41. توابع داخلی که آرایه را حفظ می‌کنند، نوع واقعی عنصر آرگومان آرایه‌ای نخست خود را
+    حفظ می‌کنند؛ حتی وقتی نتیجهٔ آن‌ها مقدار اولیهٔ یک متغیر `let` باشد.
+42. متغیرها و فیلدهایی که نوع اعلام‌شدهٔ آن‌ها پکیج یا اینترفیس است باید مقدار اولیه
+    داشته باشند، زیرا Benita مقدار ارجاعی `null` را تعریف نمی‌کند.
+43. بلوک `finally` که همیشه مقدار بازمی‌گرداند یا خطا پرتاب می‌کند، نحوهٔ پایان `try`
+    دربرگیرندهٔ خود را تعیین می‌کند؛ حتی اگر بلوک `try` یا `catch` بتواند به انتهای
+    خود برسد.
+44. توکن‌های گسترش‌یافته از `include_once` نام فایل، شمارهٔ خط و متن خط مبدأ خود را
+    حفظ می‌کنند تا عیب‌یابی Lexer و Parser فایل الحاق‌شده را مشخص کند.
+45. هر ورودی REPL نسبت به وضعیت زمان اجرای زبان اتمیک است. اگر اجرا شکست بخورد، وضعیت
+    متغیرها، آرایه‌ها، توابع، نمونه‌های پکیج و داده‌های سراسری بازیابی می‌شود.
+46. مقدار اولیهٔ `let` باید نوع مشخصی را تعیین کند. انواع جایگزین مانند `unknown[]`
+    حاصل از آرایهٔ خالی بدون نوع رد می‌شوند؛ باید نوع آرایه صریحاً نوشته شود.
+47. `BEN1005` وابستگی حلقوی در الحاق فایل را مشخص می‌کند. مقدار اعشاری که با `.` آغاز
+    شود یک خطای واژگانی مجزا است و با `BEN1007` گزارش می‌شود.
+48. متغیر پکیج یا اینترفیس در سطح بالا، حتی بدون اصلاح‌گر دسترسی، سراسری است؛ حذف
+    اصلاح‌گر مانند متغیرهای سراسری ابتدایی به معنای `private` است.
+49. متدهای پکیج بدون توجه به ترتیب متنی تعریفشان در دسترس مقداردهی اولیهٔ فیلدها هستند.
+    خود مقداردهی‌های اولیهٔ فیلدها همچنان به‌ترتیب متن مبدأ اجرا می‌شوند.
+50. تمام نمایش‌های CLR تولیدشده برای `number` در عملیات برابری، `match`، جست‌وجوی
+    آرایه و مرتب‌سازی آرایه به‌عنوان یک نوع واحد در زبان مقایسه می‌شوند.
+51. ثبت دامنه در `async` آرایه‌ها و نمونه‌های پکیج را به‌صورت عمیق همسان‌سازی می‌کند
+    و در عین حال نام‌های مستعار و چرخه‌ها را حفظ می‌کند. بنابراین تغییرات task نمی‌تواند
+    وضعیت تغییرپذیر قابل مشاهده برای فراخواننده را تغییر دهد.
+52. تحلیل بازگشت قطعی، یک `break` در شاخهٔ لفظی غیرقابل دسترسی مانند `if (false)` را
+    نادیده می‌گیرد؛ اما یک `break` قابل دسترسی همچنان مانع از آن می‌شود که حلقهٔ
+    بی‌نهایت، بازگشت را اثبات کند.
+53. `include_once` فقط زمانی به‌عنوان دستورالعمل شناخته می‌شود که در مرز کامل توکن
+    قرار داشته و پس از آن فاصلهٔ خالی باشد؛ نام‌هایی مانند `include_once_helper`
+    شناسهٔ عادی باقی می‌مانند.
+54. عیب‌یابی‌های REPL از نام مجازی `<repl>` و شماره‌خط‌های وابسته به متن پذیرفته‌شدهٔ
+    نشست استفاده می‌کنند؛ ورودی‌های ردشده این متن مبدأ را جلو نمی‌برند.
+55. عیب‌یابی‌های معنایی نام فایل، خط و ستون گره AST تحلیل‌شده را حفظ می‌کنند؛ این
+    قاعده گره‌های یک فایل گسترش‌یافته از طریق `include_once` را نیز شامل می‌شود.
+56. نوع فیلد `let` در پکیج توسط تحلیل معنایی و از هر عبارت مقداردهی اولیهٔ مشخص
+    استنتاج می‌شود؛ استنتاج به مقادیر لفظی یا فراخوانی توابع قبلی محدود نیست.
+57. آرگومان‌ها و عبارت‌های سمت راست در دسترسی خارجی به عضو پکیج، پیش از هدایت فراخوانی
+    به نمونهٔ پکیج در دامنهٔ فراخواننده ارزیابی می‌شوند.
+58. متدها و مقداردهی‌های اولیهٔ فیلدهای پکیج می‌توانند متغیرهای سراسری را بخوانند و
+    توابع سراسری را فراخوانی کنند. تغییرات یک متغیر سراسری در دامنه‌های زمان اجرای
+    ریشه و پکیج قابل مشاهده باقی می‌ماند؛ فیلد هم‌نام پکیج مستقل است و درون پکیج بر
+    آن متغیر سراسری سایه می‌اندازد.
+59. مقداردهی‌های اولیهٔ فیلدهای پکیج به‌ترتیب متن مبدأ تحلیل و اجرا می‌شوند. مقداردهی
+    اولیه می‌تواند به فیلدی قبلی ارجاع دهد، اما ارجاع به فیلد جاری یا فیلد بعدی نامعتبر
+    است. بدنهٔ متدهای پکیج بدون توجه به ترتیب تعریف می‌تواند به همهٔ فیلدها ارجاع دهد.
+60. `init` تنها سازندهٔ پکیج است. متد عادی هم‌نام با پکیج همچنان یک متد عادی است و
+    آرگومان‌های پذیرفته‌شده توسط `new` را تعیین نمی‌کند.
+61. اندیس آرایه و آرگومان‌های اندیس/طول توابع داخلی آرایه باید اعداد صحیح و متناهی
+    باشند و هرگز گرد نمی‌شوند. دسترسی و انتساب مستقیم آرایه اندیس منفی را می‌پذیرد؛
+    `-1` به آخرین عنصر اشاره می‌کند. توابع داخلی آرایه به اندیس‌های نامنفی نیاز دارند.
+62. عیب‌یابی معنایی به داخلی‌ترین عبارت تحلیل‌شده‌ای اشاره می‌کند که مسئول خطاست؛
+    از جمله شناسه‌ها و مقادیر لفظی تودرتو در عبارت‌های دودویی یا فراخوانی.
 
 Notes
 -----
 
 `include_once "path";` is a preprocessing directive rather than a tokenized
 grammar production and may appear on its own source line. Directives are
-expanded before parsing. Built-in function
+expanded recursively before parsing. Text inside line or block comments is never
+treated as an include directive. Relative paths are resolved from the directory of the
+file containing the directive. Canonical absolute paths are compared with platform-appropriate
+case sensitivity, so equivalent paths are included only once per compilation. A circular
+dependency is rejected with `BEN1005` and its include chain. Built-in function
 names and signatures are runtime API entries, not grammar productions; their
 authoritative definitions live in `BuiltInRegistry`.
+
+یادداشت‌ها (فارسی)
+------------------
+
+`include_once "path";` یک دستورالعمل پیش‌پردازشی است، نه یک قاعدهٔ تولید در
+دستور زبان، و می‌تواند در خطی مستقل از کد مبدأ قرار گیرد. دستورالعمل‌ها پیش از
+تجزیه به‌صورت بازگشتی گسترش می‌یابند. متن درون توضیحات خطی یا بلوکی هرگز به‌عنوان
+دستورالعمل الحاق در نظر گرفته نمی‌شود. مسیرهای نسبی بر مبنای پوشهٔ فایل حاوی
+دستورالعمل محاسبه می‌شوند. مسیرهای مطلق استانداردشده با حساسیت به بزرگی و کوچکی
+حروف متناسب با پلتفرم مقایسه می‌شوند؛ بنابراین مسیرهای معادل در هر بار کامپایل فقط
+یک‌بار الحاق می‌شوند. وابستگی حلقوی همراه با زنجیرهٔ الحاق آن و با کد `BEN1005`
+رد می‌شود. نام‌ها و امضاهای توابع داخلی، ورودی‌های API زمان اجرا هستند و جزو قواعد
+تولید دستور زبان محسوب نمی‌شوند؛ تعریف‌های مرجع آن‌ها در `BuiltInRegistry` قرار دارد.

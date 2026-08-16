@@ -1,14 +1,14 @@
-﻿using Benita;
+using Benita;
 
 namespace BenitaTestProject
 {
     [TestClass]
+    /// <summary>ساخت AST و رعایت تقدم و ساختار قواعد دستوری توسط Parser را بررسی می‌کند.</summary>
     public class ParserTests
     {
         [TestMethod]
-        public void Parse_MainFunction_Valid()
+        public void Parse_WithMainFunction_ReturnsMainFunction()
         {
-            // Arrange
             List<Token> tokens = new List<Token>
             {
                 new Token(TokenType.MAIN, "_main_", 0),
@@ -21,10 +21,8 @@ namespace BenitaTestProject
 
             Parser parser = new Parser(tokens);
 
-            // Act
             ProgramNode? program = parser.Parse();
 
-            // Assert
             Assert.IsNotNull(program);
             Assert.IsNotNull(program.MainFunction);
             Assert.AreEqual(0, program.GlobalVariables.Count);
@@ -32,9 +30,8 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void Parse_GlobalVariableDeclaration_Valid()
+        public void Parse_WithGlobalVariable_ReturnsDeclaration()
         {
-            // Arrange
             List<Token> tokens = new List<Token>
             {
 
@@ -51,10 +48,8 @@ namespace BenitaTestProject
 
             Parser parser = new Parser(tokens);
 
-            // Act
             ProgramNode? program = parser.Parse();
 
-            // Assert
             Assert.IsNotNull(program);
             Assert.IsNotNull(program.MainFunction);
             Assert.AreEqual(1, program.GlobalVariables.Count);
@@ -67,9 +62,8 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void Parse_Function_Valid()
+        public void Parse_WithFunction_ReturnsFunctionDeclaration()
         {
-            // Arrange
             List<Token> tokens = new List<Token>
             {
                 new Token(TokenType.FUNC, "func", 0),
@@ -100,10 +94,8 @@ namespace BenitaTestProject
 
             Parser parser = new Parser(tokens);
 
-            // Act
             ProgramNode? program = parser.Parse();
 
-            // Assert
             Assert.IsNotNull(program);
             Assert.AreEqual(0, program.GlobalVariables.Count);
             Assert.AreEqual(1, program.Functions.Count);
@@ -131,9 +123,8 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void Parse_ArrayDeclaration_NoSize_Valid()
+        public void Parse_WithUnsizedArray_ReturnsArrayDeclaration()
         {
-            // Arrange
             List<Token> tokens = new List<Token>
             {
                 new Token(TokenType.NUMBER, "number", 0),
@@ -151,10 +142,8 @@ namespace BenitaTestProject
 
             Parser parser = new Parser(tokens);
 
-            // Act
             ProgramNode? program = parser.Parse();
 
-            // Assert
             Assert.IsNotNull(program);
             Assert.AreEqual(1, program.GlobalVariables.Count);
             Assert.AreEqual(0, program.Functions.Count);
@@ -166,9 +155,8 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void Parse_IfStatement_Valid()
+        public void Parse_WithIfStatement_ReturnsConditionalNode()
         {
-            // Arrange
             List<Token> tokens = new List<Token>
             {
                 new Token(TokenType.MAIN, "_main_", 0),
@@ -200,10 +188,8 @@ namespace BenitaTestProject
 
             Parser parser = new Parser(tokens);
 
-            // Act
             ProgramNode? program = parser.Parse();
 
-            // Assert
             Assert.IsNotNull(program);
             Assert.AreEqual(0, program.GlobalVariables.Count);
             Assert.AreEqual(0, program.Functions.Count);
@@ -254,9 +240,8 @@ namespace BenitaTestProject
         }
 
         [TestMethod]
-        public void Parse_WhileLoop_Valid()
+        public void Parse_WithWhileLoop_ReturnsLoopNode()
         {
-            // Arrange
             List<Token> tokens = new List<Token>
             {
                 new Token(TokenType.MAIN, "_main_", 0),
@@ -280,10 +265,8 @@ namespace BenitaTestProject
 
             Parser parser = new Parser(tokens);
 
-            // Act
             ProgramNode? program = parser.Parse();
 
-            // Assert
             Assert.IsNotNull(program);
             Assert.AreEqual(0, program.GlobalVariables.Count);
             Assert.AreEqual(0, program.Functions.Count);
@@ -326,7 +309,6 @@ namespace BenitaTestProject
         [TestMethod]
         public void Parse_MainFunctionMissing_ThrowsException()
         {
-            // Arrange
             List<Token> tokens = new List<Token>
             {
                 new Token(TokenType.FUNC, "func", 0),
@@ -346,7 +328,6 @@ namespace BenitaTestProject
             };
 
             Parser parser = new Parser(tokens);
-            // Act & Assert
             var exception = Assert.ThrowsException<ParserException>(() => parser.Parse());
             Assert.AreEqual("BEN2003", exception.Code);
             StringAssert.Contains(exception.Message, "No main function or top-level executable statement was found.");
@@ -355,7 +336,6 @@ namespace BenitaTestProject
         [TestMethod]
         public void Parse_MainFunctionDuplicated_ThrowsException()
         {
-            // Arrange
             List<Token> tokens = new List<Token>
             {
                 new Token(TokenType.MAIN, "_main_", 0),
@@ -382,16 +362,14 @@ namespace BenitaTestProject
             };
 
             Parser parser = new Parser(tokens);
-            // Act & Assert
             var exception = Assert.ThrowsException<ParserException>(() => parser.Parse());
             Assert.AreEqual("BEN2002", exception.Code);
             StringAssert.Contains(exception.Message, "The main function is already defined.");
         }
 
         [TestMethod]
-        public void Parse_RecursiveFunction_Valid()
+        public void Parse_WithRecursiveFunction_ReturnsRecursiveCall()
         {
-            // Arrange
             List<Token> tokens = new List<Token>
             {
                 // Function: Factorial(number n) -> number
@@ -472,17 +450,14 @@ namespace BenitaTestProject
 
             Parser parser = new Parser(tokens);
 
-            // Act
             ProgramNode? program = parser.Parse();
 
-            // Assert
             Assert.IsNotNull(program);
             Assert.AreEqual(0, program.GlobalVariables.Count);
             Assert.AreEqual(1, program.Functions.Count);
             Assert.IsNotNull(program.MainFunction);
             Assert.AreEqual(2, program.MainFunction.Body.Statements.Count);
 
-            // Assert the Factorial function
             var factorialFunction = program.Functions[0];
             Assert.AreEqual("Factorial", factorialFunction.Name);
             Assert.AreEqual("number", factorialFunction.ReturnType);
@@ -543,7 +518,6 @@ namespace BenitaTestProject
             Assert.IsTrue(factorialArgument.Right is LiteralNode);
             Assert.AreEqual("1", (factorialArgument.Right as LiteralNode).Value);
 
-            // Assert the _main_ function
             var mainFunction = program.MainFunction;
             Assert.AreEqual("_main_", mainFunction.Name);
             Assert.AreEqual("void", mainFunction.ReturnType);

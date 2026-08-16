@@ -1,32 +1,29 @@
-﻿using Benita.itpr_df;
+using Benita.itpr_df;
 
 using Benita;
 
-namespace BenitaTestProject.Itpr_df
+namespace BenitaTestProject.Runtime.BuiltIns
 {
     [TestClass]
-    public class ArrayManagementTests
-    {
+/// <summary>عملیات آرایه در runtime و اعتبارسنجی آرگومان‌های آن‌ها را بررسی می‌کند.</summary>
+public class ArrayManagementTests
+{
         [TestMethod]
         public void HandleFunctionCall_WithArrayLength_ReturnsElementCount()
         {
-            // Arrange
             var array = new object[] { 1, 2, 3 };
             var arguments = new List<object> { array };
 
             var arrayManagement = new ArrayManagement();
 
-            // Act
             var result = arrayManagement.HandleFunctionCall("array_len", arguments);
 
-            // Assert
             Assert.AreEqual(array.Length, result);
         }
 
         [TestMethod]
         public void HandleFunctionCall_WithArrayAdd_ReturnsArrayWithAppendedElement()
         {
-            // Arrange
             var initialArray = new object[] { 1, 2, 3 };
             var valueToAdd = 4;
             var expectedArray = new object[] { 1, 2, 3, 4 };
@@ -34,11 +31,9 @@ namespace BenitaTestProject.Itpr_df
 
             var arrayManagement = new ArrayManagement();
 
-            // Act
             var result = arrayManagement.HandleFunctionCall("array_add", arguments);
             var resultArray = result as object[];
 
-            // Assert
             Assert.AreNotEqual(null, resultArray);
             Assert.AreEqual(expectedArray.Length, resultArray.Length);
             CollectionAssert.AreEqual(expectedArray, resultArray);
@@ -47,7 +42,6 @@ namespace BenitaTestProject.Itpr_df
         [TestMethod]
         public void HandleFunctionCall_WithArrayRemove_ReturnsArrayWithoutSelectedElement()
         {
-            // Arrange
             var initialArray = new object[] { 1, 2, 3, 4 };
             var indexToRemove = 2; // Element '3'
             var expectedArray = new object[] { 1, 2, 4 };
@@ -55,11 +49,9 @@ namespace BenitaTestProject.Itpr_df
 
             var arrayManagement = new ArrayManagement();
 
-            // Act
             var result = arrayManagement.HandleFunctionCall("array_remove", arguments);
             var resultArray = result as object[];
 
-            // Assert
             Assert.AreNotEqual(null, resultArray);
             Assert.AreEqual(expectedArray.Length, resultArray.Length);
             CollectionAssert.AreEqual(expectedArray, resultArray);
@@ -68,11 +60,9 @@ namespace BenitaTestProject.Itpr_df
         [TestMethod]
         public void HandleFunctionCall_WithNonArrayLengthArgument_ThrowsException()
         {
-            // Arrange
             var arguments = new List<object> { "not an array" };
             var arrayManagement = new ArrayManagement();
 
-            // Act & Assert
             var exception = Assert.ThrowsException<BuiltInException>(() => arrayManagement.HandleFunctionCall("array_len", arguments));
             Assert.AreEqual("Argument to array_len must be an array", exception.Description);
         }
@@ -80,11 +70,9 @@ namespace BenitaTestProject.Itpr_df
         [TestMethod]
         public void HandleFunctionCall_WithNonArrayAddArgument_ThrowsException()
         {
-            // Arrange
             var arguments = new List<object> { "not an array", 1 };
             var arrayManagement = new ArrayManagement();
 
-            // Act & Assert
             var exception = Assert.ThrowsException<BuiltInException>(() => arrayManagement.HandleFunctionCall("array_add", arguments));
             Assert.AreEqual("Argument to array_add must be an array", exception.Description);
         }
@@ -92,11 +80,9 @@ namespace BenitaTestProject.Itpr_df
         [TestMethod]
         public void HandleFunctionCall_WithNonArrayRemoveArgument_ThrowsException()
         {
-            // Arrange
             var arguments = new List<object> { "not an array", 0 };
             var arrayManagement = new ArrayManagement();
 
-            // Act & Assert
             var exception = Assert.ThrowsException<BuiltInException>(() => arrayManagement.HandleFunctionCall("array_remove", arguments));
             Assert.AreEqual("Argument to array_remove must be an array", exception.Description);
         }
@@ -104,32 +90,39 @@ namespace BenitaTestProject.Itpr_df
         [TestMethod]
         public void HandleFunctionCall_WithOutOfRangeRemoveIndex_ThrowsArgumentOutOfRangeException()
         {
-            // Arrange
             var initialArray = new object[] { 1, 2, 3 };
             var indexToRemove = 5; // Index out of range
             var arguments = new List<object> { initialArray, indexToRemove };
 
             var arrayManagement = new ArrayManagement();
 
-            // Act & Assert
             var exception = Assert.ThrowsException<BuiltInException>(() => arrayManagement.HandleFunctionCall("array_remove", arguments));
             Assert.AreEqual("Index is out of range. (Parameter 'index')", exception.Description);
         }
 
         [TestMethod]
+        public void HandleFunctionCall_WithFractionalIndex_RejectsImplicitRounding()
+        {
+            var service = new ArrayManagement();
+
+            BuiltInException exception = Assert.ThrowsException<BuiltInException>(() =>
+                service.HandleFunctionCall("array_remove", [new object[] { 1, 2 }, 0.5]));
+
+            StringAssert.Contains(exception.Description, "whole number");
+        }
+
+        [TestMethod]
         public void HandleFunctionCall_WithUnknownFunction_ThrowsException()
         {
-            // Arrange
             var arrayManagement = new ArrayManagement();
             var arguments = new List<object>();
 
-            // Act & Assert
             var exception = Assert.ThrowsException<BuiltInException>(() => arrayManagement.HandleFunctionCall("unknown_function", arguments));
             Assert.AreEqual("Unknown function 'unknown_function'", exception.Description);
         }
 
         [TestMethod]
-        public void NewArrayLookupFunctions_FindElements()
+        public void HandleFunctionCall_WithArrayLookupFunctions_FindsElements()
         {
             var service = new ArrayManagement();
             var array = new object[] { "a", "b", "c" };
@@ -140,7 +133,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void NewArrayTransformFunctions_ReturnNewArrays()
+        public void HandleFunctionCall_WithArrayTransformFunctions_ReturnsNewArrays()
         {
             var service = new ArrayManagement();
             var source = new object[] { 3, 1, 2 };
@@ -150,7 +143,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void NewArrayCompositionFunctions_InsertSliceConcatAndSort()
+        public void HandleFunctionCall_WithArrayCompositionFunctions_ReturnsExpectedArrays()
         {
             var service = new ArrayManagement();
             var inserted = (object[])service.HandleFunctionCall("array_insert", [new object[] { 10, 30 }, 1, 20]);
@@ -161,7 +154,7 @@ namespace BenitaTestProject.Itpr_df
         }
 
         [TestMethod]
-        public void NewArrayRangeFunctions_RejectInvalidRanges()
+        public void HandleFunctionCall_WithInvalidArrayRanges_ThrowsException()
         {
             var service = new ArrayManagement();
             var array = new object[] { 1, 2, 3 };

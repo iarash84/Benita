@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>سازگاری معنایی و زمان اجرای توابع داخلی رشته را بررسی می‌کند.</summary>
 public class StringFunctionTests
 {
     private const string Source = @"
@@ -29,7 +30,7 @@ _main_() {
 
         new CompilerClass().Exec(Source);
 
-        Assert.AreEqual(expected, output.GetOuput());
+        Assert.AreEqual(expected, output.GetOutput());
     }
 
     [TestMethod]

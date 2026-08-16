@@ -3,8 +3,20 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>تداوم نشست، اتمیک بودن ورودی و عیب‌یابی‌های REPL را بررسی می‌کند.</summary>
 public class ReplTests
 {
+    [TestMethod]
+    public void Run_FailedSubmissionReportsItsSessionLineAndReplSource()
+    {
+        const string input = "number value = 1;\nnumber broken = ;\n:exit\n";
+        var output = new StringWriter();
+
+        new Repl(new StringReader(input), output).Run();
+
+        StringAssert.Contains(output.ToString(), "<repl>:2:");
+    }
+
     [TestMethod]
     public void Run_PreservesVariablesBetweenSubmissionsAndPrintsExpressions()
     {
@@ -13,7 +25,7 @@ public class ReplTests
 
         new Repl(new StringReader(input), Console.Out).Run();
 
-        StringAssert.Contains(consoleOutput.GetOuput(), "42\r\n");
+        StringAssert.Contains(consoleOutput.GetOutput(), "42\r\n");
     }
 
     [TestMethod]
@@ -24,7 +36,7 @@ public class ReplTests
 
         new Repl(new StringReader(input), Console.Out).Run();
 
-        StringAssert.Contains(consoleOutput.GetOuput(), "12\r\n");
+        StringAssert.Contains(consoleOutput.GetOutput(), "12\r\n");
     }
 
     [TestMethod]
@@ -47,8 +59,8 @@ public class ReplTests
 
         new Repl(new StringReader(input), Console.Out).Run();
 
-        StringAssert.Contains(consoleOutput.GetOuput(), "BEN2");
-        StringAssert.Contains(consoleOutput.GetOuput(), "2\r\n");
+        StringAssert.Contains(consoleOutput.GetOutput(), "BEN2");
+        StringAssert.Contains(consoleOutput.GetOutput(), "2\r\n");
     }
 
     [TestMethod]
@@ -59,7 +71,53 @@ public class ReplTests
 
         new Repl(new StringReader(input), Console.Out).Run();
 
-        StringAssert.Contains(consoleOutput.GetOuput(), "Current submission cancelled.");
-        StringAssert.Contains(consoleOutput.GetOuput(), "7\r\n");
+        StringAssert.Contains(consoleOutput.GetOutput(), "Current submission cancelled.");
+        StringAssert.Contains(consoleOutput.GetOutput(), "7\r\n");
+    }
+
+    [TestMethod]
+    public void Run_RuntimeFailureRollsBackScalarAndArrayMutations()
+    {
+        const string input = """
+            number value = 1;
+            number[] items = [1];
+            value = 2; items[0] = 9; print(items[5]);
+            value
+            items[0]
+            :exit
+            """;
+        using var consoleOutput = new ConsoleOutput();
+
+        new Repl(new StringReader(input), Console.Out).Run();
+
+        string output = consoleOutput.GetOutput();
+        StringAssert.Contains(output, "BEN4001");
+        StringAssert.Contains(output, $"1{Environment.NewLine}");
+        Assert.IsFalse(output.Contains($"2{Environment.NewLine}", StringComparison.Ordinal));
+        Assert.IsFalse(output.Contains($"9{Environment.NewLine}", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    public void Run_RuntimeFailureRollsBackPackageInstanceMutation()
+    {
+        const string input = """
+            pkg Counter {
+            number value = 1;
+            public func set(number next) -> void { value = next; }
+            public func current() -> number { return value; }
+            }
+            Counter counter = new Counter();
+            counter.set(9); number[] items = [1]; print(items[5]);
+            counter.current()
+            :exit
+            """;
+        using var consoleOutput = new ConsoleOutput();
+
+        new Repl(new StringReader(input), Console.Out).Run();
+
+        string output = consoleOutput.GetOutput();
+        StringAssert.Contains(output, "BEN4001");
+        StringAssert.Contains(output, $"1{Environment.NewLine}");
+        Assert.IsFalse(output.Contains($"9{Environment.NewLine}", StringComparison.Ordinal));
     }
 }

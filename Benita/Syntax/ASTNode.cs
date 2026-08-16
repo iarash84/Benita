@@ -1,10 +1,19 @@
 ﻿namespace Benita
 {
+    /// <summary>سطح دسترسی declarationهای متغیر و تابع را مشخص می‌کند.</summary>
+    public enum AccessModifier
+    {
+        Private,
+        Public
+    }
+
     /// <summary>
     /// Represents the base class for all nodes in the Abstract Syntax Tree (AST).
     /// </summary>
     public abstract class AstNode
     {
+        /// <summary>موقعیت آغاز node در source را برای diagnostics مراحل بعدی نگه می‌دارد.</summary>
+        public SourceSpan Span { get; internal set; } = SourceSpan.Unknown;
     }
 
     /// <summary>
@@ -89,14 +98,47 @@
     {
     }
 
+    /// <summary>فراخوانی تابعی را بازنمایی می‌کند که در یک task مستقل اجرا می‌شود.</summary>
+    public class AsyncExpressionNode(FunctionCallNode call) : ExpressionNode
+    {
+        public FunctionCallNode Call { get; } = call;
+    }
+
+    /// <summary>انتظار برای تکمیل یک task و دریافت نتیجه یا خطای آن را بازنمایی می‌کند.</summary>
+    public class AwaitExpressionNode(ExpressionNode task) : ExpressionNode
+    {
+        public ExpressionNode Task { get; } = task;
+    }
+
+    /// <summary>پرتاب یک مقدار استاندارد error را بازنمایی می‌کند.</summary>
+    public class ThrowStatementNode(ExpressionNode error) : StatementNode
+    {
+        public ExpressionNode Error { get; } = error;
+    }
+
+    /// <summary>ساختار try را همراه catch اختیاری و finally اختیاری نگهداری می‌کند.</summary>
+    public class TryStatementNode(
+        BlockNode tryBlock,
+        string? catchVariable,
+        BlockNode? catchBlock,
+        BlockNode? finallyBlock) : StatementNode
+    {
+        public BlockNode TryBlock { get; } = tryBlock;
+        public string? CatchVariable { get; } = catchVariable;
+        public BlockNode? CatchBlock { get; } = catchBlock;
+        public BlockNode? FinallyBlock { get; } = finallyBlock;
+    }
+
     /// <summary>
     /// Represents a variable declaration node with a type, optional name, and optional initializer.
     /// </summary>
-    public class VariableDeclarationNode(string? type, string name, ExpressionNode? initializer) : StatementNode
+    public class VariableDeclarationNode(string? type, string name, ExpressionNode? initializer,
+        AccessModifier accessModifier = AccessModifier.Private) : StatementNode
     {
         public string? Type { get; } = type;
         public string Name { get; } = name;
         public ExpressionNode? Initializer { get; } = initializer;
+        public AccessModifier AccessModifier { get; } = accessModifier;
     }
 
     /// <summary>
@@ -117,6 +159,22 @@
         public string Name { get; } = name;
         public string PackageName { get; } = packageName;
         public List<ExpressionNode> Arguments { get; } = arguments;
+    }
+
+    /// <summary>ساخت یک نمونهٔ package را در جایگاه expression بازنمایی می‌کند.</summary>
+    public class NewExpressionNode(string packageName, List<ExpressionNode> arguments) : ExpressionNode
+    {
+        public string PackageName { get; } = packageName;
+        public List<ExpressionNode> Arguments { get; } = arguments;
+    }
+
+    /// <summary>
+    /// مقداری که پیش از ورود به scope یک نمونه ارزیابی شده است را در اجرای داخلی حمل می‌کند.
+    /// این گره مستقیماً توسط parser ساخته نمی‌شود.
+    /// </summary>
+    internal sealed class RuntimeValueNode(object? value) : ExpressionNode
+    {
+        public object? Value { get; } = value;
     }
 
     /// <summary>
@@ -263,13 +321,15 @@
         List<ParameterNode> parameters,
         string? returnType,
         BlockNode body,
-        ReturnStatementNode? returnStatement) : AstNode
+        ReturnStatementNode? returnStatement,
+        AccessModifier accessModifier = AccessModifier.Private) : AstNode
     {
         public string Name { get; } = name;
         public List<ParameterNode> Parameters { get; } = parameters;
         public string? ReturnType { get; } = returnType;
         public BlockNode Body { get; } = body;
         public ReturnStatementNode? ReturnStatement { get; } = returnStatement;
+        public AccessModifier AccessModifier { get; } = accessModifier;
     }
 
     /// <summary>
@@ -289,13 +349,27 @@
         public string Name { get; } = name;
     }
 
-    /// <summary>
-    /// Represents a package node with a name and a list of members.
-    /// </summary>
-    public class PackageNode(string name, List<PackageMemberNode> members) : AstNode
+    /// <summary>یک package را همراه اعضا و interfaceهای پیاده‌سازی‌شدهٔ آن بازنمایی می‌کند.</summary>
+    public class PackageNode(string name, List<PackageMemberNode> members, List<string>? interfaces = null) : AstNode
     {
         public string Name { get; } = name;
         public List<PackageMemberNode> Members { get; } = members;
+        public List<string> Interfaces { get; } = interfaces ?? [];
+    }
+
+    /// <summary>امضای یک متد بدون بدنه را در قرارداد interface نگهداری می‌کند.</summary>
+    public class InterfaceMethodNode(string name, List<ParameterNode> parameters, string returnType) : AstNode
+    {
+        public string Name { get; } = name;
+        public List<ParameterNode> Parameters { get; } = parameters;
+        public string ReturnType { get; } = returnType;
+    }
+
+    /// <summary>یک interface نام‌دار و مجموعهٔ متدهای الزامی آن را بازنمایی می‌کند.</summary>
+    public class InterfaceNode(string name, List<InterfaceMethodNode> methods) : AstNode
+    {
+        public string Name { get; } = name;
+        public List<InterfaceMethodNode> Methods { get; } = methods;
     }
 
     /// <summary>
@@ -308,12 +382,14 @@
     /// <summary>
     /// Represents a package variable declaration node with a type, optional name, and optional initializer.
     /// </summary>
-    public class PackageVariableDeclarationNode(string? type, string name, ExpressionNode? initializer)
+    public class PackageVariableDeclarationNode(string? type, string name, ExpressionNode? initializer,
+        AccessModifier accessModifier = AccessModifier.Private)
         : PackageMemberNode
     {
-        public string? Type { get; } = type;
+        public string? Type { get; internal set; } = type;
         public string Name { get; } = name;
         public ExpressionNode? Initializer { get; } = initializer;
+        public AccessModifier AccessModifier { get; } = accessModifier;
     }
 
     /// <summary>
@@ -324,28 +400,30 @@
         List<ParameterNode> parameters,
         string? returnType,
         BlockNode body,
-        ReturnStatementNode? returnStatement) : PackageMemberNode
+        ReturnStatementNode? returnStatement,
+        AccessModifier accessModifier = AccessModifier.Private) : PackageMemberNode
     {
         public string Name { get; } = name;
         public List<ParameterNode> Parameters { get; } = parameters;
         public string? ReturnType { get; } = returnType;
         public BlockNode Body { get; } = body;
         public ReturnStatementNode? ReturnStatement { get; } = returnStatement;
+        public AccessModifier AccessModifier { get; } = accessModifier;
     }
 
-    /// <summary>
-    /// Represents the program node containing global variables, packages, functions, main function, and statements.
-    /// </summary>
+    /// <summary>ریشهٔ AST شامل interfaceها، packageها، declarationها و نقطهٔ ورود برنامه است.</summary>
     public class ProgramNode(
         List<VariableDeclarationNode> globalVariables,
         List<PackageNode> packages,
         List<FunctionNode> functions,
         FunctionNode? mainFunction,
-        List<StatementNode?>? statements) : AstNode
+        List<StatementNode?>? statements,
+        List<InterfaceNode>? interfaces = null) : AstNode
     {
         public List<VariableDeclarationNode> GlobalVariables { get; } = globalVariables;
         public List<FunctionNode> Functions { get; } = functions;
         public List<PackageNode> Packages { get; } = packages;
+        public List<InterfaceNode> Interfaces { get; } = interfaces ?? [];
         public FunctionNode? MainFunction { get; } = mainFunction;
         public List<StatementNode?>? Statements { get; } = statements;
     }
@@ -362,7 +440,8 @@
     /// <summary>
     /// Represents an array initializer node with a list of elements.
     /// </summary>
-    public class ArrayInitializerNode(List<ExpressionNode> elements, ExpressionNode sizeExpression) : ExpressionNode
+    public class ArrayInitializerNode(List<ExpressionNode> elements, ExpressionNode sizeExpression,
+        string? elementType = null) : ExpressionNode
     {
         /// <summary>
         /// Gets the list of elements used to initialize the array.
@@ -370,5 +449,8 @@
         public List<ExpressionNode> Elements = elements;
 
         public ExpressionNode SizeExpression = sizeExpression;
+
+        /// <summary>نوع صریح عنصر برای initializer سایزدار؛ برای literal آرایه null است.</summary>
+        public string? ElementType { get; } = elementType;
     }
 }

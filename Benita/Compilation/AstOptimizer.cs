@@ -3,10 +3,11 @@ using System.Globalization;
 namespace Benita
 {
     /// <summary>
-    /// Produces an optimized copy of an AST without changing the source program's semantics.
+    /// یک نسخهٔ بهینه‌شده از AST تولید می‌کند، بدون اینکه معنای قابل مشاهدهٔ برنامه تغییر کند.
     /// </summary>
     public sealed class AstOptimizer
     {
+        /// <summary>تمام بخش‌های برنامه را به‌صورت بازگشتی بهینه و یک AST جدید تولید می‌کند.</summary>
         public ProgramNode Optimize(ProgramNode program)
         {
             ArgumentNullException.ThrowIfNull(program);
@@ -16,25 +17,27 @@ namespace Benita
                 program.Packages.Select(OptimizePackage).ToList(),
                 program.Functions.Select(OptimizeFunction).ToList(),
                 program.MainFunction is null ? null : OptimizeFunction(program.MainFunction),
-                program.Statements?.Select(OptimizeStatement).ToList());
+                program.Statements?.Select(OptimizeStatement).ToList(),
+                program.Interfaces);
         }
 
         private VariableDeclarationNode OptimizeVariable(VariableDeclarationNode node) =>
-            new(node.Type, node.Name, OptimizeExpression(node.Initializer));
+            new(node.Type, node.Name, OptimizeExpression(node.Initializer), node.AccessModifier);
 
         private PackageNode OptimizePackage(PackageNode node) =>
-            new(node.Name, node.Members.Select(OptimizePackageMember).ToList());
+            new(node.Name, node.Members.Select(OptimizePackageMember).ToList(), node.Interfaces);
 
         private PackageMemberNode OptimizePackageMember(PackageMemberNode node) => node switch
         {
             PackageVariableDeclarationNode variable => new PackageVariableDeclarationNode(
-                variable.Type, variable.Name, OptimizeExpression(variable.Initializer)),
+                variable.Type, variable.Name, OptimizeExpression(variable.Initializer), variable.AccessModifier),
             PackageFunctionNode function => new PackageFunctionNode(
                 function.Name,
                 function.Parameters,
                 function.ReturnType,
                 OptimizeBlock(function.Body),
-                OptimizeReturn(function.ReturnStatement)),
+                OptimizeReturn(function.ReturnStatement),
+                function.AccessModifier),
             _ => throw new InvalidOperationException($"Unsupported package member '{node.GetType().Name}'.")
         };
 
@@ -44,7 +47,8 @@ namespace Benita
                 node.Parameters,
                 node.ReturnType,
                 OptimizeBlock(node.Body),
-                OptimizeReturn(node.ReturnStatement));
+                OptimizeReturn(node.ReturnStatement),
+                node.AccessModifier);
 
         private BlockNode OptimizeBlock(BlockNode node) =>
             new(node.Statements.Select(statement => OptimizeStatement(statement)!).ToList());
@@ -81,6 +85,13 @@ namespace Benita
                     OptimizeStatement(forEach.Body)!),
                 BlockNode block => OptimizeBlock(block),
                 ReturnStatementNode returnStatement => OptimizeReturn(returnStatement),
+                ThrowStatementNode throwStatement => new ThrowStatementNode(
+                    OptimizeExpression(throwStatement.Error)!),
+                TryStatementNode tryStatement => new TryStatementNode(
+                    OptimizeBlock(tryStatement.TryBlock),
+                    tryStatement.CatchVariable,
+                    tryStatement.CatchBlock is null ? null : OptimizeBlock(tryStatement.CatchBlock),
+                    tryStatement.FinallyBlock is null ? null : OptimizeBlock(tryStatement.FinallyBlock)),
                 ObjectInstantiationNode creation => new ObjectInstantiationNode(
                     creation.Name,
                     creation.PackageName,
@@ -98,6 +109,7 @@ namespace Benita
 
             if (TryGetBoolean(condition, out bool value))
             {
+                // فقط شاخه‌ای حذف می‌شود که شرط ثابت، غیرقابل‌دسترسی بودن آن را اثبات کند.
                 return value
                     ? thenBranch ?? new BlockNode(new List<StatementNode>())
                     : elseBranch ?? new BlockNode(new List<StatementNode>());
@@ -111,6 +123,7 @@ namespace Benita
             ExpressionNode? condition = OptimizeExpression(node.Condition);
             if (TryGetBoolean(condition, out bool value) && !value)
             {
+                // حلقه‌ای با شرط ثابت false هیچ اثر قابل مشاهده‌ای ندارد.
                 return new BlockNode(new List<StatementNode>());
             }
 
@@ -132,13 +145,20 @@ namespace Benita
                 FunctionCallNode call => new FunctionCallNode(
                     call.FunctionName,
                     call.Arguments.Select(argument => OptimizeExpression(argument)!).ToList()),
+                AsyncExpressionNode asyncExpression => new AsyncExpressionNode(
+                    (FunctionCallNode)OptimizeExpression(asyncExpression.Call)!),
+                AwaitExpressionNode awaitExpression => new AwaitExpressionNode(
+                    OptimizeExpression(awaitExpression.Task)!),
                 ArrayAccessNode access => new ArrayAccessNode(
                     access.Name, OptimizeExpression(access.Index)),
                 ArrayInitializerNode array => new ArrayInitializerNode(
                     array.Elements.Select(element => OptimizeExpression(element)!).ToList(),
-                    OptimizeExpression(array.SizeExpression)!),
+                    OptimizeExpression(array.SizeExpression)!, array.ElementType),
                 MemberAccessNode member => new MemberAccessNode(
                     member.ObjectName, OptimizeMemberExpression(member.Expression)),
+                NewExpressionNode creation => new NewExpressionNode(
+                    creation.PackageName,
+                    creation.Arguments.Select(argument => OptimizeExpression(argument)!).ToList()),
                 MatchExpressionNode match => new MatchExpressionNode(
                     OptimizeExpression(match.Value)!, OptimizeMatchArms(match.Arms)),
                 _ => throw new InvalidOperationException($"Unsupported expression '{node.GetType().Name}'.")
@@ -192,6 +212,19 @@ namespace Benita
                 return new LiteralNode(leftLiteral.Value + rightLiteral.Value, TokenType.STRING_LITERAL);
             }
 
+            if (node.Operator is "==" or "!=" && IsString(leftLiteral) && IsString(rightLiteral))
+            {
+                bool equal = string.Equals(leftLiteral.Value, rightLiteral.Value, StringComparison.Ordinal);
+                return BooleanLiteral(node.Operator == "==" ? equal : !equal);
+            }
+
+            if (node.Operator is "==" or "!=" && TryGetBoolean(leftLiteral, out bool leftBool) &&
+                TryGetBoolean(rightLiteral, out bool rightBool))
+            {
+                bool equal = leftBool == rightBool;
+                return BooleanLiteral(node.Operator == "==" ? equal : !equal);
+            }
+
             return new BinaryExpressionNode(left, node.Operator, right);
         }
 
@@ -201,6 +234,7 @@ namespace Benita
 
             if (TryGetBoolean(left, out bool leftValue))
             {
+                // برای حفظ رفتار short-circuit، وقتی نتیجه قطعی است عملوند راست بهینه نمی‌شود.
                 if (node.Operator == "&&" && !leftValue || node.Operator == "||" && leftValue)
                 {
                     return BooleanLiteral(leftValue);
