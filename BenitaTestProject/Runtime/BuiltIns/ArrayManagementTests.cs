@@ -5,6 +5,7 @@ using Benita;
 namespace BenitaTestProject.Runtime.BuiltIns
 {
     [TestClass]
+/// <summary>عملیات آرایه در runtime و اعتبارسنجی آرگومان‌های آن‌ها را بررسی می‌کند.</summary>
 public class ArrayManagementTests
 {
         [TestMethod]

@@ -1,6 +1,7 @@
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>یکسان‌سازی خروجی کنسول در سیستم‌عامل‌های مختلف را بررسی می‌کند.</summary>
 public class ConsoleOutputTests
 {
     [TestMethod]

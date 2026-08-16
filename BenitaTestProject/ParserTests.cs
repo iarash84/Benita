@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject
 {
     [TestClass]
+    /// <summary>ساخت AST و رعایت تقدم و ساختار قواعد دستوری توسط Parser را بررسی می‌کند.</summary>
     public class ParserTests
     {
         [TestMethod]

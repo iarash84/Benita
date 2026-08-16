@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>کد، متن و موقعیت مبدأ عیب‌یابی‌های مراحل کامپایل را بررسی می‌کند.</summary>
 public class DiagnosticTests
 {
     [TestMethod]

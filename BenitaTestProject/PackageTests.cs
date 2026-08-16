@@ -2,6 +2,7 @@ using Benita;
 namespace BenitaTestProject
 {
     [TestClass]
+    /// <summary>تعریف، ساخت و دسترسی به فیلدها و متدهای پکیج را بررسی می‌کند.</summary>
     public class PackageTests
     {
         private CompilerClass _compiler;

@@ -4,6 +4,7 @@ namespace BenitaTestProject;
 
 [TestClass]
 [DoNotParallelize]
+/// <summary>کد خروج و پیام‌های رابط خط فرمان برنامه را بررسی می‌کند.</summary>
 public class ApplicationCliTests
 {
     [TestMethod]

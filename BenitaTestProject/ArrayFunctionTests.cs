@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>نوع‌دهی و رفتار زمان اجرای مجموعهٔ توابع داخلی آرایه را بررسی می‌کند.</summary>
 public class ArrayFunctionTests
 {
     [TestMethod]

@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>حالت بررسی بدون اجرای Compiler و انتشار خطاهای آن را آزمایش می‌کند.</summary>
 public class CompilerCheckTests
 {
     [TestMethod]

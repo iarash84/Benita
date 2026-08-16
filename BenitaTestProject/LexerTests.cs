@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject
 {
     [TestClass]
+    /// <summary>توکن‌سازی کلیدواژه‌ها، مقادیر، عملگرها و خطاهای واژگانی را بررسی می‌کند.</summary>
     public class LexerTests
     {
         [TestMethod]

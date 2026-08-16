@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>جداسازی state و قراردادهای معماری میان Compiler، Interpreter و runtime را تثبیت می‌کند.</summary>
 public class ArchitectureRegressionTests
 {
     [TestMethod]

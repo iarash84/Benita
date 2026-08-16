@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>قواعد دسترسی پیش‌فرض و صریح اعضا و تابع `_main_` را بررسی می‌کند.</summary>
 public class AccessModifierTests
 {
     [TestMethod]

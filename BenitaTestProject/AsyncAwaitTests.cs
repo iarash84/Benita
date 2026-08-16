@@ -4,6 +4,7 @@ namespace BenitaTestProject;
 
 [TestClass]
 [DoNotParallelize]
+/// <summary>ثبت دامنه، جداسازی state و انتشار نتیجه یا خطای taskها را بررسی می‌کند.</summary>
 public class AsyncAwaitTests
 {
     [TestMethod]

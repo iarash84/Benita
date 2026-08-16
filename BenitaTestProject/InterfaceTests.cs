@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>قرارداد interface، انتساب نوعی و dispatch چندریختی را بررسی می‌کند.</summary>
 public class InterfaceTests
 {
     [TestMethod]

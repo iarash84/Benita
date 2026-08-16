@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>نگاشت، برابری و قواعد انتساب انواع زبان را بررسی می‌کند.</summary>
 public class TypeSystemTests
 {
     [DataTestMethod]

@@ -5,6 +5,7 @@ using Benita;
 namespace BenitaTestProject.Runtime.BuiltIns
 {
     [TestClass]
+    /// <summary>خواندن، نوشتن، بررسی وجود و حذف فایل توسط توابع داخلی را بررسی می‌کند.</summary>
     public class FileManagementTests
     {
 

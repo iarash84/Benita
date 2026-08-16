@@ -3,10 +3,11 @@ using System.Globalization;
 namespace Benita
 {
     /// <summary>
-    /// Produces an optimized copy of an AST without changing the source program's semantics.
+    /// یک نسخهٔ بهینه‌شده از AST تولید می‌کند، بدون اینکه معنای قابل مشاهدهٔ برنامه تغییر کند.
     /// </summary>
     public sealed class AstOptimizer
     {
+        /// <summary>تمام بخش‌های برنامه را به‌صورت بازگشتی بهینه و یک AST جدید تولید می‌کند.</summary>
         public ProgramNode Optimize(ProgramNode program)
         {
             ArgumentNullException.ThrowIfNull(program);
@@ -108,6 +109,7 @@ namespace Benita
 
             if (TryGetBoolean(condition, out bool value))
             {
+                // فقط شاخه‌ای حذف می‌شود که شرط ثابت، غیرقابل‌دسترسی بودن آن را اثبات کند.
                 return value
                     ? thenBranch ?? new BlockNode(new List<StatementNode>())
                     : elseBranch ?? new BlockNode(new List<StatementNode>());
@@ -121,6 +123,7 @@ namespace Benita
             ExpressionNode? condition = OptimizeExpression(node.Condition);
             if (TryGetBoolean(condition, out bool value) && !value)
             {
+                // حلقه‌ای با شرط ثابت false هیچ اثر قابل مشاهده‌ای ندارد.
                 return new BlockNode(new List<StatementNode>());
             }
 
@@ -231,6 +234,7 @@ namespace Benita
 
             if (TryGetBoolean(left, out bool leftValue))
             {
+                // برای حفظ رفتار short-circuit، وقتی نتیجه قطعی است عملوند راست بهینه نمی‌شود.
                 if (node.Operator == "&&" && !leftValue || node.Operator == "||" && leftValue)
                 {
                     return BooleanLiteral(leftValue);

@@ -5,6 +5,7 @@ using Benita;
 namespace BenitaTestProject.Runtime.BuiltIns;
 
 [TestClass]
+/// <summary>پیاده‌سازی زمان اجرای عملیات رشته‌ای و حالت‌های مرزی آن را بررسی می‌کند.</summary>
 public class StringManagementTests
 {
     private readonly StringManagement _strings = new();

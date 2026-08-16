@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>تداوم نشست، اتمیک بودن ورودی و عیب‌یابی‌های REPL را بررسی می‌کند.</summary>
 public class ReplTests
 {
     [TestMethod]

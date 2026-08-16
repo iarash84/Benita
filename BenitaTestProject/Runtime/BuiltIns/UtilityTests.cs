@@ -5,6 +5,7 @@ using Benita;
 namespace BenitaTestProject.Runtime.BuiltIns
 {
     [TestClass]
+    /// <summary>رفتار توابع داخلی عمومی مانند ورودی، خروجی و تبدیل نوع را بررسی می‌کند.</summary>
     public class UtilityTests
     {
         [TestMethod]

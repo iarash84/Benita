@@ -3,6 +3,7 @@
 namespace BenitaTestProject
 {
     [TestClass]
+    /// <summary>ارزیابی گره‌های اصلی AST و تغییر state توسط مفسر را بررسی می‌کند.</summary>
     public class InterpreterTests
     {
 

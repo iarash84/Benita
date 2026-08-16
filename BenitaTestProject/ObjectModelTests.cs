@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>ساخت نمونه، مقداردهی فیلدها، scope و فراخوانی اعضای پکیج را بررسی می‌کند.</summary>
 public class ObjectModelTests
 {
     [TestMethod]

@@ -4,6 +4,7 @@ using System.Globalization;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>حفظ رفتار برنامه هنگام constant folding و حذف مسیرهای قطعی را بررسی می‌کند.</summary>
 public class AstOptimizerTests
 {
     private readonly AstOptimizer _optimizer = new();

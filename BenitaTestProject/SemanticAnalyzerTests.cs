@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject
 {
     [TestClass]
+    /// <summary>ثبت نمادها و تشخیص خطاهای پایه توسط تحلیل‌گر معنایی را بررسی می‌کند.</summary>
     public class SemanticAnalyzerTests
     {
         [TestMethod]

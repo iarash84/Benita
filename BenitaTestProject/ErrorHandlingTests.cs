@@ -4,6 +4,7 @@ namespace BenitaTestProject;
 
 [TestClass]
 [DoNotParallelize]
+/// <summary>رفتار `throw`، `catch` و `finally` را در تحلیل و زمان اجرا بررسی می‌کند.</summary>
 public class ErrorHandlingTests
 {
     [TestMethod]

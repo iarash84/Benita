@@ -3,6 +3,7 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
+/// <summary>قواعد نحوی و معنایی اصلاح‌شده را در برابر بازگشت باگ‌ها تثبیت می‌کند.</summary>
 public class LanguageSyntaxRegressionTests
 {
     [TestMethod]

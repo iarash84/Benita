@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Benita
 {
+    /// <summary>وضعیت جاری مفسر را در حالت اشکال‌زدایی به‌شکل رنگی در کنسول نمایش می‌دهد.</summary>
     public class DebugClass
     {
         private static DebugClass _instance;
@@ -16,6 +17,7 @@ namespace Benita
         {
         }
 
+        /// <summary>نمونهٔ مشترک و thread-safe ابزار اشکال‌زدایی را دریافت می‌کند.</summary>
         public static DebugClass Instance
         {
             get
@@ -30,7 +32,7 @@ namespace Benita
         }
 
 
-        // Method to output the current state of the interpreter
+        /// <summary>پیام اشکال‌زدایی و در صورت درخواست، snapshot وضعیت مفسر را چاپ می‌کند.</summary>
         public void DebugLog(string message, Dictionary<string, object> variables,
             Dictionary<string, object> outerScopeVariables, Dictionary<string, FunctionNode> functions,
             RuntimeContext context, bool pressKeyWait)
@@ -113,7 +115,8 @@ namespace Benita
             Console.Write($"  {kvp.Key}: ");
             ResetColor();
 
-            if (kvp.Value is Array array) // Check if the value is an array
+            // آرایه‌ها به‌صورت مجموعه نمایش داده می‌شوند تا مقدار عناصر آن‌ها قابل بررسی باشد.
+            if (kvp.Value is Array array)
             {
                 SetColor(ConsoleColor.Magenta);
                 Console.Write("[");
@@ -146,6 +149,7 @@ namespace Benita
 
             if (kvp.Value is { } functionNode)
             {
+                // امضای تابع برای تشخیص سریع ناسازگاری پارامترها و نوع بازگشتی چاپ می‌شود.
                 SetColor(ConsoleColor.DarkCyan);
                 for (int i = 0; i < functionNode.Parameters.Count; i++)
                 {
@@ -171,6 +175,7 @@ namespace Benita
 
             if (kvp.Value is { } packageNode)
             {
+                // فیلدها و متدها جداگانه چاپ می‌شوند تا ساختار هر پکیج واضح بماند.
                 foreach (var member in packageNode.Members)
                 {
                     if (member is PackageVariableDeclarationNode field)
