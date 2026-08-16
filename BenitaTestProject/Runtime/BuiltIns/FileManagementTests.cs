@@ -1,8 +1,8 @@
-﻿using Benita.itpr_df;
+using Benita.itpr_df;
 
 using Benita;
 
-namespace BenitaTestProject.Itpr_df
+namespace BenitaTestProject.Runtime.BuiltIns
 {
     [TestClass]
     public class FileManagementTests
@@ -13,32 +13,26 @@ namespace BenitaTestProject.Itpr_df
         [TestMethod]
         public void HandleFunctionCall_WithFileRead_ReturnsFileContent()
         {
-            // Arrange
             var fileContent = "Test file content";
             File.WriteAllText(TestFilePath, fileContent);
 
             var fileManagement = new FileManagement();
             var arguments = new List<object> { TestFilePath };
 
-            // Act
             var result = fileManagement.HandleFunctionCall("file_read", arguments);
 
-            // Assert
             Assert.AreEqual(fileContent, result);
         }
 
         [TestMethod]
         public void HandleFunctionCall_WithFileWrite_WritesFileContent()
         {
-            // Arrange
             var fileManagement = new FileManagement();
             var contentToWrite = "Content to write";
             var arguments = new List<object> { TestFilePath, contentToWrite };
 
-            // Act
             fileManagement.HandleFunctionCall("file_write", arguments);
 
-            // Assert
             Assert.AreEqual(contentToWrite, File.ReadAllText(TestFilePath));
 
             // Clean up
@@ -48,23 +42,18 @@ namespace BenitaTestProject.Itpr_df
         [TestMethod]
         public void HandleFunctionCall_WithFileExist_ReturnsCurrentExistenceState()
         {
-            // Arrange
             var fileManagement = new FileManagement();
             var arguments = new List<object> { TestFilePath };
 
-            // Act
             var result = fileManagement.HandleFunctionCall("file_exist", arguments);
 
-            // Assert
             Assert.IsFalse((bool)result);
 
             // Create the file
             File.WriteAllText(TestFilePath, "dummy content");
 
-            // Act again
             result = fileManagement.HandleFunctionCall("file_exist", arguments);
 
-            // Assert
             Assert.IsTrue((bool)result);
 
             // Clean up
@@ -74,17 +63,14 @@ namespace BenitaTestProject.Itpr_df
         [TestMethod]
         public void HandleFunctionCall_WithFileDelete_DeletesExistingFile()
         {
-            // Arrange
             var fileManagement = new FileManagement();
             File.WriteAllText(TestFilePath, "dummy content");
             var arguments = new List<object> { TestFilePath };
 
-            // Act
             var resultBeforeDelete = fileManagement.HandleFunctionCall("file_exist", arguments);
             var deleteResult = fileManagement.HandleFunctionCall("file_delete", arguments);
             var resultAfterDelete = fileManagement.HandleFunctionCall("file_exist", arguments);
 
-            // Assert
             Assert.IsTrue((bool)resultBeforeDelete);
             Assert.IsTrue((bool)deleteResult);
             Assert.IsFalse((bool)resultAfterDelete);
@@ -93,11 +79,9 @@ namespace BenitaTestProject.Itpr_df
         [TestMethod]
         public void HandleFunctionCall_WithUnknownFunction_ThrowsException()
         {
-            // Arrange
             var fileManagement = new FileManagement();
             var arguments = new List<object>();
 
-            // Act & Assert
             var exception = Assert.ThrowsException<BuiltInException>(() => fileManagement.HandleFunctionCall("unknown_function", arguments));
             Assert.AreEqual("Unknown function 'unknown_function'", exception.Description);
         }

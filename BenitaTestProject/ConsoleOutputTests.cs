@@ -9,6 +9,6 @@ public class ConsoleOutputTests
         using var consoleOutput = new ConsoleOutput();
         Console.Write("first\nsecond\n");
 
-        Assert.AreEqual("first\r\nsecond\r\n", consoleOutput.GetOuput());
+        Assert.AreEqual("first\r\nsecond\r\n", consoleOutput.GetOutput());
     }
 }

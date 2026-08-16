@@ -1,4 +1,4 @@
-﻿using Benita;
+using Benita;
 
 namespace BenitaTestProject
 {
@@ -26,7 +26,6 @@ namespace BenitaTestProject
         [TestMethod]
         public void Analyze_WithValidMainFunction_CompletesSuccessfully()
         {
-            // Arrange
             var semanticAnalyzer = new SemanticAnalyzer();
             var mainFunction = new FunctionNode("main", new List<ParameterNode>(), "void", new BlockNode(new List<StatementNode>()), null);
             var program = new ProgramNode(
@@ -37,14 +36,12 @@ namespace BenitaTestProject
                 statements: null
             );
 
-            // Act & Assert (no exception expected)
             semanticAnalyzer.Analyze(program);
         }
 
         [TestMethod]
         public void Analyze_WithMismatchedReturnType_ThrowsException()
         {
-            // Arrange
             var semanticAnalyzer = new SemanticAnalyzer();
             var program = new ProgramNode(
                 new List<VariableDeclarationNode?>(),
@@ -59,14 +56,12 @@ namespace BenitaTestProject
                 statements: null
             );
 
-            // Act & Assert (expecting an exception)
             Assert.ThrowsException<Exception>(() => semanticAnalyzer.Analyze(program));
         }
 
         [TestMethod]
         public void Analyze_WithUndeclaredVariable_ThrowsException()
         {
-            // Arrange
             var semanticAnalyzer = new SemanticAnalyzer();
             var program = new ProgramNode(
                 new List<VariableDeclarationNode?>(),
@@ -82,7 +77,6 @@ namespace BenitaTestProject
                 statements: null
             );
 
-            // Act & Assert (expecting an exception)
             Assert.ThrowsException<Exception>(() => semanticAnalyzer.Analyze(program));
         }
 

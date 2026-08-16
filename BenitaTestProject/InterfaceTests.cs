@@ -35,7 +35,7 @@ public class InterfaceTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source, optimizeAst: true);
-        Assert.AreEqual($"8{Environment.NewLine}12{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"8{Environment.NewLine}12{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]
@@ -57,7 +57,7 @@ public class InterfaceTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual($"read/write{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"read/write{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]
@@ -81,7 +81,7 @@ public class InterfaceTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual($"email/email{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"email/email{Environment.NewLine}", output.GetOutput());
     }
 
     [DataTestMethod]

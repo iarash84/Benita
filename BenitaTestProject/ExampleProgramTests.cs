@@ -100,7 +100,7 @@ public class ExampleProgramTests
 
             new CompilerClass().Exec(source);
 
-            Assert.AreEqual(expectedOutput, NormalizeLineEndings(consoleOutput.GetOuput()));
+            Assert.AreEqual(expectedOutput, NormalizeLineEndings(consoleOutput.GetOutput()));
         }
         finally
         {
@@ -173,7 +173,7 @@ public class ExampleProgramTests
     {
         using var consoleOutput = new ConsoleOutput();
         new CompilerClass().Exec(File.ReadAllText(Path.Combine(ExamplesDirectory, fileName)));
-        return NormalizeLineEndings(consoleOutput.GetOuput());
+        return NormalizeLineEndings(consoleOutput.GetOutput());
     }
 
     private static string CreateTemporaryExamplesDirectory()

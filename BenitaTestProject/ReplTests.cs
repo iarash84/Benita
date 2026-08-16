@@ -13,7 +13,7 @@ public class ReplTests
 
         new Repl(new StringReader(input), Console.Out).Run();
 
-        StringAssert.Contains(consoleOutput.GetOuput(), "42\r\n");
+        StringAssert.Contains(consoleOutput.GetOutput(), "42\r\n");
     }
 
     [TestMethod]
@@ -24,7 +24,7 @@ public class ReplTests
 
         new Repl(new StringReader(input), Console.Out).Run();
 
-        StringAssert.Contains(consoleOutput.GetOuput(), "12\r\n");
+        StringAssert.Contains(consoleOutput.GetOutput(), "12\r\n");
     }
 
     [TestMethod]
@@ -47,8 +47,8 @@ public class ReplTests
 
         new Repl(new StringReader(input), Console.Out).Run();
 
-        StringAssert.Contains(consoleOutput.GetOuput(), "BEN2");
-        StringAssert.Contains(consoleOutput.GetOuput(), "2\r\n");
+        StringAssert.Contains(consoleOutput.GetOutput(), "BEN2");
+        StringAssert.Contains(consoleOutput.GetOutput(), "2\r\n");
     }
 
     [TestMethod]
@@ -59,7 +59,7 @@ public class ReplTests
 
         new Repl(new StringReader(input), Console.Out).Run();
 
-        StringAssert.Contains(consoleOutput.GetOuput(), "Current submission cancelled.");
-        StringAssert.Contains(consoleOutput.GetOuput(), "7\r\n");
+        StringAssert.Contains(consoleOutput.GetOutput(), "Current submission cancelled.");
+        StringAssert.Contains(consoleOutput.GetOutput(), "7\r\n");
     }
 }

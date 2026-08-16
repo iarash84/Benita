@@ -21,7 +21,7 @@ public class AsyncAwaitTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source, optimizeAst: true);
-        Assert.AreEqual($"3{Environment.NewLine}30{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"3{Environment.NewLine}30{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]
@@ -38,7 +38,7 @@ public class AsyncAwaitTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual($"42{Environment.NewLine}42{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"42{Environment.NewLine}42{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]
@@ -58,7 +58,7 @@ public class AsyncAwaitTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual($"ASYNC100{Environment.NewLine}task failed{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"ASYNC100{Environment.NewLine}task failed{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]
@@ -76,7 +76,7 @@ public class AsyncAwaitTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual($"7{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"7{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]

@@ -2,7 +2,7 @@ using Benita;
 namespace BenitaTestProject
 {
     [TestClass]
-    public class PackageTest
+    public class PackageTests
     {
         private CompilerClass _compiler;
 
@@ -30,19 +30,16 @@ _main_(){
 	myPackage classInstance = new myPackage(5);
 	print(classInstance.var);	
 }";
-            // Act            
             _compiler.Check(source);
             //var result = _compiler.Exec(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "5\r\n";
 
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
 
         }
@@ -68,19 +65,16 @@ _main_(){
 	classInstance.var += classInstance.Third();
 	print(classInstance.var);
 }";
-            // Act            
             _compiler.Check(source);
             //var result = _compiler.Exec(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "3\r\n8\r\n";
 
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
 
         }
@@ -142,18 +136,15 @@ _main_(){
 	First(8);
 	print(""this is a test"");	
 }";
-            // Act            
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "3\r\n8\r\n6\r\n9\r\n4\r\n7\r\n7\r\n5\r\n9\r\n9\r\nthis is a test\r\n";
 
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
 
         }

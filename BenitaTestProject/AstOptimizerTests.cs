@@ -117,7 +117,7 @@ _main_() {
 
         new CompilerClass().Exec(source, optimizeAst: true);
 
-        Assert.AreEqual("14\r\n", output.GetOuput());
+        Assert.AreEqual("14\r\n", output.GetOutput());
     }
 
     private static ProgramNode CreateProgram(StatementNode statement)

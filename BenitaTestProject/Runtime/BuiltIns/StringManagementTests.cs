@@ -2,7 +2,7 @@ using Benita.itpr_df;
 
 using Benita;
 
-namespace BenitaTestProject.Itpr_df;
+namespace BenitaTestProject.Runtime.BuiltIns;
 
 [TestClass]
 public class StringManagementTests

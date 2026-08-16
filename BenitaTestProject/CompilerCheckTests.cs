@@ -13,7 +13,7 @@ public class CompilerCheckTests
 
         new CompilerClass().Check(source, sourceName: "valid.ben");
 
-        Assert.AreEqual(string.Empty, consoleOutput.GetOuput());
+        Assert.AreEqual(string.Empty, consoleOutput.GetOutput());
     }
 
     [TestMethod]

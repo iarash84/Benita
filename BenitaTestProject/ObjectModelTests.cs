@@ -29,7 +29,7 @@ public class ObjectModelTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source, optimizeAst: true);
-        Assert.AreEqual($"Benita{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"Benita{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]
@@ -53,7 +53,7 @@ public class ObjectModelTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual($"hello{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"hello{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]
@@ -79,7 +79,7 @@ public class ObjectModelTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual($"ready{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"ready{Environment.NewLine}", output.GetOutput());
     }
 
     [DataTestMethod]

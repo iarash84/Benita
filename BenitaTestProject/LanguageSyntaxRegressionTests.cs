@@ -54,7 +54,7 @@ _main_() { print(sign(2)); }";
         const string source = "_main_() { for (;;) { print(1); break; } }";
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual("1\r\n", output.GetOuput());
+        Assert.AreEqual("1\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -114,7 +114,7 @@ _main_() { print(sign(2)); }";
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("print((2 + 3) * 4);");
 
-        Assert.AreEqual("20\r\n", output.GetOuput());
+        Assert.AreEqual("20\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -150,7 +150,7 @@ _main_() { print(sign(2)); }";
             else { print("small"); }
             """);
 
-        Assert.AreEqual("medium\r\n", output.GetOuput());
+        Assert.AreEqual("medium\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -170,7 +170,7 @@ _main_() { print(sign(2)); }";
             print(result);
             """);
 
-        Assert.AreEqual("Excellent\r\n", output.GetOuput());
+        Assert.AreEqual("Excellent\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -186,7 +186,7 @@ _main_() { print(sign(2)); }";
             }
             """);
 
-        Assert.AreEqual("two\r\n", output.GetOuput());
+        Assert.AreEqual("two\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -226,7 +226,7 @@ _main_() { print(sign(2)); }";
             }
             """);
 
-        Assert.AreEqual("small\r\n", output.GetOuput());
+        Assert.AreEqual("small\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -243,7 +243,7 @@ _main_() { print(sign(2)); }";
             print(result);
             """, optimizeAst: true);
 
-        Assert.AreEqual("low\r\n", output.GetOuput());
+        Assert.AreEqual("low\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -276,7 +276,7 @@ _main_() { print(sign(2)); }";
             }
             """, optimizeAst: true);
 
-        Assert.AreEqual("1\r\n2\r\n3\r\n", output.GetOuput());
+        Assert.AreEqual("1\r\n2\r\n3\r\n", output.GetOutput());
     }
 
     [TestMethod]
@@ -292,7 +292,7 @@ _main_() { print(sign(2)); }";
             }
             """);
 
-        Assert.AreEqual("1\r\n3\r\n", output.GetOuput());
+        Assert.AreEqual("1\r\n3\r\n", output.GetOutput());
     }
 
     [TestMethod]

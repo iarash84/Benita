@@ -25,7 +25,7 @@ public class ErrorHandlingTests
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source, optimizeAst: true);
         Assert.AreEqual($"APP100{Environment.NewLine}operation failed{Environment.NewLine}cleanup{Environment.NewLine}",
-            output.GetOuput());
+            output.GetOutput());
     }
 
     [TestMethod]
@@ -43,7 +43,7 @@ public class ErrorHandlingTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual($"BEN4101{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"BEN4101{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]
@@ -59,7 +59,7 @@ public class ErrorHandlingTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual($"finally{Environment.NewLine}7{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"finally{Environment.NewLine}7{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]
@@ -78,7 +78,7 @@ public class ErrorHandlingTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual($"inner cleanup{Environment.NewLine}INNER{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"inner cleanup{Environment.NewLine}INNER{Environment.NewLine}", output.GetOutput());
     }
 
     [TestMethod]
@@ -95,7 +95,7 @@ public class ErrorHandlingTests
 
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
-        Assert.AreEqual($"INNER{Environment.NewLine}outer{Environment.NewLine}", output.GetOuput());
+        Assert.AreEqual($"INNER{Environment.NewLine}outer{Environment.NewLine}", output.GetOutput());
     }
 
     [DataTestMethod]

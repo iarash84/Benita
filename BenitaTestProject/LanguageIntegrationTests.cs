@@ -2,8 +2,9 @@ using Benita;
 
 namespace BenitaTestProject
 {
+    /// <summary>سناریوهای چندلایهٔ زبان را از source تا خروجی runtime اعتبارسنجی می‌کند.</summary>
     [TestClass]
-    public class CompleteTest
+    public class LanguageIntegrationTests
     {
         private CompilerClass _compiler;
 
@@ -11,90 +12,6 @@ namespace BenitaTestProject
         public void Setup()
         {
             _compiler = new CompilerClass();
-        }
-
-        [TestMethod]
-        public void ConcatenatedPrintExpressionExecutesCorrectly()
-        {
-            string source = @"
-_main_() {
-    print(""This is a test"" + "" => ""  + 1);
-}";
-
-            // Act
-            _compiler.Check(source);
-
-            // Act
-            var expectedOutput = "This is a test => 1\r\n";
-            using (var consoleOutput = new ConsoleOutput())
-            {
-                _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
-            }
-        }
-
-        [TestMethod]
-        public void GlobalVariableFunctionAndLocalVariablesExecuteCorrectly()
-        {
-            string source = @"
-number x = 10;
-func add(number a, number b) -> number {
-    number c = a + b;
-    return a + b;
-}
-
-_main_() {
-    number y = 20;
-    number sum = add(x, y);
-    print(sum);
-    string message = ""Hello, World!"";
-    print(message);
-}";
-
-            // Act
-            _compiler.Check(source);
-            // Assert
-
-            var expectedOutput = "30\r\nHello, World!\r\n";
-            using (var consoleOutput = new ConsoleOutput())
-            {
-                _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
-            }
-
-        }
-
-        [TestMethod]
-        public void CommentsGlobalVariableAndFunctionCallExecuteCorrectly()
-        {
-            string source = @"
-// this is a comment
-/* This is Multi Line
-one line
-Two line
-Three line
-Comment */                        
-string global_var = ""This is global variable"";
-_main_() {
-    number x = 10;
-    number y = 20;
-    print(myFunction(x , y));
-    print(global_var);
-}
-func myFunction(number a, number b) -> number {
-    return a + b;
-}";
-            // Act
-            _compiler.Check(source);
-            // Assert
-
-            var expectedOutput = "30\r\nThis is global variable\r\n";
-            using (var consoleOutput = new ConsoleOutput())
-            {
-                _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
-            }
-
         }
 
         [TestMethod]
@@ -111,16 +28,14 @@ _main_() {
     print(x + y);
 }";
 
-            // Act
             _compiler.Check(source);
 
 
-            // Act
             var expectedOutput = "18\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -143,16 +58,13 @@ _main_() {
     }
     print(x);
 }";
-            // Act
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedOutput = "30\r\n15\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
 
         }
@@ -169,16 +81,13 @@ _main_() {
     number result = add(2, 3);
     print(result);
 }";
-            // Act
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedOutput = "5\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -191,16 +100,13 @@ _main_()  {
     print(result);
 }";
 
-            // Act
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedOutput = "5\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -224,16 +130,13 @@ _main_() {
     print(message);
 }";
 
-            // Act
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedOutput = "hello world\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -248,11 +151,8 @@ _main_() {
     print(message);
 }";
 
-            // Act
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedInput = "Tom";
             var expectedOutput = "Enter your name \r\nyour name is \r\nTom\r\n";
             using (var consoleInput = new ConsoleInput(expectedInput))
@@ -260,7 +160,7 @@ _main_() {
                 using (var consoleOutput = new ConsoleOutput())
                 {
                     _compiler.Exec(source);
-                    Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                    Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
                 }
             }
         }
@@ -306,11 +206,8 @@ _main_() {
     string userInput = input();
     print(""You entered: "" + userInput);    
 }";
-            // Act            
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedInput = "Tom";
             var expectedOutput = "Hello, world!\r\nSum is even.\r\nYou entered: Tom\r\n";
             using (var consoleInput = new ConsoleInput(expectedInput))
@@ -318,7 +215,7 @@ _main_() {
                 using (var consoleOutput = new ConsoleOutput())
                 {
                     _compiler.Exec(source);
-                    Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                    Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
                 }
             }
         }
@@ -336,10 +233,8 @@ _main_() {
         is_even();
     }
 }";
-            // Act            
             _compiler.Check(source);
 
-            // Assert
         }
 
         [TestMethod]
@@ -353,16 +248,13 @@ _main_() {
          print(""While Test"");    
     }  
 }";
-            // Act            
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedOutput = "While Test\r\nWhile Test\r\nWhile Test\r\nWhile Test\r\nWhile Test\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -383,16 +275,13 @@ _main_() {
     }   
 }";
 
-            // Act
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedOutput = "Sum is even.\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -409,16 +298,13 @@ _main_() {
     }   
 }";
 
-            // Act
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedOutput = "YES\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -439,9 +325,7 @@ _main_() {
     }
 }";
 
-            // Act
             _compiler.Check(source);
-            // Assert
         }
 
         [TestMethod]
@@ -457,12 +341,10 @@ _main_() {
         print(""File does not exist."");
     }
 }";
-            // Act
 
             _compiler.Check(source);
             _compiler.Exec(source);
 
-            // Assert
         }
 
         [TestMethod]
@@ -477,17 +359,14 @@ _main_() {
     print(anotherArr[1]);
 }";
 
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "10\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -507,16 +386,13 @@ _main_() {
     }                     
 }";
 
-            // Act
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedOutput = "Element at index 0: 10\r\nElement at index 1: 20\r\nElement at index 2: 5\r\nElement at index 3: 40\r\nElement at index 4: 50\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
 
         }
@@ -537,16 +413,13 @@ _main_() {
     }                     
 }";
 
-            // Act
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedOutput = "Element at index 0: 10\r\nElement at index 1: 20\r\nElement at index 2: 40\r\nElement at index 3: 50\r\nElement at index 4: 60\r\nElement at index 5: 70\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
 
         }
@@ -571,13 +444,10 @@ _main_() {
         n--;
     }                
 }";
-            // Act            
             _compiler.Check(source);
             //var result = _compiler.Exec(source);
 
-            // Assert
 
-            // Act
             var expectedInput = "5";
             var expectedOutput = "Enter The Number Of Terms:\r\nThe Fibonacci Series is:\r\n0\r\n1\r\n1\r\n2\r\n3\r\n";
             using (var consoleInput = new ConsoleInput(expectedInput))
@@ -585,7 +455,7 @@ _main_() {
                 using (var consoleOutput = new ConsoleOutput())
                 {
                     _compiler.Exec(source);
-                    Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                    Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
                 }
             }
         }
@@ -613,16 +483,13 @@ _main_() {
       i++;
    }
 }";
-            // Act
             _compiler.Check(source);
-            // Assert
 
-            // Act
             var expectedOutput = "0 => 0\r\n1 => 1\r\n2 => 1\r\n3 => 2\r\n4 => 3\r\n5 => 5\r\n6 => 8\r\n7 => 13\r\n8 => 21\r\n9 => 34\r\n10 => 55\r\n11 => 89\r\n12 => 144\r\n13 => 233\r\n14 => 377\r\n15 => 610\r\n16 => 987\r\n17 => 1597\r\n18 => 2584\r\n19 => 4181\r\n20 => 6765\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
 
         }
@@ -647,17 +514,14 @@ _main_()
 	print(Factorial(a));
 }
 ";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "120\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -684,17 +548,14 @@ return result;
 print(CheckNumber(5));
 }
 ";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "Positive\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -709,17 +570,14 @@ _main_() {
 	}	
 }
 ";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "run count\r\nrun count\r\nrun count\r\nrun count\r\nrun count\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -750,18 +608,15 @@ _main_() {
    }
 }
 ";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput =
                 "0\r\n1\r\n1\r\n2\r\n3\r\n5\r\n8\r\n13\r\n21\r\n34\r\n55\r\n89\r\n144\r\n233\r\n377\r\n610\r\n987\r\n1597\r\n2584\r\n4181\r\n6765\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -783,17 +638,14 @@ func test(number i) -> void
 _main_(){
 	test(5);
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "yess\r\nfive\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -821,17 +673,14 @@ _main_() {
 	print(string_var);
 
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "9\r\n15\r\nthis is a test => hassan -> 15\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -856,17 +705,14 @@ _main_() {
 	let classInstance = new myPackage(5);
 	print(classInstance.Second(2));
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "7\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -879,17 +725,14 @@ _main_() {
 		print(i + "" this is a test"");
 	}
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "0 this is a test\r\n1 this is a test\r\n2 this is a test\r\n3 this is a test\r\n4 this is a test\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -904,17 +747,14 @@ _main_(){
     let m = new My();
     print(m.var);
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "1\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -925,17 +765,14 @@ _main_(){
 let text = ""hello world"";
 print(text);
 ";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "hello world\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -952,17 +789,14 @@ for(let i =0; i <5; i++){
 }
 print(Add(4, 6));
 ";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "this is a test\r\nthis is a test\r\nthis is a test\r\nthis is a test\r\nthis is a test\r\n10\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -979,17 +813,14 @@ pkg My{
 let m = new My();
 print(m.AddPrint(3));
 ";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "25\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1021,17 +852,14 @@ print(m.AddChap(3));
 _main_(){
 	print(""YES"");
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "YES\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1075,17 +903,14 @@ _main_()
 	number[] second_array = BubbleSort(first_array);
 	ArrayPrint(second_array);
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "befor Bubble sorting\r\nElement at index 0: 64\r\nElement at index 1: 34\r\nElement at index 2: 25\r\nElement at index 3: 12\r\nElement at index 4: 22\r\nElement at index 5: 11\r\nElement at index 6: 90\r\nafter Bubble sorting\r\nElement at index 0: 11\r\nElement at index 1: 12\r\nElement at index 2: 22\r\nElement at index 3: 25\r\nElement at index 4: 34\r\nElement at index 5: 64\r\nElement at index 6: 90\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1136,17 +961,14 @@ _main_()
 	}
 
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "Element found at index 3\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1199,17 +1021,14 @@ _main_()
 	}
 }
 ";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "Element found at index => 3\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1263,17 +1082,14 @@ _main_()
 	print(""Sorted array: "");
 	ArrayPrint(array);
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "Sorted array: \r\nElement at index 0: 5\r\nElement at index 1: 7\r\nElement at index 2: 23\r\nElement at index 3: 32\r\nElement at index 4: 34\r\nElement at index 5: 62\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1289,17 +1105,14 @@ for(let i= 0; i <= 10; i++)
 	}
 	print(i);
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "1\r\n3\r\n5\r\n7\r\n9\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1315,17 +1128,14 @@ for(let i= 0; i <= 10; i++)
 	}
 	print(i);
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "0\r\n1\r\n2\r\n3\r\n4\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1349,17 +1159,14 @@ for(let i = 0; i <= 100 ; i++)
 		print(i +"" is PowerOfTwo"");
 	//else
 	//	print(i +"" is not PowerOfTwo"");";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "1 is PowerOfTwo\r\n2 is PowerOfTwo\r\n4 is PowerOfTwo\r\n8 is PowerOfTwo\r\n16 is PowerOfTwo\r\n32 is PowerOfTwo\r\n64 is PowerOfTwo\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1380,17 +1187,14 @@ for (let i = 1; i <= 30; i++)
 	// If the number is not a multiple of 3 or 5, print the number
 	else
 		print(i);";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "1\r\n2\r\nFizz\r\n4\r\nBuzz\r\nFizz\r\n7\r\n8\r\nFizz\r\nBuzz\r\n11\r\nFizz\r\n13\r\n14\r\nFizzBuzz\r\n16\r\n17\r\nFizz\r\n19\r\nBuzz\r\nFizz\r\n22\r\n23\r\nFizz\r\nBuzz\r\n26\r\nFizz\r\n28\r\n29\r\nFizzBuzz\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1431,17 +1235,14 @@ _main_(){
         print(local_primes[i]);
     }
 }";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "Prime numbers up to 100\r\n2\r\n3\r\n5\r\n7\r\n11\r\n13\r\n17\r\n19\r\n23\r\n29\r\n31\r\n37\r\n41\r\n43\r\n47\r\n53\r\n59\r\n61\r\n67\r\n71\r\n73\r\n79\r\n83\r\n89\r\n97\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1482,17 +1283,14 @@ PrintArray(array);
 array = InsertionSort(array);
 print(""Sorted array:"");
 PrintArray(array);";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "Original array:\r\n12\r\n11\r\n13\r\n5\r\n6\r\nSorted array:\r\n5\r\n6\r\n11\r\n12\r\n13\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1535,17 +1333,14 @@ localArray = SelectionSort(localArray);
 print(""Sorted array:"");
 PrintArray(localArray);";
 
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "Original array:\r\n64\r\n25\r\n12\r\n22\r\n11\r\nSorted array:\r\n11\r\n12\r\n22\r\n25\r\n64\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1616,17 +1411,14 @@ PrintArray(localArray);
 localArray = CountingSort(localArray);
 print(""Sorted array:"");
 PrintArray(localArray);";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "Original array:\r\n4\r\n2\r\n2\r\n8\r\n3\r\n3\r\n1\r\n7\r\n5\r\n6\r\nSorted array:\r\n1\r\n2\r\n2\r\n3\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1701,16 +1493,13 @@ number[] localArray = [ 7, 15, 8, 5, 3, 11, 9, 4, 1, 6, 2];
 localArray = BingoSort(localArray);
 print(""Sorted array:"");
 PrintArray(localArray);";
-            // Act
             _compiler.Check(source);
 
-            // Assert
-            // Act
             var expectedOutput = "Sorted array:\r\n1\r\n2\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n9\r\n11\r\n15\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
 
@@ -1721,17 +1510,14 @@ PrintArray(localArray);";
 let num  = 5.2 + 8;
 print(num);
 ";
-            // Act
             _compiler.Check(source);
 
-            // Assert
 
-            // Act
             var expectedOutput = "13.2\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {
                 _compiler.Exec(source);
-                Assert.AreEqual(expectedOutput, consoleOutput.GetOuput());
+                Assert.AreEqual(expectedOutput, consoleOutput.GetOutput());
             }
         }
     }

@@ -28,7 +28,7 @@ _main_() {
 
         new CompilerClass().Exec(source);
 
-        Assert.AreEqual(expected, output.GetOuput());
+        Assert.AreEqual(expected, output.GetOutput());
     }
 
     [TestMethod]
