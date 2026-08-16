@@ -1,3 +1,5 @@
+// فارسی: الگوی Abstract Factory خانواده‌ای سازگار از Button و Checkbox را پشت قرارداد UiFactory می‌سازد.
+// English: Demonstrates Abstract Factory by creating compatible Button and Checkbox families through UiFactory.
 interface Button { func paint() -> string; }
 interface Checkbox { func paint() -> string; }
 interface UiFactory {

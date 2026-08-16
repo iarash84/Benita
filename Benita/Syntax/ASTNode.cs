@@ -1,5 +1,6 @@
 ﻿namespace Benita
 {
+    /// <summary>سطح دسترسی declarationهای متغیر و تابع را مشخص می‌کند.</summary>
     public enum AccessModifier
     {
         Private,
@@ -315,9 +316,7 @@
         public string Name { get; } = name;
     }
 
-    /// <summary>
-    /// Represents a package node with a name and a list of members.
-    /// </summary>
+    /// <summary>یک package را همراه اعضا و interfaceهای پیاده‌سازی‌شدهٔ آن بازنمایی می‌کند.</summary>
     public class PackageNode(string name, List<PackageMemberNode> members, List<string>? interfaces = null) : AstNode
     {
         public string Name { get; } = name;
@@ -325,6 +324,7 @@
         public List<string> Interfaces { get; } = interfaces ?? [];
     }
 
+    /// <summary>امضای یک متد بدون بدنه را در قرارداد interface نگهداری می‌کند.</summary>
     public class InterfaceMethodNode(string name, List<ParameterNode> parameters, string returnType) : AstNode
     {
         public string Name { get; } = name;
@@ -332,6 +332,7 @@
         public string ReturnType { get; } = returnType;
     }
 
+    /// <summary>یک interface نام‌دار و مجموعهٔ متدهای الزامی آن را بازنمایی می‌کند.</summary>
     public class InterfaceNode(string name, List<InterfaceMethodNode> methods) : AstNode
     {
         public string Name { get; } = name;
@@ -377,9 +378,7 @@
         public AccessModifier AccessModifier { get; } = accessModifier;
     }
 
-    /// <summary>
-    /// Represents the program node containing global variables, packages, functions, main function, and statements.
-    /// </summary>
+    /// <summary>ریشهٔ AST شامل interfaceها، packageها، declarationها و نقطهٔ ورود برنامه است.</summary>
     public class ProgramNode(
         List<VariableDeclarationNode> globalVariables,
         List<PackageNode> packages,

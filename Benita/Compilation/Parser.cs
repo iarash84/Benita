@@ -70,11 +70,19 @@
                     NextToken(2).Type == TokenType.EQUAL &&
                     NextToken(3).Type == TokenType.NEW)
                 {
-                    statements.Add(ParseStatement());
+                    if (declaredAccess is null)
+                        statements.Add(ParseStatement());
+                    else
+                        globalVariables.Add(ParseVariableDeclaration(declaredAccess.Value));
                 }
                 else if (Check(TokenType.BOOL, TokenType.NUMBER, TokenType.STRING, TokenType.LET))
                 {
                     globalVariables.Add(ParseVariableDeclaration(declaredAccess ?? AccessModifier.Private));
+                }
+                else if (declaredAccess is not null &&
+                    Check(TokenType.IDENTIFIER) && NextToken().Type == TokenType.IDENTIFIER)
+                {
+                    globalVariables.Add(ParseVariableDeclaration(declaredAccess.Value, allowCustom: true));
                 }
                 else
                 {
@@ -92,6 +100,7 @@
             return new ProgramNode(globalVariables, packages, _functions, mainFunction, statements, interfaces);
         }
 
+        /// <summary>modifier اختیاری ابتدای declaration را می‌خواند؛ نبود آن با null مشخص می‌شود.</summary>
         private AccessModifier? ParseAccessModifier()
         {
             if (Match(TokenType.PUBLIC)) return AccessModifier.Public;
@@ -212,6 +221,7 @@
             return new PackageNode(packageName, members, interfaces);
         }
 
+        /// <summary>تعریف interface و امضاهای بدون بدنهٔ متدهای آن را تجزیه می‌کند.</summary>
         private InterfaceNode ParseInterface()
         {
             string name = Consume(TokenType.IDENTIFIER, "Expected interface name").Lexeme;
@@ -233,6 +243,7 @@
             return new InterfaceNode(name, methods);
         }
 
+        /// <summary>سازندهٔ init و بدنه و پارامترهای آن را به یک تابع داخلی package تبدیل می‌کند.</summary>
         private PackageFunctionNode ParsePackageInitializer()
         {
             Consume(TokenType.LPAREN, "Expected '(' after 'init'");
@@ -251,9 +262,13 @@
         /// </summary>
         /// <returns>A <see cref="VariableDeclarationNode"/> representing the global variable declaration.</returns>
         /// <exception cref="Exception">Thrown if the declaration is malformed.</exception>
-        private VariableDeclarationNode ParseVariableDeclaration(AccessModifier accessModifier = AccessModifier.Private)
+        /// <param name="accessModifier">سطح دسترسی declaration؛ در صورت حذف private است.</param>
+        /// <param name="allowCustom">مشخص می‌کند نوع‌های نام‌دار package یا interface مجاز باشند.</param>
+        private VariableDeclarationNode ParseVariableDeclaration(
+            AccessModifier accessModifier = AccessModifier.Private,
+            bool allowCustom = false)
         {
-            string type = ParseType(allowLet: true); ///< The type of the variable (e.g., "number[]").
+            string type = ParseType(allowLet: true, allowCustom: allowCustom); ///< The type of the variable (e.g., "number[]").
             if (Check(TokenType.IDENTIFIER))
             {
                 string name = Consume(TokenType.IDENTIFIER, "Expected variable name").Lexeme;

@@ -1,3 +1,5 @@
+// فارسی: الگوی State رفتار Player را با تعویض نمونهٔ PlayingState و PausedState تغییر می‌دهد.
+// English: Demonstrates State by changing Player behavior through PlayingState and PausedState objects.
 interface PlayerState { func next() -> PlayerState; func name() -> string; }
 
 pkg PlayingState : PlayerState {

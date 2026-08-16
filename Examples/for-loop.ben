@@ -1,4 +1,5 @@
-
+// فارسی: حلقهٔ کلاسیک for و پیمایش مستقیم آرایه با for-in را نمایش می‌دهد.
+// English: Demonstrates a classic for loop and direct array iteration with for-in.
 
 _main_() {
     for (number i = 0; i < 5; i++) {

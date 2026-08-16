@@ -1,3 +1,5 @@
+// فارسی: محاسبهٔ بازگشتی فیبوناچی و چاپ نتایج با حلقهٔ for را آزمایش می‌کند.
+// English: Tests recursive Fibonacci calculation and printing results with a for loop.
 func fib(number x) -> number 
 {
 	//return x;

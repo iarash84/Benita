@@ -10,6 +10,7 @@
         /// Dictionary to store packages names and their associated PackageNode.
         /// </summary>
         private readonly Dictionary<string, PackageNode> _packages;
+        /// <summary>قراردادهای interface ثبت‌شده را برای تحلیل نوع و member access نگه می‌دارد.</summary>
         private readonly Dictionary<string, InterfaceNode> _interfaces;
 
 
@@ -112,11 +113,7 @@
                 AnalyzeFunction(program.MainFunction);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="packageNode"></param>
-        /// <exception cref="Exception"></exception>
+        /// <summary>نام package را ثبت و از برخورد نام آن با سایر نوع‌ها جلوگیری می‌کند.</summary>
         private void DeclarePackage(PackageNode packageNode)
         {
             if (_packages.ContainsKey(packageNode.Name) || _interfaces.ContainsKey(packageNode.Name))
@@ -126,6 +123,7 @@
             _packages[packageNode.Name] = packageNode;
         }
 
+        /// <summary>نام interface را پیش از تحلیل بدنه‌ها ثبت و تکراری‌بودن نوع را بررسی می‌کند.</summary>
         private void DeclareInterface(InterfaceNode interfaceNode)
         {
             if (_interfaces.ContainsKey(interfaceNode.Name) || _packages.ContainsKey(interfaceNode.Name))
@@ -133,6 +131,7 @@
             _interfaces[interfaceNode.Name] = interfaceNode;
         }
 
+        /// <summary>نوع‌های امضا و یکتایی متدها و پارامترهای یک interface را اعتبارسنجی می‌کند.</summary>
         private void AnalyzeInterface(InterfaceNode interfaceNode)
         {
             HashSet<string> methodNames = [];
@@ -151,10 +150,7 @@
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="packageNode"></param>
+        /// <summary>فیلدها، مقداردهی اولیه و متدهای یک package را تحلیل معنایی می‌کند.</summary>
         private void AnalyzePackage(PackageNode packageNode)
         {
             ValidateImplementedInterfaces(packageNode);
@@ -193,6 +189,7 @@
             }
         }
 
+        /// <summary>کامل‌بودن، public بودن و تطابق دقیق امضای پیاده‌سازی interfaceها را بررسی می‌کند.</summary>
         private void ValidateImplementedInterfaces(PackageNode package)
         {
             HashSet<string> implemented = [];

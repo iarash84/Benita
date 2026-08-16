@@ -15,6 +15,17 @@ public class AccessModifierTests
     }
 
     [TestMethod]
+    public void Parser_AcceptsAccessModifierOnNamedTypeVariable()
+    {
+        const string source = "pkg Box {} public Box box = new Box(); print(1);";
+        ProgramNode program = new Parser(new Lexer(source).Tokenize()).Parse();
+
+        VariableDeclarationNode variable = program.GlobalVariables.Single();
+        Assert.AreEqual("Box", variable.Type);
+        Assert.AreEqual(AccessModifier.Public, variable.AccessModifier);
+    }
+
+    [TestMethod]
     public void PublicPackageMembers_AreAccessibleFromOutside()
     {
         const string source = "pkg Box { public number value = 1; public func read() -> number { return value; } } _main_() { Box box = new Box(); print(box.value); print(box.read()); }";

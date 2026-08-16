@@ -1,3 +1,5 @@
+// فارسی: الگوی Builder ساخت مرحله‌ای Computer و نگهداری state سازنده را نمایش می‌دهد.
+// English: Demonstrates Builder through step-by-step Computer construction and builder state.
 pkg Computer {
     string cpu = "";
     number memory = 0;

@@ -1,3 +1,5 @@
+// فارسی: جست‌وجوی دودویی روی آرایهٔ مرتب و حالت‌های پیدا شدن و نشدن مقدار را نمایش می‌دهد.
+// English: Demonstrates binary search on a sorted array for both found and missing values.
 // Binary search requires a sorted array and repeatedly halves the search range.
 func binary_search(number[] values, number target) -> number {
     number left = 0;

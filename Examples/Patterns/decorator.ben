@@ -1,3 +1,5 @@
+// فارسی: الگوی Decorator با wrap کردن Message رفتار رمزگذاری و timestamp را ترکیب می‌کند.
+// English: Demonstrates Decorator by wrapping Message objects with encryption and timestamp behavior.
 interface Message { func content() -> string; }
 
 pkg PlainMessage : Message {

@@ -1,3 +1,5 @@
+// فارسی: تضمین می‌کند include_once یک کتابخانهٔ تکراری را فقط یک بار وارد کند.
+// English: Verifies that include_once imports the same function library only once.
 include_once "add-function-library.ben";
 include_once "add-function-library.ben";
 

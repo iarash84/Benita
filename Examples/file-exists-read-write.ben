@@ -1,3 +1,5 @@
+// فارسی: عملیات بررسی وجود، خواندن و ساخت فایل با محتوای اولیه را آزمایش می‌کند.
+// English: Tests file existence checks, reading, and creating a file with initial content.
 number myVar;
 string fileContent;
 

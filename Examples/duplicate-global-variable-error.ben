@@ -1,3 +1,5 @@
+// فارسی: نمونهٔ منفی برای تشخیص declaration تکراری متغیر سراسری است.
+// English: Negative example that tests detection of duplicate global variable declarations.
 /*
 
 func add(number a, number b) -> number {

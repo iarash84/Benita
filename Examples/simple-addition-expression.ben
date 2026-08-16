@@ -1,3 +1,5 @@
+// فارسی: ساده‌ترین عبارت جمع و چاپ نتیجه در _main_ را آزمایش می‌کند.
+// English: Tests a minimal addition expression and printing its result from _main_.
 _main_()  {
     number result = 2 + 3;
     print(result);
