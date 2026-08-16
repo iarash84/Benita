@@ -57,6 +57,7 @@
             {"match", TokenType.MATCH},
             {"public", TokenType.PUBLIC},
             {"private", TokenType.PRIVATE},
+            {"interface", TokenType.INTERFACE},
         };
 
         /// <summary>
@@ -147,6 +148,7 @@
                 case '}': AddToken(TokenType.RBRACE); break;
                 case ';': AddToken(TokenType.SEMICOLON); break;
                 case ',': AddToken(TokenType.COMMA); break;
+                case ':': AddToken(TokenType.COLON); break;
                 case '.':
                     if (Match('.'))
                     {

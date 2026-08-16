@@ -106,7 +106,10 @@ initializer به نام `init` است. نوع package در پارامتر، خر
 متناظری در زبان ندارد. سازندهٔ قدیمیِ هم‌نام package برای سازگاری با کدهای قبلی شناخته
 می‌شود، ولی کد جدید باید از `init` استفاده کند.
 
-این مدل برای الگوهای composition محور مثل Builder، Facade و Simple Factory کافی است و
-نمونه‌های `Examples/Patterns` در تست‌های اجرایی هم اجرا می‌شوند. برای Strategy، Adapter و
-الگوهای چندریختی، قدم بعدی تعریف interface و assignability میان interface و پیاده‌سازی آن
-است؛ وراثت کلاس‌ها در اولویت فعلی نیست.
+این مدل علاوه بر composition از interfaceهای اسمی و چندریختی نیز پشتیبانی می‌کند.
+`InterfaceNode` قرارداد متدها را نگه می‌دارد و `PackageNode.Interfaces` فهرست قراردادهای
+پیاده‌سازی‌شده را ثبت می‌کند. تحلیل‌گر تطابق کامل امضا و public بودن implementation را
+بررسی می‌کند و assignability از package به interface را می‌پذیرد. در runtime همان
+`PackageInstance` واقعی نگهداری می‌شود، بنابراین فراخوانی از طریق interface به متد concrete
+dispatch می‌شود. نمونه‌های Strategy، Factory Method، Abstract Factory، Adapter، Decorator،
+Bridge، State و Proxy در `Examples/Patterns` و تست‌های اجرایی پوشش داده شده‌اند.

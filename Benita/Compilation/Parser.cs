@@ -34,6 +34,7 @@
 
             List<StatementNode?> statements = new List<StatementNode?>();
             List<PackageNode?> packages = new List<PackageNode?>();
+            List<InterfaceNode> interfaces = [];
             FunctionNode? mainFunction = null;
 
             while (!IsAtEnd())
@@ -53,6 +54,12 @@
                     if (declaredAccess is not null)
                         throw Error("BEN2001", "Access modifiers can only be applied to variable and function declarations.");
                     packages.Add(ParsePackage());
+                }
+                else if (Match(TokenType.INTERFACE))
+                {
+                    if (declaredAccess is not null)
+                        throw Error("BEN2001", "An interface declaration cannot have an access modifier.");
+                    interfaces.Add(ParseInterface());
                 }
                 else if (Match(TokenType.FUNC))
                 {
@@ -82,7 +89,7 @@
                 throw Error("BEN2003", "No main function or top-level executable statement was found.");
             }
 
-            return new ProgramNode(globalVariables, packages, _functions, mainFunction, statements);
+            return new ProgramNode(globalVariables, packages, _functions, mainFunction, statements, interfaces);
         }
 
         private AccessModifier? ParseAccessModifier()
@@ -116,6 +123,14 @@
         private PackageNode? ParsePackage()
         {
             string packageName = Consume(TokenType.IDENTIFIER, "Expected package name").Lexeme;
+            List<string> interfaces = [];
+            if (Match(TokenType.COLON))
+            {
+                do
+                {
+                    interfaces.Add(Consume(TokenType.IDENTIFIER, "Expected interface name after ':'").Lexeme);
+                } while (Match(TokenType.COMMA));
+            }
             Consume(TokenType.LBRACE, "Expected '{' after package name.");
 
             List<PackageMemberNode> members = new List<PackageMemberNode>();
@@ -194,7 +209,28 @@
             }
             Consume(TokenType.RBRACE, "Expected '}' after package body.");
 
-            return new PackageNode(packageName, members);
+            return new PackageNode(packageName, members, interfaces);
+        }
+
+        private InterfaceNode ParseInterface()
+        {
+            string name = Consume(TokenType.IDENTIFIER, "Expected interface name").Lexeme;
+            Consume(TokenType.LBRACE, "Expected '{' after interface name");
+            List<InterfaceMethodNode> methods = [];
+            while (!Check(TokenType.RBRACE) && !IsAtEnd())
+            {
+                Consume(TokenType.FUNC, "Expected a function signature in interface");
+                string methodName = Consume(TokenType.IDENTIFIER, "Expected interface method name").Lexeme;
+                Consume(TokenType.LPAREN, "Expected '(' after interface method name");
+                List<ParameterNode> parameters = ParseParameters();
+                Consume(TokenType.RPAREN, "Expected ')' after interface parameters");
+                Consume(TokenType.ARROW, "Expected '->' after interface parameters");
+                string returnType = ParseType(allowVoid: true, allowCustom: true);
+                Consume(TokenType.SEMICOLON, "Expected ';' after interface method signature");
+                methods.Add(new InterfaceMethodNode(methodName, parameters, returnType));
+            }
+            Consume(TokenType.RBRACE, "Expected '}' after interface body");
+            return new InterfaceNode(name, methods);
         }
 
         private PackageFunctionNode ParsePackageInitializer()

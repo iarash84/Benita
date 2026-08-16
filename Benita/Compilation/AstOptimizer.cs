@@ -16,14 +16,15 @@ namespace Benita
                 program.Packages.Select(OptimizePackage).ToList(),
                 program.Functions.Select(OptimizeFunction).ToList(),
                 program.MainFunction is null ? null : OptimizeFunction(program.MainFunction),
-                program.Statements?.Select(OptimizeStatement).ToList());
+                program.Statements?.Select(OptimizeStatement).ToList(),
+                program.Interfaces);
         }
 
         private VariableDeclarationNode OptimizeVariable(VariableDeclarationNode node) =>
             new(node.Type, node.Name, OptimizeExpression(node.Initializer), node.AccessModifier);
 
         private PackageNode OptimizePackage(PackageNode node) =>
-            new(node.Name, node.Members.Select(OptimizePackageMember).ToList());
+            new(node.Name, node.Members.Select(OptimizePackageMember).ToList(), node.Interfaces);
 
         private PackageMemberNode OptimizePackageMember(PackageMemberNode node) => node switch
         {

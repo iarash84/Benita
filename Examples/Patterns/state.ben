@@ -1,0 +1,24 @@
+interface PlayerState { func next() -> PlayerState; func name() -> string; }
+
+pkg PlayingState : PlayerState {
+    public func next() -> PlayerState { return new PausedState(); }
+    public func name() -> string { return "playing"; }
+}
+
+pkg PausedState : PlayerState {
+    public func next() -> PlayerState { return new PlayingState(); }
+    public func name() -> string { return "paused"; }
+}
+
+pkg Player {
+    PlayerState state = new PlayingState();
+    public func status() -> string { return state.name(); }
+    public func advance() -> void { state = state.next(); }
+}
+
+_main_() {
+    Player player = new Player();
+    print(player.status());
+    player.advance();
+    print(player.status());
+}

@@ -30,6 +30,14 @@ dotnet run --project Benita -- exc Examples/algorithm-bubble-sort.ben
 | Builder | `Patterns/builder.ben` | تنظیم مرحله‌ای و ساخت شیء نهایی با `build` |
 | Facade | `Patterns/facade.ben` | قراردادن چند سرویس پشت یک API ساده |
 | Factory | `Patterns/factory.ben` | متمرکزکردن منطق ساخت نمونه |
+| Strategy | `Patterns/strategy.ben` | تعویض الگوریتم از طریق یک interface مشترک |
+| Factory Method | `Patterns/factory-method.ben` | واگذاری ساخت محصول به creatorهای concrete |
+| Abstract Factory | `Patterns/abstract-factory.ben` | ساخت خانواده‌ای از محصولات سازگار |
+| Adapter | `Patterns/adapter.ben` | تبدیل API قدیمی به قرارداد مورد انتظار |
+| Decorator | `Patterns/decorator.ben` | افزودن رفتار با wrapping چندریختی |
+| Bridge | `Patterns/bridge.ben` | جداسازی abstraction از implementation |
+| State | `Patterns/state.ben` | تغییر رفتار با تعویض شیء state |
+| Proxy | `Patterns/proxy.ben` | کنترل دسترسی و cache کردن سرویس اصلی |
 
 ```bash
 dotnet run --project Benita -- exc Examples/Patterns/builder.ben

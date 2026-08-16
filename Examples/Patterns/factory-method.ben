@@ -1,0 +1,28 @@
+interface Document { func describe() -> string; }
+interface DocumentCreator { func create() -> Document; }
+
+pkg Report : Document {
+    public func describe() -> string { return "Report document"; }
+}
+
+pkg Invoice : Document {
+    public func describe() -> string { return "Invoice document"; }
+}
+
+pkg ReportCreator : DocumentCreator {
+    public func create() -> Document { return new Report(); }
+}
+
+pkg InvoiceCreator : DocumentCreator {
+    public func create() -> Document { return new Invoice(); }
+}
+
+func render(DocumentCreator creator) -> string {
+    Document document = creator.create();
+    return document.describe();
+}
+
+_main_() {
+    print(render(new ReportCreator()));
+    print(render(new InvoiceCreator()));
+}

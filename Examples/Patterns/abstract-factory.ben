@@ -1,0 +1,29 @@
+interface Button { func paint() -> string; }
+interface Checkbox { func paint() -> string; }
+interface UiFactory {
+    func create_button() -> Button;
+    func create_checkbox() -> Checkbox;
+}
+
+pkg LightButton : Button { public func paint() -> string { return "Light button"; } }
+pkg LightCheckbox : Checkbox { public func paint() -> string { return "Light checkbox"; } }
+pkg DarkButton : Button { public func paint() -> string { return "Dark button"; } }
+pkg DarkCheckbox : Checkbox { public func paint() -> string { return "Dark checkbox"; } }
+
+pkg LightFactory : UiFactory {
+    public func create_button() -> Button { return new LightButton(); }
+    public func create_checkbox() -> Checkbox { return new LightCheckbox(); }
+}
+
+pkg DarkFactory : UiFactory {
+    public func create_button() -> Button { return new DarkButton(); }
+    public func create_checkbox() -> Checkbox { return new DarkCheckbox(); }
+}
+
+func render(UiFactory factory) -> string {
+    Button button = factory.create_button();
+    Checkbox checkbox = factory.create_checkbox();
+    return button.paint() + " / " + checkbox.paint();
+}
+
+_main_() { print(render(new DarkFactory())); }

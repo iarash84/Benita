@@ -7,12 +7,19 @@ This document uses EBNF. Terminals are written in quotes, `?` means optional,
 program                 ::= top-level-item* EOF ;
 
 top-level-item          ::= package-declaration
+                          | interface-declaration
                           | access-modifier? function-declaration
                           | access-modifier? variable-declaration
                           | main-function
                           | statement ;
 
-package-declaration     ::= "pkg" identifier "{" package-member* "}" ;
+package-declaration     ::= "pkg" identifier implementation-list?
+                            "{" package-member* "}" ;
+implementation-list    ::= ":" identifier ("," identifier)* ;
+interface-declaration  ::= "interface" identifier
+                            "{" interface-method* "}" ;
+interface-method       ::= "func" identifier "(" parameter-list? ")"
+                            "->" return-type ";" ;
 package-member          ::= access-modifier? package-variable-declaration
                           | initializer-declaration
                           | access-modifier? function-declaration ;
@@ -168,8 +175,17 @@ Semantic constraints
     contract for `new`; a package without `init` only accepts zero arguments.
 15. `this` is available only in a package initializer or method and denotes the
     current instance. Package field and method names are checked statically.
-16. Package types may be used for variables, parameters, return values, and
-    fields. Inheritance, interfaces, and overloads are not part of the language yet.
+16. Package and interface types may be used for variables, parameters, return
+    values, and fields.
+17. A package implements interfaces nominally with `pkg Name : A, B`. Merely
+    having compatible methods without listing the interface is not sufficient.
+18. Every interface method must have one matching public package method. Name,
+    parameter count, parameter types, and return type must match exactly.
+19. An implementing package value is assignable to its interface type. Calls
+    through that interface dispatch to the concrete package instance at runtime.
+20. Interfaces contain method signatures only: fields, bodies, constructors,
+    and access modifiers are not permitted. Class inheritance and overloads are
+    not part of the language yet.
 
 Notes
 -----

@@ -1,0 +1,22 @@
+interface PaymentStrategy {
+    func pay(number amount) -> string;
+}
+
+pkg CardPayment : PaymentStrategy {
+    public func pay(number amount) -> string { return "Card: " + to_string(amount); }
+}
+
+pkg CashPayment : PaymentStrategy {
+    public func pay(number amount) -> string { return "Cash: " + to_string(amount); }
+}
+
+pkg Checkout {
+    PaymentStrategy strategy = new CashPayment();
+    init(PaymentStrategy selected) { this.strategy = selected; }
+    public func complete(number amount) -> string { return strategy.pay(amount); }
+}
+
+_main_() {
+    Checkout checkout = new Checkout(new CardPayment());
+    print(checkout.complete(120));
+}

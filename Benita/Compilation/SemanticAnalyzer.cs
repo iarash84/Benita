@@ -10,6 +10,7 @@
         /// Dictionary to store packages names and their associated PackageNode.
         /// </summary>
         private readonly Dictionary<string, PackageNode> _packages;
+        private readonly Dictionary<string, InterfaceNode> _interfaces;
 
 
         /// <summary>
@@ -36,6 +37,7 @@
             _globalVariables = new Dictionary<string, string?>();
             _functions = new Dictionary<string, FunctionNode>();
             _packages = new Dictionary<string, PackageNode>();
+            _interfaces = new Dictionary<string, InterfaceNode>();
             _defaultFunctions = BuiltInRegistry.Descriptors.Values.ToDictionary(
                 descriptor => descriptor.Name,
                 descriptor => (descriptor.ReturnType, descriptor.ParameterTypes.ToList()),
@@ -49,11 +51,16 @@
         public void Analyze(ProgramNode program)
         {
             _packages.Clear();
+            _interfaces.Clear();
             _globalVariables.Clear();
             _functions.Clear();
 
+            foreach (InterfaceNode interfaceNode in program.Interfaces)
+                DeclareInterface(interfaceNode);
             foreach (var packageNode in program.Packages)
                 DeclarePackage(packageNode);
+            foreach (InterfaceNode interfaceNode in program.Interfaces)
+                AnalyzeInterface(interfaceNode);
             foreach (var packageNode in program.Packages)
                 AnalyzePackage(packageNode);
 
@@ -112,11 +119,36 @@
         /// <exception cref="Exception"></exception>
         private void DeclarePackage(PackageNode packageNode)
         {
-            if (_packages.ContainsKey(packageNode.Name))
+            if (_packages.ContainsKey(packageNode.Name) || _interfaces.ContainsKey(packageNode.Name))
             {
                 throw new Exception($"Package '{packageNode.Name}' is already declared.");
             }
             _packages[packageNode.Name] = packageNode;
+        }
+
+        private void DeclareInterface(InterfaceNode interfaceNode)
+        {
+            if (_interfaces.ContainsKey(interfaceNode.Name) || _packages.ContainsKey(interfaceNode.Name))
+                throw new Exception($"Type '{interfaceNode.Name}' is already declared.");
+            _interfaces[interfaceNode.Name] = interfaceNode;
+        }
+
+        private void AnalyzeInterface(InterfaceNode interfaceNode)
+        {
+            HashSet<string> methodNames = [];
+            foreach (InterfaceMethodNode method in interfaceNode.Methods)
+            {
+                if (!methodNames.Add(method.Name))
+                    throw new Exception($"Interface '{interfaceNode.Name}' declares method '{method.Name}' more than once.");
+                EnsureKnownType(method.ReturnType, allowVoid: true);
+                HashSet<string> parameterNames = [];
+                foreach (ParameterNode parameter in method.Parameters)
+                {
+                    EnsureKnownType(parameter.Type);
+                    if (!parameterNames.Add(parameter.Name))
+                        throw new Exception($"Parameter '{parameter.Name}' is already declared in '{method.Name}'.");
+                }
+            }
         }
 
         /// <summary>
@@ -125,6 +157,7 @@
         /// <param name="packageNode"></param>
         private void AnalyzePackage(PackageNode packageNode)
         {
+            ValidateImplementedInterfaces(packageNode);
             Dictionary<string, string?> variableScope = new Dictionary<string, string?>
             {
                 ["this"] = packageNode.Name
@@ -138,8 +171,7 @@
                     if (variableScope.ContainsKey(variableDeclaration.Name))
                         throw new Exception($"Variable '{variableDeclaration.Name}' is already declared.");
                     TypeSymbol fieldType = TypeFacts.FromName(variableDeclaration.Type);
-                    if (fieldType is NamedTypeSymbol && !_packages.ContainsKey(fieldType.Name))
-                        throw new Exception($"Unknown package type '{fieldType}'.");
+                    EnsureKnownType(fieldType.Name);
                     variableScope[variableDeclaration.Name] = fieldType.Name;
                 }
             }
@@ -161,6 +193,32 @@
             }
         }
 
+        private void ValidateImplementedInterfaces(PackageNode package)
+        {
+            HashSet<string> implemented = [];
+            foreach (string interfaceName in package.Interfaces)
+            {
+                if (!implemented.Add(interfaceName))
+                    throw new Exception($"Package '{package.Name}' lists interface '{interfaceName}' more than once.");
+                if (!_interfaces.TryGetValue(interfaceName, out InterfaceNode? contract))
+                    throw new Exception($"Unknown interface '{interfaceName}'.");
+                foreach (InterfaceMethodNode required in contract.Methods)
+                {
+                    PackageFunctionNode? implementation = package.Members.OfType<PackageFunctionNode>()
+                        .FirstOrDefault(method => method.Name == required.Name);
+                    if (implementation is null)
+                        throw new Exception($"Package '{package.Name}' does not implement '{interfaceName}.{required.Name}'.");
+                    if (implementation.AccessModifier != AccessModifier.Public)
+                        throw new Exception($"Implementation '{package.Name}.{required.Name}' must be public.");
+                    if (implementation.ReturnType != required.ReturnType ||
+                        implementation.Parameters.Count != required.Parameters.Count ||
+                        implementation.Parameters.Where((parameter, index) =>
+                            parameter.Type != required.Parameters[index].Type).Any())
+                        throw new Exception($"Method '{package.Name}.{required.Name}' does not match interface '{interfaceName}'.");
+                }
+            }
+        }
+
         private void AnalyzePackageFunction(PackageFunctionNode function, Dictionary<string, string?> variableScope)
         {
             EnsureKnownType(function.ReturnType, allowVoid: true);
@@ -171,8 +229,7 @@
             foreach (var param in function.Parameters)
             {
                 TypeSymbol parameterType = TypeFacts.FromName(param.Type);
-                if (parameterType is NamedTypeSymbol && !_packages.ContainsKey(parameterType.Name))
-                    throw new Exception($"Unknown package type '{parameterType}'.");
+                EnsureKnownType(parameterType.Name);
                 DeclareVariable(param.Name, param.Type, localVariables);
             }
 
@@ -363,7 +420,7 @@
                     var resultValueType = returnStatementNode.ReturnExpression == null
                         ? "void"
                         : AnalyzeExpression(returnStatementNode.ReturnExpression, localVariables);
-                    if (resultValueType != functionReturnType)
+                    if (!CheckType(functionReturnType, resultValueType))
                     {
                         throw new Exception($"Return type mismatch in function. Expected '{functionReturnType}' but got '{resultValueType}'.");
                     }
@@ -555,8 +612,23 @@
 
         private string? HandleMemberAccessNode(MemberAccessNode memberAccess, Dictionary<string, string?> localVariables)
         {
-            if (!localVariables.TryGetValue(memberAccess.ObjectName, out string? packageName) ||
-                packageName is null || !_packages.TryGetValue(packageName, out PackageNode? outPackage))
+            if (!localVariables.TryGetValue(memberAccess.ObjectName, out string? packageName) || packageName is null)
+                throw new Exception($"Member access requires a package instance, but '{memberAccess.ObjectName}' is not one.");
+
+            if (_interfaces.TryGetValue(packageName, out InterfaceNode? outInterface))
+            {
+                if (memberAccess.Expression is not FunctionCallNode interfaceCall)
+                    throw new Exception($"Interface '{outInterface.Name}' exposes methods only.");
+                InterfaceMethodNode? contractMethod = outInterface.Methods
+                    .FirstOrDefault(method => method.Name == interfaceCall.FunctionName);
+                if (contractMethod is null)
+                    throw new Exception($"Interface '{outInterface.Name}' has no method named '{interfaceCall.FunctionName}'.");
+                ValidateArguments(interfaceCall.FunctionName, interfaceCall.Arguments,
+                    contractMethod.Parameters, localVariables);
+                return contractMethod.ReturnType;
+            }
+
+            if (!_packages.TryGetValue(packageName, out PackageNode? outPackage))
                 throw new Exception($"Member access requires a package instance, but '{memberAccess.ObjectName}' is not one.");
 
             bool requirePublic = memberAccess.ObjectName != "this";
@@ -771,7 +843,7 @@
                     throw new Exception($"Type mismatch in argument 2 of function call to 'array_concat'. Expected '{arrayElementType}[]' but got '{argType}'.");
 
                 TypeSymbol expectedType = functionInfo.ParameterTypes[i];
-                if (!TypeFacts.IsAssignableTo(argType, expectedType))
+                if (!CheckType(expectedType.Name, argType.Name))
                 {
                     throw new Exception($"Type mismatch in argument {i + 1} of function call to '{functionCall.FunctionName}'. Expected '{expectedType}' but got '{argType}'.");
                 }
@@ -876,6 +948,10 @@
         {
             TypeSymbol target = TypeFacts.FromName(firstType);
             TypeSymbol source = TypeFacts.FromName(secondType);
+            if (target is NamedTypeSymbol targetNamed && source is NamedTypeSymbol sourceNamed &&
+                _interfaces.ContainsKey(targetNamed.Name) &&
+                _packages.TryGetValue(sourceNamed.Name, out PackageNode? sourcePackage))
+                return sourcePackage.Interfaces.Contains(targetNamed.Name);
             return TypeFacts.IsAssignableTo(source, target);
         }
 
@@ -884,8 +960,9 @@
             if (typeName is null) return;
             if (allowVoid && typeName == "void" || allowLet && typeName == "let") return;
             TypeSymbol type = TypeFacts.FromName(typeName);
-            if (type is NamedTypeSymbol named && !_packages.ContainsKey(named.Name))
-                throw new Exception($"Unknown package type '{named.Name}'.");
+            if (type is NamedTypeSymbol named &&
+                !_packages.ContainsKey(named.Name) && !_interfaces.ContainsKey(named.Name))
+                throw new Exception($"Unknown package or interface type '{named.Name}'.");
         }
 
         /// <summary>

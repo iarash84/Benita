@@ -294,7 +294,7 @@ pkg Dashboard {
 عضوی که باید از بیرون package قابل استفاده باشد، `public` را صریح می‌نویسیم و در صورت
 نیاز می‌توان `private` را نیز صریح نوشت. اعضای private داخل همان package و از مسیر
 `this` قابل استفاده‌اند، اما دسترسی از طریق نمونه در بیرون رد می‌شود. تابع `_main_`
-هیچ‌وقت access modifier نمی‌گیرد. وراثت، interface و overload هنوز پشتیبانی نمی‌شوند.
+هیچ‌وقت access modifier نمی‌گیرد. وراثت و overload هنوز پشتیبانی نمی‌شوند.
 مثال‌های Builder، Facade و Factory در `Examples/Patterns` هستند.
 
 ```benita
@@ -309,6 +309,38 @@ _main_() {
     print(counter.current());
 }
 ```
+
+### Interface و چندریختی
+
+یک interface قرارداد متدها را بدون بدنه تعریف می‌کند. package با نوشتن نام interface
+پس از `:` آن را پیاده‌سازی می‌کند. متدهای پیاده‌سازی باید `public` باشند و نام، نوع
+پارامترها و نوع خروجی آن‌ها دقیقاً با قرارداد تطبیق داشته باشد:
+
+```benita
+interface Formatter {
+    func format(string value) -> string;
+}
+
+pkg JsonFormatter : Formatter {
+    public func format(string value) -> string {
+        return "json: " + value;
+    }
+}
+
+func show(Formatter formatter, string value) -> void {
+    print(formatter.format(value));
+}
+
+_main_() {
+    Formatter formatter = new JsonFormatter();
+    show(formatter, "Benita");
+}
+```
+
+نوع interface را می‌توان برای متغیر، فیلد، پارامتر و خروجی تابع استفاده کرد. یک package
+تنها زمانی به interface قابل انتساب است که آن را صریحاً در declaration خود فهرست کرده
+باشد. فراخوانی متد از طریق interface در زمان اجرا به implementation نمونهٔ واقعی هدایت
+می‌شود. چند interface نیز با کاما نوشته می‌شوند: `pkg Channel : Reader, Writer`.
 
 ### ۹. ورودی، تبدیل و ریاضیات
 
@@ -782,9 +814,39 @@ be created without arguments. Variables and functions are private by default. Pr
 declaration with `public` only when it must be part of a package's external API; `private`
 may also be written explicitly. Private package members remain available inside their
 package and through `this`, but instance access from outside is rejected. The `_main_`
-entry point must never have an access modifier. Inheritance, interfaces, and overloads
+entry point must never have an access modifier. Inheritance and overloads
 are not supported yet. Builder, Facade, and Factory examples are available under
 `Examples/Patterns`.
+
+#### Interfaces and polymorphism
+
+An interface declares method signatures without bodies. A package implements one or
+more interfaces by listing them after `:`. Implementations must be public and must
+match the method name, parameter types, and return type exactly.
+
+```benita
+interface Formatter {
+    func format(string value) -> string;
+}
+
+pkg JsonFormatter : Formatter {
+    public func format(string value) -> string { return "json: " + value; }
+}
+
+func show(Formatter formatter, string value) -> void {
+    print(formatter.format(value));
+}
+
+_main_() {
+    Formatter formatter = new JsonFormatter();
+    show(formatter, "Benita");
+}
+```
+
+Interface types are valid for variables, fields, parameters, and return values. A
+package is assignable to an interface only when it explicitly lists that interface.
+Calls through the interface dynamically dispatch to the concrete package instance.
+Multiple contracts use commas: `pkg Channel : Reader, Writer`.
 
 ```benita
 pkg Counter {

@@ -11,8 +11,10 @@ internal static class AstPrinter
         string child = indent + "  ";
         switch (node)
         {
-            case ProgramNode value: PrintAll(value.GlobalVariables, child); PrintAll(value.Packages, child); PrintAll(value.Functions, child); Print(value.MainFunction, child); PrintAll(value.Statements, child); break;
-            case PackageNode value: Detail(child, "Name", value.Name); PrintAll(value.Members, child); break;
+            case ProgramNode value: PrintAll(value.Interfaces, child); PrintAll(value.GlobalVariables, child); PrintAll(value.Packages, child); PrintAll(value.Functions, child); Print(value.MainFunction, child); PrintAll(value.Statements, child); break;
+            case InterfaceNode value: Detail(child, "Name", value.Name); PrintAll(value.Methods, child); break;
+            case InterfaceMethodNode value: Detail(child, "Method", $"{value.Name} -> {value.ReturnType}"); PrintAll(value.Parameters, child); break;
+            case PackageNode value: Detail(child, "Name", value.Interfaces.Count == 0 ? value.Name : $"{value.Name} : {string.Join(", ", value.Interfaces)}"); PrintAll(value.Members, child); break;
             case FunctionNode value: Detail(child, "Name", $"{value.AccessModifier.ToString().ToLowerInvariant()} {value.Name}"); PrintAll(value.Parameters, child); Print(value.Body, child); Print(value.ReturnStatement, child); break;
             case PackageFunctionNode value: Detail(child, "Name", $"{value.AccessModifier.ToString().ToLowerInvariant()} {value.Name}"); PrintAll(value.Parameters, child); Print(value.Body, child); Print(value.ReturnStatement, child); break;
             case BlockNode value: PrintAll(value.Statements, child); break;

@@ -54,6 +54,14 @@ public class ExampleProgramTests
             yield return Case(Path.Combine("Patterns", "builder.ben"), null, "Ryzen 7 / 32 GB");
             yield return Case(Path.Combine("Patterns", "facade.ben"), null, "Order completed");
             yield return Case(Path.Combine("Patterns", "factory.ben"), null, "Email: Build finished");
+            yield return Case(Path.Combine("Patterns", "strategy.ben"), null, "Card: 120");
+            yield return Case(Path.Combine("Patterns", "factory-method.ben"), null, "Report document", "Invoice document");
+            yield return Case(Path.Combine("Patterns", "abstract-factory.ben"), null, "Dark button / Dark checkbox");
+            yield return Case(Path.Combine("Patterns", "adapter.ben"), null, "Legacy: adapted");
+            yield return Case(Path.Combine("Patterns", "decorator.ben"), null, "encrypted(timestamped(hello))");
+            yield return Case(Path.Combine("Patterns", "bridge.ben"), null, "Radio on", "Radio off");
+            yield return Case(Path.Combine("Patterns", "state.ben"), null, "playing", "paused");
+            yield return Case(Path.Combine("Patterns", "proxy.ben"), null, "remote data");
             // فراخوانی بازگشتی فیبوناچی، بازگشت زودهنگام و پیمایش با حلقه for را بررسی می‌کند.
             yield return Case("recursive-fibonacci-for-loop.ben", null, "0", "1", "1", "2", "3", "5", "8", "13", "21", "34", "55", "89", "144", "233", "377", "610", "987", "1597", "2584", "4181", "6765");
             // فراخوانی بازگشتی فیبوناچی با متغیر نتیجه و حلقه while را بررسی می‌کند.

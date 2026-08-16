@@ -20,6 +20,8 @@
 - توابع، بازگشت و فراخوانی بازگشتی
 - شرط‌های `if/else if/else`، ساختار مقدارساز/دستوری `match` و حلقه‌های `while`، `for` و `for-in`
 - بسته‌ها (`pkg`)، مقداردهی با `init`، ارجاع `this`، composition و نمونه‌سازی expression-based
+- اعضای private به‌صورت پیش‌فرض و modifierهای صریح `public` و `private`
+- interfaceهای اسمی، پیاده‌سازی چند interface و چندریختی زمان اجرا
 - ورودی و خروجی کنسول
 - عملیات خواندن، نوشتن، بررسی وجود و حذف فایل
 - دستور `include_once` برای استفاده از فایل‌های دیگر
@@ -165,6 +167,8 @@ Benita is a small educational programming language I am building with C# and .NE
 - Functions, returns, and recursion
 - `if/else if/else` conditions, value/statement `match`, and `while`/`for`/`for-in` loops
 - Packages (`pkg`) with `init`, `this`, composition, and expression-based object creation
+- Private-by-default members with explicit `public`/`private` access modifiers
+- Nominal interfaces, multiple interface implementation, and runtime polymorphism
 - Console input and output
 - File read, write, existence, and deletion operations
 - `include_once` support for reusable source files

@@ -318,10 +318,24 @@
     /// <summary>
     /// Represents a package node with a name and a list of members.
     /// </summary>
-    public class PackageNode(string name, List<PackageMemberNode> members) : AstNode
+    public class PackageNode(string name, List<PackageMemberNode> members, List<string>? interfaces = null) : AstNode
     {
         public string Name { get; } = name;
         public List<PackageMemberNode> Members { get; } = members;
+        public List<string> Interfaces { get; } = interfaces ?? [];
+    }
+
+    public class InterfaceMethodNode(string name, List<ParameterNode> parameters, string returnType) : AstNode
+    {
+        public string Name { get; } = name;
+        public List<ParameterNode> Parameters { get; } = parameters;
+        public string ReturnType { get; } = returnType;
+    }
+
+    public class InterfaceNode(string name, List<InterfaceMethodNode> methods) : AstNode
+    {
+        public string Name { get; } = name;
+        public List<InterfaceMethodNode> Methods { get; } = methods;
     }
 
     /// <summary>
@@ -371,11 +385,13 @@
         List<PackageNode> packages,
         List<FunctionNode> functions,
         FunctionNode? mainFunction,
-        List<StatementNode?>? statements) : AstNode
+        List<StatementNode?>? statements,
+        List<InterfaceNode>? interfaces = null) : AstNode
     {
         public List<VariableDeclarationNode> GlobalVariables { get; } = globalVariables;
         public List<FunctionNode> Functions { get; } = functions;
         public List<PackageNode> Packages { get; } = packages;
+        public List<InterfaceNode> Interfaces { get; } = interfaces ?? [];
         public FunctionNode? MainFunction { get; } = mainFunction;
         public List<StatementNode?>? Statements { get; } = statements;
     }

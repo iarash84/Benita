@@ -1,0 +1,22 @@
+interface Message { func content() -> string; }
+
+pkg PlainMessage : Message {
+    public func content() -> string { return "hello"; }
+}
+
+pkg EncryptedMessage : Message {
+    Message wrapped = new PlainMessage();
+    init(Message message) { this.wrapped = message; }
+    public func content() -> string { return "encrypted(" + wrapped.content() + ")"; }
+}
+
+pkg TimestampedMessage : Message {
+    Message wrapped = new PlainMessage();
+    init(Message message) { this.wrapped = message; }
+    public func content() -> string { return "timestamped(" + wrapped.content() + ")"; }
+}
+
+_main_() {
+    Message message = new EncryptedMessage(new TimestampedMessage(new PlainMessage()));
+    print(message.content());
+}

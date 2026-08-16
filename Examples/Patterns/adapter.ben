@@ -1,0 +1,16 @@
+interface Printer { func print_text(string text) -> string; }
+
+pkg LegacyPrinter {
+    public func send(string text) -> string { return "Legacy: " + text; }
+}
+
+pkg PrinterAdapter : Printer {
+    LegacyPrinter legacy = new LegacyPrinter();
+    public func print_text(string text) -> string { return legacy.send(text); }
+}
+
+func print_document(Printer printer, string text) -> string {
+    return printer.print_text(text);
+}
+
+_main_() { print(print_document(new PrinterAdapter(), "adapted")); }
