@@ -632,11 +632,10 @@ namespace Benita
                 {
                     bool pendingReturn = _functionReturnFlag;
                     _functionReturnFlag = false;
-                    object? finallyResult = Visit(node.FinallyBlock);
+                    Visit(node.FinallyBlock);
                     if (_functionReturnFlag)
-                        result = finallyResult;
-                    else
-                        _functionReturnFlag = pendingReturn;
+                        throw new RuntimeException("Control cannot leave a finally block with return.");
+                    _functionReturnFlag = pendingReturn;
                 }
             }
 
@@ -750,6 +749,19 @@ namespace Benita
         /// <param name="node">The program node.</param>
         /// <returns>Null.</returns>
         private object VisitProgramNode(ProgramNode node)
+        {
+            try
+            {
+                return ExecuteProgramNode(node);
+            }
+            catch (ThrownErrorException exception)
+            {
+                throw new UnhandledErrorException(exception.Error, exception);
+            }
+        }
+
+        /// <summary>گره برنامه را اجرا می‌کند؛ تبدیل خطای مدیریت‌نشده در wrapper عمومی انجام می‌شود.</summary>
+        private object ExecuteProgramNode(ProgramNode node)
         {
             DebugLog($"VisitProgramNode:", false);
 

@@ -1705,7 +1705,7 @@ PrintArray(localArray);";
             _compiler.Check(source);
 
             // Assert
-// Act
+            // Act
             var expectedOutput = "Sorted array:\r\n1\r\n2\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n9\r\n11\r\n15\r\n";
             using (var consoleOutput = new ConsoleOutput())
             {

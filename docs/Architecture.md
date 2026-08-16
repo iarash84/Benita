@@ -121,4 +121,15 @@ Bridge، State و Proxy در `Examples/Patterns` و تست‌های اجرایی
 خطاهای runtime را به `ErrorValue` تبدیل می‌کند، بدون آنکه سیگنال‌های کنترل حلقه را بگیرد.
 متغیر catch scope محدود دارد و interpreter پیش از خروج مقدار قبلی هم‌نام را بازیابی
 می‌کند. اجرای finally با نگهداری موقت flag مربوط به return انجام می‌شود تا cleanup پیش
-از تحویل مقدار تابع اجرا شود. این مدل مبنای انتقال خطای task در قابلیت async/await خواهد بود.
+از تحویل مقدار تابع اجرا شود. خروج کنترلی از finally در تحلیل معنایی محدود شده است تا
+flagهای داخلی ناسازگار نشوند. در مرز `ProgramNode` نیز `ThrownErrorException` داخلی به
+`UnhandledErrorException` عمومی با code و message اصلی تبدیل می‌شود. این مدل مبنای انتقال
+خطای task در قابلیت async/await خواهد بود.
+
+### مرز لازم برای async/await آینده
+
+`Interpreter` و dictionaryهای mutable در `RuntimeContext` در وضعیت فعلی thread-safe نیستند
+و نباید مستقیماً میان taskها به اشتراک گذاشته شوند. پیاده‌سازی async باید برای هر task یک
+scope اجرایی مستقل بسازد، تعریف‌های immutable تابع و package را به‌صورت read-only به اشتراک
+بگذارد و نتیجه یا `ErrorValue` را از طریق handle مربوط به task بازگرداند. هر نوع global state
+مشترک نیز پیش از فعال‌شدن اجرای هم‌زمان به synchronization یا مدل channel نیاز دارد.

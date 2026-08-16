@@ -58,6 +58,10 @@ public sealed class SemanticException(string description, Exception? innerExcept
 public sealed class RuntimeException(string description, Exception? innerException = null)
     : BenitaException("BEN4001", description, innerException: innerException);
 
+/// <summary>خطای زبان که تا مرز اجرای برنامه catch نشده است را با کد اصلی گزارش می‌کند.</summary>
+public sealed class UnhandledErrorException(ErrorValue error, Exception? innerException = null)
+    : BenitaException(error.Code, error.Message, innerException: innerException);
+
 /// <summary>خطای پایدار مربوط به اعتبارسنجی یا اجرای توابع داخلی زبان.</summary>
 public sealed class BuiltInException(string description, Exception? innerException = null)
     : BenitaException("BEN4101", description, innerException: innerException);

@@ -116,6 +116,8 @@
         /// <summary>نام package را ثبت و از برخورد نام آن با سایر نوع‌ها جلوگیری می‌کند.</summary>
         private void DeclarePackage(PackageNode packageNode)
         {
+            if (packageNode.Name == Types.Error.Name)
+                throw new Exception("The name 'error' is reserved by the language error type.");
             if (_packages.ContainsKey(packageNode.Name) || _interfaces.ContainsKey(packageNode.Name))
             {
                 throw new Exception($"Package '{packageNode.Name}' is already declared.");
@@ -126,6 +128,8 @@
         /// <summary>نام interface را پیش از تحلیل بدنه‌ها ثبت و تکراری‌بودن نوع را بررسی می‌کند.</summary>
         private void DeclareInterface(InterfaceNode interfaceNode)
         {
+            if (interfaceNode.Name == Types.Error.Name)
+                throw new Exception("The name 'error' is reserved by the language error type.");
             if (_interfaces.ContainsKey(interfaceNode.Name) || _packages.ContainsKey(interfaceNode.Name))
                 throw new Exception($"Type '{interfaceNode.Name}' is already declared.");
             _interfaces[interfaceNode.Name] = interfaceNode;
@@ -244,6 +248,8 @@
         /// <param name="function">The function to declare and analyze.</param>
         private void DeclareFunction(FunctionNode function)
         {
+            if (function.Name == Types.Error.Name)
+                throw new Exception("The function name 'error' is reserved by the language runtime.");
             if (_functions.ContainsKey(function.Name))
             {
                 throw new Exception($"Function '{function.Name}' is already declared.");
@@ -411,7 +417,7 @@
                     break;
                 case ThrowStatementNode throwStatement:
                     string? thrownType = AnalyzeExpression(throwStatement.Error, localVariables);
-                    if (thrownType != "error")
+                    if (thrownType != Types.Error.Name)
                         throw new Exception($"A throw statement requires an error value, but got '{thrownType}'.");
                     break;
                 case TryStatementNode tryStatement:
@@ -419,11 +425,11 @@
                     if (tryStatement.CatchBlock is not null)
                     {
                         var catchScope = new Dictionary<string, string?>(localVariables);
-                        catchScope[tryStatement.CatchVariable!] = "error";
+                        catchScope[tryStatement.CatchVariable!] = Types.Error.Name;
                         AnalyzeStatement(tryStatement.CatchBlock, catchScope, functionReturnType, loopDepth);
                     }
                     if (tryStatement.FinallyBlock is not null)
-                        AnalyzeStatement(tryStatement.FinallyBlock, new(localVariables), functionReturnType, loopDepth);
+                        AnalyzeStatement(tryStatement.FinallyBlock, new(localVariables), functionReturnType: null, loopDepth: 0);
                     break;
                 case ReturnStatementNode returnStatementNode:
                     if (functionReturnType == null)
@@ -445,7 +451,6 @@
                         throw new Exception(
                             $"A package with this name : {objectInstantiationNode.PackageName} has not been implemented ");
                     }
-                    // TODO: Must check object name in this scope
                     if (localVariables.ContainsKey(objectInstantiationNode.Name))
                     {
                         throw new Exception($"Variable '{objectInstantiationNode.Name}' is already declared.");
@@ -472,7 +477,6 @@
             MatchStatementNode match => match.Arms.Any(arm => arm.IsDefault) &&
                                         match.Arms.All(arm => AlwaysReturns(arm.Body as StatementNode)),
             TryStatementNode tryStatement =>
-                tryStatement.FinallyBlock is not null && AlwaysReturns(tryStatement.FinallyBlock) ||
                 AlwaysReturns(tryStatement.TryBlock) &&
                 (tryStatement.CatchBlock is null || AlwaysReturns(tryStatement.CatchBlock)),
             _ => false
@@ -632,7 +636,7 @@
             if (!localVariables.TryGetValue(memberAccess.ObjectName, out string? packageName) || packageName is null)
                 throw new Exception($"Member access requires a package instance, but '{memberAccess.ObjectName}' is not one.");
 
-            if (packageName == "error")
+            if (packageName == Types.Error.Name)
             {
                 if (memberAccess.Expression is IdentifierNode errorMember &&
                     errorMember.Name is "code" or "message")

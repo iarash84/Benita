@@ -361,6 +361,10 @@ try {
 و هنگام ادامهٔ انتشار خطا اجرا می‌شود. خطاهای runtime و توابع داخلی نیز قابل دریافت‌اند؛
 خطاهای built-in کد پایدار خود مانند `BEN4101` را حفظ می‌کنند و سایر خطاهای runtime با
 `BEN5000` در اختیار catch قرار می‌گیرند. متغیر catch بیرون از block آن قابل استفاده نیست.
+نام `error` برای نوع و تابع سازندهٔ خطا رزرو شده است. خروج از finally با `return` یا با
+`break` و `continue` مربوط به حلقه‌ای بیرون از finally مجاز نیست؛ اما حلقه‌ای که داخل
+finally تعریف شده باشد کنترل جریان معمول خود را دارد. خطای کاربر که catch نشود با همان
+code و message اصلی در مرز اجرای برنامه گزارش می‌شود.
 
 ### ۹. ورودی، تبدیل و ریاضیات
 
@@ -887,6 +891,10 @@ A try statement requires at least a catch or finally clause. Finally runs after 
 completion, return, and continuing error propagation. Runtime and built-in failures are
 catchable; built-ins retain stable codes such as `BEN4101`, while other runtime failures
 use `BEN5000`. The catch variable is local to its catch block.
+The `error` type and constructor name are reserved. Return and loop control targeting an
+outer loop cannot leave finally, although loops declared inside finally retain normal
+break/continue behavior. An uncaught user error reaches the program boundary with its
+original code and message.
 
 ```benita
 pkg Counter {

@@ -286,7 +286,7 @@
             {
                 throw CreateError("BEN1002", "Unterminated string literal.");
             }
-            Advance(); 
+            Advance();
             AddToken(TokenType.STRING_LITERAL, value.ToString());
         }
 

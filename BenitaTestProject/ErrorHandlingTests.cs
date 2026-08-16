@@ -102,6 +102,11 @@ public class ErrorHandlingTests
     [DataRow("_main_() { throw \"bad\"; }", "requires an error value")]
     [DataRow("_main_() { try { print(1); } }", "requires a catch or finally")]
     [DataRow("_main_() { try {} catch (failure) {} print(failure.message); }", "Member access requires")]
+    [DataRow("func value() -> number { try { return 1; } finally { return 2; } } _main_() {}", "return")]
+    [DataRow("_main_() { while (true) { try {} finally { break; } } }", "break")]
+    [DataRow("pkg error {} _main_() {}", "reserved")]
+    [DataRow("interface error {} _main_() {}", "reserved")]
+    [DataRow("func error(string code, string message) -> error { return error(code, message); } _main_() {}", "reserved")]
     public void InvalidErrorHandling_IsRejected(string source, string expectedMessage)
     {
         try
@@ -113,5 +118,22 @@ public class ErrorHandlingTests
         {
             StringAssert.Contains(exception.Message, expectedMessage);
         }
+    }
+
+    [TestMethod]
+    public void Finally_AllowsLoopControlThatStaysInsideFinally()
+    {
+        const string source = "_main_() { try {} finally { while (true) { break; } } }";
+        new CompilerClass().Check(source);
+    }
+
+    [TestMethod]
+    public void UncaughtError_PreservesUserCodeAtProgramBoundary()
+    {
+        UnhandledErrorException exception = Assert.ThrowsException<UnhandledErrorException>(() =>
+            new CompilerClass().Exec("_main_() { throw error(\"APP900\", \"unhandled\"); }"));
+
+        Assert.AreEqual("APP900", exception.Code);
+        Assert.AreEqual("unhandled", exception.Description);
     }
 }

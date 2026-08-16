@@ -201,6 +201,13 @@ Semantic constraints
     completion, return, or error propagation.
 23. Runtime and built-in failures may be caught. Built-in failures retain their
     stable code (such as `BEN4101`); other runtime failures use `BEN5000`.
+24. `error` is a reserved type and built-in function name; packages, interfaces,
+    and global functions cannot redeclare it.
+25. `return`, or a `break`/`continue` targeting a loop outside the finally block,
+    cannot leave a finally block. Loops declared inside finally retain their own
+    valid break and continue statements.
+26. An uncaught user error crosses the program boundary with its original code
+    and message as an `UnhandledErrorException` diagnostic.
 
 Notes
 -----
