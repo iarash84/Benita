@@ -136,6 +136,52 @@ dotnet test Benita.sln
 - [برنامه‌های نمونه](Examples)
 - [افزونهٔ Benita برای Visual Studio Code](editors/vscode-benita)
 
+### نقشه راه و Todo List
+
+موارد زیر جهت کلی توسعهٔ آینده هستند و ترتیب آن‌ها الزاماً نشان‌دهندهٔ اولویت یا نسخهٔ انتشار نیست. قابلیت‌هایی که نسخهٔ اولیهٔ آن‌ها هم‌اکنون وجود دارد، در این فهرست به‌معنای تکمیل طراحی، افزایش پوشش و پایدارسازی رفتارشان هستند.
+
+- [ ] **تابع به‌عنوان مقدار (First-class Functions)**
+  - [ ] تعریف `Function Type`
+  - [ ] پشتیبانی از `Function Reference`
+  - [ ] نگهداری و ارسال تابع مانند سایر مقدارها
+  - [ ] فراخوانی (`Invoke`) یک مقدار تابعی
+- [ ] **Lambda Expression و Closure**
+  - [ ] تعریف عبارت Lambda با استنتاج نوع مناسب
+  - [ ] ساخت Closure
+  - [ ] دسترسی امن Lambda به متغیرهای Scope بیرونی و تعیین قواعد capture
+- [ ] **Generic Collections**
+  - [ ] `list<T>`
+  - [ ] `map<K, V>`
+  - [ ] `set<T>`
+  - [ ] `stack<T>`
+  - [ ] `queue<T>`
+- [ ] **تکمیل Encapsulation**
+  - [ ] تثبیت رفتار `public` و `private`
+  - [ ] کنترل دسترسی اعضا در مرحلهٔ تحلیل معنایی
+  - [ ] خطاهای واضح برای دسترسی غیرمجاز
+- [ ] **Static Members**
+  - [ ] Static Function
+  - [ ] Static Field
+  - [ ] قواعد دسترسی، مقداردهی اولیه و چرخهٔ عمر اعضای static
+- [ ] **Dependency Injection**
+  - [ ] Constructor Injection
+  - [ ] مدیریت وابستگی بین Objectها
+  - [ ] تشخیص وابستگی‌های نامعتبر یا چرخه‌ای
+- [ ] **بهبود معماری Compiler**
+  - [ ] افزودن Binder
+  - [ ] تعریف Bound Tree مستقل از Syntax Tree
+  - [ ] طراحی Symbol System یکپارچه
+  - [ ] مدیریت دقیق Scopeها
+  - [ ] جداسازی کامل مسئولیت Parser و Semantic Analyzer
+- [ ] **تست سه‌لایه**
+  - [ ] Parser Tests
+  - [ ] Semantic Tests
+  - [ ] Runtime Tests
+
+#### سیاست Inheritance
+
+Inheritance فعلاً پیاده‌سازی نخواهد شد. تمرکز فعلی زبان روی **Interface + Composition** باقی می‌ماند؛ اگر در آینده نیاز مشخصی به وراثت ایجاد شود، ابتدا فقط **Single Inheritance** و هزینه‌های معماری و معنایی آن بررسی خواهد شد.
+
 ### انتشار نسخه جدید
 
 برای ساخت خودکار GitHub Release، یک tag مطابق Semantic Versioning ایجاد و push کنید:
@@ -292,6 +338,52 @@ Programs in the [`Examples`](Examples) directory are executed directly by the te
 - [Language grammar](docs/Grammar.txt)
 - [Example programs and educational algorithms](Examples/README.md)
 - [Benita extension for Visual Studio Code](editors/vscode-benita)
+
+### Roadmap and Todo List
+
+The following items describe the general direction of future development; their order does not necessarily indicate priority or a target release. For features that already have an initial implementation, the tasks below represent completing the design, expanding coverage, and stabilizing behavior.
+
+- [ ] **First-class functions**
+  - [ ] Define a function type
+  - [ ] Support function references
+  - [ ] Store and pass functions like other values
+  - [ ] Invoke function values
+- [ ] **Lambda expressions and closures**
+  - [ ] Add lambda expressions with suitable type inference
+  - [ ] Implement closures
+  - [ ] Define safe capture rules for variables from outer scopes
+- [ ] **Generic collections**
+  - [ ] `list<T>`
+  - [ ] `map<K, V>`
+  - [ ] `set<T>`
+  - [ ] `stack<T>`
+  - [ ] `queue<T>`
+- [ ] **Complete encapsulation**
+  - [ ] Stabilize `public` and `private` behavior
+  - [ ] Enforce member access during semantic analysis
+  - [ ] Provide clear diagnostics for invalid access
+- [ ] **Static members**
+  - [ ] Static functions
+  - [ ] Static fields
+  - [ ] Define access, initialization, and lifetime rules
+- [ ] **Dependency injection**
+  - [ ] Constructor injection
+  - [ ] Dependency management between objects
+  - [ ] Detect invalid or circular dependencies
+- [ ] **Improve compiler architecture**
+  - [ ] Add a binder
+  - [ ] Introduce a bound tree independent of the syntax tree
+  - [ ] Design a unified symbol system
+  - [ ] Implement precise scope management
+  - [ ] Fully separate parser and semantic analyzer responsibilities
+- [ ] **Three-layer testing strategy**
+  - [ ] Parser tests
+  - [ ] Semantic tests
+  - [ ] Runtime tests
+
+#### Inheritance policy
+
+Inheritance will not be implemented for now. The language will continue to focus on **interfaces and composition**. If a concrete need for inheritance emerges later, only **single inheritance** will be evaluated first, including its architectural and semantic costs.
 
 ### Publishing a release
 
