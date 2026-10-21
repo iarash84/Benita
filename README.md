@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Logo.jpg" alt="Benita Logo" width="150" height="150">
+  <img src="Logo.png" alt="Benita Logo" width="150" height="150">
 </p>
 
 # Benita Programming Language | زبان برنامه‌نویسی بنیتا
