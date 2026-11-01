@@ -26,7 +26,7 @@
             <Keywords name="Folders in comment, close"></Keywords>
             <Keywords name="Keywords1">_main_ pkg interface func init public private let if else while for in match return break continue try catch finally throw async await new this</Keywords>
             <Keywords name="Keywords2">number string bool void error true false</Keywords>
-            <Keywords name="Keywords3">print input file_read file_write file_exist file_delete array_len array_add array_remove array_contains array_index_of array_reverse array_clear array_insert array_slice array_concat array_sort to_string to_number round_number sqrt_number string_len string_char_at string_substring string_contains string_index_of string_replace string_split string_trim string_to_lower string_to_upper</Keywords>
+            <Keywords name="Keywords3">print input array_len array_add array_remove array_contains array_index_of array_reverse array_clear array_insert array_slice array_concat array_sort to_string to_number round_number sqrt_number string_len string_char_at string_substring string_contains string_index_of string_replace string_split string_trim string_to_lower string_to_upper</Keywords>
             <Keywords name="Keywords4">include_once</Keywords>
             <Keywords name="Keywords5"></Keywords>
             <Keywords name="Keywords6"></Keywords>

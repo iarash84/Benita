@@ -253,7 +253,7 @@ BuiltInDescriptor
 توابع داخلی فعلی در چهار گروه قرار می‌گیرند:
 
 - آرایه: `array_len`، `array_add`، `array_remove`، جست‌وجو، برش، ادغام و مرتب‌سازی
-- فایل: `file_read`، `file_write`، `file_exist` و `file_delete`
+- فایل: کلاس داخلی `File` با متدهای `readText`، `writeText`، `appendText`، `exists`، `delete`، `copyTo` و `moveTo`
 - ابزار عمومی: `print`، `input`، `to_string`، `to_number`، `round_number` و `sqrt_number`
 - رشته: `string_len`، `string_char_at`، `string_substring`، `string_contains`، `string_index_of`، `string_replace`، `string_split`، `string_trim`، `string_to_lower` و `string_to_upper`
 

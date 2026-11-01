@@ -468,18 +468,22 @@ _main_() {
 
 ### ۱۰. عملیات فایل
 
+عملیات فایل از طریق کلاس داخلی `File` انجام می‌شوند:
+
 ```benita
 _main_() {
-    if (!file_exist("message.txt")) {
-        file_write("message.txt", "Hello");
+    File file = new File("message.txt");
+
+    if (!file.exists()) {
+        file.writeText("Hello");
     }
 
-    print(file_read("message.txt"));
-    file_delete("message.txt");
+    print(file.readText());
+    file.delete();
 }
 ```
 
-توابع موجود: `file_read`، `file_write`، `file_exist` و `file_delete`.
+`File` متدهای `readText`، `writeText`، `appendText`، `exists`، `delete`، `copyTo` و `moveTo` و propertyهای فقط‌خواندنی `path` و `length` را ارائه می‌کند. توابع قدیمی `file_read`، `file_write`، `file_exist` و `file_delete` دیگر بخشی از زبان نیستند.
 
 ### ۱۱. استفاده از فایل‌های دیگر
 
@@ -1092,18 +1096,22 @@ String indexes are zero-based. `string_index_of` returns `-1` when no match is f
 
 ### 10. File operations
 
+File operations use the `File` built-in class:
+
 ```benita
 _main_() {
-    if (!file_exist("message.txt")) {
-        file_write("message.txt", "Hello");
+    File file = new File("message.txt");
+
+    if (!file.exists()) {
+        file.writeText("Hello");
     }
 
-    print(file_read("message.txt"));
-    file_delete("message.txt");
+    print(file.readText());
+    file.delete();
 }
 ```
 
-Available functions are `file_read`, `file_write`, `file_exist`, and `file_delete`.
+`File` provides `readText`, `writeText`, `appendText`, `exists`, `delete`, `copyTo`, and `moveTo`, plus read-only `path` and `length` properties. The old `file_read`, `file_write`, `file_exist`, and `file_delete` functions are no longer part of the language.
 
 ### 11. Including other files
 

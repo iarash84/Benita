@@ -113,7 +113,7 @@
     },
     "built-ins": {
       "name": "support.function.builtin.benita",
-      "match": "\\b(print|input|file_read|file_write|file_exist|file_delete|array_len|array_add|array_remove|array_contains|array_index_of|array_reverse|array_clear|array_insert|array_slice|array_concat|array_sort|to_string|to_number|round_number|sqrt_number|error|string_len|string_char_at|string_substring|string_contains|string_index_of|string_replace|string_split|string_trim|string_to_lower|string_to_upper)(?=\\s*\\()"
+      "match": "\\b(print|input|array_len|array_add|array_remove|array_contains|array_index_of|array_reverse|array_clear|array_insert|array_slice|array_concat|array_sort|to_string|to_number|round_number|sqrt_number|error|string_len|string_char_at|string_substring|string_contains|string_index_of|string_replace|string_split|string_trim|string_to_lower|string_to_upper)(?=\\s*\\()"
     },
     "special-variables": {
       "name": "variable.language.this.benita",

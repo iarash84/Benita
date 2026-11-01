@@ -4,11 +4,11 @@ number myVar;
 string fileContent;
 
 _main_() {
-    if (file_exist("test.txt")) {
-        fileContent = file_read("test.txt");
-        print(fileContent);
+    File file = new File("test.txt");
+    if (file.exists()) {
+        print(file.readText());
     } else {
         print("File does not exist, creating new file with content.");
-        file_write("test.txt", "Hello, world!");
+        file.writeText("Hello, world!");
     }
 }

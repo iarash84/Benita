@@ -245,6 +245,8 @@ public sealed class BuiltInClassRegistry
     {
         BuiltInClassRegistry registry = new();
         registry.Register(new NativeCounterClass());
+        registry.Register(new DateTimeClass());
+        registry.Register(new FileClass());
         return registry;
     }
 }

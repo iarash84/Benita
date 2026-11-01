@@ -29,10 +29,6 @@ internal static class BuiltInRegistry
     {
         yield return Define<Utility>("print", Types.Void, Types.Any);
         yield return Define<Utility>("input", Types.String);
-        yield return Define<FileManagement>("file_read", Types.String, Types.String);
-        yield return Define<FileManagement>("file_write", Types.Void, Types.String, Types.String);
-        yield return Define<FileManagement>("file_exist", Types.Bool, Types.String);
-        yield return Define<FileManagement>("file_delete", Types.Bool, Types.String);
         yield return Define<ArrayManagement>("array_len", Types.Number, Types.AnyArray);
         yield return Define<ArrayManagement>("array_add", Types.AnyArray, Types.AnyArray, Types.Any);
         yield return Define<ArrayManagement>("array_remove", Types.AnyArray, Types.AnyArray, Types.Number);

@@ -143,7 +143,7 @@ public class ExampleProgramTests
 
             var output = ExecuteExample("file-delete.ben");
             Assert.IsFalse(File.Exists(Path.Combine(temporaryDirectory, "test.txt")));
-            StringAssert.Contains(output, "file deleted sucessfully");
+            StringAssert.Contains(output, "file deleted successfully");
         }
         finally
         {

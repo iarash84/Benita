@@ -63,6 +63,94 @@ public class BuiltInClassTests
     }
 
     [TestMethod]
+    public void BuiltInClass_DateTimeSupportsImmutableOperationsAndFormatting()
+    {
+        const string source = """
+            _main_() {
+                DateTime initial = new DateTime(0);
+                DateTime later = initial.addHours(2.5);
+                print(initial.year);
+                print(later.timestamp);
+                print(initial.differenceInSeconds(later));
+                print(initial.isBefore(later));
+                print(later.isAfter(initial));
+                print(initial.format("yyyy-MM-dd HH:mm:ss"));
+            }
+            """;
+        using var output = new ConsoleOutput();
+
+        new CompilerClass().Exec(source, optimizeAst: true);
+
+        Assert.AreEqual(
+            $"1970{Environment.NewLine}" +
+            $"9000{Environment.NewLine}" +
+            $"-9000{Environment.NewLine}" +
+            $"True{Environment.NewLine}" +
+            $"True{Environment.NewLine}" +
+            $"1970-01-01 00:00:00{Environment.NewLine}",
+            output.GetOutput());
+    }
+
+    [TestMethod]
+    public void BuiltInClass_FileSupportsTextOperationsAndReadOnlyMetadata()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"benita-{Guid.NewGuid():N}.txt");
+        string copyPath = path + ".copy";
+        try
+        {
+            string source = $$"""
+                _main_() {
+                    File file = new File("{{path.Replace("\\", "\\\\")}}");
+                    print(file.exists());
+                    file.writeText("Hello");
+                    file.appendText(" Benita");
+                    print(file.exists());
+                    print(file.readText());
+                    print(file.length > 0);
+                    file.copyTo("{{copyPath.Replace("\\", "\\\\")}}");
+                    File copy = new File("{{copyPath.Replace("\\", "\\\\")}}");
+                    print(copy.exists());
+                    file.delete();
+                    print(file.exists());
+                }
+                """;
+            using var output = new ConsoleOutput();
+
+            new CompilerClass().Exec(source, optimizeAst: true);
+
+            Assert.AreEqual(
+                $"False{Environment.NewLine}" +
+                $"True{Environment.NewLine}" +
+                $"Hello Benita{Environment.NewLine}" +
+                $"True{Environment.NewLine}" +
+                $"True{Environment.NewLine}" +
+                $"False{Environment.NewLine}",
+                output.GetOutput());
+        }
+        finally
+        {
+            File.Delete(path);
+            File.Delete(copyPath);
+        }
+    }
+
+    [TestMethod]
+    public void BuiltInClass_DateTimeRejectsWritablePropertiesAndInvalidTimestamp()
+    {
+        SemanticException semanticException = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check("_main_() { DateTime value = new DateTime(0); value.year = 2024; }"));
+
+        Assert.AreEqual("BEN3001", semanticException.Code);
+
+        BuiltInClassRegistry registry = BuiltInClassRegistry.CreateDefault();
+        Assert.IsTrue(registry.TryGet("DateTime", out BuiltInClassDefinition definition));
+        BuiltInException runtimeException = Assert.ThrowsException<BuiltInException>(() =>
+            definition.Create([double.PositiveInfinity]));
+
+        Assert.AreEqual("BEN4101", runtimeException.Code);
+    }
+
+    [TestMethod]
     public void BuiltInClass_InvalidCallsAndPropertyAccessAreRejectedSemantically()
     {
         BuiltInClassRegistry registry = BuiltInClassRegistry.CreateDefault();

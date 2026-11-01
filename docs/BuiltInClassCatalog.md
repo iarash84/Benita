@@ -211,3 +211,273 @@ state در هر `NativeCounterInstance` نگهداری می‌شود؛ بناب�
 | سازنده | `NativeCounter(number initialValue)` | ایجاد شمارنده با مقدار اولیه |
 | متد | `increment(number amount) -> number` | افزایش مقدار و بازگرداندن مقدار جدید |
 | property | `value: number` | خواندن و جایگزینی مقدار فعلی |
+
+---
+
+## `DateTime`
+
+### وضعیت و مدل زمانی
+
+| مورد | مقدار |
+|---|---|
+| وضعیت | موجود و فعال |
+| نام runtime | `DateTime` |
+| مدل مقدار | immutable |
+| واحد `timestamp` | ثانیه از Unix epoch |
+| منطقهٔ زمانی | UTC |
+| overload | ندارد |
+
+`DateTime` یک لحظهٔ زمانی را به‌صورت UTC نگهداری می‌کند. مقدار سازنده و property `timestamp` تعداد ثانیه‌های سپری‌شده از `1970-01-01 00:00:00 UTC` هستند. مقدار می‌تواند اعشاری باشد و دقت زیرثانیه‌ای آن در representation داخلی حفظ می‌شود.
+
+کلاس immutable است: متدهای `addDays` و `addHours` نمونهٔ جدید برمی‌گردانند و نمونهٔ اصلی را تغییر نمی‌دهند. این ویژگی باعث می‌شود استفاده از آن در task capture و rollback نیازمند اشتراک state mutable نباشد.
+
+### سازنده
+
+#### `DateTime(number timestamp)`
+
+یک لحظهٔ زمانی را از Unix timestamp بر حسب ثانیه می‌سازد.
+
+| پارامتر | نوع | اجباری | توضیح |
+|---|---|---:|---|
+| `timestamp` | `number` | بله | تعداد ثانیه نسبت به Unix epoch در UTC |
+
+نمونه:
+
+```benita
+_main_() {
+    DateTime epoch = new DateTime(0);
+    print(epoch.year);  // 1970
+    print(epoch.month); // 1
+    print(epoch.day);   // 1
+}
+```
+
+مقدارهای `NaN`، مثبت بی‌نهایت، منفی بی‌نهایت و timestamp خارج از محدودهٔ پشتیبانی‌شده در runtime رد می‌شوند.
+
+### متدها
+
+#### `addDays(number amount) -> DateTime`
+
+تعداد `amount` روز به مقدار زمانی اضافه می‌کند و یک نمونهٔ جدید برمی‌گرداند. `amount` می‌تواند اعشاری یا منفی باشد.
+
+#### `addHours(number amount) -> DateTime`
+
+تعداد `amount` ساعت به مقدار زمانی اضافه می‌کند و یک نمونهٔ جدید برمی‌گرداند.
+
+```benita
+_main_() {
+    DateTime start = new DateTime(0);
+    DateTime next = start.addHours(2.5);
+
+    print(start.timestamp); // 0
+    print(next.timestamp);  // 9000
+}
+```
+
+#### `differenceInSeconds(DateTime other) -> number`
+
+اختلاف زمانی را به‌صورت `this.timestamp - other.timestamp` بر حسب ثانیه برمی‌گرداند. اگر نمونهٔ فعلی بعد از `other` باشد، مقدار مثبت است؛ در غیر این صورت مقدار منفی خواهد بود.
+
+```benita
+_main_() {
+    DateTime first = new DateTime(0);
+    DateTime second = first.addHours(2);
+
+    print(second.differenceInSeconds(first)); // 7200
+    print(first.differenceInSeconds(second)); // -7200
+}
+```
+
+#### `format(string pattern) -> string`
+
+مقدار UTC را با patternهای قالب‌بندی تاریخ و زمان .NET، با فرهنگ invariant، به رشته تبدیل می‌کند.
+
+```benita
+_main_() {
+    DateTime epoch = new DateTime(0);
+    print(epoch.format("yyyy-MM-dd HH:mm:ss")); // 1970-01-01 00:00:00
+}
+```
+
+#### `isBefore(DateTime other) -> bool`
+
+بررسی می‌کند که نمونهٔ فعلی پیش از `other` قرار دارد یا خیر.
+
+#### `isAfter(DateTime other) -> bool`
+
+بررسی می‌کند که نمونهٔ فعلی پس از `other` قرار دارد یا خیر.
+
+### ویژگی‌ها
+
+تمام propertyهای `DateTime` فقط خواندنی هستند:
+
+| Name | Type | Read | Write | توضیح |
+|---|---|---:|---:|---|
+| `year` | `number` | بله | خیر | سال UTC |
+| `month` | `number` | بله | خیر | ماه UTC از 1 تا 12 |
+| `day` | `number` | بله | خیر | روز ماه UTC |
+| `hour` | `number` | بله | خیر | ساعت UTC از 0 تا 23 |
+| `minute` | `number` | بله | خیر | دقیقه UTC |
+| `second` | `number` | بله | خیر | ثانیه UTC |
+| `timestamp` | `number` | بله | خیر | Unix timestamp بر حسب ثانیه |
+
+### خطاها و محدودیت‌ها
+
+- `BEN3001`: تعداد یا type نادرست آرگومان‌ها، member ناشناخته یا تلاش برای نوشتن در propertyهای فقط‌خواندنی.
+- `BEN4101`: timestamp غیرقابل‌نمایش، نتیجهٔ runtime ناسازگار یا خطای داخلی اجرای عملیات زمانی.
+- کلاس متد static مانند `now()` ندارد؛ برای زمان فعلی باید timestamp آن توسط host یا API دیگری به برنامه داده شود.
+- منطقهٔ زمانی قابل تغییر نیست و تمام اجزای تقویمی با UTC محاسبه می‌شوند.
+- propertyها قابل انتساب نیستند؛ برای تغییر زمان باید نمونهٔ جدیدی از `addDays` یا `addHours` دریافت شود.
+
+### پیاده‌سازی و تست
+
+| بخش | مرجع |
+|---|---|
+| definition و instance | [`Benita/Runtime/BuiltIns/DateTime.cs`](../Benita/Runtime/BuiltIns/DateTime.cs) |
+| قرارداد registry | [`BuiltInClassDefinition`](../Benita/Runtime/BuiltIns/BuiltInClassRegistry.cs:34) |
+| ثبت پیش‌فرض | [`BuiltInClassRegistry.CreateDefault()`](../Benita/Runtime/BuiltIns/BuiltInClassRegistry.cs:244) |
+| تست API و validation | [`BenitaTestProject/BuiltInClassTests.cs`](../BenitaTestProject/BuiltInClassTests.cs:65) |
+
+### خلاصهٔ API
+
+| عضو | Signature | اثر |
+|---|---|---|
+| سازنده | `DateTime(number timestamp)` | ساخت مقدار زمانی UTC از Unix timestamp |
+| متد | `addDays(number amount) -> DateTime` | ایجاد زمان جدید با روزهای اضافه‌شده |
+| متد | `addHours(number amount) -> DateTime` | ایجاد زمان جدید با ساعت‌های اضافه‌شده |
+| متد | `differenceInSeconds(DateTime other) -> number` | محاسبهٔ اختلاف signed بر حسب ثانیه |
+| متد | `format(string pattern) -> string` | قالب‌بندی زمان UTC |
+| متد | `isBefore(DateTime other) -> bool` | مقایسهٔ قبل‌بودن |
+| متد | `isAfter(DateTime other) -> bool` | مقایسهٔ بعد‌بودن |
+| property | `year`, `month`, `day`, `hour`, `minute`, `second`, `timestamp` | اجزای UTC و timestamp فقط‌خواندنی |
+
+---
+
+## `File`
+
+### وضعیت و مدل resource
+
+| مورد | مقدار |
+|---|---|
+| وضعیت | موجود و فعال |
+| نام runtime | `File` |
+| حوزه | عملیات متنی و مدیریت مسیر فایل |
+| نگهداری file handle | ندارد |
+| mutable | فایل mutable است؛ instance فقط مسیر را نگهداری می‌کند |
+| overload | ندارد |
+
+`File` یک مسیر فایل را به‌عنوان state immutable نمونه نگهداری می‌کند و عملیات متن، وجود، اندازه، حذف، کپی و انتقال را ارائه می‌دهد. این کلاس file handle دائمی باز نمی‌کند؛ هر عملیات فایل را مستقل انجام می‌دهد و handle توسط API فایل .NET بسته می‌شود. بنابراین clone کردن نمونه فقط مسیر را کپی می‌کند و resource مشترکی بین clone و نمونهٔ اصلی وجود ندارد.
+
+### سازنده
+
+#### `File(string path)`
+
+یک instance برای مسیر `path` می‌سازد. ساخت instance فایل را ایجاد یا باز نمی‌کند.
+
+| پارامتر | نوع | اجباری | توضیح |
+|---|---|---:|---|
+| `path` | `string` | بله | مسیر نسبی یا مطلق فایل |
+
+رشتهٔ خالی یا whitespace به‌عنوان مسیر معتبر پذیرفته نمی‌شود.
+
+```benita
+_main_() {
+    File file = new File("data/output.txt");
+    print(file.path);
+}
+```
+
+### متدها
+
+#### `readText() -> string`
+
+تمام متن فایل را با encoding پیش‌فرض runtime می‌خواند. اگر فایل وجود نداشته باشد یا دسترسی کافی نباشد، خطای runtime تولید می‌شود.
+
+#### `writeText(string content) -> void`
+
+محتوای فایل را با `content` جایگزین می‌کند و در صورت نیاز فایل را ایجاد می‌کند.
+
+#### `appendText(string content) -> void`
+
+`content` را به انتهای فایل اضافه می‌کند و در صورت نیاز فایل را ایجاد می‌کند.
+
+#### `exists() -> bool`
+
+وجود فایل در مسیر فعلی را بررسی می‌کند. این متد برای مسیر ناموجود `false` برمی‌گرداند و برای بررسی وجود، خطا تولید نمی‌کند.
+
+#### `delete() -> void`
+
+فایل را حذف می‌کند. حذف فایل ناموجود مطابق رفتار API فایل runtime بدون نگهداری handle دائمی انجام می‌شود.
+
+#### `copyTo(string destination) -> void`
+
+فایل را به `destination` کپی می‌کند. شکست عملیات، مانند مقصد نامعتبر یا نبودن فایل مبدأ، خطای runtime است.
+
+#### `moveTo(string destination) -> void`
+
+فایل را به `destination` منتقل می‌کند. پس از موفقیت، مسیر نگهداری‌شده در instance همچنان مسیر اولیه است؛ برای کار با مقصد باید یک `File` جدید ساخته شود.
+
+### ویژگی‌ها
+
+| Name | Type | Read | Write | توضیح |
+|---|---|---:|---:|---|
+| `path` | `string` | بله | خیر | مسیر ثبت‌شده در instance |
+| `length` | `number` | بله | خیر | اندازهٔ فعلی فایل بر حسب byte |
+
+`length` فقط برای فایل موجود قابل خواندن است. مقدار آن اندازهٔ فعلی روی دیسک است و با `writeText` یا `appendText` تغییر می‌کند.
+
+### نمونهٔ کامل و قابل اجرا
+
+```benita
+_main_() {
+    File file = new File("data/notes.txt");
+
+    file.writeText("First line");
+    file.appendText("\\nSecond line");
+
+    if (file.exists()) {
+        print(file.readText());
+        print(file.length > 0);
+    }
+
+    File backup = new File("data/notes.backup.txt");
+    file.copyTo(backup.path);
+    print(backup.exists());
+
+    file.delete();
+    backup.delete();
+}
+```
+
+### خطاها و محدودیت‌ها
+
+- `BEN3001`: تعداد یا type نادرست آرگومان‌ها، member ناشناخته یا تلاش برای نوشتن در `path` و `length`.
+- `BEN4101`: خطای I/O، مسیر نامعتبر، نبودن فایل برای `readText`/`copyTo`/`moveTo`، دسترسی ناکافی یا مقدار runtime ناسازگار.
+- کلاس فقط عملیات متن را پوشش می‌دهد و API stream، encoding انتخابی یا file handle دائمی ندارد.
+- `path` پس از ساخت قابل تغییر نیست؛ برای مسیر جدید یک instance جدید بسازید.
+- `length` بر حسب byte است، نه تعداد کاراکترهای متن.
+- هم‌زمانی عملیات روی یک فایل توسط چند instance به عهدهٔ برنامه است و کلاس locking اختصاصی ارائه نمی‌دهد.
+
+### پیاده‌سازی و تست
+
+| بخش | مرجع |
+|---|---|
+| definition و instance | [`Benita/Runtime/BuiltIns/File.cs`](../Benita/Runtime/BuiltIns/File.cs) |
+| قرارداد registry | [`BuiltInClassDefinition`](../Benita/Runtime/BuiltIns/BuiltInClassRegistry.cs:34) |
+| ثبت پیش‌فرض | [`BuiltInClassRegistry.CreateDefault()`](../Benita/Runtime/BuiltIns/BuiltInClassRegistry.cs:244) |
+| تست عملیات فایل و lifecycle | [`BenitaTestProject/BuiltInClassTests.cs`](../BenitaTestProject/BuiltInClassTests.cs:95) |
+
+### خلاصهٔ API
+
+| عضو | Signature | اثر |
+|---|---|---|
+| سازنده | `File(string path)` | ساخت wrapper مسیر بدون بازکردن handle |
+| متد | `readText() -> string` | خواندن کل متن فایل |
+| متد | `writeText(string content) -> void` | جایگزینی محتوای فایل |
+| متد | `appendText(string content) -> void` | افزودن متن به انتهای فایل |
+| متد | `exists() -> bool` | بررسی وجود فایل |
+| متد | `delete() -> void` | حذف فایل |
+| متد | `copyTo(string destination) -> void` | کپی فایل به مقصد |
+| متد | `moveTo(string destination) -> void` | انتقال فایل به مقصد |
+| property | `path: string` | مسیر فقط‌خواندنی |
+| property | `length: number` | اندازهٔ فعلی فایل بر حسب byte |

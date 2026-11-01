@@ -386,42 +386,58 @@ _main_() {
         }
 
         [TestMethod]
-        public void FileExistReadAndWriteFunctionsPassesValidation()
+        public void FileReadWriteAndExistencePassesValidation()
         {
-            string source = @"
-number myVar;
-string fileContent;
+            string path = Path.Combine(Path.GetTempPath(), $"benita-integration-{Guid.NewGuid():N}.txt");
+            string escapedPath = path.Replace("\\", "\\\\");
+            string source = $$"""
+                _main_() {
+                    File file = new File("{{escapedPath}}");
+                    if (file.exists()) {
+                        print(file.readText());
+                    } else {
+                        print("File does not exist, creating new file with content.");
+                        file.writeText("Hello, world!");
+                    }
+                }
+                """;
 
-_main_() {
-    if (file_exist(""test.txt"")) {
-        fileContent = file_read(""test.txt"");
-        print(fileContent);
-    } else {
-        print(""File does not exist, creating new file with content."");
-        file_write(""test.txt"", ""Hello, world!"");
-    }
-}";
-
-            _compiler.Check(source);
+            try
+            {
+                _compiler.Check(source);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
         }
 
         [TestMethod]
-        public void FileDeleteFunctionPassesValidation()
+        public void FileDeletePassesValidation()
         {
-            string source = @"
-_main_() {
-    string file_path = ""test.txt"";
-    if (file_exist(file_path)) {
-        file_delete(file_path);
-        print(""file deleted sucessfully"");
-    } else {
-        print(""File does not exist."");
-    }
-}";
+            string path = Path.Combine(Path.GetTempPath(), $"benita-integration-{Guid.NewGuid():N}.txt");
+            string escapedPath = path.Replace("\\", "\\\\");
+            string source = $$"""
+                _main_() {
+                    File file = new File("{{escapedPath}}");
+                    if (file.exists()) {
+                        file.delete();
+                        print("file deleted successfully");
+                    } else {
+                        print("File does not exist.");
+                    }
+                }
+                """;
 
-            _compiler.Check(source);
-            _compiler.Exec(source);
-
+            try
+            {
+                _compiler.Check(source);
+                _compiler.Exec(source);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
         }
 
         [TestMethod]
