@@ -13,12 +13,12 @@ public class ErrorHandlingTests
         const string source = """
             _main_() {
                 try {
-                    throw error("APP100", "operation failed");
+                    throw Error.create("APP100", "operation failed");
                 } catch (failure) {
-                    print(failure.code);
-                    print(failure.message);
+                    Console.print(failure.code);
+                    Console.print(failure.message);
                 } finally {
-                    print("cleanup");
+                    Console.print("cleanup");
                 }
             }
             """;
@@ -35,9 +35,9 @@ public class ErrorHandlingTests
         const string source = """
             _main_() {
                 try {
-                    number value = to_number("not-a-number");
+                    number value = Convert.to_number("not-a-number");
                 } catch (failure) {
-                    print(failure.code);
+                    Console.print(failure.code);
                 }
             }
             """;
@@ -53,9 +53,9 @@ public class ErrorHandlingTests
         const string source = """
             func value() -> number {
                 try { return 7; }
-                finally { print("finally"); }
+                finally { Console.print("finally"); }
             }
-            _main_() { print(value()); }
+            _main_() { Console.print(value()); }
             """;
 
         using var output = new ConsoleOutput();
@@ -68,8 +68,8 @@ public class ErrorHandlingTests
     {
         const string source = """
             func value() -> number {
-                try { print("work"); }
-                finally { throw error("STOP", "stopped"); }
+                try { Console.print("work"); }
+                finally { throw Error.create("STOP", "stopped"); }
             }
             _main_() { value(); }
             """;
@@ -86,10 +86,10 @@ public class ErrorHandlingTests
         const string source = """
             _main_() {
                 try {
-                    try { throw error("INNER", "failed"); }
-                    finally { print("inner cleanup"); }
+                    try { throw Error.create("INNER", "failed"); }
+                    finally { Console.print("inner cleanup"); }
                 } catch (failure) {
-                    print(failure.code);
+                    Console.print(failure.code);
                 }
             }
             """;
@@ -105,9 +105,9 @@ public class ErrorHandlingTests
         const string source = """
             _main_() {
                 string failure = "outer";
-                try { throw error("INNER", "failed"); }
-                catch (failure) { print(failure.code); }
-                print(failure);
+                try { throw Error.create("INNER", "failed"); }
+                catch (failure) { Console.print(failure.code); }
+                Console.print(failure);
             }
             """;
 
@@ -118,13 +118,13 @@ public class ErrorHandlingTests
 
     [DataTestMethod]
     [DataRow("_main_() { throw \"bad\"; }", "requires an error value")]
-    [DataRow("_main_() { try { print(1); } }", "requires a catch or finally")]
-    [DataRow("_main_() { try {} catch (failure) {} print(failure.message); }", "Member access requires")]
+    [DataRow("_main_() { try { Console.print(1); } }", "requires a catch or finally")]
+    [DataRow("_main_() { try {} catch (failure) {} Console.print(failure.message); }", "Member access requires")]
     [DataRow("func value() -> number { try { return 1; } finally { return 2; } } _main_() {}", "return")]
     [DataRow("_main_() { while (true) { try {} finally { break; } } }", "break")]
     [DataRow("pkg error {} _main_() {}", "reserved")]
     [DataRow("interface error {} _main_() {}", "reserved")]
-    [DataRow("func error(string code, string message) -> error { return error(code, message); } _main_() {}", "reserved")]
+    [DataRow("func error(string code, string message) -> error { return Error.create(code, message); } _main_() {}", "reserved")]
     public void InvalidErrorHandling_IsRejected(string source, string expectedMessage)
     {
         try
@@ -149,7 +149,7 @@ public class ErrorHandlingTests
     public void UncaughtError_PreservesUserCodeAtProgramBoundary()
     {
         UnhandledErrorException exception = Assert.ThrowsException<UnhandledErrorException>(() =>
-            new CompilerClass().Exec("_main_() { throw error(\"APP900\", \"unhandled\"); }"));
+            new CompilerClass().Exec("_main_() { throw Error.create(\"APP900\", \"unhandled\"); }"));
 
         Assert.AreEqual("APP900", exception.Code);
         Assert.AreEqual("unhandled", exception.Description);

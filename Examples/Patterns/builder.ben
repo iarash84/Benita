@@ -10,7 +10,7 @@ pkg Computer {
     }
 
     public func describe() -> string {
-        return cpu + " / " + to_string(memory) + " GB";
+        return cpu + " / " + Convert.to_string(memory) + " GB";
     }
 }
 
@@ -39,5 +39,5 @@ _main_() {
     builder.set_memory(32);
 
     Computer computer = builder.build();
-    print(computer.describe());
+    Console.print(computer.describe());
 }

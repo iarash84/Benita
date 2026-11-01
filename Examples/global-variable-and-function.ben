@@ -9,7 +9,7 @@ func add(number a, number b) -> number {
 _main_() {
     number y = 20;
     number sum = add(x, y);
-    print(sum);
+    Console.print(sum);
     string message = "Hello, World!";
-    print(message);
+    Console.print(message);
 }

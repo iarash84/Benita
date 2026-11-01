@@ -24,8 +24,8 @@ public class AsyncAwaitTests
             _main_() {
                 Box box = new Box();
                 let operation = async mutate(box);
-                print(await operation);
-                print(box.value);
+                Console.print(await operation);
+                Console.print(box.value);
             }
             """;
 
@@ -45,8 +45,8 @@ public class AsyncAwaitTests
             _main_() {
                 let first = async add(10, 20);
                 let second = async add(1, 2);
-                print(await second);
-                print(await first);
+                Console.print(await second);
+                Console.print(await first);
             }
             """;
 
@@ -62,8 +62,8 @@ public class AsyncAwaitTests
             func value() -> number { return 42; }
             _main_() {
                 let operation = async value();
-                print(await operation);
-                print(await operation);
+                Console.print(await operation);
+                Console.print(await operation);
             }
             """;
 
@@ -76,13 +76,13 @@ public class AsyncAwaitTests
     public void Await_PropagatesTaskErrorToCatch()
     {
         const string source = """
-            func fail() -> number { throw error("ASYNC100", "task failed"); }
+            func fail() -> number { throw Error.create("ASYNC100", "task failed"); }
             _main_() {
                 let operation = async fail();
                 try { number result = await operation; }
                 catch (failure) {
-                    print(failure.code);
-                    print(failure.message);
+                    Console.print(failure.code);
+                    Console.print(failure.message);
                 }
             }
             """;
@@ -101,7 +101,7 @@ public class AsyncAwaitTests
                 number value = 7;
                 let operation = async identity(value);
                 value = 9;
-                print(await operation);
+                Console.print(await operation);
             }
             """;
 

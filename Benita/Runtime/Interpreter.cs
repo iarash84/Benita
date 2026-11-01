@@ -578,12 +578,6 @@ namespace Benita
                 }
             }
 
-            if (BuiltInRegistry.TryGet(node.FunctionName, out BuiltInDescriptor descriptor))
-            {
-                List<object> arguments = (from argument in node.Arguments select Visit(argument)).ToList();
-                return descriptor.HandlerFactory().HandleFunctionCall(node.FunctionName, arguments);
-            }
-
             throw new($"Unknown function '{node.FunctionName}'");
         }
 
@@ -1224,6 +1218,12 @@ namespace Benita
         private object VisitMemberAccessNode(MemberAccessNode node)
         {
             DebugLog($"VisitMemberAccessNode: ObjectName = {node.ObjectName}");
+
+            if (_context.BuiltInClasses.TryGet(node.ObjectName, out BuiltInClassDefinition? staticClass) &&
+                node.Expression is FunctionCallNode staticCall &&
+                staticClass.StaticMethods.ContainsKey(staticCall.FunctionName))
+                return staticClass.InvokeStatic(staticCall.FunctionName,
+                    staticCall.Arguments.Select(argument => Visit(argument)).ToList())!;
 
             if (node.ObjectName == "this" || node.ObjectName == _packageScope)
                 return Visit(node.Expression);

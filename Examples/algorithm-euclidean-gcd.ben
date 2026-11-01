@@ -12,5 +12,5 @@ func gcd(number first, number second) -> number {
 }
 
 _main_() {
-    print(gcd(48, 18));
+    Console.print(gcd(48, 18));
 }

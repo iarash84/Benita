@@ -20,5 +20,5 @@ pkg TimestampedMessage : Message {
 
 _main_() {
     Message message = new EncryptedMessage(new TimestampedMessage(new PlainMessage()));
-    print(message.content());
+    Console.print(message.content());
 }

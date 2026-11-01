@@ -25,7 +25,7 @@ func myFunction(number a, number b) -> number {
 _main_() {
     number x = 10;
     number y = 8;
-    print(x + y);
+    Console.print(x + y);
 }";
 
             _compiler.Check(source);
@@ -45,7 +45,7 @@ _main_() {
         [DataRow("bool[]")]
         public void UninitializedArray_UsesAnEmptyRuntimeArray(string arrayType)
         {
-            string source = $"_main_() {{ {arrayType} values; print(array_len(values)); }}";
+            string source = $"_main_() {{ {arrayType} values; Console.print(Array.length(values)); }}";
             using var consoleOutput = new ConsoleOutput();
 
             _compiler.Exec(source);
@@ -59,7 +59,7 @@ _main_() {
         [DataRow("bool", "False")]
         public void SizedArray_UsesTheElementTypeDefaultValue(string elementType, string expectedValue)
         {
-            string source = $"_main_() {{ number size = 2; {elementType}[] values = {elementType}[size]; print(array_len(values)); print(values[0]); }}";
+            string source = $"_main_() {{ number size = 2; {elementType}[] values = {elementType}[size]; Console.print(Array.length(values)); Console.print(values[0]); }}";
             using var consoleOutput = new ConsoleOutput();
 
             _compiler.Exec(source, optimizeAst: true);
@@ -84,9 +84,9 @@ _main_() {
         {
             const string source = """
                 _main_() {
-                    print(to_string(12));
-                    print(to_string(true));
-                    print(to_string("Benita"));
+                    Console.print(Convert.to_string(12));
+                    Console.print(Convert.to_string(true));
+                    Console.print(Convert.to_string("Benita"));
                 }
                 """;
             using var consoleOutput = new ConsoleOutput();
@@ -104,7 +104,7 @@ _main_() {
             const string source = """
                 number initial = value();
                 func value() -> number { return 7; }
-                _main_() { print(initial); }
+                _main_() { Console.print(initial); }
                 """;
 
             foreach (bool optimize in new[] { false, true })
@@ -127,13 +127,13 @@ func myFunction(number a, number b) -> number {
 _main_() {
     number x = 10;
     number y = 20;
-    print(x + y);
+    Console.print(x + y);
     number i = 0;
     while ( i < 5 ) {
         x++;
         i++;
     }
-    print(x);
+    Console.print(x);
 }";
             _compiler.Check(source);
 
@@ -156,7 +156,7 @@ func add(number a, number b) -> number {
 
 _main_() {
     number result = add(2, 3);
-    print(result);
+    Console.print(result);
 }";
             _compiler.Check(source);
 
@@ -174,7 +174,7 @@ _main_() {
             string source = @" 
 _main_()  {
     number result = 2 + 3;
-    print(result);
+    Console.print(result);
 }";
 
             _compiler.Check(source);
@@ -204,7 +204,7 @@ _main_() {
     number y = 20;
     number sum = add(x, y);              
     string message = concatenate(""hello"", "" world"");    
-    print(message);
+    Console.print(message);
 }";
 
             _compiler.Check(source);
@@ -222,10 +222,10 @@ _main_() {
         {
             string source = @"
 _main_() {
-    print(""Enter your name "");
-    string message = input();
-    print(""your name is "");
-    print(message);
+    Console.print(""Enter your name "");
+    string message = Console.input();
+    Console.print(""your name is "");
+    Console.print(message);
 }";
 
             _compiler.Check(source);
@@ -266,13 +266,13 @@ _main_() {
     string world = ""world!"";
     string message = concatenate(hello, world);
 
-    print(message);
+    Console.print(message);
 
     bool check = is_even(sum);
     if (check) {
-        print(""Sum is even."");
+        Console.print(""Sum is even."");
     } else {
-        print(""Sum is odd."");
+        Console.print(""Sum is odd."");
     }
     number i = 0;
     while ( i < 5 ) {
@@ -280,8 +280,8 @@ _main_() {
         i++;
     }
 
-    string userInput = input();
-    print(""You entered: "" + userInput);    
+    string userInput = Console.input();
+    Console.print(""You entered: "" + userInput);    
 }";
             _compiler.Check(source);
 
@@ -302,7 +302,7 @@ _main_() {
         {
             string source = @"
 func is_even() -> void {
-    print(""Sum is even."");
+    Console.print(""Sum is even."");
 }
 
 _main_() {
@@ -322,7 +322,7 @@ _main_() {
     number i = 0;
     while ( i < 5 ) {
          i++;
-         print(""While Test"");    
+         Console.print(""While Test"");    
     }  
 }";
             _compiler.Check(source);
@@ -346,9 +346,9 @@ func is_even(number a) -> bool {
 _main_() {
     number num = 12;           
     if (is_even(num)) {
-        print(""Sum is even."");
+        Console.print(""Sum is even."");
     } else {
-        print(""Sum is odd."");
+        Console.print(""Sum is odd."");
     }   
 }";
 
@@ -369,9 +369,9 @@ _main_() {
 _main_() {
     number num = 12;           
     if (num == 12 || num > 15 && num == 10) {
-        print(""YES"");
+        Console.print(""YES"");
     } else {
-        print(""NO"");
+        Console.print(""NO"");
     }   
 }";
 
@@ -394,9 +394,9 @@ _main_() {
                 _main_() {
                     File file = new File("{{escapedPath}}");
                     if (file.exists()) {
-                        print(file.readText());
+                        Console.print(file.readText());
                     } else {
-                        print("File does not exist, creating new file with content.");
+                        Console.print("File does not exist, creating new file with content.");
                         file.writeText("Hello, world!");
                     }
                 }
@@ -422,9 +422,9 @@ _main_() {
                     File file = new File("{{escapedPath}}");
                     if (file.exists()) {
                         file.delete();
-                        print("file deleted successfully");
+                        Console.print("file deleted successfully");
                     } else {
-                        print("File does not exist.");
+                        Console.print("File does not exist.");
                     }
                 }
                 """;
@@ -449,7 +449,7 @@ number[] arr = [10, 20, 30];  // Example array declaration with initializer
 _main_() {
     number[] anotherArr;  // Example array declaration without initializer
     anotherArr = [5, 10, 15];
-    print(anotherArr[1]);
+    Console.print(anotherArr[1]);
 }";
 
             _compiler.Check(source);
@@ -473,8 +473,8 @@ _main_() {
     number[] arr = [10, 20, 30, 40, 50];
     number i = 0;
     arr[2] = 5;
-    while (i < array_len(arr)) {
-        print(""Element at index "" + i + "": "" + arr[i]);
+    while (i < Array.length(arr)) {
+        Console.print(""Element at index "" + i + "": "" + arr[i]);
         i++;
     }                     
 }";
@@ -496,12 +496,12 @@ _main_() {
             string source = @"
 _main_() {                                        
     number[] arr = [10, 20, 30, 40, 50];
-    arr = array_remove(arr , 2);
-    arr = array_add(arr, 60);
-    arr = array_add(arr, 70);
+    arr = Array.remove(arr , 2);
+    arr = Array.add(arr, 60);
+    arr = Array.add(arr, 70);
     number i = 0;            
-    while (i < array_len(arr)) {
-        print(""Element at index "" + i + "": "" + arr[i]);
+    while (i < Array.length(arr)) {
+        Console.print(""Element at index "" + i + "": "" + arr[i]);
         i++;
     }                     
 }";
@@ -522,18 +522,18 @@ _main_() {
         {
             string source = @"
 _main_() {
-    print(""Enter The Number Of Terms:"");
-    number n = to_number(input());
+    Console.print(""Enter The Number Of Terms:"");
+    number n = Convert.to_number(Console.input());
     number f = 0; 
     number f1=-1; 
     number f2=1;
-    print(""The Fibonacci Series is:"");
+    Console.print(""The Fibonacci Series is:"");
     while(n>0)
     {
         f=f1+f2;
         f1=f2;
         f2=f;
-        print(f);
+        Console.print(f);
         n--;
     }                
 }";
@@ -572,7 +572,7 @@ _main_() {
    number x = 20; 
    number i = 0;
    while(i <= x) {
-      print(i + "" => "" + fib(i));
+      Console.print(i + "" => "" + fib(i));
       i++;
    }
 }";
@@ -604,7 +604,7 @@ func Factorial(number n) -> number
 _main_()
 {
 	number a = 5;
-	print(Factorial(a));
+	Console.print(Factorial(a));
 }
 ";
             _compiler.Check(source);
@@ -638,7 +638,7 @@ return result;
 
  _main_()
 {
-print(CheckNumber(5));
+Console.print(CheckNumber(5));
 }
 ";
             _compiler.Check(source);
@@ -659,7 +659,7 @@ print(CheckNumber(5));
 _main_() {
 	number i;
 	for( i =0; i < 5; i++){
-		print(""run count"");
+		Console.print(""run count"");
 	}	
 }
 ";
@@ -690,14 +690,14 @@ func fib(number x) -> number
 
 func chap(number content) -> void
 {
-	print(content);
+	Console.print(content);
 }
 
 
 _main_() {
    for(number i =0; i <= 20; i++) {
       chap(fib(i));
-	  //print(fib(i));
+	  //Console.print(fib(i));
    }
 }
 ";
@@ -719,12 +719,12 @@ _main_() {
             string source = @"
 func test(number i) -> void
 {
-	print(""yess"");
+	Console.print(""yess"");
 	if(i == 5){
-		print(""five"");
+		Console.print(""five"");
 		return;
 	}
-	print(""Nop"");
+	Console.print(""Nop"");
 	return;
 }
 
@@ -752,7 +752,7 @@ func myFunction(number a, number b) -> number {
 
 _main_() {
 	let z = myFunction(2, 7);
-	print(z);
+	Console.print(z);
     let x = 10;
 	let i = 0;
     while ( i < 5 ) {
@@ -760,10 +760,10 @@ _main_() {
 		i++;
     }
 	z = 40;
-    print(x);
+    Console.print(x);
 	let string_var1 = ""hassan"";
 	let string_var = ""this is a test"" + "" => "" + string_var1 + "" -> "" + x;
-	print(string_var);
+	Console.print(string_var);
 
 }";
             _compiler.Check(source);
@@ -796,7 +796,7 @@ pkg myPackage {
 
 _main_() {
 	let classInstance = new myPackage(5);
-	print(classInstance.Second(2));
+	Console.print(classInstance.Second(2));
 }";
             _compiler.Check(source);
 
@@ -815,7 +815,7 @@ _main_() {
             string source = @"
 _main_() {
 	for(let i =0; i < 5; i++){
-		print(i + "" this is a test"");
+		Console.print(i + "" this is a test"");
 	}
 }";
             _compiler.Check(source);
@@ -838,7 +838,7 @@ pkg My{
 }
 _main_(){
     let m = new My();
-    print(m.var);
+    Console.print(m.var);
 }";
             _compiler.Check(source);
 
@@ -856,7 +856,7 @@ _main_(){
         {
             string source = @"
 let text = ""hello world"";
-print(text);
+Console.print(text);
 ";
             _compiler.Check(source);
 
@@ -878,9 +878,9 @@ func Add(number i, number j) -> number{
 }
 
 for(let i =0; i <5; i++){
-	print(""this is a test"");
+	Console.print(""this is a test"");
 }
-print(Add(4, 6));
+Console.print(Add(4, 6));
 ";
             _compiler.Check(source);
 
@@ -904,7 +904,7 @@ pkg My{
 	}
 }
 let m = new My();
-print(m.AddPrint(3));
+Console.print(m.AddPrint(3));
 ";
             _compiler.Check(source);
 
@@ -933,17 +933,17 @@ func Add(number i, number j) -> number{
 }
 
 let text = ""hello world"";
-print(text);
+Console.print(text);
 for(let i =0; i <5; i++){
-	print(""this is a test"");
+	Console.print(""this is a test"");
 }
-print(Add(4, 6));
+Console.print(Add(4, 6));
 let m = new My();
-print(m.AddChap(3));
+Console.print(m.AddChap(3));
 
 
 _main_(){
-	print(""YES"");
+	Console.print(""YES"");
 }";
             _compiler.Check(source);
 
@@ -962,7 +962,7 @@ _main_(){
             string source = @"
 func BubbleSort(number[] sort_array) -> number[]
 {
-	let n = array_len(sort_array);
+	let n = Array.length(sort_array);
 	for (number i = 0; i < n - 1; i++)
 	{
 		for (number j = 0; j < n - i - 1; j++)
@@ -981,18 +981,18 @@ func BubbleSort(number[] sort_array) -> number[]
 
 func ArrayPrint(number[] print_array) -> void {
 	let i = 0;
-    while (i < array_len(print_array)) {
-        print(""Element at index "" + i + "": "" + print_array[i]);
+    while (i < Array.length(print_array)) {
+        Console.print(""Element at index "" + i + "": "" + print_array[i]);
         i++;
     }    
 }
 
 _main_()
 {
-	print(""befor Bubble sorting"");
+	Console.print(""befor Bubble sorting"");
 	number[] first_array = [64, 34, 25, 12, 22, 11, 90];
 	ArrayPrint(first_array);
-	print(""after Bubble sorting"");
+	Console.print(""after Bubble sorting"");
 	number[] second_array = BubbleSort(first_array);
 	ArrayPrint(second_array);
 }";
@@ -1014,14 +1014,14 @@ _main_()
  func BinarySearchIterative(number[] bsi_array, number key) -> number
     {	
         let min = 0;
-        let max = array_len(bsi_array) - 1;
+        let max = Array.length(bsi_array) - 1;
 		
 		number mid;
 
         while (min <= max)
         {
 			mid = min + max;
-			mid = round_number(mid/2);
+			mid = Math.round(mid/2);
             if (bsi_array[mid] == key)
             {
                 return mid;
@@ -1046,11 +1046,11 @@ _main_()
 
 	if (result != -1)
 	{
-		print(""Element found at index "" + result);
+		Console.print(""Element found at index "" + result);
 	}
 	else
 	{
-		print(""Element not found in the array"");
+		Console.print(""Element not found in the array"");
 	}
 
 }";
@@ -1074,7 +1074,7 @@ func BinarySearch(number[] arr, number target, number left, number right) -> num
 	if (right >= left)
 	{
 		number distance = right - left;
-		number mid = round_number(left + distance / 2);
+		number mid = Math.round(left + distance / 2);
 
 		// Check if the target is present at the mid
 		if (arr[mid] == target)
@@ -1102,15 +1102,15 @@ _main_()
 	number[] array = [ 2, 3, 4, 10, 40 ];
 	number globalTarget = 10;
 
-	number result = BinarySearch(array, globalTarget, 0, array_len(array) - 1);
+	number result = BinarySearch(array, globalTarget, 0, Array.length(array) - 1);
 
 	if (result != -1)
 	{
-		print(""Element found at index => "" + result);
+		Console.print(""Element found at index => "" + result);
 	}
 	else
 	{
-		print(""Element not found in the array"");
+		Console.print(""Element not found in the array"");
 	}
 }
 ";
@@ -1163,16 +1163,16 @@ func QuickSort(number[] array, number low, number high) -> void
 }
 func ArrayPrint(number[] print_array) -> void {
 	let i = 0;
-    while (i < array_len(print_array)) {
-        print(""Element at index "" + i + "": "" + print_array[i]);
+    while (i < Array.length(print_array)) {
+        Console.print(""Element at index "" + i + "": "" + print_array[i]);
         i++;
     }    
 }
 _main_()
 {
 	number[] array = [ 34, 7, 23, 32, 5, 62 ];
-	QuickSort(array, 0, array_len(array) - 1);
-	print(""Sorted array: "");
+	QuickSort(array, 0, Array.length(array) - 1);
+	Console.print(""Sorted array: "");
 	ArrayPrint(array);
 }";
             _compiler.Check(source);
@@ -1196,7 +1196,7 @@ for(let i= 0; i <= 10; i++)
 	{
 		continue;
 	}
-	print(i);
+	Console.print(i);
 }";
             _compiler.Check(source);
 
@@ -1219,7 +1219,7 @@ for(let i= 0; i <= 10; i++)
 	{
 		break;
 	}
-	print(i);
+	Console.print(i);
 }";
             _compiler.Check(source);
 
@@ -1249,9 +1249,9 @@ func PowerOfTwo(number n) -> bool  {
 
 for(let i = 0; i <= 100 ; i++)
 	if(PowerOfTwo(i))
-		print(i +"" is PowerOfTwo"");
+		Console.print(i +"" is PowerOfTwo"");
 	//else
-	//	print(i +"" is not PowerOfTwo"");";
+	//	Console.print(i +"" is not PowerOfTwo"");";
             _compiler.Check(source);
 
 
@@ -1270,16 +1270,16 @@ for(let i = 0; i <= 100 ; i++)
 for (let i = 1; i <= 30; i++)
 	// Check if the number is a multiple of both 3 and 5
 	if (i % 3 == 0 && i % 5 == 0)	
-		print(""FizzBuzz"");	
+		Console.print(""FizzBuzz"");	
 	// Check if the number is a multiple of 3
 	else if (i % 3 == 0)	
-		print(""Fizz"");	
+		Console.print(""Fizz"");	
 	// Check if the number is a multiple of 5
 	else if (i % 5 == 0)	
-		print(""Buzz"");	
+		Console.print(""Buzz"");	
 	// If the number is not a multiple of 3 or 5, print the number
 	else
-		print(i);";
+		Console.print(i);";
             _compiler.Check(source);
 
 
@@ -1300,7 +1300,7 @@ func isPrime(number num) -> bool {
     if (num <= 1) {
         return false;
     }
-    for (let i = 2; i <= sqrt_number(num); i++) {
+    for (let i = 2; i <= Math.sqrt(num); i++) {
         if (num % i == 0) {
             return false;
         }
@@ -1313,7 +1313,7 @@ func generatePrimesUpTo(number limit) -> number[]  {
     number[] primes = [];
     for (let i = 2; i <= limit; i++) {
         if (isPrime(i)) {
-            primes = array_add(primes, i);
+            primes = Array.add(primes, i);
         }
     }
     return primes;
@@ -1323,9 +1323,9 @@ _main_(){
     let limit = 100; // You can change this limit to any number
     number[] local_primes = generatePrimesUpTo(limit);
 
-    print(""Prime numbers up to "" + limit);
-    for (let i = 0; i < array_len(local_primes); i++ ) {
-        print(local_primes[i]);
+    Console.print(""Prime numbers up to "" + limit);
+    for (let i = 0; i < Array.length(local_primes); i++ ) {
+        Console.print(local_primes[i]);
     }
 }";
             _compiler.Check(source);
@@ -1345,7 +1345,7 @@ _main_(){
             string source = @"
 func InsertionSort(number[] arr) -> number[]
 {
-	number n = array_len(arr);
+	number n = Array.length(arr);
 	for (let i = 1; i < n; i++)
 	{
 		let key = arr[i];
@@ -1364,17 +1364,17 @@ func InsertionSort(number[] arr) -> number[]
 
 func PrintArray(number[] printArray) -> void
 {
-	for (let i = 0; i < array_len(printArray); i++)
+	for (let i = 0; i < Array.length(printArray); i++)
 	{
-		print(printArray[i]);
+		Console.print(printArray[i]);
 	}
 }
 
 number[] array = [ 12, 11, 13, 5, 6 ];
-print(""Original array:"");
+Console.print(""Original array:"");
 PrintArray(array);
 array = InsertionSort(array);
-print(""Sorted array:"");
+Console.print(""Sorted array:"");
 PrintArray(array);";
             _compiler.Check(source);
 
@@ -1393,7 +1393,7 @@ PrintArray(array);";
             string source = @"
 func SelectionSort(number[] array) -> number[]
 {
-	number n = array_len(array);
+	number n = Array.length(array);
 	for (number i = 0; i < n - 1; i++)
 	{
 		number minIndex = i;
@@ -1413,17 +1413,17 @@ func SelectionSort(number[] array) -> number[]
 
 func PrintArray(number[] printArray) -> void
 {
-	for (let i = 0; i < array_len(printArray); i++)
+	for (let i = 0; i < Array.length(printArray); i++)
 	{
-		print(printArray[i]);
+		Console.print(printArray[i]);
 	}
 }
 
 number[] localArray = [ 64, 25, 12, 22, 11 ];
-print(""Original array:"");
+Console.print(""Original array:"");
 PrintArray(localArray);
 localArray = SelectionSort(localArray);
-print(""Sorted array:"");
+Console.print(""Sorted array:"");
 PrintArray(localArray);";
 
             _compiler.Check(source);
@@ -1444,7 +1444,7 @@ PrintArray(localArray);";
 func CountingSort(number[] array) -> number[]
 {
 	number max = GetMaxValue(array);
-	let arrayLen = array_len(array);	
+	let arrayLen = Array.length(array);	
 	
 	number[] count = number[max +1];	
 	number[] output = number[arrayLen];
@@ -1479,7 +1479,7 @@ func CountingSort(number[] array) -> number[]
 func GetMaxValue(number[] array) -> number
 {
 	let max = array[0];
-	for (let i = 1; i < array_len(array); i++)
+	for (let i = 1; i < Array.length(array); i++)
 	{
 		if (array[i] > max)
 		{
@@ -1491,18 +1491,18 @@ func GetMaxValue(number[] array) -> number
 
 func PrintArray(number[] printArray) -> void
 {
-	let n = array_len(printArray);
+	let n = Array.length(printArray);
 	for (let i = 0; i < n; i++)
 	{
-		print(printArray[i]);
+		Console.print(printArray[i]);
 	}
 }
 
 number[] localArray = [ 4, 2, 2, 8, 3, 3, 1, 7, 5, 6 ];
-print(""Original array:"");
+Console.print(""Original array:"");
 PrintArray(localArray);
 localArray = CountingSort(localArray);
-print(""Sorted array:"");
+Console.print(""Sorted array:"");
 PrintArray(localArray);";
             _compiler.Check(source);
 
@@ -1520,7 +1520,7 @@ PrintArray(localArray);";
         {
             string source = @"
 func BingoSort(number[] arr) -> number[] {
-	number n = array_len(arr);
+	number n = Array.length(arr);
 	number min = GetMinValue(arr);
 	number max = GetMaxValue(arr);
 	number nextBingo = max;
@@ -1552,7 +1552,7 @@ func BingoSort(number[] arr) -> number[] {
 
 func GetMaxValue(number[] array) -> number {
 	let max = array[0];
-	for (let i = 1; i < array_len(array); i++)
+	for (let i = 1; i < Array.length(array); i++)
 	{
 		if (array[i] > max)
 		{
@@ -1564,7 +1564,7 @@ func GetMaxValue(number[] array) -> number {
 
 func GetMinValue(number[] array) -> number {
 	let min = array[0];
-	for (let i = 1; i < array_len(array); i++)
+	for (let i = 1; i < Array.length(array); i++)
 	{
 		if (array[i] < min)
 		{
@@ -1575,16 +1575,16 @@ func GetMinValue(number[] array) -> number {
 }
 
 func PrintArray(number[] printArray) -> void {
-	let n = array_len(printArray);
+	let n = Array.length(printArray);
 	for (let i = 0; i < n; i++)
 	{
-		print(printArray[i]);
+		Console.print(printArray[i]);
 	}
 }
 
 number[] localArray = [ 7, 15, 8, 5, 3, 11, 9, 4, 1, 6, 2];
 localArray = BingoSort(localArray);
-print(""Sorted array:"");
+Console.print(""Sorted array:"");
 PrintArray(localArray);";
             _compiler.Check(source);
 
@@ -1601,7 +1601,7 @@ PrintArray(localArray);";
         {
             string source = @"
 let num  = 5.2 + 8;
-print(num);
+Console.print(num);
 ";
             _compiler.Check(source);
 

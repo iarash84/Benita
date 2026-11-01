@@ -2,17 +2,17 @@
 // Tests throwing an error, reading code/message in catch, and guaranteed finally execution.
 func validate(number value) -> number {
     if (value < 0) {
-        throw error("VALUE100", "Value cannot be negative");
+        throw Error.create("VALUE100", "Value cannot be negative");
     }
     return value;
 }
 
 _main_() {
     try {
-        print(validate(-1));
+        Console.print(validate(-1));
     } catch (failure) {
-        print(failure.code + ": " + failure.message);
+        Console.print(failure.code + ": " + failure.message);
     } finally {
-        print("Validation finished");
+        Console.print("Validation finished");
     }
 }

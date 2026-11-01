@@ -7,7 +7,7 @@ func find_primes(number limit) -> number[] {
 
     for (number candidate = 2; candidate <= limit; candidate++) {
         if (!composite[candidate]) {
-            primes = array_add(primes, candidate);
+            primes = Array.add(primes, candidate);
 
             if (candidate * candidate <= limit) {
                 for (number multiple = candidate * candidate; multiple <= limit; multiple += candidate) {
@@ -23,6 +23,6 @@ func find_primes(number limit) -> number[] {
 _main_() {
     number[] primes = find_primes(30);
     for (prime in primes) {
-        print(prime);
+        Console.print(prime);
     }
 }

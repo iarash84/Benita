@@ -15,7 +15,7 @@ _main_() {
    number x = 20; 
    number i = 0;
    while(i <= x) {
-      print(fib(i));
+      Console.print(fib(i));
       i++;
    }
 }

@@ -2,5 +2,5 @@
 // Tests a minimal addition expression and printing its result from _main_.
 _main_()  {
     number result = 2 + 3;
-    print(result);
+    Console.print(result);
 }

@@ -7,8 +7,8 @@ func is_even(number a) -> bool {
 _main_() {
     number num = 12;           
     if (is_even(num)) {
-        print("Sum is even.");
+        Console.print("Sum is even.");
     } else {
-        print("Sum is odd.");
+        Console.print("Sum is odd.");
     }   
 }

@@ -9,17 +9,17 @@ public class StringFunctionTests
     private const string Source = @"
 _main_() {
     string value = ""  Hello Benita  "";
-    print(string_len(value));
-    print(string_char_at(value, 2));
-    print(string_substring(value, 2, 5));
-    print(string_contains(value, ""Benita""));
-    print(string_index_of(value, ""Benita""));
-    print(string_replace(value, ""Benita"", ""World""));
-    string[] parts = string_split(""one,two,three"", "","");
-    print(parts[1]);
-    print(string_trim(value));
-    print(string_to_lower(""BENITA""));
-    print(string_to_upper(""benita""));
+    Console.print(String.length(value));
+    Console.print(String.char_at(value, 2));
+    Console.print(String.substring(value, 2, 5));
+    Console.print(String.contains(value, ""Benita""));
+    Console.print(String.index_of(value, ""Benita""));
+    Console.print(String.replace(value, ""Benita"", ""World""));
+    string[] parts = String.split(""one,two,three"", "","");
+    Console.print(parts[1]);
+    Console.print(String.trim(value));
+    Console.print(String.to_lower(""BENITA""));
+    Console.print(String.to_upper(""benita""));
 }";
 
     [TestMethod]
@@ -38,12 +38,12 @@ _main_() {
     {
         const string invalidSource = @"
 _main_() {
-    number length = string_len(42);
+    number length = String.length(42);
 }";
 
         var exception = Assert.ThrowsException<SemanticException>(() =>
             new CompilerClass().Check(invalidSource));
 
-        StringAssert.Contains(exception.Message, "string_len");
+        StringAssert.Contains(exception.Message, "String.length");
     }
 }

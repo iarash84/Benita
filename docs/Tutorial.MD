@@ -12,7 +12,7 @@
 
 ```benita
 _main_() {
-    print("Hello, Benita!");
+    Console.print("Hello, Benita!");
 }
 ```
 
@@ -20,7 +20,7 @@ _main_() {
 
 ```benita
 number x = 2;
-print(x + 3);
+Console.print(x + 3);
 ```
 
 ### ۲. انواع و متغیرها
@@ -98,9 +98,9 @@ sum++;
 number value = 12;
 
 if (value % 2 == 0) {
-    print("even");
+    Console.print("even");
 } else {
-    print("odd");
+    Console.print("odd");
 }
 ```
 
@@ -108,11 +108,11 @@ if (value % 2 == 0) {
 
 ```benita
 if (value > 10) {
-    print("large");
+    Console.print("large");
 } else if (value > 5) {
-    print("medium");
+    Console.print("medium");
 } else {
-    print("small");
+    Console.print("small");
 }
 ```
 
@@ -133,9 +133,9 @@ let result = match score {
 
 ```benita
 match value {
-    1 => { print("one"); }
-    2 => { print("two"); }
-    _ => { print("other"); }
+    1 => { Console.print("one"); }
+    2 => { Console.print("two"); }
+    _ => { Console.print("other"); }
 }
 ```
 
@@ -147,8 +147,8 @@ match value {
 
 ```benita
 match value {
-    1, 2, 3 => print("small");
-    _ => print("other");
+    1, 2, 3 => Console.print("small");
+    _ => Console.print("other");
 }
 ```
 
@@ -171,7 +171,7 @@ let level = match value {
 ```benita
 number i = 0;
 while (i < 3) {
-    print(i);
+    Console.print(i);
     i++;
 }
 ```
@@ -180,7 +180,7 @@ while (i < 3) {
 
 ```benita
 for (number i = 0; i < 3; i++) {
-    print(i);
+    Console.print(i);
 }
 ```
 
@@ -190,7 +190,7 @@ for (number i = 0; i < 3; i++) {
 ```benita
 number[] values = [10, 20, 30];
 for (item in values) {
-    print(item);
+    Console.print(item);
 }
 ```
 
@@ -207,12 +207,12 @@ func add(number a, number b) -> number {
 }
 
 func show(string message) -> void {
-    print(message);
+    Console.print(message);
     return;
 }
 
 _main_() {
-    print(add(2, 3));
+    Console.print(add(2, 3));
     show("done");
 }
 ```
@@ -235,11 +235,11 @@ func factorial(number n) -> number {
 ```benita
 number[] values = [10, 20, 30];
 values[1] = 25;
-print(values[1]);
+Console.print(values[1]);
 
-values = array_add(values, 40);
-values = array_remove(values, 0);
-print(array_len(values));
+values = Array.add(values, 40);
+values = Array.remove(values, 0);
+Console.print(Array.length(values));
 ```
 
 تمام عناصر یک آرایه باید نوع یکسان داشته باشند و اندیس آرایه عددی است.
@@ -257,17 +257,17 @@ print(array_len(values));
 
 | تابع | کاربرد | مقدار بازگشتی |
 | --- | --- | --- |
-| `array_len(array)` | تعداد عناصر آرایه را محاسبه می‌کند. | `number` |
-| `array_add(array, value)` | مقدار را به انتهای آرایه اضافه می‌کند. | آرایه جدید |
-| `array_remove(array, index)` | عنصر موجود در اندیس مشخص را حذف می‌کند. | آرایه جدید |
-| `array_contains(array, value)` | وجود مقدار در آرایه را بررسی می‌کند. | `bool` |
-| `array_index_of(array, value)` | اندیس اولین مقدار مطابق را پیدا می‌کند؛ اگر مقدار وجود نداشته باشد `-1` برمی‌گرداند. | `number` |
-| `array_reverse(array)` | ترتیب عناصر را معکوس می‌کند. | آرایه جدید |
-| `array_clear(array)` | تمام عناصر را حذف می‌کند. | آرایه خالی هم‌نوع |
-| `array_insert(array, index, value)` | مقدار را در اندیس مشخص درج می‌کند. اندیس می‌تواند از صفر تا طول آرایه باشد. | آرایه جدید |
-| `array_slice(array, start, length)` | از اندیس `start` به تعداد `length` عنصر استخراج می‌کند. | آرایه جدید |
-| `array_concat(first, second)` | دو آرایه هم‌نوع را به هم متصل می‌کند. | آرایه جدید |
-| `array_sort(array)` | عناصر را به‌صورت صعودی مرتب می‌کند. | آرایه جدید |
+| `Array.length(array)` | تعداد عناصر آرایه را محاسبه می‌کند. | `number` |
+| `Array.add(array, value)` | مقدار را به انتهای آرایه اضافه می‌کند. | آرایه جدید |
+| `Array.remove(array, index)` | عنصر موجود در اندیس مشخص را حذف می‌کند. | آرایه جدید |
+| `Array.contains(array, value)` | وجود مقدار در آرایه را بررسی می‌کند. | `bool` |
+| `Array.index_of(array, value)` | اندیس اولین مقدار مطابق را پیدا می‌کند؛ اگر مقدار وجود نداشته باشد `-1` برمی‌گرداند. | `number` |
+| `Array.reverse(array)` | ترتیب عناصر را معکوس می‌کند. | آرایه جدید |
+| `Array.clear(array)` | تمام عناصر را حذف می‌کند. | آرایه خالی هم‌نوع |
+| `Array.insert(array, index, value)` | مقدار را در اندیس مشخص درج می‌کند. اندیس می‌تواند از صفر تا طول آرایه باشد. | آرایه جدید |
+| `Array.slice(array, start, length)` | از اندیس `start` به تعداد `length` عنصر استخراج می‌کند. | آرایه جدید |
+| `Array.concat(first, second)` | دو آرایه هم‌نوع را به هم متصل می‌کند. | آرایه جدید |
+| `Array.sort(array)` | عناصر را به‌صورت صعودی مرتب می‌کند. | آرایه جدید |
 
 نوع مقداری که به `array_add` یا `array_insert` داده می‌شود باید با نوع عناصر آرایه
 یکسان باشد. همچنین دو ورودی `array_concat` باید آرایه‌های هم‌نوع باشند. اندیس یا
@@ -276,15 +276,15 @@ print(array_len(values));
 ```benita
 number[] values = [30, 10, 20];
 
-print(array_contains(values, 10)); // True
-print(array_index_of(values, 20)); // 2
+Console.print(Array.contains(values, 10)); // True
+Console.print(Array.index_of(values, 20)); // 2
 
-values = array_insert(values, 1, 40);       // [30, 40, 10, 20]
-number[] middle = array_slice(values, 1, 2); // [40, 10]
-values = array_concat(middle, [50, 5]);      // [40, 10, 50, 5]
-values = array_reverse(values);              // [5, 50, 10, 40]
-values = array_sort(values);                 // [5, 10, 40, 50]
-values = array_clear(values);                // []
+values = Array.insert(values, 1, 40);       // [30, 40, 10, 20]
+number[] middle = Array.slice(values, 1, 2); // [40, 10]
+values = Array.concat(middle, [50, 5]);      // [40, 10, 50, 5]
+values = Array.reverse(values);              // [5, 50, 10, 40]
+values = Array.sort(values);                 // [5, 10, 40, 50]
+values = Array.clear(values);                // []
 ```
 
 ### ۸. بسته‌ها
@@ -308,7 +308,7 @@ pkg Counter {
 _main_() {
     Counter counter = new Counter(5);
     counter.increment();
-    print(counter.value);
+    Console.print(counter.value);
 }
 ```
 
@@ -322,7 +322,7 @@ func create_counter(number initial) -> Counter {
 
 _main_() {
     let counter = create_counter(10);
-    print(counter.value);
+    Console.print(counter.value);
 }
 ```
 
@@ -353,7 +353,7 @@ pkg Counter {
 
 _main_() {
     Counter counter = new Counter();
-    print(counter.current());
+    Console.print(counter.current());
 }
 ```
 
@@ -375,7 +375,7 @@ pkg JsonFormatter : Formatter {
 }
 
 func show(Formatter formatter, string value) -> void {
-    print(formatter.format(value));
+    Console.print(formatter.format(value));
 }
 
 _main_() {
@@ -391,16 +391,16 @@ _main_() {
 
 ### مدیریت خطا
 
-تابع داخلی `error(code, message)` یک مقدار استاندارد خطا می‌سازد و `throw` آن را به
+تابع داخلی `Error.create(code, message)` یک مقدار استاندارد خطا می‌سازد و `throw` آن را به
 نزدیک‌ترین `catch` منتقل می‌کند. متغیر catch دو عضو فقط‌خواندنی `code` و `message` دارد:
 
 ```benita
 try {
-    throw error("APP100", "Operation failed");
+    throw Error.create("APP100", "Operation failed");
 } catch (failure) {
-    print(failure.code + ": " + failure.message);
+    Console.print(failure.code + ": " + failure.message);
 } finally {
-    print("Cleanup always runs");
+    Console.print("Cleanup always runs");
 }
 ```
 
@@ -428,39 +428,39 @@ code و message اصلی در مرز اجرای برنامه گزارش می‌�
 
 ```benita
 _main_() {
-    print("Enter a number:");
-    number value = to_number(input());
-    print(to_string(value));
-    print(round_number(value));
-    print(sqrt_number(value));
+    Console.print("Enter a number:");
+    number value = Convert.to_number(Console.input());
+    Console.print(Convert.to_string(value));
+    Console.print(Math.round(value));
+    Console.print(Math.sqrt(value));
 }
 ```
 
 توابع داخلی این بخش:
 
-- `print(value)` چاپ مقدار
-- `input()` خواندن یک خط رشته‌ای
-- `to_string(value)` تبدیل مقدار به رشته
-- `to_number(value)` تبدیل مقدار به عدد
-- `round_number(value)` گرد کردن عدد
-- `sqrt_number(value)` محاسبه ریشه دوم
+- `Console.print(value)` چاپ مقدار
+- `Console.input()` خواندن یک خط رشته‌ای
+- `Convert.to_string(value)` تبدیل مقدار به رشته
+- `Convert.to_number(value)` تبدیل مقدار به عدد
+- `Math.round(value)` گرد کردن عدد
+- `Math.sqrt(value)` محاسبه ریشه دوم
 
 #### توابع رشته‌ای
 
 ```benita
 _main_() {
     string value = "  Hello Benita  ";
-    print(string_len(value));
-    print(string_char_at(value, 2));
-    print(string_substring(value, 2, 5));
-    print(string_contains(value, "Benita"));
-    print(string_index_of(value, "Benita"));
-    print(string_replace(value, "Benita", "World"));
-    string[] parts = string_split("one,two,three", ",");
-    print(parts[1]);
-    print(string_trim(value));
-    print(string_to_lower("BENITA"));
-    print(string_to_upper("benita"));
+    Console.print(String.length(value));
+    Console.print(String.char_at(value, 2));
+    Console.print(String.substring(value, 2, 5));
+    Console.print(String.contains(value, "Benita"));
+    Console.print(String.index_of(value, "Benita"));
+    Console.print(String.replace(value, "Benita", "World"));
+    string[] parts = String.split("one,two,three", ",");
+    Console.print(parts[1]);
+    Console.print(String.trim(value));
+    Console.print(String.to_lower("BENITA"));
+    Console.print(String.to_upper("benita"));
 }
 ```
 
@@ -478,7 +478,7 @@ _main_() {
         file.writeText("Hello");
     }
 
-    print(file.readText());
+    Console.print(file.readText());
     file.delete();
 }
 ```
@@ -491,7 +491,7 @@ _main_() {
 include_once "add-function-library.ben";
 
 _main_() {
-    print(add(2, 3));
+    Console.print(add(2, 3));
 }
 ```
 
@@ -549,7 +549,7 @@ benita> value
 
 ```text
 benita> for (number i = 0; i < 3; i++) {
-   ...>     print(i);
+   ...>     Console.print(i);
    ...> }
 0
 1
@@ -619,7 +619,7 @@ func sign(number value) -> string {
 
 ```benita
 for (;;) {
-    print("running");
+    Console.print("running");
     break;
 }
 ```
@@ -637,7 +637,7 @@ The simplest Benita program starts with `_main_`:
 
 ```benita
 _main_() {
-    print("Hello, Benita!");
+    Console.print("Hello, Benita!");
 }
 ```
 
@@ -645,7 +645,7 @@ You can also place executable statements directly at the top level:
 
 ```benita
 number x = 2;
-print(x + 3);
+Console.print(x + 3);
 ```
 
 ### 2. Types and variables
@@ -723,9 +723,9 @@ Ordered comparisons (`<`, `>`, `<=`, and `>=`) accept only numbers.
 number value = 12;
 
 if (value % 2 == 0) {
-    print("even");
+    Console.print("even");
 } else {
-    print("odd");
+    Console.print("odd");
 }
 ```
 
@@ -733,11 +733,11 @@ A condition must evaluate to `bool`. Multiple conditions can be chained with `el
 
 ```benita
 if (value > 10) {
-    print("large");
+    Console.print("large");
 } else if (value > 5) {
-    print("medium");
+    Console.print("medium");
 } else {
-    print("small");
+    Console.print("small");
 }
 ```
 
@@ -758,9 +758,9 @@ It can also execute statement blocks:
 
 ```benita
 match value {
-    1 => { print("one"); }
-    2 => { print("two"); }
-    _ => { print("other"); }
+    1 => { Console.print("one"); }
+    2 => { Console.print("two"); }
+    _ => { Console.print("other"); }
 }
 ```
 
@@ -772,8 +772,8 @@ body does not require braces:
 
 ```benita
 match value {
-    1, 2, 3 => print("small");
-    _ => print("other");
+    1, 2, 3 => Console.print("small");
+    _ => Console.print("other");
 }
 ```
 
@@ -796,7 +796,7 @@ A `while` loop:
 ```benita
 number i = 0;
 while (i < 3) {
-    print(i);
+    Console.print(i);
     i++;
 }
 ```
@@ -805,7 +805,7 @@ A `for` loop:
 
 ```benita
 for (number i = 0; i < 3; i++) {
-    print(i);
+    Console.print(i);
 }
 ```
 
@@ -815,7 +815,7 @@ inferred and exists only inside the loop body:
 ```benita
 number[] values = [10, 20, 30];
 for (item in values) {
-    print(item);
+    Console.print(item);
 }
 ```
 
@@ -832,12 +832,12 @@ func add(number a, number b) -> number {
 }
 
 func show(string message) -> void {
-    print(message);
+    Console.print(message);
     return;
 }
 
 _main_() {
-    print(add(2, 3));
+    Console.print(add(2, 3));
     show("done");
 }
 ```
@@ -860,11 +860,11 @@ func factorial(number n) -> number {
 ```benita
 number[] values = [10, 20, 30];
 values[1] = 25;
-print(values[1]);
+Console.print(values[1]);
 
-values = array_add(values, 40);
-values = array_remove(values, 0);
-print(array_len(values));
+values = Array.add(values, 40);
+values = Array.remove(values, 0);
+Console.print(Array.length(values));
 ```
 
 All elements in an array must have the same type, and an array index must be numeric.
@@ -881,17 +881,17 @@ store the result of functions such as `array_insert` and `array_sort` in a varia
 
 | Function | Description | Return value |
 | --- | --- | --- |
-| `array_len(array)` | Gets the number of elements. | `number` |
-| `array_add(array, value)` | Appends a value to the array. | New array |
-| `array_remove(array, index)` | Removes the element at the given index. | New array |
-| `array_contains(array, value)` | Checks whether the array contains a value. | `bool` |
-| `array_index_of(array, value)` | Gets the first matching index, or `-1` when the value is absent. | `number` |
-| `array_reverse(array)` | Reverses the element order. | New array |
-| `array_clear(array)` | Removes every element. | New empty array of the same type |
-| `array_insert(array, index, value)` | Inserts a value at an index from zero through the array length. | New array |
-| `array_slice(array, start, length)` | Copies `length` elements beginning at `start`. | New array |
-| `array_concat(first, second)` | Joins two arrays of the same type. | New array |
-| `array_sort(array)` | Sorts the elements in ascending order. | New array |
+| `Array.length(array)` | Gets the number of elements. | `number` |
+| `Array.add(array, value)` | Appends a value to the array. | New array |
+| `Array.remove(array, index)` | Removes the element at the given index. | New array |
+| `Array.contains(array, value)` | Checks whether the array contains a value. | `bool` |
+| `Array.index_of(array, value)` | Gets the first matching index, or `-1` when the value is absent. | `number` |
+| `Array.reverse(array)` | Reverses the element order. | New array |
+| `Array.clear(array)` | Removes every element. | New empty array of the same type |
+| `Array.insert(array, index, value)` | Inserts a value at an index from zero through the array length. | New array |
+| `Array.slice(array, start, length)` | Copies `length` elements beginning at `start`. | New array |
+| `Array.concat(first, second)` | Joins two arrays of the same type. | New array |
+| `Array.sort(array)` | Sorts the elements in ascending order. | New array |
 
 Values passed to `array_add` and `array_insert` must match the array element type.
 Both inputs to `array_concat` must also have the same element type. Invalid indices
@@ -900,15 +900,15 @@ or ranges passed to `array_remove`, `array_insert`, or `array_slice` produce an 
 ```benita
 number[] values = [30, 10, 20];
 
-print(array_contains(values, 10)); // True
-print(array_index_of(values, 20)); // 2
+Console.print(Array.contains(values, 10)); // True
+Console.print(Array.index_of(values, 20)); // 2
 
-values = array_insert(values, 1, 40);       // [30, 40, 10, 20]
-number[] middle = array_slice(values, 1, 2); // [40, 10]
-values = array_concat(middle, [50, 5]);      // [40, 10, 50, 5]
-values = array_reverse(values);              // [5, 50, 10, 40]
-values = array_sort(values);                 // [5, 10, 40, 50]
-values = array_clear(values);                // []
+values = Array.insert(values, 1, 40);       // [30, 40, 10, 20]
+number[] middle = Array.slice(values, 1, 2); // [40, 10]
+values = Array.concat(middle, [50, 5]);      // [40, 10, 50, 5]
+values = Array.reverse(values);              // [5, 50, 10, 40]
+values = Array.sort(values);                 // [5, 10, 40, 50]
+values = Array.clear(values);                // []
 ```
 
 ### 8. Packages
@@ -932,7 +932,7 @@ pkg Counter {
 _main_() {
     Counter counter = new Counter(5);
     counter.increment();
-    print(counter.value);
+    Console.print(counter.value);
 }
 ```
 
@@ -946,7 +946,7 @@ func create_counter(number initial) -> Counter {
 
 _main_() {
     let counter = create_counter(10);
-    print(counter.value);
+    Console.print(counter.value);
 }
 ```
 
@@ -985,7 +985,7 @@ pkg JsonFormatter : Formatter {
 }
 
 func show(Formatter formatter, string value) -> void {
-    print(formatter.format(value));
+    Console.print(formatter.format(value));
 }
 
 _main_() {
@@ -1001,16 +1001,16 @@ Multiple contracts use commas: `pkg Channel : Reader, Writer`.
 
 #### Error handling
 
-The built-in `error(code, message)` creates a standard error value, and `throw` transfers
+The built-in `Error.create(code, message)` creates a standard error value, and `throw` transfers
 it to the nearest catch. A catch variable exposes read-only `code` and `message` members:
 
 ```benita
 try {
-    throw error("APP100", "Operation failed");
+    throw Error.create("APP100", "Operation failed");
 } catch (failure) {
-    print(failure.code + ": " + failure.message);
+    Console.print(failure.code + ": " + failure.message);
 } finally {
-    print("Cleanup always runs");
+    Console.print("Cleanup always runs");
 }
 ```
 
@@ -1048,7 +1048,7 @@ pkg Counter {
 
 _main_() {                            // never public/private
     Counter counter = new Counter();
-    print(counter.current());
+    Console.print(counter.current());
 }
 ```
 
@@ -1056,39 +1056,39 @@ _main_() {                            // never public/private
 
 ```benita
 _main_() {
-    print("Enter a number:");
-    number value = to_number(input());
-    print(to_string(value));
-    print(round_number(value));
-    print(sqrt_number(value));
+    Console.print("Enter a number:");
+    number value = Convert.to_number(Console.input());
+    Console.print(Convert.to_string(value));
+    Console.print(Math.round(value));
+    Console.print(Math.sqrt(value));
 }
 ```
 
 Built-in functions in this group:
 
-- `print(value)` prints a value
-- `input()` reads one line of text
-- `to_string(value)` converts a value to a string
-- `to_number(value)` converts a value to a number
-- `round_number(value)` rounds a number
-- `sqrt_number(value)` returns a square root
+- `Console.print(value)` prints a value
+- `Console.input()` reads one line of text
+- `Convert.to_string(value)` converts a value to a string
+- `Convert.to_number(value)` converts a value to a number
+- `Math.round(value)` rounds a number
+- `Math.sqrt(value)` returns a square root
 
 #### String functions
 
 ```benita
 _main_() {
     string value = "  Hello Benita  ";
-    print(string_len(value));
-    print(string_char_at(value, 2));
-    print(string_substring(value, 2, 5));
-    print(string_contains(value, "Benita"));
-    print(string_index_of(value, "Benita"));
-    print(string_replace(value, "Benita", "World"));
-    string[] parts = string_split("one,two,three", ",");
-    print(parts[1]);
-    print(string_trim(value));
-    print(string_to_lower("BENITA"));
-    print(string_to_upper("benita"));
+    Console.print(String.length(value));
+    Console.print(String.char_at(value, 2));
+    Console.print(String.substring(value, 2, 5));
+    Console.print(String.contains(value, "Benita"));
+    Console.print(String.index_of(value, "Benita"));
+    Console.print(String.replace(value, "Benita", "World"));
+    string[] parts = String.split("one,two,three", ",");
+    Console.print(parts[1]);
+    Console.print(String.trim(value));
+    Console.print(String.to_lower("BENITA"));
+    Console.print(String.to_upper("benita"));
 }
 ```
 
@@ -1106,7 +1106,7 @@ _main_() {
         file.writeText("Hello");
     }
 
-    print(file.readText());
+    Console.print(file.readText());
     file.delete();
 }
 ```
@@ -1119,7 +1119,7 @@ _main_() {
 include_once "add-function-library.ben";
 
 _main_() {
-    print(add(2, 3));
+    Console.print(add(2, 3));
 }
 ```
 
@@ -1174,7 +1174,7 @@ Multiline constructs remain at the `...>` prompt until all braces are closed:
 
 ```text
 benita> for (number i = 0; i < 3; i++) {
-   ...>     print(i);
+   ...>     Console.print(i);
    ...> }
 0
 1

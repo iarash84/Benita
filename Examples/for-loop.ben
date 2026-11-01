@@ -3,11 +3,11 @@
 
 _main_() {
     for (number i = 0; i < 5; i++) {
-        print(i);
+        Console.print(i);
     }
 
     number[] values = [10, 20, 30];
     for (item in values) {
-        print(item);
+        Console.print(item);
     }
 }

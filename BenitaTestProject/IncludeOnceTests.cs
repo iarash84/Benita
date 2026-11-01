@@ -10,7 +10,7 @@ public class IncludeOnceTests
     {
         const string source = """
             func include_once_helper() -> number { return 1; }
-            _main_() { print(include_once_helper()); }
+            _main_() { Console.print(include_once_helper()); }
             """;
 
         new CompilerClass().Check(source);
@@ -50,7 +50,7 @@ public class IncludeOnceTests
             const string source = """
                 include_once "lib/common.ben";
                 include_once "lib/../lib/common.ben";
-                _main_() { print(value()); }
+                _main_() { Console.print(value()); }
                 """;
 
             List<Token> tokens = new Lexer(source, sourceName: Path.Combine(directory, "main.ben")).Tokenize();
@@ -76,7 +76,7 @@ public class IncludeOnceTests
                 "include_once \"../common.ben\";");
             const string source = """
                 include_once "feature/entry.ben";
-                _main_() { print(value()); }
+                _main_() { Console.print(value()); }
                 """;
 
             new CompilerClass().Check(source, sourceName: Path.Combine(directory, "main.ben"));
@@ -97,7 +97,7 @@ public class IncludeOnceTests
             string rootPath = Path.Combine(directory, "main.ben");
             const string source = """
                 include_once "feature/entry.ben";
-                _main_() { print("ok"); }
+                _main_() { Console.print("ok"); }
                 """;
             File.WriteAllText(rootPath, source);
             File.WriteAllText(Path.Combine(featureDirectory, "entry.ben"),
@@ -131,7 +131,7 @@ public class IncludeOnceTests
             /*
             include_once "definitely-missing.ben";
             */
-            _main_() { print("ok"); }
+            _main_() { Console.print("ok"); }
             """;
 
         new CompilerClass().Check(source);
@@ -148,7 +148,7 @@ public class IncludeOnceTests
             const string source = """
                 string marker = "/*";
                 include_once "library.ben";
-                _main_() { print(value()); }
+                _main_() { Console.print(value()); }
                 """;
 
             new CompilerClass().Check(source, sourceName: Path.Combine(directory, "main.ben"));

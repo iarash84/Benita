@@ -20,13 +20,13 @@ _main_() {
     string world = "world!";
     string message = concatenate(hello, world);
 
-    print(message);
+    Console.print(message);
 
     bool check = is_even(sum);
     if (check) {
-        print("Sum is even.");
+        Console.print("Sum is even.");
     } else {
-        print("Sum is odd.");
+        Console.print("Sum is odd.");
     }
     number i = 0;
     while ( i < 5 ) {
@@ -34,6 +34,6 @@ _main_() {
         i++;
     }
 
-    string userInput = input();
-    print("You entered: " + userInput);    
+    string userInput = Console.input();
+    Console.print("You entered: " + userInput);    
 }

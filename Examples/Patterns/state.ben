@@ -20,7 +20,7 @@ pkg Player {
 
 _main_() {
     Player player = new Player();
-    print(player.status());
+    Console.print(player.status());
     player.advance();
-    print(player.status());
+    Console.print(player.status());
 }

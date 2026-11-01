@@ -10,5 +10,5 @@ func factorial(number value) -> number {
 }
 
 _main_() {
-    print(factorial(6));
+    Console.print(factorial(6));
 }

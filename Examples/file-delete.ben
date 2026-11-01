@@ -4,8 +4,8 @@ _main_() {
     File file = new File("test.txt");
     if (file.exists()) {
         file.delete();
-        print("file deleted successfully");
+        Console.print("file deleted successfully");
     } else {
-        print("File does not exist.");
+        Console.print("File does not exist.");
     }
 }

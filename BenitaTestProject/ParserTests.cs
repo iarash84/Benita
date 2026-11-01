@@ -432,7 +432,7 @@ namespace BenitaTestProject
                 new Token(TokenType.NUMBER_LITERAL, "5", 10),
                 new Token(TokenType.SEMICOLON, ";", 10),
 
-                // print(Factorial(a));
+                // Console.print(Factorial(a));
                 new Token(TokenType.IDENTIFIER, "print", 11),
                 new Token(TokenType.LPAREN, "(", 11),
                 new Token(TokenType.IDENTIFIER, "Factorial", 11),

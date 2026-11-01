@@ -28,4 +28,4 @@ func render(UiFactory factory) -> string {
     return button.paint() + " / " + checkbox.paint();
 }
 
-_main_() { print(render(new DarkFactory())); }
+_main_() { Console.print(render(new DarkFactory())); }

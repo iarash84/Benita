@@ -2,6 +2,6 @@
 // Negative example rejecting a value returned from the void _main_ entry point.
 _main_()
 {
-	print("This is a test");
+	Console.print("This is a test");
 	return 1;
 }

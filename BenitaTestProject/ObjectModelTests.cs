@@ -14,7 +14,7 @@ public class ObjectModelTests
                 number first = 1;
                 public number second = first + 1;
             }
-            _main_() { Values values = new Values(); print(values.second); }
+            _main_() { Values values = new Values(); Console.print(values.second); }
             """;
         const string invalidSource = """
             pkg Values {
@@ -54,13 +54,13 @@ public class ObjectModelTests
 
             Box globalBox = new Box();
             _main_() {
-                print(globalBox.value);
-                print(globalBox.readSeed());
+                Console.print(globalBox.value);
+                Console.print(globalBox.readSeed());
                 globalBox.incrementSeed();
                 globalBox.incrementField();
-                print(seed);
-                print(value);
-                print(globalBox.value);
+                Console.print(seed);
+                Console.print(value);
+                Console.print(globalBox.value);
             }
             """;
 
@@ -86,10 +86,10 @@ public class ObjectModelTests
                 Box box = new Box();
                 number value = 9;
                 box.set(value);
-                print(box.value);
+                Console.print(box.value);
                 value = 12;
                 box.value = value;
-                print(box.value);
+                Console.print(box.value);
             }
             """;
 
@@ -109,7 +109,7 @@ public class ObjectModelTests
                 let value = 1 + 1;
                 public func next() -> number { return value + 1; }
             }
-            _main_() { Counter counter = new Counter(); print(counter.next()); }
+            _main_() { Counter counter = new Counter(); Console.print(counter.next()); }
             """;
 
         foreach (bool optimize in new[] { false, true })
@@ -138,7 +138,7 @@ public class ObjectModelTests
 
             _main_() {
                 Person person = new Person("Benita");
-                print(person.describe());
+                Console.print(person.describe());
             }
             """;
 
@@ -162,7 +162,7 @@ public class ObjectModelTests
 
             _main_() {
                 let message = create_message();
-                print(message.text);
+                Console.print(message.text);
             }
             """;
 
@@ -188,7 +188,7 @@ public class ObjectModelTests
 
             _main_() {
                 Car car = new Car();
-                print(car.status());
+                Console.print(car.status());
             }
             """;
 
@@ -207,7 +207,7 @@ public class ObjectModelTests
 
             Value value = new Value();
             func read() -> number { return value.amount; }
-            _main_() { print(read()); print(value.amount); }
+            _main_() { Console.print(read()); Console.print(value.amount); }
             """;
 
         foreach (bool optimize in new[] { false, true })
@@ -229,7 +229,7 @@ public class ObjectModelTests
 
             _main_() {
                 Counter counter = new Counter();
-                print(counter.value);
+                Console.print(counter.value);
             }
             """;
 
@@ -244,7 +244,7 @@ public class ObjectModelTests
     [DataTestMethod]
     [DataRow("pkg A { init(number value) { } } _main_() { A a = new A(\"bad\"); }")]
     [DataRow("pkg A { func A(number value) -> void { } } _main_() { A a = new A(1); }")]
-    [DataRow("pkg A { init() { } } _main_() { A a = new A(); print(a.missing); }")]
+    [DataRow("pkg A { init() { } } _main_() { A a = new A(); Console.print(a.missing); }")]
     [DataRow("_main_() { let value = new Missing(); }")]
     [DataRow("_main_() { Missing value; }")]
     public void InvalidObjectOperations_AreRejected(string source)

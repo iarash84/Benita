@@ -24,6 +24,6 @@ pkg RemoteControl {
 
 _main_() {
     RemoteControl remote = new RemoteControl(new Radio());
-    print(remote.turn_on());
-    print(remote.turn_off());
+    Console.print(remote.turn_on());
+    Console.print(remote.turn_off());
 }

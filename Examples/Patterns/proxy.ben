@@ -22,4 +22,4 @@ pkg CachedDataProxy : DataService {
 
 func load(DataService service) -> string { return service.fetch(); }
 
-_main_() { print(load(new CachedDataProxy())); }
+_main_() { Console.print(load(new CachedDataProxy())); }

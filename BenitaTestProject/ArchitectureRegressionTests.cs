@@ -25,7 +25,7 @@ public class ArchitectureRegressionTests
     [TestMethod]
     public void BuiltInFailure_UsesStableDiagnosticCode()
     {
-        const string source = "_main_() { number[] values = [1]; values = array_remove(values, 9); }";
+        const string source = "_main_() { number[] values = [1]; values = Array.remove(values, 9); }";
 
         var exception = Assert.ThrowsException<BuiltInException>(() => new CompilerClass().Exec(source));
 
@@ -42,7 +42,7 @@ public class ArchitectureRegressionTests
             }
             _main_() {
                 set_counter();
-                print(counter);
+                Console.print(counter);
             }
             """;
         using var output = new ConsoleOutput();
@@ -66,7 +66,7 @@ public class ArchitectureRegressionTests
             }
             _main_() {
                 increment_twice();
-                print(counter);
+                Console.print(counter);
             }
             """;
         using var output = new ConsoleOutput();
@@ -92,7 +92,7 @@ public class ArchitectureRegressionTests
     [TestMethod]
     public void CompilerExec_WhenRuntimeThrowsBenitaException_PreservesItsSpecificTypeAndCode()
     {
-        const string source = "_main_() { number[] values = [1]; values = array_remove(values, 9); }";
+        const string source = "_main_() { number[] values = [1]; values = Array.remove(values, 9); }";
 
         BuiltInException exception = Assert.ThrowsException<BuiltInException>(() =>
             new CompilerClass().Exec(source));

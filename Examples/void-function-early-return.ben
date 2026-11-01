@@ -2,12 +2,12 @@
 // Tests early exit and empty return statements in a void function.
 func test(number i) -> void
 {
-	print("yess");
+	Console.print("yess");
 	if(i == 5){
-		print("five");
+		Console.print("five");
 		return;
 	}
-	print("Nop");
+	Console.print("Nop");
 	return;
 }
 

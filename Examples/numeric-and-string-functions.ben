@@ -13,5 +13,5 @@ _main_() {
     number y = 20;
     number sum = add(x, y);              
     string message = concatenate("hello", " world");    
-    print(message);
+    Console.print(message);
 }

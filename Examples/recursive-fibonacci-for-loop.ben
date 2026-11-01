@@ -12,13 +12,13 @@ func fib(number x) -> number
 
 func chap(number content) -> void
 {
-	print(content);
+	Console.print(content);
 }
 
 
 _main_() {
    for(number i =0; i <= 20; i++) {
       chap(fib(i));
-	  //print(fib(i));
+	  //Console.print(fib(i));
    }
 }

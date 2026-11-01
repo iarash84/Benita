@@ -161,7 +161,7 @@ func add(number a, number b) -> number {
 }
 
 _main_() {
-    print(add(2, 3));
+    Console.print(add(2, 3));
 }
 ```
 

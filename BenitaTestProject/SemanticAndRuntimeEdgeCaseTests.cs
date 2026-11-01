@@ -26,7 +26,7 @@ public class SemanticAndRuntimeEdgeCaseTests
         const string source = """
             func first() -> number { return second(); }
             func second() -> number { return 2; }
-            _main_() { print(first()); }
+            _main_() { Console.print(first()); }
             """;
 
         var program = new Parser(new Lexer(source).Tokenize()).Parse();

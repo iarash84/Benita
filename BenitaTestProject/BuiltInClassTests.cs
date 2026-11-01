@@ -25,10 +25,10 @@ public class BuiltInClassTests
         const string source = """
             _main_() {
                 Probe probe = new Probe("start");
-                print(probe.value);
+                Console.print(probe.value);
                 probe.value = "changed";
-                print(probe.append("!"));
-                print(probe.value);
+                Console.print(probe.append("!"));
+                Console.print(probe.value);
             }
             """;
         BuiltInClassRegistry registry = BuiltInClassRegistry.CreateDefault();
@@ -47,11 +47,11 @@ public class BuiltInClassTests
         const string source = """
             _main_() {
                 NativeCounter counter = new NativeCounter(2);
-                print(counter.value);
+                Console.print(counter.value);
                 counter.value = 5;
-                print(counter.increment(3));
+                Console.print(counter.increment(3));
                 counter.value += 2;
-                print(counter.value);
+                Console.print(counter.value);
             }
             """;
         using var output = new ConsoleOutput();
@@ -69,12 +69,12 @@ public class BuiltInClassTests
             _main_() {
                 DateTime initial = new DateTime(0);
                 DateTime later = initial.addHours(2.5);
-                print(initial.year);
-                print(later.timestamp);
-                print(initial.differenceInSeconds(later));
-                print(initial.isBefore(later));
-                print(later.isAfter(initial));
-                print(initial.format("yyyy-MM-dd HH:mm:ss"));
+                Console.print(initial.year);
+                Console.print(later.timestamp);
+                Console.print(initial.differenceInSeconds(later));
+                Console.print(initial.isBefore(later));
+                Console.print(later.isAfter(initial));
+                Console.print(initial.format("yyyy-MM-dd HH:mm:ss"));
             }
             """;
         using var output = new ConsoleOutput();
@@ -101,17 +101,17 @@ public class BuiltInClassTests
             string source = $$"""
                 _main_() {
                     File file = new File("{{path.Replace("\\", "\\\\")}}");
-                    print(file.exists());
+                    Console.print(file.exists());
                     file.writeText("Hello");
                     file.appendText(" Benita");
-                    print(file.exists());
-                    print(file.readText());
-                    print(file.length > 0);
+                    Console.print(file.exists());
+                    Console.print(file.readText());
+                    Console.print(file.length > 0);
                     file.copyTo("{{copyPath.Replace("\\", "\\\\")}}");
                     File copy = new File("{{copyPath.Replace("\\", "\\\\")}}");
-                    print(copy.exists());
+                    Console.print(copy.exists());
                     file.delete();
-                    print(file.exists());
+                    Console.print(file.exists());
                 }
                 """;
             using var output = new ConsoleOutput();
@@ -196,7 +196,7 @@ public class BuiltInClassTests
         const string source = """
             _main_() {
                 BadResult value = new BadResult();
-                print(value.invalidMethod());
+                Console.print(value.invalidMethod());
             }
             """;
         BuiltInClassRegistry registry = BuiltInClassRegistry.CreateDefault();
@@ -228,8 +228,8 @@ public class BuiltInClassTests
             _main_() {
                 NativeCounter counter = new NativeCounter(0);
                 let operation = async mutate(counter);
-                print(await operation);
-                print(counter.value);
+                Console.print(await operation);
+                Console.print(counter.value);
             }
             """;
         using var output = new ConsoleOutput();

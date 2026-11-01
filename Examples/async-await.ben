@@ -4,16 +4,16 @@
 func add(number left, number right) -> number { return left + right; }
 
 func fail() -> number {
-    throw error("ASYNC100", "Background operation failed");
+    throw Error.create("ASYNC100", "Background operation failed");
 }
 
 _main_() {
     let first = async add(20, 22);
     let second = async add(5, 7);
-    print(await second);
-    print(await first);
+    Console.print(await second);
+    Console.print(await first);
 
     let failing = async fail();
     try { number unused = await failing; }
-    catch (failure) { print(failure.code + ": " + failure.message); }
+    catch (failure) { Console.print(failure.code + ": " + failure.message); }
 }

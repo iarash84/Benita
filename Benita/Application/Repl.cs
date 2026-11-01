@@ -151,7 +151,7 @@ public sealed class Repl
     {
         string trimmed = input.Trim();
         if (!trimmed.EndsWith(';') && !trimmed.EndsWith('}'))
-            return $"print({trimmed});";
+            return $"Console.print({trimmed});";
         return input;
     }
 

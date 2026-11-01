@@ -41,8 +41,8 @@ NativeCounter second = new NativeCounter(10);
 
 first.value = 20;
 
-print(first.value);  // 20
-print(second.value); // 10
+Console.print(first.value);  // 20
+Console.print(second.value); // 10
 ```
 
 ### متدها
@@ -67,8 +67,8 @@ _main_() {
 
     number updated = counter.increment(3);
 
-    print(updated);      // 5
-    print(counter.value); // 5
+    Console.print(updated);      // 5
+    Console.print(counter.value); // 5
 }
 ```
 
@@ -78,9 +78,9 @@ _main_() {
 _main_() {
     NativeCounter counter = new NativeCounter(0);
 
-    print(counter.increment(1)); // 1
-    print(counter.increment(4)); // 5
-    print(counter.increment(-2)); // 3
+    Console.print(counter.increment(1)); // 1
+    Console.print(counter.increment(4)); // 5
+    Console.print(counter.increment(-2)); // 3
 }
 ```
 
@@ -102,13 +102,13 @@ _main_() {
 _main_() {
     NativeCounter counter = new NativeCounter(2);
 
-    print(counter.value); // 2
+    Console.print(counter.value); // 2
 
     counter.value = 8;
-    print(counter.value); // 8
+    Console.print(counter.value); // 8
 
     counter.value += 2;
-    print(counter.value); // 10
+    Console.print(counter.value); // 10
 }
 ```
 
@@ -122,11 +122,11 @@ _main_() {
 _main_() {
     NativeCounter counter = new NativeCounter(2);
 
-    print(counter.value);
+    Console.print(counter.value);
     counter.value = 5;
-    print(counter.increment(3));
+    Console.print(counter.increment(3));
     counter.value += 2;
-    print(counter.value);
+    Console.print(counter.value);
 }
 ```
 
@@ -246,9 +246,9 @@ state در هر `NativeCounterInstance` نگهداری می‌شود؛ بناب�
 ```benita
 _main_() {
     DateTime epoch = new DateTime(0);
-    print(epoch.year);  // 1970
-    print(epoch.month); // 1
-    print(epoch.day);   // 1
+    Console.print(epoch.year);  // 1970
+    Console.print(epoch.month); // 1
+    Console.print(epoch.day);   // 1
 }
 ```
 
@@ -269,8 +269,8 @@ _main_() {
     DateTime start = new DateTime(0);
     DateTime next = start.addHours(2.5);
 
-    print(start.timestamp); // 0
-    print(next.timestamp);  // 9000
+    Console.print(start.timestamp); // 0
+    Console.print(next.timestamp);  // 9000
 }
 ```
 
@@ -283,8 +283,8 @@ _main_() {
     DateTime first = new DateTime(0);
     DateTime second = first.addHours(2);
 
-    print(second.differenceInSeconds(first)); // 7200
-    print(first.differenceInSeconds(second)); // -7200
+    Console.print(second.differenceInSeconds(first)); // 7200
+    Console.print(first.differenceInSeconds(second)); // -7200
 }
 ```
 
@@ -295,7 +295,7 @@ _main_() {
 ```benita
 _main_() {
     DateTime epoch = new DateTime(0);
-    print(epoch.format("yyyy-MM-dd HH:mm:ss")); // 1970-01-01 00:00:00
+    Console.print(epoch.format("yyyy-MM-dd HH:mm:ss")); // 1970-01-01 00:00:00
 }
 ```
 
@@ -383,7 +383,7 @@ _main_() {
 ```benita
 _main_() {
     File file = new File("data/output.txt");
-    print(file.path);
+    Console.print(file.path);
 }
 ```
 
@@ -436,13 +436,13 @@ _main_() {
     file.appendText("\\nSecond line");
 
     if (file.exists()) {
-        print(file.readText());
-        print(file.length > 0);
+        Console.print(file.readText());
+        Console.print(file.length > 0);
     }
 
     File backup = new File("data/notes.backup.txt");
     file.copyTo(backup.path);
-    print(backup.exists());
+    Console.print(backup.exists());
 
     file.delete();
     backup.delete();

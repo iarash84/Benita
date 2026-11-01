@@ -3,10 +3,10 @@
 // A palindrome reads identically from left to right and from right to left.
 func is_palindrome(string value) -> bool {
     number left = 0;
-    number right = string_len(value) - 1;
+    number right = String.length(value) - 1;
 
     while (left < right) {
-        if (string_char_at(value, left) != string_char_at(value, right)) {
+        if (String.char_at(value, left) != String.char_at(value, right)) {
             return false;
         }
 
@@ -18,7 +18,7 @@ func is_palindrome(string value) -> bool {
 }
 
 _main_() {
-    print(is_palindrome("level"));
-    print(is_palindrome("benita"));
-    print(is_palindrome(""));
+    Console.print(is_palindrome("level"));
+    Console.print(is_palindrome("benita"));
+    Console.print(is_palindrome(""));
 }

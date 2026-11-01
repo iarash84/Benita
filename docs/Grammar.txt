@@ -197,7 +197,7 @@ Semantic constraints
 20. Interfaces contain method signatures only: fields, bodies, constructors,
     and access modifiers are not permitted. Class inheritance and overloads are
     not part of the language yet.
-21. `error(code, message)` creates the only value accepted by `throw`. Both
+21. `Error.create(code, message)` creates the only value accepted by `throw`. Both
     arguments are strings. An error exposes read-only string members `code` and
     `message` inside a catch block.
 22. A try statement requires at least one catch or finally clause. The catch
@@ -341,7 +341,7 @@ Semantic constraints
     اینترفیس در زمان اجرا به نمونهٔ واقعی پکیج هدایت می‌شود.
 20. اینترفیس‌ها فقط شامل امضای متدها هستند؛ فیلد، بدنه، سازنده و اصلاح‌گر دسترسی در
     آن‌ها مجاز نیست. وراثت کلاسی و سربارگذاری هنوز بخشی از زبان نیستند.
-21. `error(code, message)` تنها مقداری را ایجاد می‌کند که `throw` می‌پذیرد. هر دو
+21. `Error.create(code, message)` تنها مقداری را ایجاد می‌کند که `throw` می‌پذیرد. هر دو
     آرگومان رشته هستند. یک خطا درون بلوک `catch` اعضای رشته‌ای و فقط‌خواندنی `code`
     و `message` را در اختیار می‌گذارد.
 22. دستور `try` باید دست‌کم یک بند `catch` یا `finally` داشته باشد. دامنهٔ متغیر

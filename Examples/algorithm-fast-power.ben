@@ -19,7 +19,7 @@ func fast_power(number base, number exponent) -> number {
 }
 
 _main_() {
-    print(fast_power(2, 10));
-    print(fast_power(3, 5));
-    print(fast_power(7, 0));
+    Console.print(fast_power(2, 10));
+    Console.print(fast_power(3, 5));
+    Console.print(fast_power(7, 0));
 }

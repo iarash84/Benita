@@ -37,7 +37,8 @@ public abstract class BuiltInClassDefinition
         string name,
         IReadOnlyList<BuiltInParameter>? constructorParameters = null,
         IReadOnlyList<BuiltInMethodDescriptor>? methods = null,
-        IReadOnlyList<BuiltInPropertyDescriptor>? properties = null)
+        IReadOnlyList<BuiltInPropertyDescriptor>? properties = null,
+        IReadOnlyList<BuiltInMethodDescriptor>? staticMethods = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("A built-in class must have a name.", nameof(name));
@@ -53,6 +54,10 @@ public abstract class BuiltInClassDefinition
         {
             ParameterTypes = Array.AsReadOnly(method.ParameterTypes.ToArray())
         }).ToArray(), method => method.Name, "method");
+        StaticMethods = CreateUniqueMap((staticMethods ?? []).Select(method => method with
+        {
+            ParameterTypes = Array.AsReadOnly(method.ParameterTypes.ToArray())
+        }).ToArray(), method => method.Name, "static method");
         Properties = CreateUniqueMap(properties ?? [], property => property.Name, "property");
 
         string? duplicateMember = Methods.Keys.Intersect(Properties.Keys, StringComparer.Ordinal).FirstOrDefault();
@@ -63,6 +68,7 @@ public abstract class BuiltInClassDefinition
     public string Name { get; }
     public IReadOnlyList<BuiltInParameter> ConstructorParameters { get; }
     public IReadOnlyDictionary<string, BuiltInMethodDescriptor> Methods { get; }
+    public IReadOnlyDictionary<string, BuiltInMethodDescriptor> StaticMethods { get; }
     public IReadOnlyDictionary<string, BuiltInPropertyDescriptor> Properties { get; }
 
     /// <summary>با بررسی عمومی تعداد و نوع آرگومان‌ها نمونه می‌سازد.</summary>
@@ -155,6 +161,30 @@ public abstract class BuiltInClassDefinition
 
     protected abstract IBuiltInClassInstance CreateInstance(IReadOnlyList<object?> arguments);
 
+    internal object? InvokeStatic(string methodName, IReadOnlyList<object?> arguments)
+    {
+        if (!StaticMethods.TryGetValue(methodName, out BuiltInMethodDescriptor? method))
+            throw new BuiltInException($"Class '{Name}' has no static method named '{methodName}'.");
+        ValidateArguments($"{Name}.{methodName}", arguments, method.ParameterTypes);
+        try
+        {
+            object? result = InvokeStaticMethod(methodName, arguments);
+            ValidateResult($"{Name}.{methodName}", result, method.ReturnType);
+            return result;
+        }
+        catch (BuiltInException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            throw new BuiltInException(exception.Message, exception);
+        }
+    }
+
+    protected virtual object? InvokeStaticMethod(string methodName, IReadOnlyList<object?> arguments) =>
+        throw new BuiltInException($"Class '{Name}' does not expose static methods.");
+
     private void ValidateInstance(IBuiltInClassInstance instance)
     {
         if (instance.ClassName != Name)
@@ -244,6 +274,12 @@ public sealed class BuiltInClassRegistry
     public static BuiltInClassRegistry CreateDefault()
     {
         BuiltInClassRegistry registry = new();
+        registry.Register(new ConsoleClass());
+        registry.Register(new ArrayClass());
+        registry.Register(new StringClass());
+        registry.Register(new ConvertClass());
+        registry.Register(new MathClass());
+        registry.Register(new ErrorClass());
         registry.Register(new NativeCounterClass());
         registry.Register(new DateTimeClass());
         registry.Register(new FileClass());

@@ -15,6 +15,6 @@ func linear_search(number[] values, number target) -> number {
 
 _main_() {
     number[] values = [14, 3, 27, 8, 19];
-    print(linear_search(values, 8));
-    print(linear_search(values, 100));
+    Console.print(linear_search(values, 8));
+    Console.print(linear_search(values, 100));
 }

@@ -166,11 +166,11 @@ namespace BenitaTestProject
                     string world = ""world!"";
                     string message = concatenate(hello, world);
 
-                    print(message);
+                    Console.print(message);
 
                     bool check = is_even(sum);
                     if (check) {
-                        print(""Sum is even."");
+                        Console.print(""Sum is even."");
                     } 
                 }
             "
@@ -180,7 +180,7 @@ namespace BenitaTestProject
 
             List<Token> tokens = lexer.Tokenize();
 
-            Assert.AreEqual(123, tokens.Count); // Adjusted based on the actual token count in the code
+            Assert.AreEqual(127, tokens.Count); // Adjusted based on the actual token count in the code
 
             // Validate specific tokens and their types
             AssertToken(tokens[0], TokenType.FUNC, "func");
@@ -290,32 +290,36 @@ namespace BenitaTestProject
             AssertToken(tokens[95], TokenType.RPAREN, ")");
             AssertToken(tokens[96], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[97], TokenType.IDENTIFIER, "print");
-            AssertToken(tokens[98], TokenType.LPAREN, "(");
-            AssertToken(tokens[99], TokenType.IDENTIFIER, "message");
-            AssertToken(tokens[100], TokenType.RPAREN, ")");
-            AssertToken(tokens[101], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[97], TokenType.IDENTIFIER, "Console");
+            AssertToken(tokens[98], TokenType.DOT, ".");
+            AssertToken(tokens[99], TokenType.IDENTIFIER, "print");
+            AssertToken(tokens[100], TokenType.LPAREN, "(");
+            AssertToken(tokens[101], TokenType.IDENTIFIER, "message");
+            AssertToken(tokens[102], TokenType.RPAREN, ")");
+            AssertToken(tokens[103], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[102], TokenType.BOOL, "bool");
-            AssertToken(tokens[103], TokenType.IDENTIFIER, "check");
-            AssertToken(tokens[104], TokenType.EQUAL, "=");
-            AssertToken(tokens[105], TokenType.IDENTIFIER, "is_even");
-            AssertToken(tokens[106], TokenType.LPAREN, "(");
-            AssertToken(tokens[107], TokenType.IDENTIFIER, "sum");
-            AssertToken(tokens[108], TokenType.RPAREN, ")");
-            AssertToken(tokens[109], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[104], TokenType.BOOL, "bool");
+            AssertToken(tokens[105], TokenType.IDENTIFIER, "check");
+            AssertToken(tokens[106], TokenType.EQUAL, "=");
+            AssertToken(tokens[107], TokenType.IDENTIFIER, "is_even");
+            AssertToken(tokens[108], TokenType.LPAREN, "(");
+            AssertToken(tokens[109], TokenType.IDENTIFIER, "sum");
+            AssertToken(tokens[110], TokenType.RPAREN, ")");
+            AssertToken(tokens[111], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[110], TokenType.IF, "if");
-            AssertToken(tokens[111], TokenType.LPAREN, "(");
-            AssertToken(tokens[112], TokenType.IDENTIFIER, "check");
-            AssertToken(tokens[113], TokenType.RPAREN, ")");
-            AssertToken(tokens[114], TokenType.LBRACE, "{");
-            AssertToken(tokens[115], TokenType.IDENTIFIER, "print");
-            AssertToken(tokens[116], TokenType.LPAREN, "(");
-            AssertToken(tokens[117], TokenType.STRING_LITERAL, "Sum is even.");
-            AssertToken(tokens[118], TokenType.RPAREN, ")");
-            AssertToken(tokens[119], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[120], TokenType.RBRACE, "}");
+            AssertToken(tokens[112], TokenType.IF, "if");
+            AssertToken(tokens[113], TokenType.LPAREN, "(");
+            AssertToken(tokens[114], TokenType.IDENTIFIER, "check");
+            AssertToken(tokens[115], TokenType.RPAREN, ")");
+            AssertToken(tokens[116], TokenType.LBRACE, "{");
+            AssertToken(tokens[117], TokenType.IDENTIFIER, "Console");
+            AssertToken(tokens[118], TokenType.DOT, ".");
+            AssertToken(tokens[119], TokenType.IDENTIFIER, "print");
+            AssertToken(tokens[120], TokenType.LPAREN, "(");
+            AssertToken(tokens[121], TokenType.STRING_LITERAL, "Sum is even.");
+            AssertToken(tokens[122], TokenType.RPAREN, ")");
+            AssertToken(tokens[123], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[124], TokenType.RBRACE, "}");
 
             // Add more assertions as needed for the remaining tokens
 
@@ -340,7 +344,7 @@ namespace BenitaTestProject
                    number x = 20; 
                    number i = 0;
                    while(i <= x) {
-                      print(i + "" => "" + fib(i));
+                      Console.print(i + "" => "" + fib(i));
                       i++;
                    }
                 }
@@ -351,7 +355,7 @@ namespace BenitaTestProject
 
             List<Token> tokens = lexer.Tokenize();
 
-            Assert.AreEqual(90, tokens.Count); // Adjusted based on the actual token count in the code
+            Assert.AreEqual(92, tokens.Count); // Adjusted based on the actual token count in the code
 
             // Validate specific tokens and their types
             AssertToken(tokens[0], TokenType.FUNC, "func");
@@ -430,23 +434,25 @@ namespace BenitaTestProject
             AssertToken(tokens[69], TokenType.IDENTIFIER, "x");
             AssertToken(tokens[70], TokenType.RPAREN, ")");
             AssertToken(tokens[71], TokenType.LBRACE, "{");
-            AssertToken(tokens[72], TokenType.IDENTIFIER, "print");
-            AssertToken(tokens[73], TokenType.LPAREN, "(");
-            AssertToken(tokens[74], TokenType.IDENTIFIER, "i");
-            AssertToken(tokens[75], TokenType.PLUS, "+");
-            AssertToken(tokens[76], TokenType.STRING_LITERAL, " => ");
+            AssertToken(tokens[72], TokenType.IDENTIFIER, "Console");
+            AssertToken(tokens[73], TokenType.DOT, ".");
+            AssertToken(tokens[74], TokenType.IDENTIFIER, "print");
+            AssertToken(tokens[75], TokenType.LPAREN, "(");
+            AssertToken(tokens[76], TokenType.IDENTIFIER, "i");
             AssertToken(tokens[77], TokenType.PLUS, "+");
-            AssertToken(tokens[78], TokenType.IDENTIFIER, "fib");
-            AssertToken(tokens[79], TokenType.LPAREN, "(");
-            AssertToken(tokens[80], TokenType.IDENTIFIER, "i");
-            AssertToken(tokens[81], TokenType.RPAREN, ")");
-            AssertToken(tokens[82], TokenType.RPAREN, ")");
-            AssertToken(tokens[83], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[84], TokenType.IDENTIFIER, "i");
-            AssertToken(tokens[85], TokenType.PLUS_PLUS, "++");
-            AssertToken(tokens[86], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[87], TokenType.RBRACE, "}");
-            AssertToken(tokens[88], TokenType.RBRACE, "}");
+            AssertToken(tokens[78], TokenType.STRING_LITERAL, " => ");
+            AssertToken(tokens[79], TokenType.PLUS, "+");
+            AssertToken(tokens[80], TokenType.IDENTIFIER, "fib");
+            AssertToken(tokens[81], TokenType.LPAREN, "(");
+            AssertToken(tokens[82], TokenType.IDENTIFIER, "i");
+            AssertToken(tokens[83], TokenType.RPAREN, ")");
+            AssertToken(tokens[84], TokenType.RPAREN, ")");
+            AssertToken(tokens[85], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[86], TokenType.IDENTIFIER, "i");
+            AssertToken(tokens[87], TokenType.PLUS_PLUS, "++");
+            AssertToken(tokens[88], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[89], TokenType.RBRACE, "}");
+            AssertToken(tokens[90], TokenType.RBRACE, "}");
         }
         [TestMethod]
         public void Tokenize_LargeMultilineSource_PreservesFinalTokenLocation()

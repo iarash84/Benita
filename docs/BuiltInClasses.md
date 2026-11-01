@@ -13,14 +13,15 @@
 5. [پیاده‌سازی instance](#5-پیادهسازی-instance)
 6. [ثبت کلاس در registry](#6-ثبت-کلاس-در-registry)
 7. [مسیر اجرای کلاس](#7-مسیر-اجرای-کلاس)
-8. [مدیریت state و Clone](#8-مدیریت-state-و-clone)
-9. [مدیریت خطا](#9-مدیریت-خطا)
-10. [نوشتن تست‌ها](#10-نوشتن-تستها)
-11. [مثال کامل](#11-مثال-کامل)
-12. [قواعد ممنوع و خطاهای رایج](#12-قواعد-ممنوع-و-خطاهای-رایج)
-13. [مراحل اجرای تغییرات](#13-مراحل-اجرای-تغییرات)
-14. [چک‌لیست Pull Request](#14-چکلیست-pull-request)
-15. [کاتالوگ کلاس‌ها و مستندات API](BuiltInClassCatalog.md)
+8. [کلاس‌های static](#8-کلاسهای-static)
+9. [مدیریت state و Clone](#9-مدیریت-state-و-clone)
+10. [مدیریت خطا](#10-مدیریت-خطا)
+11. [نوشتن تست‌ها](#11-نوشتن-تستها)
+12. [مثال کامل](#12-مثال-کامل)
+13. [قواعد ممنوع و خطاهای رایج](#13-قواعد-ممنوع-و-خطاهای-رایج)
+14. [مراحل اجرای تغییرات](#14-مراحل-اجرای-تغییرات)
+15. [چک‌لیست Pull Request](#15-چکلیست-pull-request)
+16. [کاتالوگ کلاس‌ها و مستندات API](BuiltInClassCatalog.md)
 
 ---
 
@@ -50,7 +51,7 @@
 _main_() {
     Example example = new Example(10);
     example.value = 20;
-    print(example.add(5));
+    Console.print(example.add(5));
 }
 ```
 
@@ -64,6 +65,61 @@ _main_() {
 6. فراخوانی `example.add(5)` به `InvokeMethod` می‌رسد.
 
 برای کلاس جدید هیچ‌کدام از این مراحل نباید به نام کلاس وابسته شوند.
+
+---
+
+## 8. کلاس‌های static
+
+برای قابلیتی که state نمونه ندارد، مانند عملیات کنسول، آرایه، رشته، تبدیل، ریاضی و ساخت خطا، از کلاس static داخلی استفاده کنید. این APIها با نام کلاس و member access فراخوانی می‌شوند و نباید به‌صورت function سراسری ثبت شوند:
+
+```benita
+_main_() {
+    Console.print("hello");
+    number size = Array.length([1, 2, 3]);
+    string lower = String.to_lower("BENITA");
+    number value = Convert.to_number("42");
+    Console.print(Math.sqrt(value));
+    throw Error.create("INVALID", "example error");
+}
+```
+
+کلاس static باید از [`StaticBuiltInClassDefinition`](../Benita/Runtime/BuiltIns/StaticBuiltInClasses.cs:3) مشتق شود و descriptorهای متد را از طریق پارامتر `staticMethods` به سازندهٔ پایه بدهد:
+
+```csharp
+internal sealed class ExampleStaticClass : StaticBuiltInClassDefinition
+{
+    internal ExampleStaticClass()
+        : base("Example", [
+            new BuiltInMethodDescriptor("identity", Types.String, [Types.String])])
+    {
+    }
+
+    protected override object? InvokeStaticMethod(
+        string methodName,
+        IReadOnlyList<object?> arguments) => methodName switch
+    {
+        "identity" => arguments[0],
+        _ => throw new BuiltInException($"Unknown static method '{methodName}'.")
+    };
+}
+```
+
+نکات قرارداد static:
+
+- متدها در [`BuiltInClassDefinition.StaticMethods`](../Benita/Runtime/BuiltIns/BuiltInClassRegistry.cs:66) ثبت می‌شوند و مانند متدهای instance از نظر تعداد آرگومان، type و نوع خروجی اعتبارسنجی می‌شوند.
+- [`StaticBuiltInClassDefinition.CreateInstance()`](../Benita/Runtime/BuiltIns/StaticBuiltInClasses.cs:11) ساخت `new Example(...)` را عمداً رد می‌کند؛ کلاس بدون state نباید instance داشته باشد.
+- semantic analyzer و interpreter هر دو نام کلاس را از همان [`BuiltInClassRegistry`](../Benita/Runtime/BuiltIns/BuiltInClassRegistry.cs:247) resolve می‌کنند.
+- implementation متد static باید مقدارهای عددی زبان را به `double` برگرداند؛ `int` به‌عنوان `number` runtime شناخته نمی‌شود.
+- کلاس جدید را در [`BuiltInClassRegistry.CreateDefault()`](../Benita/Runtime/BuiltIns/BuiltInClassRegistry.cs:274) ثبت و برای syntax معتبر، خطاهای semantic و رفتار runtime تست اضافه کنید.
+
+کلاس‌های دارای state همچنان باید مدل instance را حفظ کنند:
+
+```benita
+_main_() {
+    DateTime value = new DateTime(0);
+    Console.print(value.format("yyyy"));
+}
+```
 
 ---
 
@@ -339,9 +395,9 @@ registry باید همان instance مشترک را در compiler و runtime د�
 ```benita
 _main_() {
     Example example = new Example(10);
-    print(example.value);
+    Console.print(example.value);
     example.value = 20;
-    print(example.add(5));
+    Console.print(example.add(5));
 }
 ```
 
@@ -470,9 +526,9 @@ public void Example_SupportsMembers()
     const string source = """
         _main_() {
             Example example = new Example(10);
-            print(example.value);
+            Console.print(example.value);
             example.value = 20;
-            print(example.add(5));
+            Console.print(example.add(5));
         }
         """;
 
@@ -615,10 +671,10 @@ registry.Register(new ExampleClass());
 ```benita
 _main_() {
     Example example = new Example(10);
-    print(example.value);   // 10
-    print(example.add(5));  // 15
+    Console.print(example.value);   // 10
+    Console.print(example.add(5));  // 15
     example.value = 100;
-    print(example.value);   // 100
+    Console.print(example.value);   // 100
 }
 ```
 

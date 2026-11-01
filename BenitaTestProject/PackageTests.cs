@@ -29,7 +29,7 @@ pkg myPackage {
 _main_(){
 	number mn = 5;
 	myPackage classInstance = new myPackage(5);
-	print(classInstance.var);	
+	Console.print(classInstance.var);	
 }";
             _compiler.Check(source);
             //var result = _compiler.Exec(source);
@@ -62,9 +62,9 @@ _main_(){
 	number mn = 5;
 	myPackage classInstance = new myPackage(5);
 
-	print(classInstance.Third());
+	Console.print(classInstance.Third());
 	classInstance.var += classInstance.Third();
-	print(classInstance.var);
+	Console.print(classInstance.var);
 }";
             _compiler.Check(source);
             //var result = _compiler.Exec(source);
@@ -92,7 +92,7 @@ pkg myPackage {
 		var = input1;
 	}
 	public func First(number c) -> void{
-		print(c);
+		Console.print(c);
 	}	
 	public func Second(number std) -> number{
 		return std + var;
@@ -103,7 +103,7 @@ pkg myPackage {
 }
 
 func First(number c) -> void{
-	print(c + 1);
+	Console.print(c + 1);
 }
 
 func inc(number a) -> number{
@@ -115,27 +115,27 @@ _main_(){
 	number mn = 5;
 	myPackage classInstance = new myPackage(5);
 
-	print(classInstance.Third());
+	Console.print(classInstance.Third());
 	classInstance.var += classInstance.Third();
-	print(classInstance.var);
+	Console.print(classInstance.var);
 	
 	classInstance.var = classInstance.Third() + 3;
-	print(classInstance.var);
+	Console.print(classInstance.var);
 
 	classInstance.var +=3;
-	print(classInstance.var);
+	Console.print(classInstance.var);
 	classInstance.var = mn + 3;
 	
 
 	classInstance.var = classInstance.var / 2;
-	print(classInstance.var);
-	print(inc(classInstance.var));
+	Console.print(classInstance.var);
+	Console.print(inc(classInstance.var));
 	classInstance.var = inc(classInstance.var);
-	print(classInstance.var);
+	Console.print(classInstance.var);
 	classInstance.First(5);
-	print(classInstance.Second(2));
+	Console.print(classInstance.Second(2));
 	First(8);
-	print(""this is a test"");	
+	Console.print(""this is a test"");	
 }";
             _compiler.Check(source);
 

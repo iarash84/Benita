@@ -29,5 +29,5 @@ pkg NotificationFactory {
 _main_() {
     NotificationFactory factory = new NotificationFactory();
     Notification notification = factory.create("email");
-    print(notification.send("Build finished"));
+    Console.print(notification.send("Build finished"));
 }

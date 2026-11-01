@@ -15,11 +15,11 @@ _main_() {
     number y = 20;
     number sum = add(x, y);              
     string message = concatenate("hello", " world");    
-    print(message);
+    Console.print(message);
 }
 */
 _main_() {
-    print("YES");
+    Console.print("YES");
 }
 
 string a = "20";
@@ -27,6 +27,6 @@ string a = "20";
 number a = 50;
 /*
 _main_() {
-    print("No");
+    Console.print("No");
 }
 */

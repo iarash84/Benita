@@ -19,9 +19,9 @@ _main_() {
     number[] values = [2, 9, 17, 21, 29];
     for (value in values) {
         if (is_prime(value)) {
-            print(value + " is prime");
+            Console.print(value + " is prime");
         } else {
-            print(value + " is not prime");
+            Console.print(value + " is not prime");
         }
     }
 }

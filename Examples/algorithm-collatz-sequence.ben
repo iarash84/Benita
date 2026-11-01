@@ -12,7 +12,7 @@ func collatz(number start) -> number[] {
             current = current * 3 + 1;
         }
 
-        sequence = array_add(sequence, current);
+        sequence = Array.add(sequence, current);
     }
 
     return sequence;
@@ -21,6 +21,6 @@ func collatz(number start) -> number[] {
 _main_() {
     number[] sequence = collatz(6);
     for (value in sequence) {
-        print(value);
+        Console.print(value);
     }
 }

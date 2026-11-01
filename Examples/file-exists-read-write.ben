@@ -6,9 +6,9 @@ string fileContent;
 _main_() {
     File file = new File("test.txt");
     if (file.exists()) {
-        print(file.readText());
+        Console.print(file.readText());
     } else {
-        print("File does not exist, creating new file with content.");
+        Console.print("File does not exist, creating new file with content.");
         file.writeText("Hello, world!");
     }
 }

@@ -28,12 +28,6 @@
         private readonly Dictionary<string, FunctionNode> _functions;
 
         /// <summary>
-        /// Dictionary to store default functions with their return types and parameter types.
-        /// </summary>
-        private readonly Dictionary<string, (TypeSymbol ReturnType, List<TypeSymbol> ParameterTypes)> _defaultFunctions;
-
-
-        /// <summary>
         /// Initializes a new instance of the SemanticAnalyzer class.
         /// </summary>
         public SemanticAnalyzer(BuiltInClassRegistry? builtInClasses = null)
@@ -43,10 +37,6 @@
             _packages = new Dictionary<string, PackageNode>();
             _interfaces = new Dictionary<string, InterfaceNode>();
             _builtInClasses = builtInClasses ?? BuiltInClassRegistry.CreateDefault();
-            _defaultFunctions = BuiltInRegistry.Descriptors.Values.ToDictionary(
-                descriptor => descriptor.Name,
-                descriptor => (descriptor.ReturnType, descriptor.ParameterTypes.ToList()),
-                StringComparer.Ordinal);
         }
 
         /// <summary>
@@ -743,6 +733,11 @@
 
         private string? HandleMemberAccessNode(MemberAccessNode memberAccess, Dictionary<string, string?> localVariables)
         {
+            if (_builtInClasses.TryGet(memberAccess.ObjectName, out BuiltInClassDefinition? staticClass) &&
+                memberAccess.Expression is FunctionCallNode staticCall &&
+                staticClass.StaticMethods.ContainsKey(staticCall.FunctionName))
+                return AnalyzeBuiltInStaticClassMemberAccess(staticClass, staticCall, localVariables);
+
             if (!localVariables.TryGetValue(memberAccess.ObjectName, out string? packageName) || packageName is null)
                 throw new Exception($"Member access requires a package instance, but '{memberAccess.ObjectName}' is not one.");
 
@@ -813,6 +808,63 @@
                 default:
                     throw new Exception($"Unsupported expression type: {memberAccess.GetType().Name}");
             }
+        }
+
+        private string AnalyzeBuiltInStaticClassMemberAccess(
+            BuiltInClassDefinition builtInClass,
+            FunctionCallNode call,
+            Dictionary<string, string?> localVariables)
+        {
+            BuiltInMethodDescriptor method = builtInClass.StaticMethods[call.FunctionName];
+            if (call.Arguments.Count != method.ParameterTypes.Count)
+                throw new SemanticException(
+                    $"'{builtInClass.Name}.{call.FunctionName}' expects {method.ParameterTypes.Count} argument(s), but got {call.Arguments.Count}.");
+
+            TypeSymbol? arrayElementType = null;
+            for (int index = 0; index < call.Arguments.Count; index++)
+            {
+                string? actualType = AnalyzeExpression(call.Arguments[index], localVariables);
+                string expectedType = method.ParameterTypes[index].Name;
+                if (!CheckType(expectedType, actualType))
+                    throw new SemanticException(
+                        $"Type mismatch in argument {index + 1} of '{builtInClass.Name}.{call.FunctionName}'. Expected '{expectedType}' but got '{actualType}'.");
+
+                if (builtInClass.Name == "Array" && index == 0 &&
+                    TypeFacts.FromName(actualType) is ArrayTypeSymbol arrayType)
+                    arrayElementType = arrayType.ElementType;
+            }
+
+            if (builtInClass.Name == "Array" && arrayElementType is not null)
+            {
+                bool elementArgument = call.FunctionName is "add" or "contains" or "index_of" && call.Arguments.Count > 1
+                    ? call.FunctionName is "add" or "contains" or "index_of"
+                    : call.FunctionName == "insert";
+                int elementIndex = call.FunctionName == "insert" ? 2 : 1;
+                if (elementArgument && call.Arguments.Count > elementIndex)
+                {
+                    TypeSymbol elementType = TypeFacts.FromName(AnalyzeExpression(call.Arguments[elementIndex], localVariables));
+                    if (!TypeFacts.IsAssignableTo(elementType, arrayElementType))
+                        throw new SemanticException(
+                            $"Type mismatch in argument {elementIndex + 1} of '{builtInClass.Name}.{call.FunctionName}'. Expected '{arrayElementType}' but got '{elementType}'.");
+                }
+
+                if (call.FunctionName == "concat" && call.Arguments.Count > 1 &&
+                    TypeFacts.FromName(AnalyzeExpression(call.Arguments[1], localVariables)) is ArrayTypeSymbol secondArray &&
+                    !TypeFacts.IsAssignableTo(secondArray.ElementType, arrayElementType))
+                    throw new SemanticException(
+                        $"Type mismatch in argument 2 of '{builtInClass.Name}.{call.FunctionName}'. Expected '{arrayElementType}[]' but got '{secondArray}'.");
+            }
+
+            if (builtInClass.Name == "Array" &&
+                method.ReturnType == Types.AnyArray &&
+                call.Arguments.Count > 0)
+            {
+                TypeSymbol firstType = TypeFacts.FromName(AnalyzeExpression(call.Arguments[0], localVariables));
+                if (firstType is ArrayTypeSymbol arrayType)
+                    return Types.ArrayOf(arrayType.ElementType).Name;
+            }
+
+            return method.ReturnType.Name;
         }
 
         private string AnalyzeBuiltInClassMemberAccess(
@@ -1033,55 +1085,29 @@
         /// <returns>The return type of the function call.</returns>
         private string? HandleFunctionCallNode(FunctionCallNode functionCall, Dictionary<string, string?> localVariables)
         {
-            if (!_functions.ContainsKey(functionCall.FunctionName) && !_defaultFunctions.ContainsKey(functionCall.FunctionName))
-            {
+            if (!_functions.TryGetValue(functionCall.FunctionName, out FunctionNode? function))
                 throw new Exception($"Undeclared function '{functionCall.FunctionName}'.");
-            }
-            (TypeSymbol ReturnType, List<TypeSymbol> ParameterTypes) functionInfo = _functions.ContainsKey(functionCall.FunctionName)
-                ? (TypeFacts.FromName(_functions[functionCall.FunctionName].ReturnType),
-                    _functions[functionCall.FunctionName].Parameters
-                        .Select(parameter => TypeFacts.FromName(parameter.Type)).ToList())
-                : _defaultFunctions[functionCall.FunctionName];
 
-            if (functionCall.Arguments.Count != functionInfo.ParameterTypes.Count)
+            List<TypeSymbol> parameterTypes = function.Parameters
+                .Select(parameter => TypeFacts.FromName(parameter.Type))
+                .ToList();
+            if (functionCall.Arguments.Count != parameterTypes.Count)
             {
-                throw new Exception($"Argument count mismatch in function call to '{functionCall.FunctionName}'. Expected {functionInfo.ParameterTypes.Count} but got {functionCall.Arguments.Count}.");
+                throw new Exception($"Argument count mismatch in function call to '{functionCall.FunctionName}'. Expected {parameterTypes.Count} but got {functionCall.Arguments.Count}.");
             }
-            TypeSymbol? arrayElementType = null;
+
             for (int i = 0; i < functionCall.Arguments.Count; i++)
             {
                 TypeSymbol argType = TypeFacts.FromName(
                     AnalyzeExpression(functionCall.Arguments[i], localVariables));
-
-                bool isArrayFunction = functionCall.FunctionName.StartsWith("array_", StringComparison.Ordinal);
-                if (isArrayFunction && i == 0 && argType is ArrayTypeSymbol arrayType)
-                    arrayElementType = arrayType.ElementType;
-
-                bool isElementArgument =
-                    functionCall.FunctionName is "array_add" or "array_contains" or "array_index_of" && i == 1 ||
-                    functionCall.FunctionName == "array_insert" && i == 2;
-                if (isElementArgument && arrayElementType is not null && arrayElementType != Types.Unknown &&
-                    !TypeFacts.IsAssignableTo(argType, arrayElementType))
-                    throw new Exception($"Type mismatch in argument {i + 1} of function call to '{functionCall.FunctionName}'. Expected '{arrayElementType}' but got '{argType}'.");
-
-                if (functionCall.FunctionName == "array_concat" && i == 1 &&
-                    arrayElementType is not null && arrayElementType != Types.Unknown &&
-                    !TypeFacts.IsAssignableTo(argType, Types.ArrayOf(arrayElementType)))
-                    throw new Exception($"Type mismatch in argument 2 of function call to 'array_concat'. Expected '{arrayElementType}[]' but got '{argType}'.");
-
-                TypeSymbol expectedType = functionInfo.ParameterTypes[i];
+                TypeSymbol expectedType = parameterTypes[i];
                 if (!CheckType(expectedType.Name, argType.Name))
                 {
                     throw new Exception($"Type mismatch in argument {i + 1} of function call to '{functionCall.FunctionName}'. Expected '{expectedType}' but got '{argType}'.");
                 }
             }
-            bool preservesArrayType = functionCall.FunctionName is
-                "array_add" or "array_remove" or "array_reverse" or "array_clear" or
-                "array_insert" or "array_slice" or "array_concat" or "array_sort";
-            if (preservesArrayType && arrayElementType is not null)
-                return Types.ArrayOf(arrayElementType).Name;
 
-            return functionInfo.ReturnType.Name;
+            return TypeFacts.FromName(function.ReturnType).Name;
         }
 
         /// <summary>

@@ -37,5 +37,5 @@ pkg ShopFacade {
 
 _main_() {
     ShopFacade shop = new ShopFacade();
-    print(shop.checkout(2, 150));
+    Console.print(shop.checkout(2, 150));
 }

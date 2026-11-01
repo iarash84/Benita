@@ -15,4 +15,4 @@ func print_document(Printer printer, string text) -> string {
     return printer.print_text(text);
 }
 
-_main_() { print(print_document(new PrinterAdapter(), "adapted")); }
+_main_() { Console.print(print_document(new PrinterAdapter(), "adapted")); }

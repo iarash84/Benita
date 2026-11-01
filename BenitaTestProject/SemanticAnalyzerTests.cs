@@ -11,7 +11,7 @@ namespace BenitaTestProject
         {
             const string source = """
                 number answer = 42;
-                _main_() { print(answer); }
+                _main_() { Console.print(answer); }
                 """;
             var program = new Parser(new Lexer(source).Tokenize()).Parse();
 
