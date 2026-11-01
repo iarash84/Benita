@@ -147,7 +147,7 @@ flowchart LR
 
 `Interpreter` با الگوی Visitor روی AST حرکت می‌کند. هنگام اجرا، مقدار متغیرها، scope توابع، آرایه‌ها و نمونه‌های package را مدیریت می‌کند و دستورات کنترلی را به‌ترتیب اجرا می‌کند.
 
-توابع داخلی مانند `print`، `input` و عملیات فایل از طریق `BuiltInRegistry` به handler مناسب در پوشهٔ `Runtime/BuiltIns` هدایت می‌شوند. وضعیت هر Interpreter نیز در `RuntimeContext` مستقل نگهداری می‌شود.
+کلاس‌های داخلی مانند `Console`، `Array`، `String` و عملیات فایل از طریق `BuiltInClassRegistry` به تعریف و handler مناسب در پوشهٔ `Runtime/BuiltIns` هدایت می‌شوند. کلاس‌های static بدون ساخت نمونه و کلاس‌های دارای state با `new` استفاده می‌شوند؛ وضعیت هر Interpreter نیز در `RuntimeContext` مستقل نگهداری می‌شود.
 
 ## مراحل پردازش برنامه
 
@@ -252,10 +252,10 @@ BuiltInDescriptor
 
 توابع داخلی فعلی در چهار گروه قرار می‌گیرند:
 
-- آرایه: `array_len`، `array_add`، `array_remove`، جست‌وجو، برش، ادغام و مرتب‌سازی
+- آرایه: کلاس static `Array` با `length`، `add`، `remove`، `contains`، `index_of`، `reverse`، `clear`، `insert`، `slice`، `concat` و `sort`
 - فایل: کلاس داخلی `File` با متدهای `readText`، `writeText`، `appendText`، `exists`، `delete`، `copyTo` و `moveTo`
-- ابزار عمومی: `print`، `input`، `to_string`، `to_number`، `round_number` و `sqrt_number`
-- رشته: `string_len`، `string_char_at`، `string_substring`، `string_contains`، `string_index_of`، `string_replace`، `string_split`، `string_trim`، `string_to_lower` و `string_to_upper`
+- ابزار عمومی: کلاس‌های `Console`، `Convert`، `Math` و `Error`
+- رشته: کلاس static `String` با `length`، `char_at`، `substring`، `contains`، `index_of`، `replace`، `split`، `trim`، `to_lower` و `to_upper`
 
 با این ساختار برای اضافه‌کردن یک تابع داخلی لازم نیست چند فهرست جدا را تغییر بدهم.
 

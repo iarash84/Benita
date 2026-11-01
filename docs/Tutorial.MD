@@ -243,16 +243,16 @@ Console.print(Array.length(values));
 ```
 
 تمام عناصر یک آرایه باید نوع یکسان داشته باشند و اندیس آرایه عددی است.
-توابع جست‌وجو و مرتب‌سازی آرایه همهٔ مقادیر `number` را مستقل از representation داخلی
-آن‌ها مقایسه می‌کنند؛ برای نمونه خروجی `array_len` با literal عددی برابر است.
+متدهای جست‌وجو و مرتب‌سازی کلاس `Array` همهٔ مقادیر `number` را مستقل از representation داخلی
+آن‌ها مقایسه می‌کنند؛ برای نمونه خروجی `Array.length` با literal عددی برابر است.
 آرایه‌ای که بدون مقدار اولیه تعریف شود، به‌صورت آرایه خالی از همان نوع ایجاد می‌شود.
 در آرایهٔ سایزدار مانند `bool[3]`، اندازه باید عدد صحیح نامنفی باشد. مقدار اولیهٔ
 عناصر برای `number` برابر `0`، برای `string` رشتهٔ خالی و برای `bool` برابر `false` است.
 
-#### توابع مدیریت آرایه
+#### متدهای مدیریت آرایه
 
-توابع مدیریت آرایه، آرایه ورودی را تغییر نمی‌دهند و نتیجه را به‌صورت یک آرایه جدید
-برمی‌گردانند. بنابراین نتیجه توابعی مانند `array_insert` و `array_sort` را در یک
+متدهای static کلاس `Array`، آرایهٔ ورودی را تغییر نمی‌دهند و نتیجه را به‌صورت یک آرایهٔ جدید
+برمی‌گردانند. بنابراین نتیجهٔ متدهایی مانند `Array.insert` و `Array.sort` را در یک
 متغیر ذخیره کنید.
 
 | تابع | کاربرد | مقدار بازگشتی |
@@ -269,9 +269,9 @@ Console.print(Array.length(values));
 | `Array.concat(first, second)` | دو آرایه هم‌نوع را به هم متصل می‌کند. | آرایه جدید |
 | `Array.sort(array)` | عناصر را به‌صورت صعودی مرتب می‌کند. | آرایه جدید |
 
-نوع مقداری که به `array_add` یا `array_insert` داده می‌شود باید با نوع عناصر آرایه
-یکسان باشد. همچنین دو ورودی `array_concat` باید آرایه‌های هم‌نوع باشند. اندیس یا
-بازه نامعتبر در `array_remove`، `array_insert` و `array_slice` باعث ایجاد خطا می‌شود.
+نوع مقداری که به `Array.add` یا `Array.insert` داده می‌شود باید با نوع عناصر آرایه
+یکسان باشد. همچنین دو ورودی `Array.concat` باید آرایه‌های هم‌نوع باشند. اندیس یا
+بازه نامعتبر در `Array.remove`، `Array.insert` و `Array.slice` باعث ایجاد خطا می‌شود.
 
 ```benita
 number[] values = [30, 10, 20];
@@ -436,7 +436,7 @@ _main_() {
 }
 ```
 
-توابع داخلی این بخش:
+کلاس‌ها و متدهای داخلی این بخش:
 
 - `Console.print(value)` چاپ مقدار
 - `Console.input()` خواندن یک خط رشته‌ای
@@ -464,7 +464,7 @@ _main_() {
 }
 ```
 
-اندیس‌های رشته از صفر شروع می‌شوند. `string_index_of` در صورت پیدا نشدن عبارت، مقدار `-1` برمی‌گرداند و `string_split` یک `string[]` تولید می‌کند.
+اندیس‌های رشته از صفر شروع می‌شوند. `String.index_of` در صورت پیدا نشدن عبارت، مقدار `-1` برمی‌گرداند و `String.split` یک `string[]` تولید می‌کند.
 
 ### ۱۰. عملیات فایل
 
@@ -869,15 +869,15 @@ Console.print(Array.length(values));
 
 All elements in an array must have the same type, and an array index must be numeric.
 Array lookup and sorting compare every `number` by its Benita value regardless of its
-internal CLR representation; for example, an `array_len` result equals a numeric literal.
+internal CLR representation; for example, an `Array.length` result equals a numeric literal.
 An array declared without an initializer starts as an empty array of its declared type.
 For a sized array such as `bool[3]`, the size must be a non-negative whole number.
 The defaults are `0` for `number`, an empty string for `string`, and `false` for `bool`.
 
 #### Array management functions
 
-Array management functions do not modify their input. They return a new array, so
-store the result of functions such as `array_insert` and `array_sort` in a variable.
+`Array` static methods do not modify their input. They return a new array, so
+store the result of methods such as `Array.insert` and `Array.sort` in a variable.
 
 | Function | Description | Return value |
 | --- | --- | --- |
@@ -893,9 +893,9 @@ store the result of functions such as `array_insert` and `array_sort` in a varia
 | `Array.concat(first, second)` | Joins two arrays of the same type. | New array |
 | `Array.sort(array)` | Sorts the elements in ascending order. | New array |
 
-Values passed to `array_add` and `array_insert` must match the array element type.
-Both inputs to `array_concat` must also have the same element type. Invalid indices
-or ranges passed to `array_remove`, `array_insert`, or `array_slice` produce an error.
+Values passed to `Array.add` and `Array.insert` must match the array element type.
+Both inputs to `Array.concat` must also have the same element type. Invalid indices
+or ranges passed to `Array.remove`, `Array.insert`, or `Array.slice` produce an error.
 
 ```benita
 number[] values = [30, 10, 20];
@@ -1092,7 +1092,7 @@ _main_() {
 }
 ```
 
-String indexes are zero-based. `string_index_of` returns `-1` when no match is found, and `string_split` returns a `string[]`.
+String indexes are zero-based. `String.index_of` returns `-1` when no match is found, and `String.split` returns a `string[]`.
 
 ### 10. File operations
 
