@@ -92,7 +92,7 @@ flowchart LR
 | `Syntax/ASTNode.cs` | تعریف Nodeهای عبارت‌ها، دستورات، توابع، حلقه‌ها، آرایه‌ها و بسته‌ها |
 | `Runtime/Interpreter.cs` | اجرای AST و نگهداری وضعیت زمان اجرا |
 | `Runtime/RuntimeContext.cs` | وضعیت مستقل متغیرها، توابع و بسته‌های هر اجرا |
-| `Runtime/BuiltIns/BuiltInRegistry.cs` | منبع واحد نام، امضا و handler توابع داخلی |
+| `Runtime/BuiltIns/BuiltInClassRegistry.cs` | registry واحد definitionهای built-in classها و scope فعال importها |
 | `Runtime/DebugClass.cs` | امکانات اجرای برنامه در حالت Debug |
 | `Diagnostics/ExceptionClass.cs` | خطاهای ساخت‌یافتهٔ Lexer، Parser، Semantic و Runtime |
 
@@ -119,7 +119,9 @@ flowchart LR
 
 ### Parser و AST
 
-`Parser` توکن‌ها را مطابق گرامر مصرف می‌کند و یک `ProgramNode` می‌سازد. این Node ریشهٔ AST است و موارد زیر را در خود نگه می‌دارد:
+`Parser` توکن‌ها را مطابق گرامر مصرف می‌کند و یک `ProgramNode` می‌سازد. declarationهای
+`import ClassName;` باید پیش از سایر declarationهای سطح بالا بیایند و نام کلاس‌ها در
+`ProgramNode.Imports` ذخیره می‌شود. این Node ریشهٔ AST است و موارد زیر را در خود نگه می‌دارد:
 
 - متغیرهای سراسری
 - interfaceها و امضای متدهای آن‌ها
@@ -147,7 +149,12 @@ flowchart LR
 
 `Interpreter` با الگوی Visitor روی AST حرکت می‌کند. هنگام اجرا، مقدار متغیرها، scope توابع، آرایه‌ها و نمونه‌های package را مدیریت می‌کند و دستورات کنترلی را به‌ترتیب اجرا می‌کند.
 
-کلاس‌های داخلی مانند `Console`، `Array`، `String` و عملیات فایل از طریق `BuiltInClassRegistry` به تعریف و handler مناسب در پوشهٔ `Runtime/BuiltIns` هدایت می‌شوند. کلاس‌های static بدون ساخت نمونه و کلاس‌های دارای state با `new` استفاده می‌شوند؛ وضعیت هر Interpreter نیز در `RuntimeContext` مستقل نگهداری می‌شود.
+کلاس‌های داخلی مانند `Console`، `Array`، `String` و عملیات فایل از طریق `BuiltInClassRegistry` به
+definition مناسب در پوشهٔ `Runtime/BuiltIns` هدایت می‌شوند. با `import ClassName;` scope فعال
+ساخته می‌شود و همان scope به semantic analyzer و interpreter می‌رسد. کلاس‌های static بدون ساخت
+نمونه و کلاس‌های دارای state با `new` استفاده می‌شوند؛ وضعیت هر Interpreter نیز در
+`RuntimeContext` مستقل نگهداری می‌شود. `include_once` فقط source fileها را وارد می‌کند و
+فعال‌سازی built-in class نیست.
 
 ## مراحل پردازش برنامه
 
@@ -156,6 +163,8 @@ flowchart LR
 <div dir="ltr" align="left">
 
 ```benita
+import Console;
+
 func add(number a, number b) -> number {
     return a + b;
 }
@@ -235,29 +244,31 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben -s 
 - `-t`: نمایش Tokenها
 - `-a`: نمایش AST
 
-## توابع داخلی و Registry
+## کلاس‌های داخلی و Registry
 
-مشخصات هر تابع داخلی در `BuiltInRegistry` ثبت می‌شود: نام تابع، نوع خروجی، نوع
-پارامترها و روشی که handler آن را می‌سازد.
+مشخصات هر built-in class در `BuiltInClassRegistry` ثبت می‌شود: نام کلاس، سازنده، متدهای
+static و instance و propertyها. برای استفادهٔ محدودشده در یک فایل، declarationهایی مانند
+`import Console;` و `import Array;` را پیش از سایر declarationها قرار دهید.
 
 <div dir="ltr" align="left">
 
 ```text
-BuiltInDescriptor
-├── Name و امضای نوعی: مورد استفاده SemanticAnalyzer
-└── HandlerFactory: مورد استفاده Interpreter
+BuiltInClassDefinition
+├── Constructor و instance members
+├── StaticMethods برای کلاس‌های بدون state
+└── BuiltInClassRegistry: lookup و ساخت scope فعال importها
 ```
 
 </div>
 
-توابع داخلی فعلی در چهار گروه قرار می‌گیرند:
+کلاس‌های داخلی فعلی در چهار گروه قرار می‌گیرند:
 
 - آرایه: کلاس static `Array` با `length`، `add`، `remove`، `contains`، `index_of`، `reverse`، `clear`، `insert`، `slice`، `concat` و `sort`
 - فایل: کلاس داخلی `File` با متدهای `readText`، `writeText`، `appendText`، `exists`، `delete`، `copyTo` و `moveTo`
 - ابزار عمومی: کلاس‌های `Console`، `Convert`، `Math` و `Error`
 - رشته: کلاس static `String` با `length`، `char_at`، `substring`، `contains`، `index_of`، `replace`، `split`، `trim`، `to_lower` و `to_upper`
 
-با این ساختار برای اضافه‌کردن یک تابع داخلی لازم نیست چند فهرست جدا را تغییر بدهم.
+با این ساختار برای اضافه‌کردن یک built-in class لازم نیست چند فهرست جدا را تغییر بدهم.
 
 ## خطاها و ابزارهای عیب‌یابی
 
@@ -309,14 +320,14 @@ GitHub Actions در Push و Pull Request پروژه را build کرده و مج�
 5. افزودن تست واحد، یکپارچه و برنامهٔ نمونه در صورت نیاز
 6. به‌روزرسانی `Grammar.txt` و Tutorial
 
-### افزودن یک تابع داخلی
+### افزودن یک کلاس داخلی
 
-برای افزودن تابع داخلی جدید:
+برای افزودن built-in class جدید:
 
-1. ایجاد یا توسعهٔ یک handler مشتق‌شده از `BuiltInHandler`
-2. افزودن یک `BuiltInDescriptor` به `BuiltInRegistry`
-3. افزودن قواعد ویژهٔ نوعی فقط در صورت نیاز؛ امضای عادی مستقیماً از registry خوانده می‌شود
-4. نوشتن تست واحد و یکپارچه و بررسی خطای پایدار `BEN4101`
+1. ایجاد definition و در صورت نیاز instance مشتق‌شده در `Runtime/BuiltIns`
+2. ثبت definition در `BuiltInClassRegistry.CreateDefault()`
+3. افزودن تست‌های static یا instance، validation و خطای پایدار `BEN4101`
+4. به‌روزرسانی کاتالوگ کلاس‌ها و نمونه‌های دارای `import`
 
 ### چک‌لیست تغییرات زبان
 

@@ -49,5 +49,6 @@ To create an installable VSIX, install the VS Code extension packaging tool and 
 npx @vscode/vsce package
 ```
 
-The extension follows the grammar documented in `docs/Grammar.txt` and the built-in
-API registered by Benita's `BuiltInRegistry`.
+The extension follows the grammar documented in `docs/Grammar.txt` and the built-in class
+API registered by Benita's `BuiltInClassRegistry`, including explicit `import ClassName;`
+declarations.

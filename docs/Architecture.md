@@ -36,17 +36,20 @@ Benita/
 اجرا `RuntimeContext` خودش را دارد. همان context به `Interpreter`، `PackageInstance` و
 debugger داده می‌شود تا چند مفسر اطلاعاتشان را ناخواسته با هم به اشتراک نگذارند.
 
-### ۲. تکرار registry توابع داخلی
+### ۲. registry کلاس‌های داخلی
 
-قبلاً مشخصات توابع داخلی در چند محل تکرار شده بود. حالا `BuiltInRegistry` نام، نوع خروجی،
-پارامترها و سازندهٔ هر تابع را نگه می‌دارد و هم تحلیل معنایی و هم مفسر از همین اطلاعات
-استفاده می‌کنند.
+تعریف هر built-in class فقط در `BuiltInClassRegistry` ثبت می‌شود. این registry metadata کلاس،
+سازنده، متدهای static و instance و propertyهای آن را در اختیار semantic analyzer و interpreter
+قرار می‌دهد. `BuiltInClassDefinition` خطاهای قرارداد و اجرای built-in را به
+`BuiltInException` با کد پایدار `BEN4101` تبدیل می‌کند.
 
-### ۳. خطاهای عمومی built-inها
+### ۳. فعال‌سازی کلاس‌های داخلی
 
-تمام handlerهای داخلی از `BuiltInHandler` مشتق می‌شوند. این کلاس خطاهای داخلی .NET را به
-`BuiltInException` با کد پایدار `BEN4101` تبدیل می‌کند؛ بنابراین CLI، REPL و استفاده مستقیم
-از runtime قرارداد خطای یکسان دارند.
+برنامه می‌تواند با declaration سطح بالای `import ClassName;` کلاس‌های built-in را فعال کند.
+پس از parse، compiler یک registry محدود از همان importها می‌سازد و همان scope را به semantic
+analyzer و runtime می‌دهد. کلاس‌های static بدون ساخت instance فعال می‌شوند؛ کلاس‌های instance
+پس از import برای type resolution و `new` در دسترس هستند. `include_once` فقط فایل source را
+ترکیب می‌کند و جایگزین import نیست.
 
 ### ۴. کلاس‌های داخلی
 
@@ -76,9 +79,9 @@ bridge استفاده می‌کند؛ adapter آینده می‌تواند هم�
    task capture و rollback ضروری است.
 5. کلاس را در bootstrap رجیستری، یعنی `BuiltInClassRegistry.CreateDefault()`، ثبت کنید.
    برای تست یا پیکربندی اختصاصی می‌توانید یک registry جدید بسازید و با `Register()` ثبت کنید.
-6. registry واحد را به `CompilerClass` یا `Repl` بدهید تا semantic analyzer و runtime همان
-   definitionها را ببینند. نیازی به تغییر lexer، parser یا AST نیست؛ syntax موجود `new Type(...)`
-   و `instance.member` استفاده می‌شود.
+6. اگر کلاس باید در برنامه‌ای با import صریح استفاده شود، `import ClassName;` را در ابتدای
+   source قرار دهید؛ compiler همان definition را در scope فعال semantic و runtime قرار می‌دهد.
+   syntax موجود `new Type(...)` و `instance.member` برای کلاس‌های instance استفاده می‌شود.
 7. حداقل تست‌های ثبت/lookup، ساخت نمونه، متد، property قابل خواندن/نوشتن، property فقط‌خواندنی،
    آرگومان نامعتبر، member نامعتبر، type نتیجهٔ نامعتبر و clone را اضافه کنید.
 
