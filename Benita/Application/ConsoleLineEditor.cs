@@ -6,7 +6,7 @@ namespace Benita;
 internal sealed class ConsoleLineEditor
 {
     private static readonly HashSet<string> Keywords =
-        ["include_once", "_main_", "pkg", "interface", "func", "public", "private", "if", "else", "while", "for", "in", "return", "new", "init", "this", "true", "false", "break", "continue", "match", "try", "catch", "finally", "throw"];
+        ["include_once", "import", "_main_", "pkg", "interface", "func", "public", "private", "if", "else", "while", "for", "in", "return", "new", "init", "this", "true", "false", "break", "continue", "match", "try", "catch", "finally", "throw"];
     private static readonly HashSet<string> Types = ["number", "string", "bool", "void", "let"];
     private static readonly HashSet<string> BuiltIns =
         ["Console", "Array", "String", "Convert", "Math", "Error", "DateTime", "File", "NativeCounter"];

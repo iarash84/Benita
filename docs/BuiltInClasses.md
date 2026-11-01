@@ -43,6 +43,26 @@
 
 مقدارهای runtime از طریق [`RuntimeValue`](../Benita/Runtime/BuiltIns/RuntimeValue.cs:8) و typeهای زبان از طریق [`TypeSymbol`](../Benita/Semantics/Types/TypeSymbol.cs:4) توصیف می‌شوند. قرارداد کلاس داخلی نباید به Reflection یا [`System.Type`](https://learn.microsoft.com/dotnet/api/system.type) وابسته باشد.
 
+### import و activation
+
+کلاس داخلی در صورت استفادهٔ صریح از import در scope برنامه فعال می‌شود:
+
+```benita
+import Console;
+import Array;
+import DateTime;
+
+_main_() {
+    Console.print(Array.length([1, 2, 3]));
+    DateTime value = new DateTime(0);
+    Console.print(value.year);
+}
+```
+
+`import ClassName;` یک declaration سطح بالا است و باید پیش از سایر declarationهای سطح بالا بیاید. import فقط definition کلاس را در scope فعال قرار می‌دهد؛ برای کلاس‌های static هیچ نمونه‌سازی یا initialization زمان اجرا انجام نمی‌شود. کلاس‌های دارای state پس از import هم به‌عنوان type و هم برای `new` قابل استفاده‌اند. import نام ناشناخته یا import تکراری خطای parser/semantic تولید می‌کند.
+
+`include_once` همچنان برای ترکیب فایل‌های منبع استفاده می‌شود و جایگزین import کلاس داخلی نیست. برای سازگاری با برنامه‌های قدیمی، برنامه‌ای که هیچ importی ندارد فعلاً registry پیش‌فرض را دریافت می‌کند؛ با افزودن اولین import، scope کلاس‌ها به همان فهرست صریح محدود می‌شود.
+
 ### مسیر عمومی یک کلاس داخلی
 
 کدی مانند زیر را در Benita در نظر بگیرید:
@@ -73,6 +93,13 @@ _main_() {
 برای قابلیتی که state نمونه ندارد، مانند عملیات کنسول، آرایه، رشته، تبدیل، ریاضی و ساخت خطا، از کلاس static داخلی استفاده کنید. این APIها با نام کلاس و member access فراخوانی می‌شوند و نباید به‌صورت function سراسری ثبت شوند:
 
 ```benita
+import Console;
+import Array;
+import String;
+import Convert;
+import Math;
+import Error;
+
 _main_() {
     Console.print("hello");
     number size = Array.length([1, 2, 3]);
@@ -115,6 +142,9 @@ internal sealed class ExampleStaticClass : StaticBuiltInClassDefinition
 کلاس‌های دارای state همچنان باید مدل instance را حفظ کنند:
 
 ```benita
+import Console;
+import DateTime;
+
 _main_() {
     DateTime value = new DateTime(0);
     Console.print(value.format("yyyy"));

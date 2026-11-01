@@ -42,6 +42,7 @@
         private static readonly Dictionary<string, TokenType> Keywords = new()
         {
             {"pkg", TokenType.PACKAGE},
+            {"import", TokenType.IMPORT},
             {"new", TokenType.NEW},
             {"init", TokenType.INIT},
             {"this", TokenType.THIS},

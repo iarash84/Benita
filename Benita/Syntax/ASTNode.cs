@@ -411,19 +411,21 @@
         public AccessModifier AccessModifier { get; } = accessModifier;
     }
 
-    /// <summary>ریشهٔ AST شامل interfaceها، packageها، declarationها و نقطهٔ ورود برنامه است.</summary>
+    /// <summary>ریشهٔ AST شامل importها، interfaceها، packageها، declarationها و نقطهٔ ورود برنامه است.</summary>
     public class ProgramNode(
         List<VariableDeclarationNode> globalVariables,
         List<PackageNode> packages,
         List<FunctionNode> functions,
         FunctionNode? mainFunction,
         List<StatementNode?>? statements,
-        List<InterfaceNode>? interfaces = null) : AstNode
+        List<InterfaceNode>? interfaces = null,
+        List<string>? imports = null) : AstNode
     {
         public List<VariableDeclarationNode> GlobalVariables { get; } = globalVariables;
         public List<FunctionNode> Functions { get; } = functions;
         public List<PackageNode> Packages { get; } = packages;
         public List<InterfaceNode> Interfaces { get; } = interfaces ?? [];
+        public List<string> Imports { get; } = imports ?? [];
         public FunctionNode? MainFunction { get; } = mainFunction;
         public List<StatementNode?>? Statements { get; } = statements;
     }

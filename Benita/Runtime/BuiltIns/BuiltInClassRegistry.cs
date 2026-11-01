@@ -285,6 +285,20 @@ public sealed class BuiltInClassRegistry
         registry.Register(new FileClass());
         return registry;
     }
+
+    /// <summary>یک scope جدید شامل فقط کلاس‌های import شده را می‌سازد.</summary>
+    public BuiltInClassRegistry CreateImported(IEnumerable<string> classNames)
+    {
+        ArgumentNullException.ThrowIfNull(classNames);
+        BuiltInClassRegistry imported = new();
+        foreach (string className in classNames)
+        {
+            if (!TryGet(className, out BuiltInClassDefinition? definition))
+                throw new SemanticException($"Unknown built-in class '{className}' in import declaration.");
+            imported.Register(definition);
+        }
+        return imported;
+    }
 }
 
 internal static class BuiltInRuntimeTypes

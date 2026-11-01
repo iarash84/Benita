@@ -16,9 +16,10 @@ public sealed class CompilerClass
         bool optimizeAst = false)
     {
         ProgramNode program = Compile(sourceCode, lexerPrint, parserPrint, sourcePrint, sourceName, optimizeAst);
+        BuiltInClassRegistry activeBuiltIns = CreateActiveBuiltIns(program);
         try
         {
-            new Interpreter(debugModeAvailable, context: new RuntimeContext(_builtInClasses)).Visit(program);
+            new Interpreter(debugModeAvailable, context: new RuntimeContext(activeBuiltIns)).Visit(program);
         }
         catch (BenitaException)
         {
@@ -62,16 +63,22 @@ public sealed class CompilerClass
     {
         ProgramNode program = Parse(Tokenize(sourceCode, lexerPrint, sourcePrint, sourceName));
         if (parserPrint) AstPrinter.Print(program);
-        AnalyzeProgram(program, _builtInClasses);
+        AnalyzeProgram(program, CreateActiveBuiltIns(program));
     }
 
     private ProgramNode Compile(string sourceCode, bool lexerPrint, bool parserPrint,
         bool sourcePrint, string? sourceName, bool optimizeAst)
     {
         ProgramNode program = Parse(Tokenize(sourceCode, lexerPrint, sourcePrint, sourceName));
-        AnalyzeProgram(program, _builtInClasses);
+        AnalyzeProgram(program, CreateActiveBuiltIns(program));
         return OptimizeIfRequested(program, parserPrint, optimizeAst);
     }
+
+    private BuiltInClassRegistry CreateActiveBuiltIns(ProgramNode program) =>
+        // Preserve source compatibility for existing programs until they opt into imports.
+        program.Imports.Count == 0
+            ? _builtInClasses
+            : _builtInClasses.CreateImported(program.Imports);
 
     private static List<Token> Tokenize(string sourceCode, bool printTokens = false,
         bool printSource = false, string? sourceName = null)

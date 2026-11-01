@@ -239,6 +239,47 @@ public class BuiltInClassTests
         Assert.AreEqual($"1{Environment.NewLine}0{Environment.NewLine}", output.GetOutput());
     }
 
+    [TestMethod]
+    public void BuiltInClass_ExplicitImportsActivateStaticAndInstanceClasses()
+    {
+        const string source = """
+            import Console;
+            import Array;
+            import NativeCounter;
+            _main_() {
+                NativeCounter counter = new NativeCounter(2);
+                Console.print(Array.length([1, 2, 3]));
+                Console.print(counter.increment(3));
+            }
+            """;
+        using var output = new ConsoleOutput();
+
+        new CompilerClass().Exec(source);
+
+        Assert.AreEqual($"3{Environment.NewLine}5{Environment.NewLine}", output.GetOutput());
+    }
+
+    [TestMethod]
+    public void BuiltInClass_ImportRejectsUnknownAndDuplicateNames()
+    {
+        SemanticException unknown = Assert.ThrowsException<SemanticException>(() =>
+            new CompilerClass().Check("import Missing; _main_() {}"));
+        StringAssert.Contains(unknown.Message, "Unknown built-in class 'Missing'");
+
+        ParserException duplicate = Assert.ThrowsException<ParserException>(() =>
+            new CompilerClass().Check("import Console; import Console; _main_() {}"));
+        StringAssert.Contains(duplicate.Message, "already imported");
+    }
+
+    [TestMethod]
+    public void BuiltInClass_ImportsMustPrecedeOtherTopLevelDeclarations()
+    {
+        ParserException exception = Assert.ThrowsException<ParserException>(() =>
+            new CompilerClass().Check("_main_() {} import Console;"));
+
+        StringAssert.Contains(exception.Message, "must appear before other top-level declarations");
+    }
+
     private sealed class BadResultClass : BuiltInClassDefinition
     {
         internal BadResultClass()

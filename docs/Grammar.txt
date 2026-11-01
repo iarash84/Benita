@@ -6,12 +6,17 @@ This document uses EBNF. Terminals are written in quotes, `?` means optional,
 
 program                 ::= top-level-item* EOF ;
 
-top-level-item          ::= package-declaration
+Top-level import declarations must appear before all other top-level items.
+
+ top-level-item          ::= import-declaration
+                           | package-declaration
                           | interface-declaration
                           | access-modifier? function-declaration
                           | access-modifier? variable-declaration
                           | main-function
                           | statement ;
+
+import-declaration      ::= "import" identifier ";" ;
 
 package-declaration     ::= "pkg" identifier implementation-list?
                             "{" package-member* "}" ;

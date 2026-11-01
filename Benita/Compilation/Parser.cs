@@ -31,6 +31,7 @@
         public ProgramNode Parse()
         {
             List<VariableDeclarationNode?> globalVariables = new List<VariableDeclarationNode?>();
+            List<string> imports = [];
 
             List<StatementNode?> statements = new List<StatementNode?>();
             List<PackageNode?> packages = new List<PackageNode?>();
@@ -40,7 +41,22 @@
             while (!IsAtEnd())
             {
                 AccessModifier? declaredAccess = ParseAccessModifier();
-                if (Check(TokenType.MAIN))
+                if (Match(TokenType.IMPORT))
+                {
+                    if (declaredAccess is not null)
+                        throw Error("BEN2001", "An import declaration cannot have an access modifier.");
+                    if (mainFunction is not null || _functions.Count > 0 || packages.Count > 0 || interfaces.Count > 0 ||
+                        globalVariables.Count > 0 || statements.Count > 0)
+                        throw Error("BEN2010", "Import declarations must appear before other top-level declarations.");
+
+                    Token className = Consume(TokenType.IDENTIFIER,
+                        "Expected a built-in class name after 'import'.");
+                    Consume(TokenType.SEMICOLON, "Expected ';' after import declaration.");
+                    if (imports.Contains(className.Lexeme, StringComparer.Ordinal))
+                        throw Error("BEN2011", $"Built-in class '{className.Lexeme}' is already imported.");
+                    imports.Add(className.Lexeme);
+                }
+                else if (Check(TokenType.MAIN))
                 {
                     if (declaredAccess is not null)
                         throw Error("BEN2009", "The _main_ entry point cannot have an access modifier.");
@@ -87,7 +103,7 @@
                 throw Error("BEN2003", "No main function or top-level executable statement was found.");
             }
 
-            return new ProgramNode(globalVariables, packages, _functions, mainFunction, statements, interfaces);
+            return new ProgramNode(globalVariables, packages, _functions, mainFunction, statements, interfaces, imports);
         }
 
         /// <summary>modifier اختیاری ابتدای declaration را می‌خواند؛ نبود آن با null مشخص می‌شود.</summary>
