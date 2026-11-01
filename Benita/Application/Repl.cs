@@ -10,16 +10,22 @@ public sealed class Repl
     private readonly TextReader _input;
     private readonly TextWriter _output;
     private readonly ConsoleLineEditor? _lineEditor;
+    private readonly BuiltInClassRegistry _builtInClasses;
     private readonly List<string> _history = [];
     private readonly StringBuilder _sessionSource = new();
-    private CompilerClass _compiler = new();
-    private Interpreter _interpreter = new(preserveStateBetweenPrograms: true);
+    private CompilerClass _compiler;
+    private Interpreter _interpreter;
 
     /// <summary>یک نشست تعاملی با ورودی و خروجی قابل‌جایگزینی ایجاد می‌کند.</summary>
-    public Repl(TextReader? input = null, TextWriter? output = null)
+    public Repl(TextReader? input = null, TextWriter? output = null,
+        BuiltInClassRegistry? builtInClasses = null)
     {
         _input = input ?? Console.In;
         _output = output ?? Console.Out;
+        _builtInClasses = builtInClasses ?? BuiltInClassRegistry.CreateDefault();
+        _compiler = new CompilerClass(_builtInClasses);
+        _interpreter = new Interpreter(preserveStateBetweenPrograms: true,
+            context: new RuntimeContext(_builtInClasses));
         if (input is null && output is null && !Console.IsInputRedirected && !Console.IsOutputRedirected)
             _lineEditor = new ConsoleLineEditor(_history);
     }
@@ -123,8 +129,9 @@ public sealed class Repl
             case ":reset":
                 _history.Clear();
                 _sessionSource.Clear();
-                _compiler = new CompilerClass();
-                _interpreter = new Interpreter(preserveStateBetweenPrograms: true);
+                _compiler = new CompilerClass(_builtInClasses);
+                _interpreter = new Interpreter(preserveStateBetweenPrograms: true,
+                    context: new RuntimeContext(_builtInClasses));
                 _output.WriteLine("Session reset.");
                 return true;
             case ":cancel":

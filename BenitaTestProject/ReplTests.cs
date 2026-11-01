@@ -120,4 +120,23 @@ public class ReplTests
         StringAssert.Contains(output, $"1{Environment.NewLine}");
         Assert.IsFalse(output.Contains($"9{Environment.NewLine}", StringComparison.Ordinal));
     }
+
+    [TestMethod]
+    public void Run_RuntimeFailureRollsBackBuiltInClassMutation()
+    {
+        const string input = """
+            NativeCounter counter = new NativeCounter(1);
+            counter.value = counter.increment(8); number[] items = [1]; print(items[5]);
+            counter.value
+            :exit
+            """;
+        using var consoleOutput = new ConsoleOutput();
+
+        new Repl(new StringReader(input), Console.Out).Run();
+
+        string output = consoleOutput.GetOutput();
+        StringAssert.Contains(output, "BEN4001");
+        StringAssert.Contains(output, $"1{Environment.NewLine}");
+        Assert.IsFalse(output.Contains($"9{Environment.NewLine}", StringComparison.Ordinal));
+    }
 }

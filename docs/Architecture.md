@@ -48,7 +48,51 @@ debugger داده می‌شود تا چند مفسر اطلاعاتشان را �
 `BuiltInException` با کد پایدار `BEN4101` تبدیل می‌کند؛ بنابراین CLI، REPL و استفاده مستقیم
 از runtime قرارداد خطای یکسان دارند.
 
-### ۴. نسخه برنامه
+### ۴. کلاس‌های داخلی
+
+`BuiltInClassRegistry` تعریف کلاس‌های داخلی را بر اساس نام نگه می‌دارد و ثبت نام تکراری را رد
+می‌کند. تعریف هر کلاس از `BuiltInClassDefinition` مشتق می‌شود و نوع سازنده، امضای متدها و
+قابلیت خواندن/نوشتن ویژگی‌ها را با descriptorهای زبان اعلام می‌کند. نمونه‌ها
+`IBuiltInClassInstance` را پیاده می‌کنند؛ برای جداسازی taskها و rollback نشست، `Clone` باید
+یک کپی مستقل از state قابل تغییر بسازد.
+
+مرز مقدارهای runtime از طریق `RuntimeValue` و `RuntimeTypeDescriptor` تعریف شده است. این
+قرارداد نام type و مقدار را به‌عنوان مفاهیم زبان منتقل می‌کند و به `System.Type` یا
+Reflection وابسته نیست. پیاده‌سازی فعلی برای سازگاری با interpreter قدیمی از `object?` به‌عنوان
+bridge استفاده می‌کند؛ adapter آینده می‌تواند همین قرارداد را با representation دیگری
+پیاده‌سازی کند.
+
+#### راهنمای افزودن یک کلاس داخلی
+
+برای افزودن کلاس جدید، مراحل زیر کافی است:
+
+1. یک کلاس مشتق‌شده از `BuiltInClassDefinition` در فایل مستقل زیر `Runtime/BuiltIns` بسازید.
+2. نام کلاس، پارامترهای سازنده، `BuiltInMethodDescriptor`ها و
+   `BuiltInPropertyDescriptor`ها را با typeهای زبان تعریف کنید.
+3. یک instance از `IBuiltInClassInstance` پیاده کنید. متدهای `InvokeMethod`، `GetProperty`
+   و `SetProperty` فقط state و رفتار کلاس را اجرا کنند؛ اعتبارسنجی عمومی توسط definition
+   انجام می‌شود.
+4. در `Clone()` یک نمونهٔ مستقل از تمام state قابل تغییر برگردانید. این شرط برای `async`،
+   task capture و rollback ضروری است.
+5. کلاس را در bootstrap رجیستری، یعنی `BuiltInClassRegistry.CreateDefault()`، ثبت کنید.
+   برای تست یا پیکربندی اختصاصی می‌توانید یک registry جدید بسازید و با `Register()` ثبت کنید.
+6. registry واحد را به `CompilerClass` یا `Repl` بدهید تا semantic analyzer و runtime همان
+   definitionها را ببینند. نیازی به تغییر lexer، parser یا AST نیست؛ syntax موجود `new Type(...)`
+   و `instance.member` استفاده می‌شود.
+7. حداقل تست‌های ثبت/lookup، ساخت نمونه، متد، property قابل خواندن/نوشتن، property فقط‌خواندنی،
+   آرگومان نامعتبر، member نامعتبر، type نتیجهٔ نامعتبر و clone را اضافه کنید.
+
+خطای semantic کلاس‌های داخلی با `SemanticException` و کد `BEN3001` گزارش می‌شود. خطای
+اعتبارسنجی یا اجرای runtime با `BuiltInException` و کد `BEN4101` گزارش می‌شود. implementation
+نمونهٔ `NativeCounter` در فایل مستقل خود قرار دارد تا registry فقط مسئول bootstrap و lookup
+باشد.
+
+`CompilerClass`، تحلیل‌گر معنایی و `RuntimeContext` باید همان رجیستری را دریافت کنند. این
+قرارداد از Reflection و `System.Type` استفاده نمی‌کند؛ جزئیات اجرای یک adapter در آینده
+می‌تواند مستقل از metadata زبان باقی بماند. رجیستری باید پس از bootstrap به‌عنوان configuration
+پایدار در نظر گرفته شود و از register کردن هم‌زمان در زمان اجرای برنامه پرهیز شود.
+
+### ۵. نسخه برنامه
 
 `AppVersion` نسخه را از assembly metadata می‌خواند. Help و REPL دیگر شماره نسخهٔ hard-coded
 ندارند و مقدار `<Version>` در فایل پروژه تنها منبع نسخهٔ برنامه است.

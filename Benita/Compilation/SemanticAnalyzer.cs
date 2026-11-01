@@ -12,6 +12,7 @@
         /// Dictionary to store packages names and their associated PackageNode.
         /// </summary>
         private readonly Dictionary<string, PackageNode> _packages;
+        private readonly BuiltInClassRegistry _builtInClasses;
         /// <summary>قراردادهای interface ثبت‌شده را برای تحلیل نوع و member access نگه می‌دارد.</summary>
         private readonly Dictionary<string, InterfaceNode> _interfaces;
 
@@ -35,12 +36,13 @@
         /// <summary>
         /// Initializes a new instance of the SemanticAnalyzer class.
         /// </summary>
-        public SemanticAnalyzer()
+        public SemanticAnalyzer(BuiltInClassRegistry? builtInClasses = null)
         {
             _globalVariables = new Dictionary<string, string?>();
             _functions = new Dictionary<string, FunctionNode>();
             _packages = new Dictionary<string, PackageNode>();
             _interfaces = new Dictionary<string, InterfaceNode>();
+            _builtInClasses = builtInClasses ?? BuiltInClassRegistry.CreateDefault();
             _defaultFunctions = BuiltInRegistry.Descriptors.Values.ToDictionary(
                 descriptor => descriptor.Name,
                 descriptor => (descriptor.ReturnType, descriptor.ParameterTypes.ToList()),
@@ -62,6 +64,7 @@
                 DeclareInterface(interfaceNode);
             foreach (var packageNode in program.Packages)
                 DeclarePackage(packageNode);
+            ValidateBuiltInClassTypes();
             // امضاها پیش از تحلیل هر call site ثبت می‌شوند تا forward call در initializer نیز معتبر باشد.
             foreach (var function in program.Functions)
                 DeclareFunction(function);
@@ -83,6 +86,7 @@
                         declaredType = initializerType;
                         RequireConcreteInferredType(declaredType, globalVar.Name);
                     }
+
                     else if (!CheckType(declaredType!, initializerType))
                     {
                         throw new Exception(
@@ -120,11 +124,32 @@
                 AnalyzeFunction(program.MainFunction);
         }
 
+        private void ValidateBuiltInClassTypes()
+        {
+            foreach (BuiltInClassDefinition builtInClass in _builtInClasses.Classes.Values)
+            {
+                foreach (BuiltInParameter parameter in builtInClass.ConstructorParameters)
+                    EnsureKnownType(parameter.Type.Name);
+
+                foreach (BuiltInMethodDescriptor method in builtInClass.Methods.Values)
+                {
+                    EnsureKnownType(method.ReturnType.Name, allowVoid: true);
+                    foreach (TypeSymbol parameterType in method.ParameterTypes)
+                        EnsureKnownType(parameterType.Name);
+                }
+
+                foreach (BuiltInPropertyDescriptor property in builtInClass.Properties.Values)
+                    EnsureKnownType(property.Type.Name);
+            }
+        }
+
         /// <summary>نام package را ثبت و از برخورد نام آن با سایر نوع‌ها جلوگیری می‌کند.</summary>
         private void DeclarePackage(PackageNode packageNode)
         {
             if (packageNode.Name == Types.Error.Name)
                 throw new Exception("The name 'error' is reserved by the language error type.");
+            if (_builtInClasses.TryGet(packageNode.Name, out _))
+                throw new Exception($"The name '{packageNode.Name}' is reserved by a built-in class.");
             if (_packages.ContainsKey(packageNode.Name) || _interfaces.ContainsKey(packageNode.Name))
             {
                 throw new Exception($"Package '{packageNode.Name}' is already declared.");
@@ -137,6 +162,8 @@
         {
             if (interfaceNode.Name == Types.Error.Name)
                 throw new Exception("The name 'error' is reserved by the language error type.");
+            if (_builtInClasses.TryGet(interfaceNode.Name, out _))
+                throw new Exception($"The name '{interfaceNode.Name}' is reserved by a built-in class.");
             if (_interfaces.ContainsKey(interfaceNode.Name) || _packages.ContainsKey(interfaceNode.Name))
                 throw new Exception($"Type '{interfaceNode.Name}' is already declared.");
             _interfaces[interfaceNode.Name] = interfaceNode;
@@ -673,8 +700,16 @@
         private string AnalyzeNewExpression(NewExpressionNode creation,
             Dictionary<string, string?> localVariables)
         {
+            if (_builtInClasses.TryGet(creation.PackageName, out BuiltInClassDefinition? builtInClass))
+            {
+                ValidateArguments(creation.PackageName, creation.Arguments,
+                    builtInClass.ConstructorParameters.Select(parameter =>
+                        new ParameterNode(parameter.Type.Name, parameter.Name)).ToList(), localVariables);
+                return builtInClass.Name;
+            }
+
             if (!_packages.TryGetValue(creation.PackageName, out PackageNode? package))
-                throw new Exception($"Unknown package '{creation.PackageName}'.");
+                throw new Exception($"Unknown package or built-in class '{creation.PackageName}'.");
 
             PackageFunctionNode? initializer = package.Members.OfType<PackageFunctionNode>()
                 .FirstOrDefault(member => member.Name == "init");
@@ -732,6 +767,9 @@
                 return contractMethod.ReturnType;
             }
 
+            if (_builtInClasses.TryGet(packageName, out BuiltInClassDefinition? builtInClass))
+                return AnalyzeBuiltInClassMemberAccess(memberAccess, localVariables, builtInClass);
+
             if (!_packages.TryGetValue(packageName, out PackageNode? outPackage))
                 throw new Exception($"Member access requires a package instance, but '{memberAccess.ObjectName}' is not one.");
 
@@ -775,7 +813,70 @@
                 default:
                     throw new Exception($"Unsupported expression type: {memberAccess.GetType().Name}");
             }
+        }
 
+        private string AnalyzeBuiltInClassMemberAccess(
+            MemberAccessNode memberAccess,
+            Dictionary<string, string?> localVariables,
+            BuiltInClassDefinition builtInClass)
+        {
+            switch (memberAccess.Expression)
+            {
+                case FunctionCallNode call:
+                    if (!builtInClass.Methods.TryGetValue(call.FunctionName, out BuiltInMethodDescriptor? method))
+                        throw new SemanticException($"Class '{builtInClass.Name}' has no method named '{call.FunctionName}'.");
+                    if (call.Arguments.Count != method.ParameterTypes.Count)
+                        throw new SemanticException(
+                            $"'{builtInClass.Name}.{call.FunctionName}' expects {method.ParameterTypes.Count} argument(s), but got {call.Arguments.Count}.");
+                    for (int index = 0; index < call.Arguments.Count; index++)
+                    {
+                        string? actualType = AnalyzeExpression(call.Arguments[index], localVariables);
+                        string expectedType = method.ParameterTypes[index].Name;
+                        if (!CheckType(expectedType, actualType))
+                            throw new SemanticException(
+                                $"Type mismatch in argument {index + 1} of '{builtInClass.Name}.{call.FunctionName}'. Expected '{expectedType}' but got '{actualType}'.");
+                    }
+                    return method.ReturnType.Name;
+
+                case IdentifierNode identifier:
+                    if (!builtInClass.Properties.TryGetValue(identifier.Name, out BuiltInPropertyDescriptor? property))
+                        throw new SemanticException($"Class '{builtInClass.Name}' has no property named '{identifier.Name}'.");
+                    if (!property.CanRead)
+                        throw new SemanticException($"Property '{builtInClass.Name}.{identifier.Name}' is not readable.");
+                    return property.Type.Name;
+
+                case AssignmentNode assignment:
+                    if (!builtInClass.Properties.TryGetValue(assignment.Name, out BuiltInPropertyDescriptor? assignedProperty))
+                        throw new SemanticException($"Class '{builtInClass.Name}' has no property named '{assignment.Name}'.");
+                    if (!assignedProperty.CanWrite)
+                        throw new SemanticException($"Property '{builtInClass.Name}.{assignment.Name}' is read-only.");
+                    string? assignedType = AnalyzeExpression(assignment.Expression, localVariables);
+                    if (!CheckType(assignedProperty.Type.Name, assignedType))
+                        throw new SemanticException(
+                            $"Type mismatch in assignment to property '{assignment.Name}'. Expected '{assignedProperty.Type}' but got '{assignedType}'.");
+                    return assignedProperty.Type.Name;
+
+                case CompoundAssignmentNode compound:
+                    if (!builtInClass.Properties.TryGetValue(compound.Name, out BuiltInPropertyDescriptor? compoundProperty))
+                        throw new SemanticException($"Class '{builtInClass.Name}' has no property named '{compound.Name}'.");
+                    if (!compoundProperty.CanRead || !compoundProperty.CanWrite)
+                        throw new SemanticException($"Property '{builtInClass.Name}.{compound.Name}' must be readable and writable.");
+                    string? compoundType = AnalyzeExpression(compound.Expression, localVariables);
+                    if (compoundProperty.Type != Types.Number || compoundType != Types.Number.Name)
+                        throw new SemanticException($"Compound assignment requires numeric operands for property '{compound.Name}'.");
+                    return compoundProperty.Type.Name;
+
+                case IncrementDecrementNode increment:
+                    if (!builtInClass.Properties.TryGetValue(increment.Name, out BuiltInPropertyDescriptor? incrementProperty))
+                        throw new SemanticException($"Class '{builtInClass.Name}' has no property named '{increment.Name}'.");
+                    if (!incrementProperty.CanRead || !incrementProperty.CanWrite ||
+                        incrementProperty.Type != Types.Number)
+                        throw new SemanticException($"Increment and decrement require a readable, writable numeric property '{increment.Name}'.");
+                    return incrementProperty.Type.Name;
+
+                default:
+                    throw new SemanticException($"Unsupported member access for built-in class '{builtInClass.Name}'.");
+            }
         }
 
         private static string FindPackageFieldType(PackageNode package, string fieldName, bool requirePublic = false)
@@ -1105,8 +1206,9 @@
             if (allowVoid && typeName == "void" || allowLet && typeName == "let") return;
             TypeSymbol type = TypeFacts.FromName(typeName);
             if (type is NamedTypeSymbol named &&
-                !_packages.ContainsKey(named.Name) && !_interfaces.ContainsKey(named.Name))
-                throw new Exception($"Unknown package or interface type '{named.Name}'.");
+                !_packages.ContainsKey(named.Name) && !_interfaces.ContainsKey(named.Name) &&
+                !_builtInClasses.TryGet(named.Name, out _))
+                throw new Exception($"Unknown package, interface, or built-in class type '{named.Name}'.");
         }
 
         /// <summary>Benita مقدار null ندارد؛ بنابراین reference نام‌دار باید هنگام declaration مقدار بگیرد.</summary>

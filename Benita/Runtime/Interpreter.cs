@@ -89,6 +89,8 @@ namespace Benita
             _functionReturnFlag = state.FunctionReturnFlag;
         }
 
+        internal BuiltInClassRegistry BuiltInClasses => _context.BuiltInClasses;
+
         private static object CloneCheckpointValue(object value, TransactionCheckpoint checkpoint,
             bool capturePackages)
         {
@@ -96,6 +98,16 @@ namespace Benita
             {
                 if (capturePackages) checkpoint.CapturePackage(package);
                 return package;
+            }
+            if (value is IBuiltInClassInstance builtInInstance)
+            {
+                Dictionary<object, object> builtInClones = capturePackages
+                    ? checkpoint.CapturedValues
+                    : checkpoint.RestoredValues;
+                if (builtInClones.TryGetValue(builtInInstance, out object? existingClone)) return existingClone;
+                IBuiltInClassInstance clone = CloneBuiltInClassInstance(builtInInstance);
+                builtInClones.Add(builtInInstance, clone);
+                return clone;
             }
             if (value is not Array array) return value;
 
@@ -298,6 +310,14 @@ namespace Benita
         private object VisitObjectInstantiationNode(ObjectInstantiationNode node)
         {
             DebugLog($"Instantiating object {node.Name} from package {node.PackageName}", false);
+            if (_context.BuiltInClasses.TryGet(node.PackageName, out BuiltInClassDefinition? builtInClass))
+            {
+                List<object?> builtInArguments = node.Arguments.Select(Visit).ToList();
+                IBuiltInClassInstance builtInInstance = builtInClass.Create(builtInArguments);
+                _variables[node.Name] = builtInInstance;
+                return builtInInstance;
+            }
+
             // Get the package definition from the list of packages
             if (!_context.Packages.TryGetValue(node.PackageName, out var packageNode))
             {
@@ -323,6 +343,12 @@ namespace Benita
         /// </summary>
         private object VisitNewExpressionNode(NewExpressionNode node)
         {
+            if (_context.BuiltInClasses.TryGet(node.PackageName, out BuiltInClassDefinition? builtInClass))
+            {
+                List<object?> builtInArguments = node.Arguments.Select(Visit).ToList();
+                return builtInClass.Create(builtInArguments);
+            }
+
             if (!_context.Packages.TryGetValue(node.PackageName, out PackageNode? packageNode))
                 throw new Exception($"Package '{node.PackageName}' not found.");
 
@@ -719,7 +745,7 @@ namespace Benita
         /// <summary>آرگومان‌ها و scope فعلی را snapshot می‌گیرد و فراخوانی را روی thread pool اجرا می‌کند.</summary>
         private object VisitAsyncExpressionNode(AsyncExpressionNode node)
         {
-            var context = new RuntimeContext();
+            var context = new RuntimeContext(_context.BuiltInClasses);
             foreach (var item in _context.GlobalFunctions)
                 context.GlobalFunctions[item.Key] = item.Value;
             foreach (var item in _functions)
@@ -762,6 +788,13 @@ namespace Benita
         {
             if (value is PackageInstance package)
                 return package.CloneForTask(context);
+            if (value is IBuiltInClassInstance builtInInstance)
+            {
+                if (context.Values.TryGetValue(builtInInstance, out object? existingClone)) return existingClone;
+                IBuiltInClassInstance clone = CloneBuiltInClassInstance(builtInInstance);
+                context.Values.Add(builtInInstance, clone);
+                return clone;
+            }
             if (value is not Array array) return value;
             if (context.Values.TryGetValue(array, out object? existing)) return existing;
 
@@ -773,6 +806,26 @@ namespace Benita
                 copy[index] = item is null ? null! : CloneTaskValue(item, context);
             }
             return copy;
+        }
+
+        private static IBuiltInClassInstance CloneBuiltInClassInstance(IBuiltInClassInstance instance)
+        {
+            try
+            {
+                IBuiltInClassInstance clone = instance.Clone();
+                if (clone is null || ReferenceEquals(clone, instance) || clone.ClassName != instance.ClassName)
+                    throw new BuiltInException(
+                        $"Cloning '{instance.ClassName}' must return an independent instance of the same class.");
+                return clone;
+            }
+            catch (BuiltInException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                throw new BuiltInException(exception.Message, exception);
+            }
         }
 
         /// <summary>یک shell خالی با تنظیمات همین مفسر برای clone داخلی package می‌سازد.</summary>
@@ -1195,7 +1248,73 @@ namespace Benita
                 return result;
             }
 
-            throw new Exception($"Member access on non-package instance '{instance}'");
+            if (TryGetVariableValue(node.ObjectName, out instance) &&
+                instance is IBuiltInClassInstance builtInInstance &&
+                _context.BuiltInClasses.TryGet(builtInInstance.ClassName, out BuiltInClassDefinition? builtInClass))
+            {
+                AstNode expression = EvaluateExternalMemberInputs(node.Expression);
+                return VisitBuiltInClassMemberAccess(builtInClass, builtInInstance, expression);
+            }
+
+            throw new RuntimeException($"Member access on non-package or non-built-in instance '{instance}'");
+        }
+
+        private object VisitBuiltInClassMemberAccess(
+            BuiltInClassDefinition builtInClass,
+            IBuiltInClassInstance instance,
+            AstNode expression)
+        {
+            try
+            {
+                switch (expression)
+                {
+                    case FunctionCallNode call:
+                        return builtInClass.Invoke(instance, call.FunctionName,
+                            call.Arguments.Select(argument => Visit(argument)).ToList())!;
+                    case IdentifierNode identifier:
+                        return builtInClass.GetProperty(instance, identifier.Name)!;
+                    case AssignmentNode assignment:
+                        object? assignedValue = Visit(assignment.Expression);
+                        builtInClass.SetProperty(instance, assignment.Name, assignedValue);
+                        return assignedValue!;
+                    case CompoundAssignmentNode compound:
+                        double oldValue = Convert.ToDouble(builtInClass.GetProperty(instance, compound.Name));
+                        double operand = Convert.ToDouble(Visit(compound.Expression));
+                        double compoundValue = compound.Operator switch
+                        {
+                            "+=" => oldValue + operand,
+                            "-=" => oldValue - operand,
+                            "*=" => oldValue * operand,
+                            "/=" => oldValue / operand,
+                            _ => throw new BuiltInException(
+                                $"Unknown compound assignment operator '{compound.Operator}'.")
+                        };
+                        builtInClass.SetProperty(instance, compound.Name, compoundValue);
+                        return compoundValue;
+                    case IncrementDecrementNode increment:
+                        double currentValue = Convert.ToDouble(builtInClass.GetProperty(instance, increment.Name));
+                        double incrementedValue = increment.Operator switch
+                        {
+                            "++" => currentValue + 1,
+                            "--" => currentValue - 1,
+                            _ => throw new BuiltInException(
+                                $"Unknown increment/decrement operator '{increment.Operator}'.")
+                        };
+                        builtInClass.SetProperty(instance, increment.Name, incrementedValue);
+                        return incrementedValue;
+                    default:
+                        throw new BuiltInException(
+                            $"Unsupported member operation for built-in class '{builtInClass.Name}'.");
+                }
+            }
+            catch (BuiltInException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                throw new BuiltInException(exception.Message, exception);
+            }
         }
 
         /// <summary>

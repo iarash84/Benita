@@ -3,6 +3,13 @@ namespace Benita;
 /// <summary>خط لولهٔ کامپایل بنیتا را از توکن‌سازی تا تحلیل و اجرا هماهنگ می‌کند.</summary>
 public sealed class CompilerClass
 {
+    private readonly BuiltInClassRegistry _builtInClasses;
+
+    public CompilerClass(BuiltInClassRegistry? builtInClasses = null)
+    {
+        _builtInClasses = builtInClasses ?? BuiltInClassRegistry.CreateDefault();
+    }
+
     /// <summary>کد منبع را تحلیل و با مفسر اجرا می‌کند.</summary>
     public void Exec(string sourceCode, bool lexerPrint = false, bool parserPrint = false,
         bool sourcePrint = false, bool debugModeAvailable = false, string? sourceName = null,
@@ -11,7 +18,7 @@ public sealed class CompilerClass
         ProgramNode program = Compile(sourceCode, lexerPrint, parserPrint, sourcePrint, sourceName, optimizeAst);
         try
         {
-            new Interpreter(debugModeAvailable).Visit(program);
+            new Interpreter(debugModeAvailable, context: new RuntimeContext(_builtInClasses)).Visit(program);
         }
         catch (BenitaException)
         {
@@ -28,9 +35,12 @@ public sealed class CompilerClass
         bool lexerPrint = false, bool parserPrint = false, bool sourcePrint = false,
         bool optimizeAst = false)
     {
+        if (!ReferenceEquals(interpreter.BuiltInClasses, _builtInClasses))
+            throw new InvalidOperationException("The compiler and REPL interpreter must use the same built-in class registry.");
+
         const string noOp = "if (false) {}";
         AnalyzeProgram(Parse(Tokenize($"{sessionSource}{Environment.NewLine}{noOp}",
-            sourceName: "<repl>")));
+            sourceName: "<repl>")), _builtInClasses);
         ProgramNode program = Parse(Tokenize($"{sourceCode}{Environment.NewLine}{noOp}",
             lexerPrint, sourcePrint, "<repl>"));
         program = OptimizeIfRequested(program, parserPrint, optimizeAst);
@@ -52,14 +62,14 @@ public sealed class CompilerClass
     {
         ProgramNode program = Parse(Tokenize(sourceCode, lexerPrint, sourcePrint, sourceName));
         if (parserPrint) AstPrinter.Print(program);
-        AnalyzeProgram(program);
+        AnalyzeProgram(program, _builtInClasses);
     }
 
-    private static ProgramNode Compile(string sourceCode, bool lexerPrint, bool parserPrint,
+    private ProgramNode Compile(string sourceCode, bool lexerPrint, bool parserPrint,
         bool sourcePrint, string? sourceName, bool optimizeAst)
     {
         ProgramNode program = Parse(Tokenize(sourceCode, lexerPrint, sourcePrint, sourceName));
-        AnalyzeProgram(program);
+        AnalyzeProgram(program, _builtInClasses);
         return OptimizeIfRequested(program, parserPrint, optimizeAst);
     }
 
@@ -81,9 +91,9 @@ public sealed class CompilerClass
         return program;
     }
 
-    private static void AnalyzeProgram(ProgramNode program)
+    private static void AnalyzeProgram(ProgramNode program, BuiltInClassRegistry builtInClasses)
     {
-        var analyzer = new SemanticAnalyzer();
+        var analyzer = new SemanticAnalyzer(builtInClasses);
         try { analyzer.Analyze(program); }
         catch (BenitaException) { throw; }
         catch (Exception exception) { throw new SemanticException(exception.Message, analyzer.CurrentSpan, exception); }
