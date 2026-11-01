@@ -20,6 +20,7 @@
 12. [قواعد ممنوع و خطاهای رایج](#12-قواعد-ممنوع-و-خطاهای-رایج)
 13. [مراحل اجرای تغییرات](#13-مراحل-اجرای-تغییرات)
 14. [چک‌لیست Pull Request](#14-چکلیست-pull-request)
+15. [کاتالوگ کلاس‌ها و مستندات API](BuiltInClassCatalog.md)
 
 ---
 
@@ -83,7 +84,8 @@ BenitaTestProject/
 └── BuiltInClassTests.cs              # تست‌های کلاس داخلی
 
  docs/
-└── BuiltInClasses.md                 # این راهنما
+├── BuiltInClasses.md                 # راهنمای توسعه و پیاده‌سازی
+└── BuiltInClassCatalog.md             # کاتالوگ API کلاس‌های داخلی
 ```
 
 ### محل هر نوع کد
@@ -93,7 +95,7 @@ BenitaTestProject/
 | Definition و Instance کلاس | یک فایل مستقل در `Benita/Runtime/BuiltIns` |
 | ثبت پیش‌فرض کلاس | `BuiltInClassRegistry.CreateDefault()` |
 | تست registry و runtime | `BenitaTestProject/BuiltInClassTests.cs` یا فایل تست مستقل |
-| مستندات رفتار کلاس | `docs/BuiltInClasses.md` یا مستندات مرتبط |
+| مستندات رفتار کلاس | [`docs/BuiltInClassCatalog.md`](BuiltInClassCatalog.md) |
 | تغییر در syntax | فقط در صورت اثبات ضرورت معماری؛ در حالت عادی ممنوع |
 
 کلاس جدید را داخل فایل registry قرار ندهید. registry باید مسئول ثبت و lookup باشد، نه محل نگهداری implementation همهٔ کلاس‌ها.
