@@ -3,345 +3,454 @@
 # معماری و راهنمای توسعهٔ Benita
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/iarash84/Benita/main/Logo.jpg" alt="Benita Logo" width="150" height="150">
+  <img src="../Logo.png" alt="Benita Logo" width="150" height="150">
 </p>
 
-در این صفحه ساختار پروژه، مسیر اجرای کد و نکاتی را که برای توسعهٔ Benita لازم است
-یک‌جا نوشته‌ام. Benita یک زبان آموزشی و تفسیرشونده است که با C# و .NET 8 اجرا می‌شود.
+این سند مرجع توسعه‌دهنده برای وضعیت فعلی مخزن Benita است. Benita یک زبان آموزشی،
+تفسیرشونده و مبتنی بر C# و .NET 8 است. هدف این صفحه توضیح دقیق ساختار مخزن، مرز
+لایه‌ها، خط لولهٔ پردازش، مدل معنایی، runtime، کلاس‌های داخلی، REPL و روش اضافه‌کردن
+قابلیت‌های جدید است؛ نه تکرار کامل آموزش زبان.
 
 ## فهرست مطالب
 
 - [نمای کلی](#نمای-کلی)
 - [ساختار مخزن](#ساختار-مخزن)
-- [معماری کامپایلر](#معماری-کامپایلر)
-- [مراحل پردازش برنامه](#مراحل-پردازش-برنامه)
-- [حالت‌های اجرای برنامه](#حالتهای-اجرای-برنامه)
-- [توابع داخلی و Registry](#توابع-داخلی-و-registry)
-- [خطاها و ابزارهای عیب‌یابی](#خطاها-و-ابزارهای-عیبیابی)
-- [آزمایش پروژه](#آزمایش-پروژه)
-- [راهنمای توسعه](#راهنمای-توسعه)
+- [خط لولهٔ پردازش](#خط-لولهٔ-پردازش)
+- [مرزهای معماری](#مرزهای-معماری)
+- [نحو و مدل AST](#نحو-و-مدل-ast)
+- [اتصال نام‌ها و تحلیل معنایی](#اتصال-نامها-و-تحلیل-معنایی)
+- [مدل نوع و scope](#مدل-نوع-و-scope)
+- [Runtime و مفسر](#runtime-و-مفسر)
+- [کلاس‌های داخلی](#کلاسهای-داخلی)
+- [CLI و REPL](#cli-و-repl)
+- [Diagnostics و عیب‌یابی](#diagnostics-و-عیبیابی)
+- [تست و CI](#تست-و-ci)
+- [راهنمای تغییر کد](#راهنمای-تغییر-کد)
+- [محدودیت‌ها و برنامهٔ آینده](#محدودیتها-و-برنامهٔ-آینده)
 
 ## نمای کلی
 
-مسیر اجرای برنامه مستقیم است: کد ابتدا به توکن و AST تبدیل می‌شود، بعد بررسی معنایی
-روی آن انجام می‌گیرد و در پایان مفسر آن را اجرا می‌کند. بهینه‌سازی AST اختیاری است.
-اگر Lexer، Parser یا تحلیل معنایی خطایی پیدا کند، برنامه به مرحلهٔ اجرا نمی‌رسد.
+مسیر عادی اجرای یک فایل به شکل زیر است:
 
 <div dir="ltr" align="left">
 
 ```mermaid
 flowchart LR
-    Source[فایل .ben] --> Lexer[Lexer]
-    Lexer --> Tokens[Token List]
-    Tokens --> Parser[Parser]
-    Parser --> AST[Abstract Syntax Tree]
-    AST --> Semantic[Semantic Analyzer]
-    Semantic --> Optimizer[AST Optimizer اختیاری]
-    Optimizer --> Interpreter[Interpreter]
-    Interpreter --> Result[خروجی برنامه]
+    Source[.ben source] --> Lexer[Lexer.Tokenize]
+    Lexer --> Parser[Parser]
+    Parser --> AST[ProgramNode / AST]
+    AST --> Binder[Binder]
+    Binder --> Semantic[SemanticAnalyzer]
+    Semantic --> Optimizer{--optimize?}
+    Optimizer --> Interpreter[Interpreter.Visit]
+    Interpreter --> Output[Program output]
 ```
 
 </div>
 
-## چند قاعدهٔ مهم زبان
-
-- تابع `_main_()` پارامتر نمی‌گیرد.
-- `void` فقط نوع خروجی تابع است و `let` برای متغیرهایی استفاده می‌شود که نوعشان از مقدار اولیه مشخص می‌شود.
-- تابعی که خروجی آن `void` نیست باید در تمام مسیرها مقدار برگرداند.
-- `break` و `continue` بیرون حلقه معتبر نیستند.
-- هر سه بخش `for` اختیاری‌اند؛ در نتیجه `for (;;)` هم معتبر است.
-- عدد اعشاری باید به‌شکل `0.5` یا `1.0` نوشته شود و `&` و `|` تکی نداریم.
-- رشته‌ها تک‌خطی هستند و escapeهای پشتیبانی‌شده در Tutorial آمده‌اند.
-
-نسخهٔ دقیق قواعد را در [Grammar.txt](Grammar.txt) نگه می‌دارم.
-
-## شرط و انتخاب
-
-علاوه بر `if` و `else if`، دو شکل از `match` وجود دارد. شکل expression یک مقدار
-برمی‌گرداند و باید شاخهٔ نهایی `_` داشته باشد. شکل statement فقط شاخهٔ منطبق را
-اجرا می‌کند و داشتن `_` در آن اختیاری است. می‌توان چند مقدار مثل `1, 2, 3` یا یک
-بازهٔ بسته مثل `0..10` را در یک شاخه نوشت.
-
-برای پیمایش آرایه هم فرم `for (item in array)` وجود دارد. نوع `item` از نوع عناصر
-آرایه گرفته می‌شود و بیرون بدنهٔ حلقه در دسترس نیست.
+نکتهٔ مهم این است که پروژه «کامپایلر به کد ماشین» نیست. `CompilerClass` یک هماهنگ‌کننده
+برای tokenize، parse، binding، تحلیل معنایی، بهینه‌سازی اختیاری و اجرای مستقیم AST است.
+`Binder` در حال حاضر برای ساخت context نمادین و `BoundProgram` استفاده می‌شود، اما مفسر
+مستقیماً AST را visit می‌کند و هنوز bound tree ورودی اجرای اصلی نیست.
 
 ## ساختار مخزن
 
-| مسیر | مسئولیت |
+| مسیر | مسئولیت فعلی |
 | --- | --- |
-| `Benita/` | پیاده‌سازی زبان، CLI، تحلیل‌گرها، AST Optimizer و مفسر |
-| `BenitaTestProject/` | تست‌های واحد، یکپارچه، رگرسیون و اجرای مثال‌ها |
-| `Examples/` | برنامه‌های معتبر و نامعتبر نمونه با پسوند `.ben` |
-| `docs/Grammar.txt` | تعریف گرامر زبان |
-| `docs/Tutorial.MD` | آموزش دستورات و قابلیت‌های زبان |
-| `.github/workflows/` | اجرای CI و ساخت Release در GitHub Actions |
-| `npp-BenitaLang.xml` | تعریف syntax highlighting برای Notepad++ |
+| [`Benita/Benita.csproj`](../Benita/Benita.csproj:1) | پروژهٔ اجرایی .NET 8 و منبع نسخهٔ assembly |
+| [`Benita/Application`](../Benita/Application) | ورودی CLI، نسخهٔ برنامه، و REPL |
+| [`Benita/Compilation`](../Benita/Compilation) | Lexer، Parser، AST printer، Binder، Semantic Analyzer، optimizer و compiler facade |
+| [`Benita/Syntax`](../Benita/Syntax) | tokenها، AST nodeها و قرارداد visitor |
+| [`Benita/Semantics`](../Benita/Semantics) | symbolها، scopeها، type symbolها و قواعد assignability |
+| [`Benita/Runtime`](../Benita/Runtime) | Interpreter، runtime context/environment، package instance، task و debugger |
+| [`Benita/Runtime/BuiltIns`](../Benita/Runtime/BuiltIns) | تعریف و اجرای کلاس‌های داخلی و مقدارهای runtime |
+| [`Benita/Diagnostics`](../Benita/Diagnostics) | exceptionها و گزارش خطاهای مرحله‌ای |
+| [`BenitaTestProject`](../BenitaTestProject) | تست‌های MSTest واحد، integration، regression و اجرای مثال‌ها |
+| [`Examples`](../Examples) | برنامه‌های نمونهٔ `.ben` و الگوریتم‌ها |
+| [`docs/Grammar.txt`](Grammar.txt) | مرجع رسمی grammar |
+| [`docs/Tutorial.MD`](Tutorial.MD) | آموزش زبان و مثال‌های نحوی |
+| [`docs/Architecture.md`](Architecture.md) | تصمیم‌های معماری و قراردادهای داخلی |
+| [`docs/BuiltInClasses.md`](BuiltInClasses.md) | راهنمای کامل افزودن built-in |
+| [`docs/BuiltInClassCatalog.md`](BuiltInClassCatalog.md) | فهرست API کلاس‌های داخلی |
+| [`editors/vscode-benita`](../editors/vscode-benita) | افزونهٔ syntax و تنظیمات VS Code |
+| [`.github`](../.github) | workflowهای build، test و release |
 
-مهم‌ترین فایل‌های پروژهٔ اصلی:
+### فایل‌های کلیدی
 
-| فایل | نقش |
-| --- | --- |
-| `Application/Program.cs` | نقطهٔ ورود و پردازش فرمان‌های CLI |
-| `Application/Repl.cs` | محیط تعاملی stateful با ورودی چندخطی، تاریخچه و فرمان‌های مدیریتی |
-| `Compilation/CompilerClass.cs` | هماهنگ‌کنندهٔ مراحل Lexer، Parser، تحلیل معنایی، بهینه‌سازی و اجرا |
-| `Compilation/AstPrinter.cs` | نمایش مستقل و سلسله‌مراتبی AST |
-| `Compilation/Lexer.cs` | تبدیل متن منبع به توکن‌ها و پردازش `import` |
-| `Compilation/Parser.cs` | تبدیل توکن‌ها به AST بر اساس گرامر زبان |
-| `Compilation/SemanticAnalyzer.cs` | کنترل نوع، declarationها، scopeها، توابع و قواعد معنایی |
-| `Syntax/Token.cs` | تعریف انواع توکن و اطلاعات موقعیت آن‌ها |
-| `Syntax/ASTNode.cs` | تعریف Nodeهای عبارت‌ها، دستورات، توابع، حلقه‌ها، آرایه‌ها و بسته‌ها |
-| `Runtime/Interpreter.cs` | اجرای AST و نگهداری وضعیت زمان اجرا |
-| `Runtime/RuntimeContext.cs` | وضعیت مستقل متغیرها، توابع و بسته‌های هر اجرا |
-| `Runtime/BuiltIns/BuiltInClassRegistry.cs` | registry واحد definitionهای built-in classها و scope فعال importها |
-| `Runtime/DebugClass.cs` | امکانات اجرای برنامه در حالت Debug |
-| `Diagnostics/ExceptionClass.cs` | خطاهای ساخت‌یافتهٔ Lexer، Parser، Semantic و Runtime |
+- [`Program.Main()`](../Benita/Application/Program.cs:6) آرگومان‌ها را می‌خواند، خطاها را به exit code تبدیل می‌کند و action مناسب را انتخاب می‌کند.
+- [`CompilerClass`](../Benita/Compilation/CompilerClass.cs:4) facade خط لولهٔ پردازش است.
+- [`Lexer`](../Benita/Compilation/Lexer.cs) متن را به `Token` تبدیل می‌کند و import فایل را resolve می‌کند.
+- [`Parser`](../Benita/Compilation/Parser.cs) tokenها را به `ProgramNode` و AST تبدیل می‌کند.
+- [`Binder`](../Benita/Compilation/Binder.cs:36) declaration و reference را به symbol متصل می‌کند و type checking نهایی انجام نمی‌دهد.
+- [`SemanticAnalyzer`](../Benita/Compilation/SemanticAnalyzer.cs:7) مسئول قواعد معنایی، type checking، package، interface، import built-in و access modifier است.
+- [`AstOptimizer`](../Benita/Compilation/AstOptimizer.cs:8) فقط هنگام درخواست، AST را بهینه می‌کند.
+- [`Interpreter`](../Benita/Runtime/Interpreter.cs:9) visitor اصلی اجرای AST است.
+- [`RuntimeContext`](../Benita/Runtime/RuntimeContext.cs:4) state مستقل هر اجرای برنامه را نگه می‌دارد.
+- [`RuntimeEnvironment`](../Benita/Runtime/RuntimeEnvironment.cs:4) زنجیرهٔ scopeهای runtime را فراهم می‌کند.
+- [`BuiltInClassRegistry`](../Benita/Runtime/BuiltIns/BuiltInClassRegistry.cs:247) definitionهای built-in و scope importشده را مدیریت می‌کند.
 
-## معماری کامپایلر
+## خط لولهٔ پردازش
 
-### لایهٔ ورودی و CLI
+### ۱. ورودی و CLI
 
-کلاس `Program` آرگومان‌های خط فرمان را می‌خواند، پسوند و وجود فایل را بررسی می‌کند و عملیات انتخاب‌شده را به `CompilerClass` می‌سپارد. اجرای بدون آرگومان راهنمای CLI را نمایش می‌دهد و محیط تعاملی فقط با فرمان `repl` آغاز می‌شود. این لایه مسئول منطق زبان نیست و فقط رابط میان کاربر و هستهٔ کامپایلر است.
+[`Program`](../Benita/Application/Program.cs:4) فقط لایهٔ رابط است. برای actionهای `run` و
+`debug` فایل باید وجود داشته باشد و پسوند آن `.ben` باشد. سپس متن فایل خوانده می‌شود و به
+[`CompilerClass.Exec()`](../Benita/Compilation/CompilerClass.cs:14) داده می‌شود. action
+`check` از [`CompilerClass.Check()`](../Benita/Compilation/CompilerClass.cs:66) استفاده
+می‌کند و هیچ کدی را اجرا نمی‌کند.
 
-### CompilerClass
+### ۲. Lexer
 
-`CompilerClass` نمای اصلی هستهٔ پروژه است و دو عملیات عمومی دارد:
+[`Lexer.Tokenize()`](../Benita/Compilation/Lexer.cs) متن را character-by-character می‌خواند
+و tokenهای keyword، identifier، literal، operator و delimiter را با span منبع تولید می‌کند.
+`sourceName` برای خطاهای فایل و import حفظ می‌شود.
 
-- `Exec`: تحلیل کامل و سپس اجرای AST با مفسر
-- `Check`: بررسی واژگانی، نحوی و معنایی بدون اجرا
+دو مفهوم import را نباید با هم اشتباه گرفت:
 
-این کلاس باعث می‌شود فرمان‌های مختلف CLI از یک مسیر مشترک برای بررسی کد استفاده کنند.
+- `import "path";` فایل source را در مرحلهٔ Lexer وارد می‌کند. مسیر نسبت به فایلی resolve
+  می‌شود که import را نوشته است و هر فایل در زنجیرهٔ همان tokenize حداکثر یک‌بار وارد می‌شود.
+- `import ClassName;` declaration سطح بالای Parser برای فعال‌کردن یک built-in class است.
+  پس از parse، registry محدودشده به همان importها به Semantic Analyzer و Interpreter داده
+  می‌شود.
 
-### Lexer
+### ۳. Parser و AST
 
-`Lexer` کد منبع را کاراکتر به کاراکتر می‌خواند و توکن‌هایی مانند شناسه، literal، عملگر، keyword و علائم نگارشی تولید می‌کند. شمارهٔ خط و موقعیت منبع نیز برای ساخت پیام خطای دقیق نگهداری می‌شود.
+[`Parser.ParseResultOrThrow()`](../Benita/Compilation/Parser.cs) token stream را به
+[`ProgramNode`](../Benita/Syntax/ASTNode.cs:414) تبدیل می‌کند. Parser فقط مسئول grammar است؛
+به symbol table، type checking یا runtime دسترسی ندارد. ریشهٔ AST شامل importها، global
+variableها، interfaceها، packageها، functionها، `_main_` و statementهای سطح بالا است.
 
-فرم فایلِ `import`، یعنی `import "path";`، در همین مرحله پردازش می‌شود؛ محتوای فایل وابسته وارد منبع می‌شود و هر فایل حداکثر یک بار پردازش خواهد شد. مسیر نسبی از پوشهٔ همان فایلی resolve می‌شود که دستور `import` در آن قرار دارد، نه از فایل دارای `_main_` و نه از ریشهٔ پروژه. برای مثال، اگر `main.ben` شامل `import "features/reports.ben";` باشد، مسیر از پوشهٔ `main.ben` محاسبه می‌شود؛ اما اگر `features/reports.ben` شامل `import "../lib/math.ben";` باشد، `..` از پوشهٔ `features` محاسبه می‌شود. برای source بدون نام، پوشهٔ کاری فعلی مبنا است.
+nodeهای اصلی در [`ASTNode.cs`](../Benita/Syntax/ASTNode.cs) عبارت‌اند از expressionها،
+statementها، function/package declarationها، loopها، match، array، object creation،
+try/catch/finally و async/await. قرارداد پیمایش در [`IAstVisitor`](../Benita/Syntax/IAstVisitor.cs)
+تعریف شده و interpreter از همین visitor استفاده می‌کند.
 
-### Parser و AST
+### ۴. Binder
 
-`Parser` توکن‌ها را مطابق گرامر مصرف می‌کند و یک `ProgramNode` می‌سازد. declarationهای
-`import ClassName;` باید پیش از سایر declarationهای سطح بالا بیایند و نام کلاس‌ها در
-`ProgramNode.Imports` ذخیره می‌شود. این Node ریشهٔ AST است و موارد زیر را در خود نگه می‌دارد:
+[`Binder.Bind()`](../Benita/Compilation/Binder.cs:53) یک phase مستقل از type checking است. این
+phase ابتدا type declarationها، global variableها و functionها را ثبت می‌کند، سپس referenceها
+را در scopeهای مربوط resolve می‌کند و duplicate/undeclared name را diagnostic می‌کند.
 
-- متغیرهای سراسری
-- interfaceها و امضای متدهای آن‌ها
-- بسته‌ها و اعضای آن‌ها، شامل `init`، ارجاع `this`، عبارت `new` و composition
-- توابع
-- تابع `_main_`
-- دستورات سطح بالا برای main ضمنی
+خروجی [`BindingResult`](../Benita/Compilation/Binder.cs:4) شامل این موارد است:
 
-کلاس‌های موجود در `ASTNode.cs` نمایش مستقل از متن برنامه هستند؛ برای مثال `BinaryExpressionNode` یک عبارت دوتایی و `WhileStatementNode` یک حلقهٔ while را نمایش می‌دهد.
+- `References`: نگاشت AST reference به symbol resolve‌شده؛
+- `Declarations`: نگاشت declaration به symbol؛
+- `Diagnostics`: خطاهای binding؛
+- `Program`: همان AST ورودی.
 
-### Semantic Analyzer
+[`BoundProgram`](../Benita/Compilation/BoundNodes.cs:4) wrapper قابل‌استفاده برای دسترسی به
+bindingهای موفق است و با [`BoundProgramFactory`](../Benita/Compilation/BoundNodes.cs:57)
+ساخته می‌شود. این مدل فعلاً یک bound view روی AST است، نه یک tree کاملاً مستقل که interpreter
+بر اساس آن اجرا کند.
 
-درست‌بودن گرامر کافی نیست. `SemanticAnalyzer` پیش از اجرا این خطاها را پیدا می‌کند:
+### ۵. Semantic Analyzer
 
-- استفاده از متغیر تعریف‌نشده
-- تعریف تکراری متغیر یا تابع
-- ناسازگاری نوع مقدار و متغیر
-- تعداد یا نوع نامعتبر آرگومان‌های تابع
-- ناسازگاری نوع `return` با خروجی تابع
-- قواعد مربوط به `_main_`، بسته‌ها و اعضای آن‌ها
-- کامل‌بودن قرارداد interface، تطابق امضاها و assignability چندریختی
-- نوع صحیح مقدار `throw`، scope متغیر catch و ساختار معتبر try/catch/finally
+در [`CompilerClass.AnalyzeProgram()`](../Benita/Compilation/CompilerClass.cs:115)، ابتدا Binder
+اجرا می‌شود و نتیجهٔ آن به [`SemanticAnalyzer`](../Benita/Compilation/SemanticAnalyzer.cs:7)
+داده می‌شود. Semantic Analyzer مالک نهایی قواعد زبان است، از جمله:
 
-### Interpreter
+- نوع expression، assignment، return و آرگومان‌ها؛
+- declaration و inferred variable؛
+- visibility و چرخهٔ دسترسی packageها؛
+- قرارداد interface و assignability چندریختی؛
+- built-in class و member resolution؛
+- `throw`، catch variable و ساختار try/catch/finally؛
+- entry point و قواعد `_main_`.
 
-`Interpreter` با الگوی Visitor روی AST حرکت می‌کند. هنگام اجرا، مقدار متغیرها، scope توابع، آرایه‌ها و نمونه‌های package را مدیریت می‌کند و دستورات کنترلی را به‌ترتیب اجرا می‌کند.
+قرارداد result محور [`SemanticAnalysisResult`](../Benita/Compilation/AnalysisContracts.cs) اجازه
+می‌دهد diagnosticها همراه با span و severity منتقل شوند. در facade عمومی، خطای semantic به
+`SemanticException` تبدیل می‌شود.
 
-کلاس‌های داخلی مانند `Console`، `Array`، `String` و عملیات فایل از طریق `BuiltInClassRegistry` به
-نحو مناسب در پوشهٔ `Runtime/BuiltIns` هدایت می‌شوند. با `import ClassName;` scope فعال
-ساخته می‌شود و همان scope به semantic analyzer و interpreter می‌رسد. کلاس‌های static بدون ساخت
-نمونه و کلاس‌های دارای state با `new` استفاده می‌شوند؛ وضعیت هر Interpreter نیز در
-`RuntimeContext` مستقل نگهداری می‌شود. توجه کنید که `import ClassName;` برای built-inها است،
-در حالی که `import "path";` برای واردکردن فایل منبع است و مسیر آن نسبت به فایل شامل‌کننده
-resolve می‌شود.
+### ۶. بهینه‌سازی اختیاری
 
-## مراحل پردازش برنامه
+[`AstOptimizer`](../Benita/Compilation/AstOptimizer.cs:8) فقط با گزینهٔ `--optimize` فراخوانی
+می‌شود. بهینه‌سازی فعلی برای constant folding و حذف شاخه‌های ثابتِ غیرقابل‌دسترسی است.
+این phase باید semantics قابل مشاهدهٔ برنامه را تغییر ندهد و در صورت تغییر AST، تست اجرایی
+معادل بدون optimizer نیز باید حفظ شود.
 
-برای نمونه، کد زیر را در نظر بگیرید:
+### ۷. اجرا
+
+در حالت `run` یا `debug`، [`CompilerClass.Exec()`](../Benita/Compilation/CompilerClass.cs:14)
+پس از compile، registry فعال را می‌سازد و [`Interpreter.Visit()`](../Benita/Runtime/Interpreter.cs:245)
+را روی `ProgramNode` اجرا می‌کند. exceptionهای Benita بدون پوشانده‌شدن دوباره پرتاب می‌شوند و
+exceptionهای ناشناخته به `RuntimeException` تبدیل می‌شوند.
+
+## مرزهای معماری
+
+وابستگی منطقی لایه‌ها باید چنین بماند:
 
 <div dir="ltr" align="left">
 
-```benita
-import Terminal;
-
-func add(number a, number b) -> number {
-    return a + b;
-}
-
-_main_() {
-    Terminal.print(add(2, 3));
-}
+```text
+Application
+  └── Compilation ──┬── Syntax
+                    ├── Semantics
+                    └── Diagnostics
+  └── Runtime ──────┬── Syntax
+                    ├── Semantics
+                    └── Diagnostics
 ```
 
 </div>
 
-پردازش آن به‌ترتیب زیر انجام می‌شود:
+قواعد مهم:
 
-1. `Lexer` کلمات `func`، `number`، شناسه‌ها، پرانتزها و سایر نشانه‌ها را به Token تبدیل می‌کند.
-2. `Parser` از Tokenها یک `FunctionNode` و یک Main Function می‌سازد.
-3. `SemanticAnalyzer` وجود تابع، تعداد آرگومان‌ها و نوع مقدار بازگشتی را کنترل می‌کند.
-4. در حالت `run`، مفسر تابع `add` را اجرا کرده و مقدار `5` را چاپ می‌کند.
+1. `Syntax` نباید به CLI یا implementation جزئی runtime وابسته شود.
+2. `CompilerClass` باید orchestration انجام دهد، نه اینکه قواعد زبان یا اجرای built-in را در خود کپی کند.
+3. وضعیت اجرای برنامه نباید در static global نگه‌داری شود؛ هر Interpreter باید `RuntimeContext`
+   مستقل داشته باشد.
+4. Parser نباید semantic lookup انجام دهد و Semantic Analyzer نباید به token stream وابسته باشد.
+5. تعریف built-in باید از یک registry مشترک به analyzer و runtime برسد.
+6. تغییرات public در قراردادهای result، symbol و type باید همراه با تست regression باشد.
 
-## حالت‌های اجرای برنامه
+## نحو و مدل AST
 
-ابتدا پروژه را آماده کنید:
+قواعد کامل در [`Grammar.txt`](Grammar.txt) و مثال‌های کاربردی در [`Tutorial.MD`](Tutorial.MD)
+است. وضعیت فعلی زبان شامل variableهای primitive و `let`، آرایه، function و recursion،
+`if`/`else`، `match` expression/statement، `while`، `for` و `for-in`، package و composition،
+interface، access modifier، error handling، async/await و import است.
 
-<div dir="ltr" align="left">
+چند قاعدهٔ مهم برای توسعه‌دهنده:
 
-```bash
-git clone https://github.com/iarash84/Benita.git
-cd Benita
-dotnet restore Benita.sln
-dotnet build Benita.sln
-```
+- `_main_` پارامتر نمی‌گیرد.
+- `void` نوع return است و `let` برای inference استفاده می‌شود.
+- function غیر `void` باید در تمام مسیرها return داشته باشد.
+- `break` و `continue` فقط در loop معتبرند.
+- هر بخش `for` اختیاری است و `for (;;)` معتبر است.
+- decimal باید شکل‌هایی مانند `0.5` یا `1.0` داشته باشد؛ operatorهای تک `&` و `|` وجود ندارند.
+- stringها تک‌خطی‌اند و escapeهای معتبر در Tutorial مشخص شده‌اند.
 
-</div>
+برای هر قابلیت جدید، AST باید syntax را faithful نگه دارد؛ تبدیل نام type از string به
+`TypeSymbol` در semantic boundary انجام می‌شود، نه در Parser.
 
-### اجرای مستقیم
+## اتصال نام‌ها و تحلیل معنایی
+
+### Symbol و Scope
+
+مدل symbol در [`Symbol.cs`](../Benita/Semantics/Symbols/Symbol.cs) تعریف شده است و شامل
+`VariableSymbol`، `ParameterSymbol`، `FunctionSymbol` و type declarationهاست. [`Scope`](../Benita/Semantics/Symbols/Symbol.cs:35)
+parent-based است:
+
+- `Declare` فقط duplicate در scope جاری را رد می‌کند؛
+- `TryLookup` از scope جاری به parentها می‌رود؛
+- shadowing در child scope ممکن است؛
+- scopeهای global، function، block، loop، foreach و catch از هم جدا هستند.
+
+Binder و Semantic Analyzer هر کدام مسئول phase خود هستند. اضافه‌کردن منطق type یا visibility به
+Binder، یا انتقال name binding به Parser، معماری فعلی را مخدوش می‌کند.
+
+### Type system
+
+نوع‌ها در [`TypeSymbol.cs`](../Benita/Semantics/Types/TypeSymbol.cs) و قواعدشان در
+[`TypeFacts.cs`](../Benita/Semantics/Types/TypeFacts.cs) قرار دارند. مدل فعلی primitiveهای
+`number`، `string`، `bool` و `void`، array type، named type برای package/interface و special
+typeهایی مانند unknown و any-array را پوشش می‌دهد. runtime valueها از طریق type mapping به
+همین مدل زبان تبدیل می‌شوند.
+
+## Runtime و مفسر
+
+[`Interpreter`](../Benita/Runtime/Interpreter.cs:9) یک visitor است و expression evaluation،
+statement execution، function call، control flow، package instance، array، task و built-in
+member access را انجام می‌دهد.
+
+### Context و environment
+
+[`RuntimeContext`](../Benita/Runtime/RuntimeContext.cs:4) state مستقل اجرای برنامه را نگه می‌دارد:
+
+- `GlobalVariables`؛
+- `GlobalFunctions`؛
+- `Packages`؛
+- registry کلاس‌های داخلی.
+
+[`RuntimeEnvironment`](../Benita/Runtime/RuntimeEnvironment.cs:4) environment زنجیره‌ای برای
+local valueهاست. `TryGet` از scope جاری به parent می‌رود و `TryAssign` نزدیک‌ترین scope دارای
+نام را به‌روزرسانی می‌کند. package instance نیز state مستقل خود را دارد.
+
+### package و object model
+
+مدل object فعلی بر package و composition است، نه inheritance. هر package می‌تواند field،
+method و حداکثر یک `init` داشته باشد. اعضا private-by-default هستند و عضو public برای دسترسی
+از بیرون package لازم است. مسیر `new Type(args)` چنین است:
+
+1. Lexer و Parser یک `NewExpressionNode` می‌سازند؛
+2. Semantic Analyzer package، initializer، تعداد/type آرگومان و visibility را بررسی می‌کند؛
+3. Interpreter آرگومان‌ها را در caller scope ارزیابی می‌کند؛
+4. [`PackageInstance`](../Benita/Runtime/PackageInstance.cs) scope و state مستقل می‌سازد؛
+5. `init` اجرا می‌شود و `this.member` به همان instance متصل می‌ماند.
+
+### REPL و rollback
+
+REPL از یک Interpreter با `preserveStateBetweenPrograms: true` استفاده می‌کند. هر submission
+ابتدا با session source انباشته تحلیل می‌شود، سپس اجرا می‌گردد. [`TransactionCheckpoint`](../Benita/Runtime/Interpreter.cs:157)
+برای خطای submission state interpreter، globalها، packageها، arrayها و cloneable built-in
+instanceها را rollback می‌کند؛ بنابراین submission ناموفق نباید نشست را نیمه‌تغییر‌یافته رها کند.
+
+## کلاس‌های داخلی
+
+تعریف‌های built-in در [`BuiltInClassRegistry.CreateDefault()`](../Benita/Runtime/BuiltIns/BuiltInClassRegistry.cs:274)
+ثبت می‌شوند. نام‌های فعلی registry عبارت‌اند از:
+
+- `Terminal` برای ورودی و خروجی کنسول؛
+- `Array` برای عملیات آرایه؛
+- `Text` برای عملیات string؛
+- `Convert` و `Math` برای تبدیل و محاسبات؛
+- `Error` برای مقدارهای خطا؛
+- `NativeCounter` برای نمونهٔ stateful و تست قرارداد instance؛
+- `DateTime` برای زمان؛
+- `File` برای read/write/append/exists/delete/copy/move.
+
+نام‌های بالا را با نام‌های قدیمی مانند `Console` یا `String` اشتباه نگیرید؛ کاتالوگ معتبر در
+[`BuiltInClassCatalog.md`](BuiltInClassCatalog.md) نگه‌داری می‌شود.
+
+هر built-in از [`BuiltInClassDefinition`](../Benita/Runtime/BuiltIns/BuiltInClassRegistry.cs:34)
+metadata constructor، method، static method و property را اعلام می‌کند. instanceها باید
+[`IBuiltInClassInstance`](../Benita/Runtime/BuiltIns/BuiltInClassRegistry.cs:20) را پیاده کنند.
+Registry اعتبار تعداد و type آرگومان، type نتیجه، نام member و read/write property را کنترل
+می‌کند. خطای semantic built-in کد `BEN3001` و خطای validation/runtime built-in کد `BEN4101` دارد.
+
+برای built-in جدید:
+
+1. definition و در صورت نیاز instance را در `Runtime/BuiltIns` اضافه کنید؛
+2. metadata را با typeهای زبان تعریف کنید؛
+3. `Clone()` را برای تمام state قابل تغییر مستقل پیاده کنید؛
+4. در `CreateDefault()` ثبت کنید؛
+5. تست lookup، constructor، method، property، خطای type و clone اضافه کنید؛
+6. کاتالوگ و مثال‌های import را به‌روز کنید.
+
+راهنمای جزئی‌تر در [`BuiltInClasses.md`](BuiltInClasses.md) است.
+
+## CLI و REPL
+
+پس از restore و build، فرمان‌های اصلی:
 
 <div dir="ltr" align="left">
 
 ```bash
 dotnet run --project Benita -- run Examples/simple-addition-expression.ben
-```
-
-</div>
-
-### اجرای Debug
-
-<div dir="ltr" align="left">
-
-```bash
 dotnet run --project Benita -- debug Examples/simple-addition-expression.ben
-```
-
-</div>
-
-### بررسی بدون اجرا
-
-<div dir="ltr" align="left">
-
-```bash
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben
+dotnet run --project Benita -- check Examples/simple-addition-expression.ben -t -a -s
+dotnet run --project Benita -- repl
 ```
 
 </div>
 
-این فرمان فقط مراحل Lexer، Parser و Semantic Analyzer را انجام می‌دهد و برای IDE، CI و اعتبارسنجی سریع مناسب است.
+actionهای legacy `exc` و `dxc` نیز در [`Program.Run()`](../Benita/Application/Program.cs:30)
+به‌ترتیب alias `run` و `debug` هستند. گزینه‌ها:
 
-### مشاهدهٔ جزئیات پردازش
-
-<div dir="ltr" align="left">
-
-```bash
-dotnet run --project Benita -- check Examples/simple-addition-expression.ben -s -t -a
-```
-
-</div>
-
-- `-s`: نمایش منبع پردازش‌شده
-- `-t`: نمایش Tokenها
-- `-a`: نمایش AST
-
-## کلاس‌های داخلی و Registry
-
-مشخصات هر built-in class در `BuiltInClassRegistry` ثبت می‌شود: نام کلاس، سازنده، متدهای
-static و instance و propertyها. برای استفادهٔ محدودشده در یک فایل، declarationهایی مانند
-`import Terminal;` و `import Array;` را پیش از سایر declarationها قرار دهید.
-
-<div dir="ltr" align="left">
-
-```text
-BuiltInClassDefinition
-├── Constructor و instance members
-├── StaticMethods برای کلاس‌های بدون state
-└── BuiltInClassRegistry: lookup و ساخت scope فعال importها
-```
-
-</div>
-
-کلاس‌های داخلی فعلی در چهار گروه قرار می‌گیرند:
-
-- آرایه: کلاس static `Array` با `length`، `add`، `remove`، `contains`، `index_of`، `reverse`، `clear`، `insert`، `slice`، `concat` و `sort`
-- فایل: کلاس داخلی `File` با متدهای `readText`، `writeText`، `appendText`، `exists`، `delete`، `copyTo` و `moveTo`
-- ابزار عمومی: کلاس‌های `Console`، `Convert`، `Math` و `Error`
-- رشته: کلاس static `String` با `length`، `char_at`، `substring`، `contains`، `index_of`، `replace`، `split`، `trim`، `to_lower` و `to_upper`
-
-با این ساختار برای اضافه‌کردن یک built-in class لازم نیست چند فهرست جدا را تغییر بدهم.
-
-## خطاها و ابزارهای عیب‌یابی
-
-خطاهای Benita دارای کد، مرحلهٔ ایجاد خطا و موقعیت در منبع هستند. به‌طور کلی خطا ممکن است در یکی از مراحل زیر رخ دهد:
-
-| مرحله | نمونهٔ مشکل |
+| گزینه | اثر |
 | --- | --- |
-| Lexer | کاراکتر نامعتبر یا رشتهٔ بسته‌نشده |
-| Parser | نبودن `;` یا ساختار نحوی ناقص |
-| Semantic Analyzer | متغیر تعریف‌نشده یا ناسازگاری نوع |
-| Runtime | خطای زمان اجرا یا عملیات نامعتبر فایل/آرایه |
+| `-t` | چاپ tokenها |
+| `-a` | چاپ AST؛ در صورت `--optimize` نسخهٔ بهینه‌شده چاپ می‌شود |
+| `-s` | چاپ source پردازش‌شده، شامل import فایل |
+| `--optimize` | فعال‌کردن AST optimizer پیش از اجرا |
 
-برای پیدا کردن خطا معمولاً از `check` همراه `-t` و `-a` شروع کنید. اگر مشکل هنگام
-اجرا رخ می‌دهد، `debug` وضعیت مفسر را هم نشان می‌دهد.
+REPL در [`Repl`](../Benita/Application/Repl.cs:8) stateful است، input چندخطی، history،
+line editor و فرمان‌های `:help`، `:history`، `:clear`، `:reset`، `:cancel` و `:exit` دارد.
+ورودی ساده‌ای که با `;` یا `}` تمام نشود، برای نمایش نتیجه به شکل `Terminal.print(...)` آماده
+می‌شود. این رفتار مخصوص REPL است و grammar فایل را تغییر نمی‌دهد.
 
-## آزمایش پروژه
+## Diagnostics و عیب‌یابی
 
-پروژهٔ تست از MSTest استفاده می‌کند:
+خطاها معمولاً در یکی از این مرزها رخ می‌دهند:
+
+| مرحله | نمونه |
+| --- | --- |
+| Lexer | character نامعتبر، string بسته‌نشده یا import file ناموجود |
+| Parser | delimiter مفقود، token غیرمنتظره یا declaration با ترتیب نادرست |
+| Binder | duplicate declaration یا undeclared identifier/function |
+| Semantic Analyzer | type mismatch، visibility، interface، package یا built-in نامعتبر |
+| Runtime | عملیات نامعتبر، خطای فایل، task یا built-in instance |
+
+برای تشخیص مرحله، ابتدا `check -t -a` را اجرا کنید. اگر خطا فقط هنگام اجراست از `debug` استفاده
+کنید. exceptionهای ساخت‌یافته در [`ExceptionClass.cs`](../Benita/Diagnostics/ExceptionClass.cs)
+کد و span منبع دارند و `Program.Main()` آن‌ها را با exit code یک گزارش می‌کند.
+
+## تست و CI
+
+پروژهٔ تست در [`BenitaTestProject.csproj`](../BenitaTestProject/BenitaTestProject.csproj) از
+MSTest استفاده می‌کند. اجرای کامل:
 
 <div dir="ltr" align="left">
 
 ```bash
+dotnet restore Benita.sln
+dotnet build Benita.sln
 dotnet test Benita.sln --configuration Release
 ```
 
 </div>
 
-تست‌ها چند سطح را پوشش می‌دهند:
+گروه‌های مهم تست عبارت‌اند از Lexer، Parser، Semantic Analyzer، Binder، BoundProgram،
+symbol/scope، interpreter، package، interface، array، string، file، async/await، diagnostics،
+CLI/REPL و regression. برنامه‌های پوشهٔ `Examples` نیز در مجموعهٔ تست استفاده می‌شوند؛ پس
+مثال‌ها بخشی از قرارداد عملی زبان هستند، نه فایل‌های تزئینی.
 
-- تست مستقل Lexer، Parser، Semantic Analyzer و Interpreter
-- تست packageها، آرایه‌ها، فایل‌ها و توابع داخلی
-- تست تشخیص خطا و پیام‌های diagnostic
-- تست کامل مسیر Compile/Execute
-- اجرای برنامه‌های پوشهٔ `Examples`
-- تست‌های رگرسیون برای اشکالات اصلاح‌شده
+پیش از commit این موارد را بررسی کنید:
 
-GitHub Actions در Push و Pull Request پروژه را build کرده و مجموعه تست‌ها را اجرا می‌کند. انتشار نسخه‌های tagشده نیز توسط workflow مربوط به Release انجام می‌شود.
+- build بدون warning جدید؛
+- تست کامل solution؛
+- تست متمرکز phase تغییرکرده؛
+- مثال‌های مرتبط؛
+- در صورت تغییر grammar، به‌روزرسانی Grammar، Tutorial و VS Code syntax در صورت نیاز.
 
-## راهنمای توسعه
+## راهنمای تغییر کد
 
-### افزودن یک قابلیت نحوی
+### افزودن قابلیت نحوی
 
-تغییر syntax معمولاً چند بخش را درگیر می‌کند:
+1. keyword/operator و token را در [`Token.cs`](../Benita/Syntax/Token.cs) و Lexer بررسی کنید؛
+2. AST node و visitor contract را در [`ASTNode.cs`](../Benita/Syntax/ASTNode.cs) اضافه کنید؛
+3. grammar و parse rule را در Parser و [`Grammar.txt`](Grammar.txt) به‌روز کنید؛
+4. binding نام‌ها را در Binder، و type/visibility rule را در Semantic Analyzer اضافه کنید؛
+5. رفتار runtime را در Interpreter پیاده کنید؛
+6. اگر semantics اجازه می‌دهد، optimizer را با احتیاط به‌روز کنید؛
+7. تست unit برای phase و تست integration برای اجرای واقعی بنویسید؛
+8. Tutorial، مثال‌ها و syntax highlighting را همسان کنید.
 
-1. افزودن Token یا keyword جدید در Lexer و Tokenها
-2. افزودن قاعدهٔ Parse و Node مناسب در AST
-3. تعریف قواعد اعتبارسنجی در Semantic Analyzer
-4. پیاده‌سازی رفتار در Interpreter
-5. افزودن تست واحد، یکپارچه و برنامهٔ نمونه در صورت نیاز
-6. به‌روزرسانی `Grammar.txt` و Tutorial
+هرگز فقط با تست ساخت AST قابلیت را تمام‌شده تلقی نکنید؛ باید حداقل یک برنامهٔ end-to-end نیز
+اجرا شود.
 
-### افزودن یک کلاس داخلی
+### تغییر type یا symbol
 
-برای افزودن built-in class جدید:
+تغییر را از [`TypeSymbol.cs`](../Benita/Semantics/Types/TypeSymbol.cs) و [`TypeFacts.cs`](../Benita/Semantics/Types/TypeFacts.cs)
+شروع کنید، سپس symbol، Binder، Semantic Analyzer، runtime type mapping و تست‌های assignability
+را بررسی کنید. نام type در AST باید برای حفظ source همان string بماند.
 
-1. ایجاد definition و در صورت نیاز instance مشتق‌شده در `Runtime/BuiltIns`
-2. ثبت definition در `BuiltInClassRegistry.CreateDefault()`
-3. افزودن تست‌های static یا instance، validation و خطای پایدار `BEN4101`
-4. به‌روزرسانی کاتالوگ کلاس‌ها و نمونه‌های دارای `import`
+### افزودن built-in
 
-### چک‌لیست تغییرات زبان
+از قرارداد registry و checklist بخش [کلاس‌های داخلی](#کلاسهای-داخلی) استفاده کنید و جزئیات
+metadata، clone و خطاها را در [`BuiltInClasses.md`](BuiltInClasses.md) ببینید. built-in نباید
+با static global state پنهان، قرارداد runtime context را دور بزند.
 
-هر قابلیت نحوی باید در Lexer، Parser، AST، Semantic Analyzer، Optimizer و Interpreter
-پشتیبانی شود. در پایان هم یک تست اجرایی لازم است تا فقط ساخته‌شدن AST را بررسی نکنیم و
-نتیجهٔ واقعی برنامه را ببینیم.
+### تغییر REPL یا CLI
+
+CLI را در [`Program.cs`](../Benita/Application/Program.cs) و رفتار نشست را در [`Repl.cs`](../Benita/Application/Repl.cs)
+تغییر دهید. برای submissionهای REPL، موفقیت باید به session source و history اضافه شود؛ خطای
+submission باید checkpoint را restore کند. تست‌های CLI و REPL را همزمان اجرا کنید.
+
+## محدودیت‌ها و برنامهٔ آینده
+
+این پروژه در حال توسعه است. مهم‌ترین مرزهای فعلی:
+
+- اجرای اصلی هنوز روی AST خام visitor است و `BoundProgram` جایگزین کامل AST نشده است؛
+- functionها هنوز first-class value و lambda/closure عمومی نیستند؛
+- collectionهای generic مانند `list<T>` و `map<K,V>` وجود ندارند؛
+- inheritance عمداً در roadmap فعلی نیست و تمرکز روی interface و composition است؛
+- static memberهای عمومی زبان هنوز یک مدل کامل مستقل ندارند؛
+- تکمیل encapsulation و گسترش coverage تست‌ها همچنان کار جاری است.
+
+هر ادعای جدید دربارهٔ قابلیت زبان باید بر اساس کد موجود، [`Grammar.txt`](Grammar.txt)،
+Tutorial و تست‌ها بررسی شود؛ roadmap یا comment قدیمی به‌تنهایی منبع حقیقت نیست.
 
 ## منابع مرتبط
 
-- [README پروژه](https://github.com/iarash84/Benita/blob/main/README.md)
-- [آموزش زبان](https://github.com/iarash84/Benita/blob/main/docs/Tutorial.MD)
-- [گرامر زبان](https://github.com/iarash84/Benita/blob/main/docs/Grammar.txt)
-- [برنامه‌های نمونه](https://github.com/iarash84/Benita/tree/main/Examples)
-- [مخزن Benita در GitHub](https://github.com/iarash84/Benita)
+- [`README.md`](../README.md)
+- [`Architecture.md`](Architecture.md)
+- [`Tutorial.MD`](Tutorial.MD)
+- [`Grammar.txt`](Grammar.txt)
+- [`BuiltInClasses.md`](BuiltInClasses.md)
+- [`BuiltInClassCatalog.md`](BuiltInClassCatalog.md)
+- [`Examples/README.md`](../Examples/README.md)
+- [`editors/vscode-benita`](../editors/vscode-benita)
 
 </div>

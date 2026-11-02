@@ -168,11 +168,11 @@ dotnet test Benita.sln
   - [ ] مدیریت وابستگی بین Objectها
   - [ ] تشخیص وابستگی‌های نامعتبر یا چرخه‌ای
 - [ ] **بهبود معماری Compiler**
-  - [ ] افزودن Binder
+  - [x] افزودن Binder
   - [ ] تعریف Bound Tree مستقل از Syntax Tree
-  - [ ] طراحی Symbol System یکپارچه
-  - [ ] مدیریت دقیق Scopeها
-  - [ ] جداسازی کامل مسئولیت Parser و Semantic Analyzer
+  - [x] طراحی Symbol System یکپارچه
+  - [x] مدیریت دقیق Scopeها
+  - [x] جداسازی کامل مسئولیت Parser و Semantic Analyzer
 - [ ] **تست سه‌لایه**
   - [ ] Parser Tests
   - [ ] Semantic Tests
@@ -371,11 +371,11 @@ The following items describe the general direction of future development; their 
   - [ ] Dependency management between objects
   - [ ] Detect invalid or circular dependencies
 - [ ] **Improve compiler architecture**
-  - [ ] Add a binder
+  - [x] Add a binder
   - [ ] Introduce a bound tree independent of the syntax tree
-  - [ ] Design a unified symbol system
-  - [ ] Implement precise scope management
-  - [ ] Fully separate parser and semantic analyzer responsibilities
+  - [x] Design a unified symbol system
+  - [x] Implement precise scope management
+  - [x] Fully separate parser and semantic analyzer responsibilities
 - [ ] **Three-layer testing strategy**
   - [ ] Parser tests
   - [ ] Semantic tests
