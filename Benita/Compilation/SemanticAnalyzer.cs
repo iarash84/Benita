@@ -12,6 +12,7 @@
         /// Dictionary to store packages names and their associated PackageNode.
         /// </summary>
         private readonly Dictionary<string, PackageNode> _packages;
+        private readonly BindingResult? _bindingResult;
         private readonly Scope _typeSymbols;
         private readonly Scope _functionSymbols;
         private readonly BuiltInClassRegistry _builtInClasses;
@@ -32,8 +33,10 @@
         /// <summary>
         /// Initializes a new instance of the SemanticAnalyzer class.
         /// </summary>
-        public SemanticAnalyzer(BuiltInClassRegistry? builtInClasses = null)
+        public SemanticAnalyzer(BuiltInClassRegistry? builtInClasses = null,
+            BindingResult? bindingResult = null)
         {
+            _bindingResult = bindingResult;
             _globalVariables = new Scope(name: "global");
             _typeSymbols = new Scope(name: "types");
             _functionSymbols = new Scope(name: "functions");
@@ -1022,6 +1025,13 @@
         /// <returns>The type of the identifier.</returns>
         private string? HandleIdentifierNode(IdentifierNode identifier, Scope localVariables)
         {
+            if (_bindingResult is not null &&
+                _bindingResult.TryGetSymbol(identifier, out Symbol? boundSymbol) &&
+                boundSymbol!.Type is not null &&
+                boundSymbol.Type != Types.Unknown &&
+                boundSymbol.Type != Types.Inferred)
+                return boundSymbol.Type.Name;
+
             if (!localVariables.TryGetValue(identifier.Name, out var node))
             {
                 throw new Exception($"Undeclared variable '{identifier.Name}'.");
@@ -1137,8 +1147,13 @@
         /// <returns>The return type of the function call.</returns>
         private string? HandleFunctionCallNode(FunctionCallNode functionCall, Scope localVariables)
         {
-            if (!_functionSymbols.TryLookup(functionCall.FunctionName, out Symbol? functionSymbol) ||
-                functionSymbol is not FunctionSymbol resolvedFunction ||
+            Symbol? functionSymbol = null;
+            bool hasBoundFunction = _bindingResult is not null &&
+                _bindingResult.TryGetSymbol(functionCall, out functionSymbol);
+            if (!hasBoundFunction)
+                _functionSymbols.TryLookup(functionCall.FunctionName, out functionSymbol);
+
+            if (functionSymbol is not FunctionSymbol resolvedFunction ||
                 resolvedFunction.Declaration is null)
                 throw new Exception($"Undeclared function '{functionCall.FunctionName}'.");
             FunctionNode function = resolvedFunction.Declaration;

@@ -114,7 +114,11 @@ public sealed class CompilerClass
 
     private static void AnalyzeProgram(ProgramNode program, BuiltInClassRegistry builtInClasses)
     {
-        var analyzer = new SemanticAnalyzer(builtInClasses);
+        // Binder supplies successful resolutions as an auxiliary semantic context.
+        // SemanticAnalyzer remains the owner of final diagnostics and language-specific
+        // rules such as package visibility, built-ins and inferred declarations.
+        BindingResult bindingResult = new Binder().Bind(program);
+        var analyzer = new SemanticAnalyzer(builtInClasses, bindingResult);
         SemanticAnalysisResult result = analyzer.AnalyzeResultOrThrow(program);
         if (result.IsSuccess)
             return;
