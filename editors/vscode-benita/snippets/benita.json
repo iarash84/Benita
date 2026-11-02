@@ -90,7 +90,7 @@
   },
   "Include once": {
     "prefix": "include",
-    "body": "include_once \"${1:path}\";",
+    "body": "import \"${1:path}\";",
     "description": "Include a Benita source file once"
   }
 }

@@ -25,7 +25,7 @@
 - مدیریت خطا با `error`، `throw` و ساختار `try/catch/finally`
 - ورودی و خروجی کنسول
 - عملیات خواندن، نوشتن، بررسی وجود و حذف فایل
-- دستور `include_once` برای استفاده از فایل‌های دیگر
+- دستور `import` برای استفاده از فایل‌های دیگر
 - اجرای مستقیم با مفسر و بهینه‌سازی اختیاری AST
 - فضای اجرای مستقل برای هر مفسر و یک فهرست مرکزی برای توابع داخلی
 - خطاهای مشخص برای توابع داخلی با کد `BEN4101`
@@ -112,7 +112,7 @@ Options:
 
 - `-a`: درخت نحوی انتزاعی یا AST را نمایش می‌دهد.
 - `-t`: توکن‌های تولیدشده توسط Lexer را نمایش می‌دهد.
-- `-s`: کد منبع پردازش‌شده، از جمله نتیجه `include_once`، را نمایش می‌دهد.
+- `-s`: کد منبع پردازش‌شده، از جمله نتیجه `import`، را نمایش می‌دهد.
 - `--optimize`: پیش از اجرا، عبارت‌های ثابت و شاخه‌های غیرقابل‌دسترسی AST را بهینه می‌کند.
 
 گزینه‌ها را می‌توان همراه فرمان‌های پردازش فایل استفاده کرد؛ برای مثال:
@@ -220,7 +220,7 @@ Benita is a small educational programming language I am building with C# and .NE
 - Error handling with `error`, `throw`, and `try/catch/finally`
 - Console input and output
 - File read, write, existence, and deletion operations
-- `include_once` support for reusable source files
+- `import` support for reusable source files
 - Direct interpretation with optional AST optimization
 - Isolated runtime contexts and a single built-in function registry
 - Structured built-in diagnostics with the stable `BEN4101` error code
@@ -307,7 +307,7 @@ Options:
 
 - `-a`: prints the Abstract Syntax Tree (AST).
 - `-t`: prints tokens produced by the Lexer.
-- `-s`: prints the processed source, including the result of `include_once`.
+- `-s`: prints the processed source, including the result of `import`.
 - `--optimize`: folds constant expressions and removes unreachable constant branches before execution.
 
 Options can be combined with file-processing actions. For example:

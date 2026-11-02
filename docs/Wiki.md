@@ -85,7 +85,7 @@ flowchart LR
 | `Application/Repl.cs` | محیط تعاملی stateful با ورودی چندخطی، تاریخچه و فرمان‌های مدیریتی |
 | `Compilation/CompilerClass.cs` | هماهنگ‌کنندهٔ مراحل Lexer، Parser، تحلیل معنایی، بهینه‌سازی و اجرا |
 | `Compilation/AstPrinter.cs` | نمایش مستقل و سلسله‌مراتبی AST |
-| `Compilation/Lexer.cs` | تبدیل متن منبع به توکن‌ها و پردازش `include_once` |
+| `Compilation/Lexer.cs` | تبدیل متن منبع به توکن‌ها و پردازش `import` |
 | `Compilation/Parser.cs` | تبدیل توکن‌ها به AST بر اساس گرامر زبان |
 | `Compilation/SemanticAnalyzer.cs` | کنترل نوع، declarationها، scopeها، توابع و قواعد معنایی |
 | `Syntax/Token.cs` | تعریف انواع توکن و اطلاعات موقعیت آن‌ها |
@@ -115,7 +115,7 @@ flowchart LR
 
 `Lexer` کد منبع را کاراکتر به کاراکتر می‌خواند و توکن‌هایی مانند شناسه، literal، عملگر، keyword و علائم نگارشی تولید می‌کند. شمارهٔ خط و موقعیت منبع نیز برای ساخت پیام خطای دقیق نگهداری می‌شود.
 
-دستور `include_once` در همین مرحله پردازش می‌شود؛ محتوای فایل وابسته وارد منبع می‌شود و هر فایل حداکثر یک بار پردازش خواهد شد.
+فرم فایلِ `import`، یعنی `import "path";`، در همین مرحله پردازش می‌شود؛ محتوای فایل وابسته وارد منبع می‌شود و هر فایل حداکثر یک بار پردازش خواهد شد. مسیر نسبی از پوشهٔ همان فایلی resolve می‌شود که دستور `import` در آن قرار دارد، نه از فایل دارای `_main_` و نه از ریشهٔ پروژه. برای مثال، اگر `main.ben` شامل `import "features/reports.ben";` باشد، مسیر از پوشهٔ `main.ben` محاسبه می‌شود؛ اما اگر `features/reports.ben` شامل `import "../lib/math.ben";` باشد، `..` از پوشهٔ `features` محاسبه می‌شود. برای source بدون نام، پوشهٔ کاری فعلی مبنا است.
 
 ### Parser و AST
 
@@ -150,11 +150,12 @@ flowchart LR
 `Interpreter` با الگوی Visitor روی AST حرکت می‌کند. هنگام اجرا، مقدار متغیرها، scope توابع، آرایه‌ها و نمونه‌های package را مدیریت می‌کند و دستورات کنترلی را به‌ترتیب اجرا می‌کند.
 
 کلاس‌های داخلی مانند `Console`، `Array`، `String` و عملیات فایل از طریق `BuiltInClassRegistry` به
-definition مناسب در پوشهٔ `Runtime/BuiltIns` هدایت می‌شوند. با `import ClassName;` scope فعال
+نحو مناسب در پوشهٔ `Runtime/BuiltIns` هدایت می‌شوند. با `import ClassName;` scope فعال
 ساخته می‌شود و همان scope به semantic analyzer و interpreter می‌رسد. کلاس‌های static بدون ساخت
 نمونه و کلاس‌های دارای state با `new` استفاده می‌شوند؛ وضعیت هر Interpreter نیز در
-`RuntimeContext` مستقل نگهداری می‌شود. `include_once` فقط source fileها را وارد می‌کند و
-فعال‌سازی built-in class نیست.
+`RuntimeContext` مستقل نگهداری می‌شود. توجه کنید که `import ClassName;` برای built-inها است،
+در حالی که `import "path";` برای واردکردن فایل منبع است و مسیر آن نسبت به فایل شامل‌کننده
+resolve می‌شود.
 
 ## مراحل پردازش برنامه
 

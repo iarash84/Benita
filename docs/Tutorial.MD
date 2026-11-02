@@ -49,12 +49,12 @@ initializer یک فیلد package می‌تواند متدی را که پایی�
 می‌شود و اجرای task، `init` نمونه را دوباره اجرا نمی‌کند.
 در تحلیل بازگشت تابع، `break` داخل شاخهٔ literal غیرقابل‌دسترسی مانند `if (false)` مسیر
 خروج محسوب نمی‌شود؛ اما هر `break` قابل‌دسترسی همچنان باید در مسیرهای بازگشت لحاظ شود.
-بعد از `include_once` باید فاصله باشد؛ پیشوندی مانند `include_once_helper` یک شناسهٔ عادی
-است و به‌عنوان دستور include تفسیر نمی‌شود.
+بعد از `import` باید فاصله باشد؛ پیشوندی مانند `include_once_helper` یک شناسهٔ عادی
+است و به‌عنوان file import تفسیر نمی‌شود.
 خطاهای REPL با نام مجازی `<repl>` و شماره‌خط متن پذیرفته‌شدهٔ نشست گزارش می‌شوند؛ یک
 submission ناموفق به تاریخچهٔ source افزوده نمی‌شود.
 خطاهای semantic نیز نام فایل، خط و ستون node مربوط را حفظ می‌کنند؛ اگر خطا در فایل
-`include_once`شده باشد، diagnostic به همان فایل اشاره می‌کند.
+`import`شده باشد، diagnostic به همان فایل اشاره می‌کند.
 فیلد package نیز می‌تواند با `let` تعریف شود؛ نوع آن از هر initializer دارای نوع مشخص،
 از جمله عبارت مرکب، در مرحلهٔ semantic استنتاج می‌شود.
 آرگومان متد و سمت راست assignment روی یک نمونهٔ package ابتدا در scope فراخواننده
@@ -487,20 +487,47 @@ _main_() {
 
 ### ۱۱. استفاده از فایل‌های دیگر
 
+برای واردکردن فایل منبع از فرم `import "path";` استفاده کنید. مسیر نسبی همیشه نسبت به
+**پوشهٔ همان فایلی** محاسبه می‌شود که دستور `import` داخل آن نوشته شده است؛ مسیر نسبت به
+فایل دارای `_main_` یا نسبت به پوشهٔ ریشهٔ پروژه محاسبه نمی‌شود.
+
+ساختار نمونه:
+
+```text
+project/
+├── main.ben
+├── lib/
+│   └── math.ben
+└── features/
+    └── reports.ben
+```
+
+محتوای فایل‌ها:
+
 ```benita
-include_once "add-function-library.ben";
+// main.ben — این فایل _main_ دارد.
+import "lib/math.ben";       // project/lib/math.ben
+import "features/reports.ben"; // project/features/reports.ben
 
 _main_() {
     Terminal.print(add(2, 3));
 }
 ```
 
-`include_once` هر فایل را در هر بار کامپایل حداکثر یک بار وارد می‌کند. مسیر نسبی نسبت به پوشهٔ
-فایلی که directive داخل آن نوشته شده محاسبه می‌شود؛ برای source بدون نام، پوشهٔ کاری مبنا است.
-مسیرهای معادل canonical می‌شوند. وابستگی چرخه‌ای مجاز نیست و با خطای `BEN1005` همراه
-زنجیرهٔ فایل‌ها گزارش می‌شود.
-متن `include_once` داخل کامنت یک‌خطی یا چندخطی نادیده گرفته می‌شود.
-خطاهای فایل‌های واردشده نام همان فایل و شمارهٔ خط اصلی آن را گزارش می‌کنند.
+```benita
+// features/reports.ben — مسیرهای این فایل از project/features محاسبه می‌شوند.
+import "../lib/math.ben";    // project/lib/math.ben
+```
+
+در این مثال، `"../lib/math.ben"` نسبت به `features/reports.ben` محاسبه می‌شود، نه نسبت
+به `main.ben`. بنابراین اگر همین دستور داخل `main.ben` نوشته شود، مسیر آن به
+`project/../lib/math.ben` اشاره خواهد کرد و معنای متفاوتی خواهد داشت.
+
+برای مسیر مطلق نیز می‌توان از مسیر کامل سیستم‌عامل استفاده کرد. اگر source نام فایل نداشته
+باشد، مسیرهای نسبی نسبت به پوشهٔ کاری فعلی برنامه محاسبه می‌شوند. هر فایل در هر بار کامپایل
+حداکثر یک بار وارد می‌شود؛ مسیرهای معادل canonical می‌شوند. وابستگی چرخه‌ای مجاز نیست و
+با خطای `BEN1005` همراه زنجیرهٔ فایل‌ها گزارش می‌شود. `import` داخل کامنت نادیده گرفته
+می‌شود و diagnosticهای فایل واردشده نام همان فایل و شمارهٔ خط اصلی آن را گزارش می‌کنند.
 
 ### ۱۲. کامنت‌ها
 
@@ -674,12 +701,12 @@ Isolation also covers arrays and package instances. Their aliases are preserved 
 task clone, and cloning does not execute package `init` again.
 Definite-return analysis ignores a `break` in an unreachable literal branch such as
 `if (false)`. Any reachable `break` still counts as a possible exit from the loop.
-`include_once` must be followed by whitespace. A name such as `include_once_helper` is an
-ordinary identifier and is not interpreted as an include directive.
+`import` must be followed by whitespace. A name such as `include_once_helper` is an
+ordinary identifier and is not interpreted as a file import.
 REPL diagnostics use the virtual source name `<repl>` and accepted-session line numbers. A
 rejected submission is not appended to the session source.
 Semantic diagnostics also retain the related node's file, line, and column. An error in an
-`include_once` file therefore points to that included file.
+`import` file therefore points to that included file.
 A package field may also use `let`; semantic analysis infers it from any concretely typed
 initializer, including a composite expression.
 Method arguments and assignment right-hand sides on a package instance are evaluated in the
@@ -1113,22 +1140,47 @@ _main_() {
 
 `File` provides `readText`, `writeText`, `appendText`, `exists`, `delete`, `copyTo`, and `moveTo`, plus read-only `path` and `length` properties. The old `file_read`, `file_write`, `file_exist`, and `file_delete` functions are no longer part of the language.
 
-### 11. Including other files
+### 11. Importing other files
+
+Use `import "path";` to import a source file. A relative path is always resolved from the
+**directory of the file that contains that `import` statement**. It is not resolved from the
+file containing `_main_` and not from the project root.
+
+Example layout:
+
+```text
+project/
+├── main.ben
+├── lib/
+│   └── math.ben
+└── features/
+    └── reports.ben
+```
 
 ```benita
-include_once "add-function-library.ben";
+// main.ben — contains _main_.
+import "lib/math.ben";          // project/lib/math.ben
+import "features/reports.ben"; // project/features/reports.ben
 
 _main_() {
     Terminal.print(add(2, 3));
 }
 ```
 
-`include_once` imports each file at most once per compilation. Relative paths are resolved from
-the directory of the file containing each directive; the working directory is used for unnamed source.
-Equivalent path spellings are normalized. Circular dependencies are rejected with `BEN1005`
-and the complete include chain.
-An `include_once` inside a line or block comment is ignored.
-Diagnostics from included files report that file and its original line number.
+```benita
+// features/reports.ben — paths here are resolved from project/features.
+import "../lib/math.ben";       // project/lib/math.ben
+```
+
+Here, `"../lib/math.ben"` is resolved relative to `features/reports.ben`, not relative to
+`main.ben`. If the same statement were written in `main.ben`, it would refer to
+`project/../lib/math.ben` and would have a different meaning.
+
+Absolute paths are also accepted. If the source has no file name, relative paths are resolved
+from the process working directory. Each file is imported at most once per compilation;
+equivalent paths are canonicalized. Circular dependencies are rejected with `BEN1005` and
+the complete dependency chain. Imports inside comments are ignored, and diagnostics from an
+imported file report that file's original name and line number.
 
 ### 12. Comments
 

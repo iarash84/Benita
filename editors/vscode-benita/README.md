@@ -9,7 +9,7 @@
 
 ### قابلیت‌ها
 
-- رنگ‌آمیزی کلیدواژه‌ها، انواع، توابع داخلی، عملگرها و `include_once`
+- رنگ‌آمیزی کلیدواژه‌ها، انواع، توابع داخلی، عملگرها و `import`
 - پشتیبانی از توضیحات خطی و بلوکی و رشته‌های دارای escape
 - تکمیل خودکار براکت و کوتیشن، indentation و folding بلوک‌ها
 - snippet برای `_main_`، تابع، پکیج، اینترفیس، کنترل جریان، مدیریت خطا و async/await
@@ -32,7 +32,7 @@ This extension adds editing support for Benita `.ben` files to Visual Studio Cod
 
 ### Features
 
-- Syntax highlighting for keywords, types, built-ins, operators, and `include_once`
+- Syntax highlighting for keywords, types, built-ins, operators, and `import`
 - Line/block comments and escaped string support
 - Automatic bracket/quote closing, indentation, and code folding
 - Snippets for `_main_`, functions, packages, interfaces, control flow, error handling,

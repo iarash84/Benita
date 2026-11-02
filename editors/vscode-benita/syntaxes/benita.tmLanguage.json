@@ -34,7 +34,7 @@
     },
     "include-directive": {
       "name": "meta.preprocessor.include.benita",
-      "begin": "\\b(include_once)\\b",
+      "begin": "\\b(import)\\b",
       "beginCaptures": {
         "1": { "name": "keyword.control.directive.include.benita" }
       },

@@ -48,7 +48,7 @@ debugger داده می‌شود تا چند مفسر اطلاعاتشان را �
 برنامه می‌تواند با declaration سطح بالای `import ClassName;` کلاس‌های built-in را فعال کند.
 پس از parse، compiler یک registry محدود از همان importها می‌سازد و همان scope را به semantic
 analyzer و runtime می‌دهد. کلاس‌های static بدون ساخت instance فعال می‌شوند؛ کلاس‌های instance
-پس از import برای type resolution و `new` در دسترس هستند. `include_once` فقط فایل source را
+پس از import برای type resolution و `new` در دسترس هستند. `import` فقط فایل source را
 ترکیب می‌کند و جایگزین import نیست.
 
 ### ۴. کلاس‌های داخلی
@@ -196,4 +196,4 @@ synchronization یا channel به زبان افزوده شوند.
 Lexer شمارهٔ خط و offset آغاز خط را هم‌زمان با scan به‌روز می‌کند. موقعیت آغاز هر token
 پیش از خواندن آن snapshot می‌شود؛ بنابراین ساخت `SourceSpan` نیازمند پیمایش دوباره از ابتدای
 source نیست و هزینهٔ tokenization با اندازهٔ ورودی رشد خطی دارد. جدول origin تولیدشده توسط
-`include_once` همچنان نام فایل و شمارهٔ خط اصلی هر token را تأمین می‌کند.
+`import` همچنان نام فایل و شمارهٔ خط اصلی هر token را تأمین می‌کند.

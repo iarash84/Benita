@@ -27,7 +27,7 @@
             <Keywords name="Keywords1">_main_ pkg import interface func init public private let if else while for in match return break continue try catch finally throw async await new this</Keywords>
             <Keywords name="Keywords2">number string bool void error true false</Keywords>
             <Keywords name="Keywords3">Console Array String Convert Math Error DateTime File NativeCounter</Keywords>
-            <Keywords name="Keywords4">include_once</Keywords>
+            <Keywords name="Keywords4">import</Keywords>
             <Keywords name="Keywords5"></Keywords>
             <Keywords name="Keywords6"></Keywords>
             <Keywords name="Keywords7"></Keywords>

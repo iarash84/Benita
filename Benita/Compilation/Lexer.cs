@@ -90,7 +90,7 @@
                 rootPath = Path.GetFullPath(sourceName);
                 baseDirectory = Path.GetDirectoryName(rootPath) ?? baseDirectory;
             }
-            _source = ProcessIncludes(source, baseDirectory, rootPath, _sourceLineOrigins); ///< Process included files.
+            _source = ProcessImports(source, baseDirectory, rootPath, _sourceLineOrigins); ///< Process file imports.
             if (sourcePrint)
                 Console.WriteLine(_source);
         }
@@ -117,10 +117,10 @@
         }
 
         /// <summary>
-        /// Recursively processes "include_once" directives to include the contents of other files.
+        /// Recursively processes file-form `import` directives to include source files once.
         /// </summary>
         /// <param name="source">The source code to process.</param>
-        private string ProcessIncludes(string source, string baseDirectory, string? currentPath,
+        private string ProcessImports(string source, string baseDirectory, string? currentPath,
             List<SourceLineOrigin> origins)
         {
             if (currentPath is not null)
@@ -139,24 +139,24 @@
                 {
                     string line = lines[lineIndex];
                     string trimmedLine = line.Trim();
-                    if (!insideBlockComment && StartsWithIncludeDirective(trimmedLine))
+                    if (!insideBlockComment && StartsWithFileImportDirective(trimmedLine))
                     {
                         string? originName = currentPath ?? _sourceName;
-                        string includePath = ParseIncludePath(trimmedLine, originName, lineIndex + 1, line);
-                        string filePath = Path.GetFullPath(Path.Combine(baseDirectory, includePath));
+                        string importPath = ParseFileImportPath(trimmedLine, originName, lineIndex + 1, line);
+                        string filePath = Path.GetFullPath(Path.Combine(baseDirectory, importPath));
                         if (_activeIncludes.Contains(filePath))
-                            throw CreateCircularIncludeError(filePath, originName, lineIndex + 1, line);
+                            throw CreateCircularImportError(filePath, originName, lineIndex + 1, line);
                         if (_includedFiles.Contains(filePath))
                             continue;
                         if (!File.Exists(filePath))
                             throw CreateIncludeError("BEN1003",
-                                $"Included file '{includePath}' was not found at '{filePath}'.",
+                                $"Imported file '{importPath}' was not found at '{filePath}'.",
                                 originName, lineIndex + 1, line);
 
                         string fileContent = File.ReadAllText(filePath);
                         string includedDirectory = Path.GetDirectoryName(filePath) ?? baseDirectory;
                         var includedOrigins = new List<SourceLineOrigin>();
-                        includedSources.Add(ProcessIncludes(fileContent, includedDirectory, filePath,
+                        includedSources.Add(ProcessImports(fileContent, includedDirectory, filePath,
                             includedOrigins));
                         origins.AddRange(includedOrigins);
                     }
@@ -182,12 +182,17 @@
             }
         }
 
-        /// <summary>کلیدواژهٔ include را فقط در مرز کامل token می‌پذیرد، نه به‌عنوان پیشوند شناسه.</summary>
-        private static bool StartsWithIncludeDirective(string line)
+        /// <summary>فرم file-based import را فقط در ابتدای یک خط مستقل شناسایی می‌کند.</summary>
+        private static bool StartsWithFileImportDirective(string line)
         {
-            const string keyword = "include_once";
-            return line.StartsWith(keyword, StringComparison.Ordinal) &&
-                   (line.Length == keyword.Length || char.IsWhiteSpace(line[keyword.Length]));
+            const string keyword = "import";
+            int pathStart = keyword.Length;
+            if (!line.StartsWith(keyword, StringComparison.Ordinal) ||
+                line.Length <= pathStart || !char.IsWhiteSpace(line[pathStart]))
+                return false;
+
+            string remainder = line[pathStart..].TrimStart();
+            return remainder.Length > 0 && remainder[0] == '"';
         }
 
         /// <summary>وضعیت کامنت چندخطی را بدون تفسیر markerهای داخل string به‌روز می‌کند.</summary>
@@ -240,7 +245,7 @@
         }
 
         /// <summary>زنجیرهٔ کامل یک وابستگی چرخه‌ای را به‌صورت diagnostic گزارش می‌کند.</summary>
-        private LexerException CreateCircularIncludeError(string repeatedPath, string? sourceName,
+        private LexerException CreateCircularImportError(string repeatedPath, string? sourceName,
             int line, string lineText)
         {
             int cycleStart = _includeStack.FindIndex(path =>
@@ -252,24 +257,24 @@
                 sourceName, line, lineText);
         }
 
-        /// <summary>مسیر یک directive معتبر include_once را استخراج می‌کند.</summary>
-        private static string ParseIncludePath(string directive, string? sourceName, int line, string lineText)
+        /// <summary>مسیر یک file import معتبر را استخراج می‌کند.</summary>
+        private static string ParseFileImportPath(string directive, string? sourceName, int line, string lineText)
         {
-            const string keyword = "include_once";
+            const string keyword = "import";
             string remainder = directive[keyword.Length..].Trim();
             if (!remainder.EndsWith(';'))
-                throw CreateIncludeError("BEN1004", "Expected ';' after include_once directive.",
+                throw CreateIncludeError("BEN1004", "Expected ';' after file import directive.",
                     sourceName, line, lineText);
             remainder = remainder[..^1].TrimEnd();
 
             if (remainder.Length < 2 || remainder[0] != '"' || remainder[^1] != '"' ||
                 remainder[1..^1].Contains('"'))
-                throw CreateIncludeError("BEN1004", "Expected include_once \"path\";.",
+                throw CreateIncludeError("BEN1004", "Expected import \"path\";.",
                     sourceName, line, lineText);
 
             string path = remainder[1..^1];
             if (string.IsNullOrWhiteSpace(path))
-                throw CreateIncludeError("BEN1004", "The include_once path cannot be empty.",
+                throw CreateIncludeError("BEN1004", "The import path cannot be empty.",
                     sourceName, line, lineText);
             return path;
         }

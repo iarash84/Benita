@@ -3,10 +3,10 @@ using Benita;
 namespace BenitaTestProject;
 
 [TestClass]
-public class IncludeOnceTests
+public class ImportTests
 {
     [TestMethod]
-    public void IncludeOnce_PrefixInIdentifier_IsTokenizedAsIdentifier()
+    public void Import_PrefixInIdentifier_IsTokenizedAsIdentifier()
     {
         const string source = """
             import Terminal;
@@ -18,14 +18,14 @@ public class IncludeOnceTests
     }
 
     [TestMethod]
-    public void IncludeOnce_SemanticDiagnosticPointsToIncludedFile()
+    public void Import_SemanticDiagnosticPointsToImportedFile()
     {
         string directory = CreateTemporaryDirectory();
         try
         {
             string libraryPath = Path.Combine(directory, "broken.ben");
             File.WriteAllText(libraryPath, "func broken() -> number { return missing; }");
-            const string source = "include_once \"broken.ben\";\n_main_() {}";
+            const string source = "import \"broken.ben\";\n_main_() {}";
 
             SemanticException exception = Assert.ThrowsException<SemanticException>(() =>
                 new CompilerClass().Check(source, sourceName: Path.Combine(directory, "main.ben")));
@@ -40,7 +40,7 @@ public class IncludeOnceTests
     }
 
     [TestMethod]
-    public void IncludeOnce_CanonicalizesEquivalentPaths()
+    public void Import_CanonicalizesEquivalentPaths()
     {
         string directory = CreateTemporaryDirectory();
         try
@@ -50,8 +50,8 @@ public class IncludeOnceTests
                 "func value() -> number { return 1; }");
             const string source = """
                 import Terminal;
-                include_once "lib/common.ben";
-                include_once "lib/../lib/common.ben";
+                import "lib/common.ben";
+                import "lib/../lib/common.ben";
                 _main_() { Terminal.print(value()); }
                 """;
 
@@ -66,7 +66,7 @@ public class IncludeOnceTests
     }
 
     [TestMethod]
-    public void IncludeOnce_ResolvesNestedPathRelativeToIncludingFile()
+    public void Import_ResolvesNestedPathRelativeToImportingFile()
     {
         string directory = CreateTemporaryDirectory();
         try
@@ -75,10 +75,10 @@ public class IncludeOnceTests
             File.WriteAllText(Path.Combine(directory, "common.ben"),
                 "func value() -> number { return 2; }");
             File.WriteAllText(Path.Combine(featureDirectory, "entry.ben"),
-                "include_once \"../common.ben\";");
+                "import \"../common.ben\";");
             const string source = """
                 import Terminal;
-                include_once "feature/entry.ben";
+                import "feature/entry.ben";
                 _main_() { Terminal.print(value()); }
                 """;
 
@@ -91,7 +91,7 @@ public class IncludeOnceTests
     }
 
     [TestMethod]
-    public void IncludeOnce_CycleBackToRoot_IsRejectedWithDependencyChain()
+    public void Import_CycleBackToRoot_IsRejectedWithDependencyChain()
     {
         string directory = CreateTemporaryDirectory();
         try
@@ -100,12 +100,12 @@ public class IncludeOnceTests
             string rootPath = Path.Combine(directory, "main.ben");
             const string source = """
                 import Terminal;
-                include_once "feature/entry.ben";
+                import "feature/entry.ben";
                 _main_() { Terminal.print("ok"); }
                 """;
             File.WriteAllText(rootPath, source);
             File.WriteAllText(Path.Combine(featureDirectory, "entry.ben"),
-                "include_once \"../main.ben\";");
+                "import \"../main.ben\";");
 
             LexerException exception = Assert.ThrowsException<LexerException>(() =>
                 new Lexer(source, sourceName: rootPath).Tokenize());
@@ -120,21 +120,21 @@ public class IncludeOnceTests
     }
 
     [TestMethod]
-    public void IncludeOnce_WithMalformedDirective_ReportsDiagnostic()
+    public void Import_WithMalformedFileDirective_ReportsDiagnostic()
     {
         LexerException exception = Assert.ThrowsException<LexerException>(() =>
-            new Lexer("include_once common.ben;").Tokenize());
+            new Lexer("import \"common.ben;").Tokenize());
 
         Assert.AreEqual("BEN1004", exception.Code);
     }
 
     [TestMethod]
-    public void IncludeOnce_InsideBlockComment_IsIgnored()
+    public void Import_InsideBlockComment_IsIgnored()
     {
         const string source = """
             import Terminal;
             /*
-            include_once "definitely-missing.ben";
+            import "definitely-missing.ben";
             */
             _main_() { Terminal.print("ok"); }
             """;
@@ -143,7 +143,7 @@ public class IncludeOnceTests
     }
 
     [TestMethod]
-    public void IncludeOnce_BlockCommentMarkerInsideString_DoesNotHideFollowingDirective()
+    public void Import_BlockCommentMarkerInsideString_DoesNotHideFollowingDirective()
     {
         string directory = CreateTemporaryDirectory();
         try
@@ -153,7 +153,7 @@ public class IncludeOnceTests
             const string source = """
                 import Terminal;
                 string marker = "/*";
-                include_once "library.ben";
+                import "library.ben";
                 _main_() { Terminal.print(value()); }
                 """;
 
@@ -176,7 +176,7 @@ public class IncludeOnceTests
             string rootPath = Path.Combine(directory, "main.ben");
 
             LexerException exception = Assert.ThrowsException<LexerException>(() =>
-                new Lexer("include_once \"library.ben\";", sourceName: rootPath).Tokenize());
+                new Lexer("import \"library.ben\";", sourceName: rootPath).Tokenize());
 
             Assert.AreEqual(Path.GetFullPath(libraryPath), exception.Span.FileName);
             Assert.AreEqual(2, exception.Span.Line);
@@ -199,7 +199,7 @@ public class IncludeOnceTests
             string rootPath = Path.Combine(directory, "main.ben");
 
             ParserException exception = Assert.ThrowsException<ParserException>(() =>
-                new CompilerClass().Check("include_once \"broken.ben\";\n_main_() {}", sourceName: rootPath));
+                new CompilerClass().Check("import \"broken.ben\";\n_main_() {}", sourceName: rootPath));
 
             Assert.AreEqual(Path.GetFullPath(libraryPath), exception.Span.FileName);
             Assert.AreEqual(2, exception.Span.Line);
