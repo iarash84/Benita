@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 import Array;
 // مرتب‌سازی حبابی، دسترسی آرایه و جابه‌جایی عناصر را آزمایش می‌کند.
 // Tests bubble sort, array access, and swapping array elements.
@@ -22,6 +22,6 @@ _main_() {
     number[] values = [5, 1, 4, 2, 8];
     number[] sorted = bubble_sort(values);
     for (value in sorted) {
-        Console.print(value);
+        Terminal.print(value);
     }
 }

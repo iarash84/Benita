@@ -11,16 +11,16 @@ public class ErrorHandlingTests
     public void ThrowCatchFinally_ExposeErrorAndAlwaysRunCleanup()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import Error;
             _main_() {
                 try {
                     throw Error.create("APP100", "operation failed");
                 } catch (failure) {
-                    Console.print(failure.code);
-                    Console.print(failure.message);
+                    Terminal.print(failure.code);
+                    Terminal.print(failure.message);
                 } finally {
-                    Console.print("cleanup");
+                    Terminal.print("cleanup");
                 }
             }
             """;
@@ -35,13 +35,13 @@ public class ErrorHandlingTests
     public void Catch_ConvertsBuiltInRuntimeFailureToErrorValue()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import Convert;
             _main_() {
                 try {
                     number value = Convert.to_number("not-a-number");
                 } catch (failure) {
-                    Console.print(failure.code);
+                    Terminal.print(failure.code);
                 }
             }
             """;
@@ -55,12 +55,12 @@ public class ErrorHandlingTests
     public void Finally_RunsBeforeFunctionReturn()
     {
         const string source = """
-            import Console;
+            import Terminal;
             func value() -> number {
                 try { return 7; }
-                finally { Console.print("finally"); }
+                finally { Terminal.print("finally"); }
             }
-            _main_() { Console.print(value()); }
+            _main_() { Terminal.print(value()); }
             """;
 
         using var output = new ConsoleOutput();
@@ -72,10 +72,10 @@ public class ErrorHandlingTests
     public void FinallyThatAlwaysThrows_SatisfiesNonVoidControlFlow()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import Error;
             func value() -> number {
-                try { Console.print("work"); }
+                try { Terminal.print("work"); }
                 finally { throw Error.create("STOP", "stopped"); }
             }
             _main_() { value(); }
@@ -91,14 +91,14 @@ public class ErrorHandlingTests
     public void Finally_RunsWhenErrorContinuesToOuterCatch()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import Error;
             _main_() {
                 try {
                     try { throw Error.create("INNER", "failed"); }
-                    finally { Console.print("inner cleanup"); }
+                    finally { Terminal.print("inner cleanup"); }
                 } catch (failure) {
-                    Console.print(failure.code);
+                    Terminal.print(failure.code);
                 }
             }
             """;
@@ -112,13 +112,13 @@ public class ErrorHandlingTests
     public void CatchVariable_ShadowsAndThenRestoresOuterVariable()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import Error;
             _main_() {
                 string failure = "outer";
                 try { throw Error.create("INNER", "failed"); }
-                catch (failure) { Console.print(failure.code); }
-                Console.print(failure);
+                catch (failure) { Terminal.print(failure.code); }
+                Terminal.print(failure);
             }
             """;
 
@@ -129,8 +129,8 @@ public class ErrorHandlingTests
 
     [DataTestMethod]
     [DataRow("_main_() { throw \"bad\"; }", "requires an error value")]
-    [DataRow("_main_() { try { Console.print(1); } }", "requires a catch or finally")]
-    [DataRow("_main_() { try {} catch (failure) {} Console.print(failure.message); }", "Member access requires")]
+    [DataRow("_main_() { try { Terminal.print(1); } }", "requires a catch or finally")]
+    [DataRow("_main_() { try {} catch (failure) {} Terminal.print(failure.message); }", "Member access requires")]
     [DataRow("func value() -> number { try { return 1; } finally { return 2; } } _main_() {}", "return")]
     [DataRow("_main_() { while (true) { try {} finally { break; } } }", "break")]
     [DataRow("pkg error {} _main_() {}", "reserved")]

@@ -10,9 +10,9 @@ namespace BenitaTestProject
         public void Analyze_WithGlobalVariables_CompletesSuccessfully()
         {
             const string source = """
-                import Console;
+                import Terminal;
                 number answer = 42;
-                _main_() { Console.print(answer); }
+                _main_() { Terminal.print(answer); }
                 """;
             var program = new Parser(new Lexer(source).Tokenize()).Parse();
 

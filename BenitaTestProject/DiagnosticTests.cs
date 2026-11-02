@@ -25,7 +25,7 @@ public class DiagnosticTests
     [TestMethod]
     public void Parse_WithMissingSemicolon_ReportsTokenLocationAndExpectedSyntax()
     {
-        const string source = "import Console;\n_main_() { Console.print(\"hello\") }";
+        const string source = "import Terminal;\n_main_() { Terminal.print(\"hello\") }";
         var tokens = new Lexer(source, sourceName: "main.ben").Tokenize();
 
         var exception = Assert.ThrowsException<ParserException>(() => new Parser(tokens).Parse());

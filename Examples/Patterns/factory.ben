@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 // Simple Factory ساخت Notification مناسب را بر اساس نوع درخواستی متمرکز می‌کند.
 // Demonstrates Simple Factory by centralizing Notification creation based on a requested kind.
 pkg Notification {
@@ -30,5 +30,5 @@ pkg NotificationFactory {
 _main_() {
     NotificationFactory factory = new NotificationFactory();
     Notification notification = factory.create("email");
-    Console.print(notification.send("Build finished"));
+    Terminal.print(notification.send("Build finished"));
 }

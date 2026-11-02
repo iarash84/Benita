@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 // عملگر increment در حلقهٔ while و تغییر متغیرهای عددی را نمایش می‌دهد.
 // Demonstrates increment operations in a while loop and numeric variable mutation.
 func myFunction(number a, number b) -> number {
@@ -8,11 +8,11 @@ func myFunction(number a, number b) -> number {
 _main_() {
     number x = 10;
     number y = 20;
-    Console.print(x + y);
+    Terminal.print(x + y);
     number i = 0;
     while ( i < 5 ) {
         x++;
         i++;
     }
-    Console.print(x);
+    Terminal.print(x);
 }

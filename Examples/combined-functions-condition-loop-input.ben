@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 // ترکیب تابع، شرط، حلقه، ورودی کاربر و عملیات عددی و رشته‌ای را آزمایش می‌کند.
 // Tests functions, conditions, loops, user input, and numeric/string operations together.
 func add(number a, number b) -> number {
@@ -21,13 +21,13 @@ _main_() {
     string world = "world!";
     string message = concatenate(hello, world);
 
-    Console.print(message);
+    Terminal.print(message);
 
     bool check = is_even(sum);
     if (check) {
-        Console.print("Sum is even.");
+        Terminal.print("Sum is even.");
     } else {
-        Console.print("Sum is odd.");
+        Terminal.print("Sum is odd.");
     }
     number i = 0;
     while ( i < 5 ) {
@@ -35,6 +35,6 @@ _main_() {
         i++;
     }
 
-    string userInput = Console.input();
-    Console.print("You entered: " + userInput);    
+    string userInput = Terminal.input();
+    Terminal.print("You entered: " + userInput);    
 }

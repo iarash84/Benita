@@ -12,7 +12,7 @@
 
 ```benita
 _main_() {
-    Console.print("Hello, Benita!");
+    Terminal.print("Hello, Benita!");
 }
 ```
 
@@ -20,7 +20,7 @@ _main_() {
 
 ```benita
 number x = 2;
-Console.print(x + 3);
+Terminal.print(x + 3);
 ```
 
 ### ۲. انواع و متغیرها
@@ -98,9 +98,9 @@ sum++;
 number value = 12;
 
 if (value % 2 == 0) {
-    Console.print("even");
+    Terminal.print("even");
 } else {
-    Console.print("odd");
+    Terminal.print("odd");
 }
 ```
 
@@ -108,11 +108,11 @@ if (value % 2 == 0) {
 
 ```benita
 if (value > 10) {
-    Console.print("large");
+    Terminal.print("large");
 } else if (value > 5) {
-    Console.print("medium");
+    Terminal.print("medium");
 } else {
-    Console.print("small");
+    Terminal.print("small");
 }
 ```
 
@@ -133,9 +133,9 @@ let result = match score {
 
 ```benita
 match value {
-    1 => { Console.print("one"); }
-    2 => { Console.print("two"); }
-    _ => { Console.print("other"); }
+    1 => { Terminal.print("one"); }
+    2 => { Terminal.print("two"); }
+    _ => { Terminal.print("other"); }
 }
 ```
 
@@ -147,8 +147,8 @@ match value {
 
 ```benita
 match value {
-    1, 2, 3 => Console.print("small");
-    _ => Console.print("other");
+    1, 2, 3 => Terminal.print("small");
+    _ => Terminal.print("other");
 }
 ```
 
@@ -171,7 +171,7 @@ let level = match value {
 ```benita
 number i = 0;
 while (i < 3) {
-    Console.print(i);
+    Terminal.print(i);
     i++;
 }
 ```
@@ -180,7 +180,7 @@ while (i < 3) {
 
 ```benita
 for (number i = 0; i < 3; i++) {
-    Console.print(i);
+    Terminal.print(i);
 }
 ```
 
@@ -190,7 +190,7 @@ for (number i = 0; i < 3; i++) {
 ```benita
 number[] values = [10, 20, 30];
 for (item in values) {
-    Console.print(item);
+    Terminal.print(item);
 }
 ```
 
@@ -207,12 +207,12 @@ func add(number a, number b) -> number {
 }
 
 func show(string message) -> void {
-    Console.print(message);
+    Terminal.print(message);
     return;
 }
 
 _main_() {
-    Console.print(add(2, 3));
+    Terminal.print(add(2, 3));
     show("done");
 }
 ```
@@ -235,11 +235,11 @@ func factorial(number n) -> number {
 ```benita
 number[] values = [10, 20, 30];
 values[1] = 25;
-Console.print(values[1]);
+Terminal.print(values[1]);
 
 values = Array.add(values, 40);
 values = Array.remove(values, 0);
-Console.print(Array.length(values));
+Terminal.print(Array.length(values));
 ```
 
 تمام عناصر یک آرایه باید نوع یکسان داشته باشند و اندیس آرایه عددی است.
@@ -276,8 +276,8 @@ Console.print(Array.length(values));
 ```benita
 number[] values = [30, 10, 20];
 
-Console.print(Array.contains(values, 10)); // True
-Console.print(Array.index_of(values, 20)); // 2
+Terminal.print(Array.contains(values, 10)); // True
+Terminal.print(Array.index_of(values, 20)); // 2
 
 values = Array.insert(values, 1, 40);       // [30, 40, 10, 20]
 number[] middle = Array.slice(values, 1, 2); // [40, 10]
@@ -308,7 +308,7 @@ pkg Counter {
 _main_() {
     Counter counter = new Counter(5);
     counter.increment();
-    Console.print(counter.value);
+    Terminal.print(counter.value);
 }
 ```
 
@@ -322,7 +322,7 @@ func create_counter(number initial) -> Counter {
 
 _main_() {
     let counter = create_counter(10);
-    Console.print(counter.value);
+    Terminal.print(counter.value);
 }
 ```
 
@@ -353,7 +353,7 @@ pkg Counter {
 
 _main_() {
     Counter counter = new Counter();
-    Console.print(counter.current());
+    Terminal.print(counter.current());
 }
 ```
 
@@ -375,7 +375,7 @@ pkg JsonFormatter : Formatter {
 }
 
 func show(Formatter formatter, string value) -> void {
-    Console.print(formatter.format(value));
+    Terminal.print(formatter.format(value));
 }
 
 _main_() {
@@ -398,9 +398,9 @@ _main_() {
 try {
     throw Error.create("APP100", "Operation failed");
 } catch (failure) {
-    Console.print(failure.code + ": " + failure.message);
+    Terminal.print(failure.code + ": " + failure.message);
 } finally {
-    Console.print("Cleanup always runs");
+    Terminal.print("Cleanup always runs");
 }
 ```
 
@@ -428,18 +428,18 @@ code و message اصلی در مرز اجرای برنامه گزارش می‌�
 
 ```benita
 _main_() {
-    Console.print("Enter a number:");
-    number value = Convert.to_number(Console.input());
-    Console.print(Convert.to_string(value));
-    Console.print(Math.round(value));
-    Console.print(Math.sqrt(value));
+    Terminal.print("Enter a number:");
+    number value = Convert.to_number(Terminal.input());
+    Terminal.print(Convert.to_string(value));
+    Terminal.print(Math.round(value));
+    Terminal.print(Math.sqrt(value));
 }
 ```
 
 کلاس‌ها و متدهای داخلی این بخش:
 
-- `Console.print(value)` چاپ مقدار
-- `Console.input()` خواندن یک خط رشته‌ای
+- `Terminal.print(value)` چاپ مقدار
+- `Terminal.input()` خواندن یک خط رشته‌ای
 - `Convert.to_string(value)` تبدیل مقدار به رشته
 - `Convert.to_number(value)` تبدیل مقدار به عدد
 - `Math.round(value)` گرد کردن عدد
@@ -450,17 +450,17 @@ _main_() {
 ```benita
 _main_() {
     string value = "  Hello Benita  ";
-    Console.print(String.length(value));
-    Console.print(String.char_at(value, 2));
-    Console.print(String.substring(value, 2, 5));
-    Console.print(String.contains(value, "Benita"));
-    Console.print(String.index_of(value, "Benita"));
-    Console.print(String.replace(value, "Benita", "World"));
-    string[] parts = String.split("one,two,three", ",");
-    Console.print(parts[1]);
-    Console.print(String.trim(value));
-    Console.print(String.to_lower("BENITA"));
-    Console.print(String.to_upper("benita"));
+    Terminal.print(Text.length(value));
+    Terminal.print(Text.char_at(value, 2));
+    Terminal.print(Text.substring(value, 2, 5));
+    Terminal.print(Text.contains(value, "Benita"));
+    Terminal.print(Text.index_of(value, "Benita"));
+    Terminal.print(Text.replace(value, "Benita", "World"));
+    string[] parts = Text.split("one,two,three", ",");
+    Terminal.print(parts[1]);
+    Terminal.print(Text.trim(value));
+    Terminal.print(Text.to_lower("BENITA"));
+    Terminal.print(Text.to_upper("benita"));
 }
 ```
 
@@ -478,7 +478,7 @@ _main_() {
         file.writeText("Hello");
     }
 
-    Console.print(file.readText());
+    Terminal.print(file.readText());
     file.delete();
 }
 ```
@@ -491,7 +491,7 @@ _main_() {
 include_once "add-function-library.ben";
 
 _main_() {
-    Console.print(add(2, 3));
+    Terminal.print(add(2, 3));
 }
 ```
 
@@ -549,7 +549,7 @@ benita> value
 
 ```text
 benita> for (number i = 0; i < 3; i++) {
-   ...>     Console.print(i);
+   ...>     Terminal.print(i);
    ...> }
 0
 1
@@ -619,7 +619,7 @@ func sign(number value) -> string {
 
 ```benita
 for (;;) {
-    Console.print("running");
+    Terminal.print("running");
     break;
 }
 ```
@@ -637,7 +637,7 @@ The simplest Benita program starts with `_main_`:
 
 ```benita
 _main_() {
-    Console.print("Hello, Benita!");
+    Terminal.print("Hello, Benita!");
 }
 ```
 
@@ -645,7 +645,7 @@ You can also place executable statements directly at the top level:
 
 ```benita
 number x = 2;
-Console.print(x + 3);
+Terminal.print(x + 3);
 ```
 
 ### 2. Types and variables
@@ -723,9 +723,9 @@ Ordered comparisons (`<`, `>`, `<=`, and `>=`) accept only numbers.
 number value = 12;
 
 if (value % 2 == 0) {
-    Console.print("even");
+    Terminal.print("even");
 } else {
-    Console.print("odd");
+    Terminal.print("odd");
 }
 ```
 
@@ -733,11 +733,11 @@ A condition must evaluate to `bool`. Multiple conditions can be chained with `el
 
 ```benita
 if (value > 10) {
-    Console.print("large");
+    Terminal.print("large");
 } else if (value > 5) {
-    Console.print("medium");
+    Terminal.print("medium");
 } else {
-    Console.print("small");
+    Terminal.print("small");
 }
 ```
 
@@ -758,9 +758,9 @@ It can also execute statement blocks:
 
 ```benita
 match value {
-    1 => { Console.print("one"); }
-    2 => { Console.print("two"); }
-    _ => { Console.print("other"); }
+    1 => { Terminal.print("one"); }
+    2 => { Terminal.print("two"); }
+    _ => { Terminal.print("other"); }
 }
 ```
 
@@ -772,8 +772,8 @@ body does not require braces:
 
 ```benita
 match value {
-    1, 2, 3 => Console.print("small");
-    _ => Console.print("other");
+    1, 2, 3 => Terminal.print("small");
+    _ => Terminal.print("other");
 }
 ```
 
@@ -796,7 +796,7 @@ A `while` loop:
 ```benita
 number i = 0;
 while (i < 3) {
-    Console.print(i);
+    Terminal.print(i);
     i++;
 }
 ```
@@ -805,7 +805,7 @@ A `for` loop:
 
 ```benita
 for (number i = 0; i < 3; i++) {
-    Console.print(i);
+    Terminal.print(i);
 }
 ```
 
@@ -815,7 +815,7 @@ inferred and exists only inside the loop body:
 ```benita
 number[] values = [10, 20, 30];
 for (item in values) {
-    Console.print(item);
+    Terminal.print(item);
 }
 ```
 
@@ -832,12 +832,12 @@ func add(number a, number b) -> number {
 }
 
 func show(string message) -> void {
-    Console.print(message);
+    Terminal.print(message);
     return;
 }
 
 _main_() {
-    Console.print(add(2, 3));
+    Terminal.print(add(2, 3));
     show("done");
 }
 ```
@@ -860,11 +860,11 @@ func factorial(number n) -> number {
 ```benita
 number[] values = [10, 20, 30];
 values[1] = 25;
-Console.print(values[1]);
+Terminal.print(values[1]);
 
 values = Array.add(values, 40);
 values = Array.remove(values, 0);
-Console.print(Array.length(values));
+Terminal.print(Array.length(values));
 ```
 
 All elements in an array must have the same type, and an array index must be numeric.
@@ -900,8 +900,8 @@ or ranges passed to `Array.remove`, `Array.insert`, or `Array.slice` produce an 
 ```benita
 number[] values = [30, 10, 20];
 
-Console.print(Array.contains(values, 10)); // True
-Console.print(Array.index_of(values, 20)); // 2
+Terminal.print(Array.contains(values, 10)); // True
+Terminal.print(Array.index_of(values, 20)); // 2
 
 values = Array.insert(values, 1, 40);       // [30, 40, 10, 20]
 number[] middle = Array.slice(values, 1, 2); // [40, 10]
@@ -932,7 +932,7 @@ pkg Counter {
 _main_() {
     Counter counter = new Counter(5);
     counter.increment();
-    Console.print(counter.value);
+    Terminal.print(counter.value);
 }
 ```
 
@@ -946,7 +946,7 @@ func create_counter(number initial) -> Counter {
 
 _main_() {
     let counter = create_counter(10);
-    Console.print(counter.value);
+    Terminal.print(counter.value);
 }
 ```
 
@@ -985,7 +985,7 @@ pkg JsonFormatter : Formatter {
 }
 
 func show(Formatter formatter, string value) -> void {
-    Console.print(formatter.format(value));
+    Terminal.print(formatter.format(value));
 }
 
 _main_() {
@@ -1008,9 +1008,9 @@ it to the nearest catch. A catch variable exposes read-only `code` and `message`
 try {
     throw Error.create("APP100", "Operation failed");
 } catch (failure) {
-    Console.print(failure.code + ": " + failure.message);
+    Terminal.print(failure.code + ": " + failure.message);
 } finally {
-    Console.print("Cleanup always runs");
+    Terminal.print("Cleanup always runs");
 }
 ```
 
@@ -1048,7 +1048,7 @@ pkg Counter {
 
 _main_() {                            // never public/private
     Counter counter = new Counter();
-    Console.print(counter.current());
+    Terminal.print(counter.current());
 }
 ```
 
@@ -1056,18 +1056,18 @@ _main_() {                            // never public/private
 
 ```benita
 _main_() {
-    Console.print("Enter a number:");
-    number value = Convert.to_number(Console.input());
-    Console.print(Convert.to_string(value));
-    Console.print(Math.round(value));
-    Console.print(Math.sqrt(value));
+    Terminal.print("Enter a number:");
+    number value = Convert.to_number(Terminal.input());
+    Terminal.print(Convert.to_string(value));
+    Terminal.print(Math.round(value));
+    Terminal.print(Math.sqrt(value));
 }
 ```
 
 Built-in functions in this group:
 
-- `Console.print(value)` prints a value
-- `Console.input()` reads one line of text
+- `Terminal.print(value)` prints a value
+- `Terminal.input()` reads one line of text
 - `Convert.to_string(value)` converts a value to a string
 - `Convert.to_number(value)` converts a value to a number
 - `Math.round(value)` rounds a number
@@ -1078,17 +1078,17 @@ Built-in functions in this group:
 ```benita
 _main_() {
     string value = "  Hello Benita  ";
-    Console.print(String.length(value));
-    Console.print(String.char_at(value, 2));
-    Console.print(String.substring(value, 2, 5));
-    Console.print(String.contains(value, "Benita"));
-    Console.print(String.index_of(value, "Benita"));
-    Console.print(String.replace(value, "Benita", "World"));
-    string[] parts = String.split("one,two,three", ",");
-    Console.print(parts[1]);
-    Console.print(String.trim(value));
-    Console.print(String.to_lower("BENITA"));
-    Console.print(String.to_upper("benita"));
+    Terminal.print(Text.length(value));
+    Terminal.print(Text.char_at(value, 2));
+    Terminal.print(Text.substring(value, 2, 5));
+    Terminal.print(Text.contains(value, "Benita"));
+    Terminal.print(Text.index_of(value, "Benita"));
+    Terminal.print(Text.replace(value, "Benita", "World"));
+    string[] parts = Text.split("one,two,three", ",");
+    Terminal.print(parts[1]);
+    Terminal.print(Text.trim(value));
+    Terminal.print(Text.to_lower("BENITA"));
+    Terminal.print(Text.to_upper("benita"));
 }
 ```
 
@@ -1106,7 +1106,7 @@ _main_() {
         file.writeText("Hello");
     }
 
-    Console.print(file.readText());
+    Terminal.print(file.readText());
     file.delete();
 }
 ```
@@ -1119,7 +1119,7 @@ _main_() {
 include_once "add-function-library.ben";
 
 _main_() {
-    Console.print(add(2, 3));
+    Terminal.print(add(2, 3));
 }
 ```
 
@@ -1174,7 +1174,7 @@ Multiline constructs remain at the `...>` prompt until all braces are closed:
 
 ```text
 benita> for (number i = 0; i < 3; i++) {
-   ...>     Console.print(i);
+   ...>     Terminal.print(i);
    ...> }
 0
 1

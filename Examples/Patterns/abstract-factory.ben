@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 // الگوی Abstract Factory خانواده‌ای سازگار از Button و Checkbox را پشت قرارداد UiFactory می‌سازد.
 // Demonstrates Abstract Factory by creating compatible Button and Checkbox families through UiFactory.
 interface Button { func paint() -> string; }
@@ -29,4 +29,4 @@ func render(UiFactory factory) -> string {
     return button.paint() + " / " + checkbox.paint();
 }
 
-_main_() { Console.print(render(new DarkFactory())); }
+_main_() { Terminal.print(render(new DarkFactory())); }

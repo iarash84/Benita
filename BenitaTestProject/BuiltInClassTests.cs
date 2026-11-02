@@ -23,14 +23,14 @@ public class BuiltInClassTests
     public void BuiltInClass_CreatesInstancesAndSupportsMethodsAndProperties()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import Probe;
             _main_() {
                 Probe probe = new Probe("start");
-                Console.print(probe.value);
+                Terminal.print(probe.value);
                 probe.value = "changed";
-                Console.print(probe.append("!"));
-                Console.print(probe.value);
+                Terminal.print(probe.append("!"));
+                Terminal.print(probe.value);
             }
             """;
         BuiltInClassRegistry registry = BuiltInClassRegistry.CreateDefault();
@@ -47,15 +47,15 @@ public class BuiltInClassTests
     public void BuiltInClass_NativeCounterSupportsConstructionAndMutableMembers()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import NativeCounter;
             _main_() {
                 NativeCounter counter = new NativeCounter(2);
-                Console.print(counter.value);
+                Terminal.print(counter.value);
                 counter.value = 5;
-                Console.print(counter.increment(3));
+                Terminal.print(counter.increment(3));
                 counter.value += 2;
-                Console.print(counter.value);
+                Terminal.print(counter.value);
             }
             """;
         using var output = new ConsoleOutput();
@@ -70,17 +70,17 @@ public class BuiltInClassTests
     public void BuiltInClass_DateTimeSupportsImmutableOperationsAndFormatting()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import DateTime;
             _main_() {
                 DateTime initial = new DateTime(0);
                 DateTime later = initial.addHours(2.5);
-                Console.print(initial.year);
-                Console.print(later.timestamp);
-                Console.print(initial.differenceInSeconds(later));
-                Console.print(initial.isBefore(later));
-                Console.print(later.isAfter(initial));
-                Console.print(initial.format("yyyy-MM-dd HH:mm:ss"));
+                Terminal.print(initial.year);
+                Terminal.print(later.timestamp);
+                Terminal.print(initial.differenceInSeconds(later));
+                Terminal.print(initial.isBefore(later));
+                Terminal.print(later.isAfter(initial));
+                Terminal.print(initial.format("yyyy-MM-dd HH:mm:ss"));
             }
             """;
         using var output = new ConsoleOutput();
@@ -105,21 +105,21 @@ public class BuiltInClassTests
         try
         {
             string source = $$"""
-                import Console;
+                import Terminal;
                 import File;
                 _main_() {
                     File file = new File("{{path.Replace("\\", "\\\\")}}");
-                    Console.print(file.exists());
+                    Terminal.print(file.exists());
                     file.writeText("Hello");
                     file.appendText(" Benita");
-                    Console.print(file.exists());
-                    Console.print(file.readText());
-                    Console.print(file.length > 0);
+                    Terminal.print(file.exists());
+                    Terminal.print(file.readText());
+                    Terminal.print(file.length > 0);
                     file.copyTo("{{copyPath.Replace("\\", "\\\\")}}");
                     File copy = new File("{{copyPath.Replace("\\", "\\\\")}}");
-                    Console.print(copy.exists());
+                    Terminal.print(copy.exists());
                     file.delete();
-                    Console.print(file.exists());
+                    Terminal.print(file.exists());
                 }
                 """;
             using var output = new ConsoleOutput();
@@ -202,11 +202,11 @@ public class BuiltInClassTests
     public void BuiltInClass_RuntimeValidationRejectsInvalidMethodAndPropertyResults()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import BadResult;
             _main_() {
                 BadResult value = new BadResult();
-                Console.print(value.invalidMethod());
+                Terminal.print(value.invalidMethod());
             }
             """;
         BuiltInClassRegistry registry = BuiltInClassRegistry.CreateDefault();
@@ -232,7 +232,7 @@ public class BuiltInClassTests
     public void BuiltInClass_TaskCaptureClonesMutableInstances()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import NativeCounter;
             func mutate(NativeCounter counter) -> number {
                 return counter.increment(1);
@@ -240,8 +240,8 @@ public class BuiltInClassTests
             _main_() {
                 NativeCounter counter = new NativeCounter(0);
                 let operation = async mutate(counter);
-                Console.print(await operation);
-                Console.print(counter.value);
+                Terminal.print(await operation);
+                Terminal.print(counter.value);
             }
             """;
         using var output = new ConsoleOutput();
@@ -255,13 +255,13 @@ public class BuiltInClassTests
     public void BuiltInClass_ExplicitImportsActivateStaticAndInstanceClasses()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import Array;
             import NativeCounter;
             _main_() {
                 NativeCounter counter = new NativeCounter(2);
-                Console.print(Array.length([1, 2, 3]));
-                Console.print(counter.increment(3));
+                Terminal.print(Array.length([1, 2, 3]));
+                Terminal.print(counter.increment(3));
             }
             """;
         using var output = new ConsoleOutput();
@@ -279,7 +279,7 @@ public class BuiltInClassTests
         StringAssert.Contains(unknown.Message, "Unknown built-in class 'Missing'");
 
         ParserException duplicate = Assert.ThrowsException<ParserException>(() =>
-            new CompilerClass().Check("import Console; import Console; _main_() {}"));
+            new CompilerClass().Check("import Terminal; import Terminal; _main_() {}"));
         StringAssert.Contains(duplicate.Message, "already imported");
     }
 
@@ -287,7 +287,7 @@ public class BuiltInClassTests
     public void BuiltInClass_ImportsMustPrecedeOtherTopLevelDeclarations()
     {
         ParserException exception = Assert.ThrowsException<ParserException>(() =>
-            new CompilerClass().Check("_main_() {} import Console;"));
+            new CompilerClass().Check("_main_() {} import Terminal;"));
 
         StringAssert.Contains(exception.Message, "must appear before other top-level declarations");
     }

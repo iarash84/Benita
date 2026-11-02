@@ -6,22 +6,22 @@ namespace BenitaTestProject;
 /// <summary>سازگاری معنایی و زمان اجرای توابع داخلی رشته را بررسی می‌کند.</summary>
 public class StringFunctionTests
 {
-    private const string Source = @"import Console;
-import String;
+    private const string Source = @"import Terminal;
+import Text;
 
 _main_() {
     string value = ""  Hello Benita  "";
-    Console.print(String.length(value));
-    Console.print(String.char_at(value, 2));
-    Console.print(String.substring(value, 2, 5));
-    Console.print(String.contains(value, ""Benita""));
-    Console.print(String.index_of(value, ""Benita""));
-    Console.print(String.replace(value, ""Benita"", ""World""));
-    string[] parts = String.split(""one,two,three"", "","");
-    Console.print(parts[1]);
-    Console.print(String.trim(value));
-    Console.print(String.to_lower(""BENITA""));
-    Console.print(String.to_upper(""benita""));
+    Terminal.print(Text.length(value));
+    Terminal.print(Text.char_at(value, 2));
+    Terminal.print(Text.substring(value, 2, 5));
+    Terminal.print(Text.contains(value, ""Benita""));
+    Terminal.print(Text.index_of(value, ""Benita""));
+    Terminal.print(Text.replace(value, ""Benita"", ""World""));
+    string[] parts = Text.split(""one,two,three"", "","");
+    Terminal.print(parts[1]);
+    Terminal.print(Text.trim(value));
+    Terminal.print(Text.to_lower(""BENITA""));
+    Terminal.print(Text.to_upper(""benita""));
 }";
 
     [TestMethod]
@@ -38,15 +38,15 @@ _main_() {
     [TestMethod]
     public void Check_WithWrongStringFunctionArgumentType_ThrowsSemanticException()
     {
-        const string invalidSource = @"import String;
+        const string invalidSource = @"import Text;
 
 _main_() {
-    number length = String.length(42);
+    number length = Text.length(42);
 }";
 
         var exception = Assert.ThrowsException<SemanticException>(() =>
             new CompilerClass().Check(invalidSource));
 
-        StringAssert.Contains(exception.Message, "String.length");
+        StringAssert.Contains(exception.Message, "Text.length");
     }
 }

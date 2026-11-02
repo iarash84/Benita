@@ -10,16 +10,16 @@ public class ArrayFunctionTests
     public void NumericLookupsAndSort_IgnoreClrNumberRepresentation()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import Array;
             _main_() {
                 number[] seed = [10, 20];
                 number[] values = [1, Array.length(seed)];
-                Console.print(Array.contains(values, 2));
-                Console.print(Array.index_of(values, 2));
+                Terminal.print(Array.contains(values, 2));
+                Terminal.print(Array.index_of(values, 2));
                 values = Array.sort(values);
-                Console.print(values[0]);
-                Console.print(values[1]);
+                Terminal.print(values[0]);
+                Terminal.print(values[1]);
             }
             """;
 
@@ -59,12 +59,12 @@ public class ArrayFunctionTests
     public void Exec_InferredArrayBuiltInResultSupportsIndexAccess()
     {
         const string source = """
-            import Console;
+            import Terminal;
             import Array;
             _main_() {
                 number[] source = [2, 1];
                 let result = Array.reverse(source);
-                Console.print(result[0]);
+                Terminal.print(result[0]);
             }
             """;
         using var output = new ConsoleOutput();
@@ -77,22 +77,22 @@ public class ArrayFunctionTests
     [TestMethod]
     public void Exec_WithAllArrayFunctions_ProducesExpectedOutput()
     {
-        const string source = @"import Console;
+        const string source = @"import Terminal;
 import Array;
 
 _main_() {
     number[] values = [3, 1, 2];
-    Console.print(Array.contains(values, 1));
-    Console.print(Array.index_of(values, 2));
+    Terminal.print(Array.contains(values, 1));
+    Terminal.print(Array.index_of(values, 2));
     values = Array.insert(values, 1, 4);
     values = Array.reverse(values);
     number[] part = Array.slice(values, 1, 2);
     values = Array.concat(part, [5, 0]);
     values = Array.sort(values);
-    Console.print(values[0]);
-    Console.print(values[3]);
+    Terminal.print(values[0]);
+    Terminal.print(values[3]);
     values = Array.clear(values);
-    Console.print(Array.length(values));
+    Terminal.print(Array.length(values));
 }";
         const string expected = "True\r\n2\r\n0\r\n5\r\n0\r\n";
         using var output = new ConsoleOutput();

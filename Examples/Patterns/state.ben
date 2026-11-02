@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 // الگوی State رفتار Player را با تعویض نمونهٔ PlayingState و PausedState تغییر می‌دهد.
 // Demonstrates State by changing Player behavior through PlayingState and PausedState objects.
 interface PlayerState { func next() -> PlayerState; func name() -> string; }
@@ -21,7 +21,7 @@ pkg Player {
 
 _main_() {
     Player player = new Player();
-    Console.print(player.status());
+    Terminal.print(player.status());
     player.advance();
-    Console.print(player.status());
+    Terminal.print(player.status());
 }

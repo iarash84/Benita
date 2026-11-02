@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 import Array;
 import Math;
 // جست‌وجوی دودویی روی آرایهٔ مرتب و حالت‌های پیدا شدن و نشدن مقدار را نمایش می‌دهد.
@@ -26,6 +26,6 @@ func binary_search(number[] values, number target) -> number {
 
 _main_() {
     number[] values = [2, 5, 8, 12, 16, 23, 38];
-    Console.print(binary_search(values, 16));
-    Console.print(binary_search(values, 7));
+    Terminal.print(binary_search(values, 16));
+    Terminal.print(binary_search(values, 7));
 }

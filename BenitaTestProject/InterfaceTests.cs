@@ -10,7 +10,7 @@ public class InterfaceTests
     public void InterfaceTypedParameter_DispatchesToConcretePackage()
     {
         const string source = """
-            import Console;
+            import Terminal;
             interface Operation {
                 func apply(number value) -> number;
             }
@@ -29,9 +29,9 @@ public class InterfaceTests
 
             _main_() {
                 Operation operation = new DoubleOperation();
-                Console.print(calculate(operation, 4));
+                Terminal.print(calculate(operation, 4));
                 operation = new TripleOperation();
-                Console.print(calculate(operation, 4));
+                Terminal.print(calculate(operation, 4));
             }
             """;
 
@@ -44,7 +44,7 @@ public class InterfaceTests
     public void Package_CanImplementMultipleInterfaces()
     {
         const string source = """
-            import Console;
+            import Terminal;
             interface Reader { func read() -> string; }
             interface Writer { func write(string value) -> string; }
             pkg Channel : Reader, Writer {
@@ -54,7 +54,7 @@ public class InterfaceTests
             _main_() {
                 Reader reader = new Channel();
                 Writer writer = new Channel();
-                Console.print(reader.read() + writer.write("/write"));
+                Terminal.print(reader.read() + writer.write("/write"));
             }
             """;
 
@@ -67,7 +67,7 @@ public class InterfaceTests
     public void Interface_CanBeUsedAsFieldAndReturnType()
     {
         const string source = """
-            import Console;
+            import Terminal;
             interface Message { func text() -> string; }
             pkg Email : Message { public func text() -> string { return "email"; } }
             pkg Factory { public func create() -> Message { return new Email(); } }
@@ -79,7 +79,7 @@ public class InterfaceTests
                 Factory factory = new Factory();
                 Message message = factory.create();
                 Client client = new Client();
-                Console.print(message.text() + "/" + client.result());
+                Terminal.print(message.text() + "/" + client.result());
             }
             """;
 

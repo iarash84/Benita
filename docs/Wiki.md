@@ -163,14 +163,14 @@ definition مناسب در پوشهٔ `Runtime/BuiltIns` هدایت می‌شو�
 <div dir="ltr" align="left">
 
 ```benita
-import Console;
+import Terminal;
 
 func add(number a, number b) -> number {
     return a + b;
 }
 
 _main_() {
-    Console.print(add(2, 3));
+    Terminal.print(add(2, 3));
 }
 ```
 
@@ -248,7 +248,7 @@ dotnet run --project Benita -- check Examples/simple-addition-expression.ben -s 
 
 مشخصات هر built-in class در `BuiltInClassRegistry` ثبت می‌شود: نام کلاس، سازنده، متدهای
 static و instance و propertyها. برای استفادهٔ محدودشده در یک فایل، declarationهایی مانند
-`import Console;` و `import Array;` را پیش از سایر declarationها قرار دهید.
+`import Terminal;` و `import Array;` را پیش از سایر declarationها قرار دهید.
 
 <div dir="ltr" align="left">
 

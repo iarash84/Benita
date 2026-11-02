@@ -274,9 +274,9 @@ public sealed class BuiltInClassRegistry
     public static BuiltInClassRegistry CreateDefault()
     {
         BuiltInClassRegistry registry = new();
-        registry.Register(new ConsoleClass());
+        registry.Register(new TerminalClass());
         registry.Register(new ArrayClass());
-        registry.Register(new StringClass());
+        registry.Register(new TextClass());
         registry.Register(new ConvertClass());
         registry.Register(new MathClass());
         registry.Register(new ErrorClass());

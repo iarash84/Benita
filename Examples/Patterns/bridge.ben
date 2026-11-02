@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 // الگوی Bridge کنترل از راه دور را از پیاده‌سازی concrete دستگاه جدا می‌کند.
 // Demonstrates Bridge by separating remote-control abstraction from concrete devices.
 interface Device {
@@ -25,6 +25,6 @@ pkg RemoteControl {
 
 _main_() {
     RemoteControl remote = new RemoteControl(new Radio());
-    Console.print(remote.turn_on());
-    Console.print(remote.turn_off());
+    Terminal.print(remote.turn_on());
+    Terminal.print(remote.turn_off());
 }

@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 import Convert;
 // الگوی Strategy روش پرداخت Checkout را از طریق PaymentStrategy قابل تعویض می‌کند.
 // Demonstrates Strategy by making Checkout payment behavior replaceable through PaymentStrategy.
@@ -22,5 +22,5 @@ pkg Checkout {
 
 _main_() {
     Checkout checkout = new Checkout(new CardPayment());
-    Console.print(checkout.complete(120));
+    Terminal.print(checkout.complete(120));
 }

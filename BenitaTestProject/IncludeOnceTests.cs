@@ -9,9 +9,9 @@ public class IncludeOnceTests
     public void IncludeOnce_PrefixInIdentifier_IsTokenizedAsIdentifier()
     {
         const string source = """
-            import Console;
+            import Terminal;
             func include_once_helper() -> number { return 1; }
-            _main_() { Console.print(include_once_helper()); }
+            _main_() { Terminal.print(include_once_helper()); }
             """;
 
         new CompilerClass().Check(source);
@@ -49,10 +49,10 @@ public class IncludeOnceTests
             File.WriteAllText(Path.Combine(libraryDirectory, "common.ben"),
                 "func value() -> number { return 1; }");
             const string source = """
-                import Console;
+                import Terminal;
                 include_once "lib/common.ben";
                 include_once "lib/../lib/common.ben";
-                _main_() { Console.print(value()); }
+                _main_() { Terminal.print(value()); }
                 """;
 
             List<Token> tokens = new Lexer(source, sourceName: Path.Combine(directory, "main.ben")).Tokenize();
@@ -77,9 +77,9 @@ public class IncludeOnceTests
             File.WriteAllText(Path.Combine(featureDirectory, "entry.ben"),
                 "include_once \"../common.ben\";");
             const string source = """
-                import Console;
+                import Terminal;
                 include_once "feature/entry.ben";
-                _main_() { Console.print(value()); }
+                _main_() { Terminal.print(value()); }
                 """;
 
             new CompilerClass().Check(source, sourceName: Path.Combine(directory, "main.ben"));
@@ -99,9 +99,9 @@ public class IncludeOnceTests
             string featureDirectory = Directory.CreateDirectory(Path.Combine(directory, "feature")).FullName;
             string rootPath = Path.Combine(directory, "main.ben");
             const string source = """
-                import Console;
+                import Terminal;
                 include_once "feature/entry.ben";
-                _main_() { Console.print("ok"); }
+                _main_() { Terminal.print("ok"); }
                 """;
             File.WriteAllText(rootPath, source);
             File.WriteAllText(Path.Combine(featureDirectory, "entry.ben"),
@@ -132,11 +132,11 @@ public class IncludeOnceTests
     public void IncludeOnce_InsideBlockComment_IsIgnored()
     {
         const string source = """
-            import Console;
+            import Terminal;
             /*
             include_once "definitely-missing.ben";
             */
-            _main_() { Console.print("ok"); }
+            _main_() { Terminal.print("ok"); }
             """;
 
         new CompilerClass().Check(source);
@@ -151,10 +151,10 @@ public class IncludeOnceTests
             File.WriteAllText(Path.Combine(directory, "library.ben"),
                 "func value() -> number { return 3; }");
             const string source = """
-                import Console;
+                import Terminal;
                 string marker = "/*";
                 include_once "library.ben";
-                _main_() { Console.print(value()); }
+                _main_() { Terminal.print(value()); }
                 """;
 
             new CompilerClass().Check(source, sourceName: Path.Combine(directory, "main.ben"));

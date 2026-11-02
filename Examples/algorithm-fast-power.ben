@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 // توان‌رسانی سریع، باقی‌مانده و کاهش دودویی توان را برای محاسبه با تکرار کمتر آزمایش می‌کند.
 // Tests exponentiation by squaring, remainder operations, and binary exponent reduction.
 // Exponentiation by squaring computes a non-negative whole power in logarithmic iterations.
@@ -20,7 +20,7 @@ func fast_power(number base, number exponent) -> number {
 }
 
 _main_() {
-    Console.print(fast_power(2, 10));
-    Console.print(fast_power(3, 5));
-    Console.print(fast_power(7, 0));
+    Terminal.print(fast_power(2, 10));
+    Terminal.print(fast_power(3, 5));
+    Terminal.print(fast_power(7, 0));
 }

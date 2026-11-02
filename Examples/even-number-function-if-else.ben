@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 // تابع بولی تشخیص زوج بودن و انتخاب شاخهٔ if/else را آزمایش می‌کند.
 // Tests a Boolean even-number function and if/else branch selection.
 func is_even(number a) -> bool {
@@ -8,8 +8,8 @@ func is_even(number a) -> bool {
 _main_() {
     number num = 12;           
     if (is_even(num)) {
-        Console.print("Sum is even.");
+        Terminal.print("Sum is even.");
     } else {
-        Console.print("Sum is odd.");
+        Terminal.print("Sum is odd.");
     }   
 }

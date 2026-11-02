@@ -36,14 +36,14 @@ public class ArchitectureRegressionTests
     public void FunctionCall_WhenGlobalVariableIsAssigned_PreservesTheMutation()
     {
         const string source = """
-            import Console;
+            import Terminal;
             number counter = 0;
             func set_counter() -> void {
                 counter = 7;
             }
             _main_() {
                 set_counter();
-                Console.print(counter);
+                Terminal.print(counter);
             }
             """;
         using var output = new ConsoleOutput();
@@ -57,7 +57,7 @@ public class ArchitectureRegressionTests
     public void NestedFunctionCalls_WhenGlobalVariableIsAssigned_PreserveTheFinalMutation()
     {
         const string source = """
-            import Console;
+            import Terminal;
             number counter = 0;
             func increment() -> void {
                 counter += 1;
@@ -68,7 +68,7 @@ public class ArchitectureRegressionTests
             }
             _main_() {
                 increment_twice();
-                Console.print(counter);
+                Terminal.print(counter);
             }
             """;
         using var output = new ConsoleOutput();

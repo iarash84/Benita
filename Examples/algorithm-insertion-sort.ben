@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 import Array;
 // مرتب‌سازی درجی و جابه‌جایی عناصر آرایه را با حرکت دادن مقادیر بزرگ‌تر آزمایش می‌کند.
 // Tests insertion sort and array mutation by shifting larger values to the right.
@@ -23,6 +23,6 @@ _main_() {
     number[] values = [6, 3, 5, 1, 4, 2];
     number[] sorted = insertion_sort(values);
     for (value in sorted) {
-        Console.print(value);
+        Terminal.print(value);
     }
 }

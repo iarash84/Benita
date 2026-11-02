@@ -11,9 +11,9 @@ internal abstract class StaticBuiltInClassDefinition : BuiltInClassDefinition
         throw new BuiltInException($"Static built-in class '{Name}' cannot be instantiated.");
 }
 
-internal sealed class ConsoleClass : StaticBuiltInClassDefinition
+internal sealed class TerminalClass : StaticBuiltInClassDefinition
 {
-    internal ConsoleClass() : base("Console", [
+    internal TerminalClass() : base("Terminal", [
         new("print", Types.Void, [Types.Any]),
         new("input", Types.String, [])]) { }
 
@@ -145,9 +145,9 @@ internal sealed class ArrayClass : StaticBuiltInClassDefinition
     }
 }
 
-internal sealed class StringClass : StaticBuiltInClassDefinition
+internal sealed class TextClass : StaticBuiltInClassDefinition
 {
-    internal StringClass() : base("String", [
+    internal TextClass() : base("Text", [
         new("length", Types.Number, [Types.String]),
         new("char_at", Types.String, [Types.String, Types.Number]),
         new("substring", Types.String, [Types.String, Types.Number, Types.Number]),

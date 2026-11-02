@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 // تضمین می‌کند include_once یک کتابخانهٔ تکراری را فقط یک بار وارد کند.
 // Verifies that include_once imports the same function library only once.
 include_once "add-function-library.ben";
@@ -6,5 +6,5 @@ include_once "add-function-library.ben";
 
 _main_() {
     number result = add(2, 3);
-    Console.print(result);
+    Terminal.print(result);
 }

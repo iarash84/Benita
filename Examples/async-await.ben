@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 import Error;
 // دو محاسبه را هم‌زمان آغاز می‌کند، نتیجه‌ها را با await می‌گیرد و انتقال خطای task به catch را نشان می‌دهد.
 // Starts two computations concurrently, awaits their results, and demonstrates task-error propagation to catch.
@@ -12,10 +12,10 @@ func fail() -> number {
 _main_() {
     let first = async add(20, 22);
     let second = async add(5, 7);
-    Console.print(await second);
-    Console.print(await first);
+    Terminal.print(await second);
+    Terminal.print(await first);
 
     let failing = async fail();
     try { number unused = await failing; }
-    catch (failure) { Console.print(failure.code + ": " + failure.message); }
+    catch (failure) { Terminal.print(failure.code + ": " + failure.message); }
 }

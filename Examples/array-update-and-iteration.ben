@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 import Array;
 // تغییر یک عنصر آرایه و پیمایش همهٔ عناصر با while را آزمایش می‌کند.
 // Tests updating an array element and iterating all elements with while.
@@ -8,7 +8,7 @@ _main_() {
     number i = 0;
     arr[2] = 5;
     while (i < Array.length(arr)) {
-        Console.print("Element at index " + i + ": " + arr[i]);
+        Terminal.print("Element at index " + i + ": " + arr[i]);
         i++;
     }                     
 }

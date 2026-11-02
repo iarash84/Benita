@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 // فاکتوریل بازگشتی و شرط توقف برای صفر و یک را آزمایش می‌کند.
 // Tests recursive factorial with base cases for zero and one.
 // Recursive factorial with a base case for zero and one.
@@ -11,5 +11,5 @@ func factorial(number value) -> number {
 }
 
 _main_() {
-    Console.print(factorial(6));
+    Terminal.print(factorial(6));
 }

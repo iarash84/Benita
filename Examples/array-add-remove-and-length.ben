@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 import Array;
 // حذف و افزودن عناصر آرایه، محاسبهٔ طول و پیمایش نتیجه را آزمایش می‌کند.
 // Tests removing and adding array elements, measuring length, and iterating the result.
@@ -9,7 +9,7 @@ _main_() {
     arr = Array.add(arr, 70);
     number i = 0;            
     while (i < Array.length(arr)) {
-        Console.print("Element at index " + i + ": " + arr[i]);
+        Terminal.print("Element at index " + i + ": " + arr[i]);
         i++;
     }                     
 }

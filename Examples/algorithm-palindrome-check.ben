@@ -1,14 +1,14 @@
-import Console;
-import String;
+import Terminal;
+import Text;
 // تشخیص palindrome را با مقایسهٔ نویسه‌های متن از ابتدا و انتها آزمایش می‌کند.
 // Tests palindrome detection by comparing characters from both ends of a string.
 // A palindrome reads identically from left to right and from right to left.
 func is_palindrome(string value) -> bool {
     number left = 0;
-    number right = String.length(value) - 1;
+    number right = Text.length(value) - 1;
 
     while (left < right) {
-        if (String.char_at(value, left) != String.char_at(value, right)) {
+        if (Text.char_at(value, left) != Text.char_at(value, right)) {
             return false;
         }
 
@@ -20,7 +20,7 @@ func is_palindrome(string value) -> bool {
 }
 
 _main_() {
-    Console.print(is_palindrome("level"));
-    Console.print(is_palindrome("benita"));
-    Console.print(is_palindrome(""));
+    Terminal.print(is_palindrome("level"));
+    Terminal.print(is_palindrome("benita"));
+    Terminal.print(is_palindrome(""));
 }

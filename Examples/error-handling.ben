@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 import Error;
 // پرتاب error، خواندن code و message در catch و اجرای تضمینی finally را آزمایش می‌کند.
 // Tests throwing an error, reading code/message in catch, and guaranteed finally execution.
@@ -11,10 +11,10 @@ func validate(number value) -> number {
 
 _main_() {
     try {
-        Console.print(validate(-1));
+        Terminal.print(validate(-1));
     } catch (failure) {
-        Console.print(failure.code + ": " + failure.message);
+        Terminal.print(failure.code + ": " + failure.message);
     } finally {
-        Console.print("Validation finished");
+        Terminal.print("Validation finished");
     }
 }

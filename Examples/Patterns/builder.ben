@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 import Convert;
 // الگوی Builder ساخت مرحله‌ای Computer و نگهداری state سازنده را نمایش می‌دهد.
 // Demonstrates Builder through step-by-step Computer construction and builder state.
@@ -41,5 +41,5 @@ _main_() {
     builder.set_memory(32);
 
     Computer computer = builder.build();
-    Console.print(computer.describe());
+    Terminal.print(computer.describe());
 }

@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 // الگوی Factory Method ساخت Document را به creatorهای concrete واگذار می‌کند.
 // Demonstrates Factory Method by delegating Document creation to concrete creators.
 interface Document { func describe() -> string; }
@@ -26,6 +26,6 @@ func render(DocumentCreator creator) -> string {
 }
 
 _main_() {
-    Console.print(render(new ReportCreator()));
-    Console.print(render(new InvoiceCreator()));
+    Terminal.print(render(new ReportCreator()));
+    Terminal.print(render(new InvoiceCreator()));
 }

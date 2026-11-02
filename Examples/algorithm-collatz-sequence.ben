@@ -1,4 +1,4 @@
-import Console;
+import Terminal;
 import Array;
 // تولید دنبالهٔ Collatz را با شرط زوج و فرد و حلقه تا رسیدن به یک آزمایش می‌کند.
 // Tests Collatz sequence generation with even/odd branches and iteration until one.
@@ -23,6 +23,6 @@ func collatz(number start) -> number[] {
 _main_() {
     number[] sequence = collatz(6);
     for (value in sequence) {
-        Console.print(value);
+        Terminal.print(value);
     }
 }

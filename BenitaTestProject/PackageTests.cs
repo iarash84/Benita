@@ -17,7 +17,7 @@ namespace BenitaTestProject
         [TestMethod]
         public void PackageConstructor_WithInitialValue_ExecutesCorrectly()
         {
-            string source = @"import Console;
+            string source = @"import Terminal;
 
 pkg myPackage {
 	public number var = 10;
@@ -30,7 +30,7 @@ pkg myPackage {
 _main_(){
 	number mn = 5;
 	myPackage classInstance = new myPackage(5);
-	Console.print(classInstance.var);	
+	Terminal.print(classInstance.var);	
 }";
             _compiler.Check(source);
             //var result = _compiler.Exec(source);
@@ -49,7 +49,7 @@ _main_(){
         [TestMethod]
         public void PackageMethods_WhenInvoked_ExecuteCorrectly()
         {
-            string source = @"import Console;
+            string source = @"import Terminal;
 
 pkg myPackage {
 	public number var = 10;
@@ -64,9 +64,9 @@ _main_(){
 	number mn = 5;
 	myPackage classInstance = new myPackage(5);
 
-	Console.print(classInstance.Third());
+	Terminal.print(classInstance.Third());
 	classInstance.var += classInstance.Third();
-	Console.print(classInstance.var);
+	Terminal.print(classInstance.var);
 }";
             _compiler.Check(source);
             //var result = _compiler.Exec(source);
@@ -86,7 +86,7 @@ _main_(){
         [TestMethod]
         public void PackageMembers_WithMixedOperations_ExecuteCorrectly()
         {
-            string source = @"import Console;
+            string source = @"import Terminal;
 
 pkg myPackage {
 	public number var = 10;
@@ -95,7 +95,7 @@ pkg myPackage {
 		var = input1;
 	}
 	public func First(number c) -> void{
-		Console.print(c);
+		Terminal.print(c);
 	}	
 	public func Second(number std) -> number{
 		return std + var;
@@ -106,7 +106,7 @@ pkg myPackage {
 }
 
 func First(number c) -> void{
-	Console.print(c + 1);
+	Terminal.print(c + 1);
 }
 
 func inc(number a) -> number{
@@ -118,27 +118,27 @@ _main_(){
 	number mn = 5;
 	myPackage classInstance = new myPackage(5);
 
-	Console.print(classInstance.Third());
+	Terminal.print(classInstance.Third());
 	classInstance.var += classInstance.Third();
-	Console.print(classInstance.var);
+	Terminal.print(classInstance.var);
 	
 	classInstance.var = classInstance.Third() + 3;
-	Console.print(classInstance.var);
+	Terminal.print(classInstance.var);
 
 	classInstance.var +=3;
-	Console.print(classInstance.var);
+	Terminal.print(classInstance.var);
 	classInstance.var = mn + 3;
 	
 
 	classInstance.var = classInstance.var / 2;
-	Console.print(classInstance.var);
-	Console.print(inc(classInstance.var));
+	Terminal.print(classInstance.var);
+	Terminal.print(inc(classInstance.var));
 	classInstance.var = inc(classInstance.var);
-	Console.print(classInstance.var);
+	Terminal.print(classInstance.var);
 	classInstance.First(5);
-	Console.print(classInstance.Second(2));
+	Terminal.print(classInstance.Second(2));
 	First(8);
-	Console.print(""this is a test"");	
+	Terminal.print(""this is a test"");	
 }";
             _compiler.Check(source);
 

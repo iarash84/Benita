@@ -146,7 +146,7 @@ namespace BenitaTestProject
         public void Tokenize_ComplexCode_ReturnsCorrectTokens()
         {
             const int IMPORT_OFFSET = 3;
-            string code = @"                import Console;
+            string code = @"                import Terminal;
 
                 func add(number a, number b) -> number {
                     return a + b;
@@ -168,11 +168,11 @@ namespace BenitaTestProject
                     string world = ""world!"";
                     string message = concatenate(hello, world);
 
-                    Console.print(message);
+                    Terminal.print(message);
 
                     bool check = is_even(sum);
                     if (check) {
-                        Console.print(""Sum is even."");
+                        Terminal.print(""Sum is even."");
                     } 
                 }
             "
@@ -292,7 +292,7 @@ namespace BenitaTestProject
             AssertToken(tokens[IMPORT_OFFSET + 95], TokenType.RPAREN, ")");
             AssertToken(tokens[IMPORT_OFFSET + 96], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[IMPORT_OFFSET + 97], TokenType.IDENTIFIER, "Console");
+            AssertToken(tokens[IMPORT_OFFSET + 97], TokenType.IDENTIFIER, "Terminal");
             AssertToken(tokens[IMPORT_OFFSET + 98], TokenType.DOT, ".");
             AssertToken(tokens[IMPORT_OFFSET + 99], TokenType.IDENTIFIER, "print");
             AssertToken(tokens[IMPORT_OFFSET + 100], TokenType.LPAREN, "(");
@@ -314,7 +314,7 @@ namespace BenitaTestProject
             AssertToken(tokens[IMPORT_OFFSET + 114], TokenType.IDENTIFIER, "check");
             AssertToken(tokens[IMPORT_OFFSET + 115], TokenType.RPAREN, ")");
             AssertToken(tokens[IMPORT_OFFSET + 116], TokenType.LBRACE, "{");
-            AssertToken(tokens[IMPORT_OFFSET + 117], TokenType.IDENTIFIER, "Console");
+            AssertToken(tokens[IMPORT_OFFSET + 117], TokenType.IDENTIFIER, "Terminal");
             AssertToken(tokens[IMPORT_OFFSET + 118], TokenType.DOT, ".");
             AssertToken(tokens[IMPORT_OFFSET + 119], TokenType.IDENTIFIER, "print");
             AssertToken(tokens[IMPORT_OFFSET + 120], TokenType.LPAREN, "(");
@@ -331,7 +331,7 @@ namespace BenitaTestProject
         public void Tokenize_FibonacciCode_ReturnsCorrectTokens()
         {
             const int IMPORT_OFFSET = 3;
-            string code = @"                import Console;
+            string code = @"                import Terminal;
 
                 func fib(number x) -> number 
                 {
@@ -348,7 +348,7 @@ namespace BenitaTestProject
                    number x = 20; 
                    number i = 0;
                    while(i <= x) {
-                      Console.print(i + "" => "" + fib(i));
+                      Terminal.print(i + "" => "" + fib(i));
                       i++;
                    }
                 }
@@ -438,7 +438,7 @@ namespace BenitaTestProject
             AssertToken(tokens[IMPORT_OFFSET + 69], TokenType.IDENTIFIER, "x");
             AssertToken(tokens[IMPORT_OFFSET + 70], TokenType.RPAREN, ")");
             AssertToken(tokens[IMPORT_OFFSET + 71], TokenType.LBRACE, "{");
-            AssertToken(tokens[IMPORT_OFFSET + 72], TokenType.IDENTIFIER, "Console");
+            AssertToken(tokens[IMPORT_OFFSET + 72], TokenType.IDENTIFIER, "Terminal");
             AssertToken(tokens[IMPORT_OFFSET + 73], TokenType.DOT, ".");
             AssertToken(tokens[IMPORT_OFFSET + 74], TokenType.IDENTIFIER, "print");
             AssertToken(tokens[IMPORT_OFFSET + 75], TokenType.LPAREN, "(");

@@ -1,20 +1,20 @@
-import Console;
+import Terminal;
 import Convert;
 // تعداد جمله‌ها را از ورودی می‌گیرد و دنبالهٔ فیبوناچی را با while تولید می‌کند.
 // Reads a term count and generates the Fibonacci sequence with while.
 _main_() {
-    Console.print("Enter The Number Of Terms:");
-    number n = Convert.to_number(Console.input());
+    Terminal.print("Enter The Number Of Terms:");
+    number n = Convert.to_number(Terminal.input());
     number f = 0; 
     number f1=-1; 
     number f2=1;
-    Console.print("The Fibonacci Series is:");
+    Terminal.print("The Fibonacci Series is:");
     while(n>0)
     {
         f=f1+f2;
         f1=f2;
         f2=f;
-        Console.print(f);
+        Terminal.print(f);
         n--;
     }                
 }

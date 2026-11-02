@@ -48,14 +48,14 @@
 کلاس داخلی در صورت استفادهٔ صریح از import در scope برنامه فعال می‌شود:
 
 ```benita
-import Console;
+import Terminal;
 import Array;
 import DateTime;
 
 _main_() {
-    Console.print(Array.length([1, 2, 3]));
+    Terminal.print(Array.length([1, 2, 3]));
     DateTime value = new DateTime(0);
-    Console.print(value.year);
+    Terminal.print(value.year);
 }
 ```
 
@@ -71,7 +71,7 @@ _main_() {
 _main_() {
     Example example = new Example(10);
     example.value = 20;
-    Console.print(example.add(5));
+    Terminal.print(example.add(5));
 }
 ```
 
@@ -93,19 +93,19 @@ _main_() {
 برای قابلیتی که state نمونه ندارد، مانند عملیات کنسول، آرایه، رشته، تبدیل، ریاضی و ساخت خطا، از کلاس static داخلی استفاده کنید. این APIها با نام کلاس و member access فراخوانی می‌شوند و نباید به‌صورت function سراسری ثبت شوند:
 
 ```benita
-import Console;
+import Terminal;
 import Array;
-import String;
+import Text;
 import Convert;
 import Math;
 import Error;
 
 _main_() {
-    Console.print("hello");
+    Terminal.print("hello");
     number size = Array.length([1, 2, 3]);
-    string lower = String.to_lower("BENITA");
+    string lower = Text.to_lower("BENITA");
     number value = Convert.to_number("42");
-    Console.print(Math.sqrt(value));
+    Terminal.print(Math.sqrt(value));
     throw Error.create("INVALID", "example error");
 }
 ```
@@ -142,12 +142,12 @@ internal sealed class ExampleStaticClass : StaticBuiltInClassDefinition
 کلاس‌های دارای state همچنان باید مدل instance را حفظ کنند:
 
 ```benita
-import Console;
+import Terminal;
 import DateTime;
 
 _main_() {
     DateTime value = new DateTime(0);
-    Console.print(value.format("yyyy"));
+    Terminal.print(value.format("yyyy"));
 }
 ```
 
@@ -425,9 +425,9 @@ registry باید همان instance مشترک را در compiler و runtime د�
 ```benita
 _main_() {
     Example example = new Example(10);
-    Console.print(example.value);
+    Terminal.print(example.value);
     example.value = 20;
-    Console.print(example.add(5));
+    Terminal.print(example.add(5));
 }
 ```
 
@@ -556,9 +556,9 @@ public void Example_SupportsMembers()
     const string source = """
         _main_() {
             Example example = new Example(10);
-            Console.print(example.value);
+            Terminal.print(example.value);
             example.value = 20;
-            Console.print(example.add(5));
+            Terminal.print(example.add(5));
         }
         """;
 
@@ -701,10 +701,10 @@ registry.Register(new ExampleClass());
 ```benita
 _main_() {
     Example example = new Example(10);
-    Console.print(example.value);   // 10
-    Console.print(example.add(5));  // 15
+    Terminal.print(example.value);   // 10
+    Terminal.print(example.add(5));  // 15
     example.value = 100;
-    Console.print(example.value);   // 100
+    Terminal.print(example.value);   // 100
 }
 ```
 
