@@ -25,13 +25,13 @@ public class DiagnosticTests
     [TestMethod]
     public void Parse_WithMissingSemicolon_ReportsTokenLocationAndExpectedSyntax()
     {
-        const string source = "_main_() { Console.print(\"hello\") }";
+        const string source = "import Console;\n_main_() { Console.print(\"hello\") }";
         var tokens = new Lexer(source, sourceName: "main.ben").Tokenize();
 
         var exception = Assert.ThrowsException<ParserException>(() => new Parser(tokens).Parse());
 
         Assert.AreEqual("BEN2001", exception.Code);
-        StringAssert.Contains(exception.Message, "main.ben:1:");
+        StringAssert.Contains(exception.Message, "main.ben:2:");
         StringAssert.Contains(exception.Message, "Expected ';'");
         StringAssert.Contains(exception.Message, "^");
     }

@@ -1,3 +1,4 @@
+import Console;
 // Simple Factory ساخت Notification مناسب را بر اساس نوع درخواستی متمرکز می‌کند.
 // Demonstrates Simple Factory by centralizing Notification creation based on a requested kind.
 pkg Notification {

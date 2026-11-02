@@ -145,7 +145,9 @@ namespace BenitaTestProject
         [TestMethod]
         public void Tokenize_ComplexCode_ReturnsCorrectTokens()
         {
-            string code = @"
+            const int IMPORT_OFFSET = 3;
+            string code = @"                import Console;
+
                 func add(number a, number b) -> number {
                     return a + b;
                 }
@@ -180,146 +182,146 @@ namespace BenitaTestProject
 
             List<Token> tokens = lexer.Tokenize();
 
-            Assert.AreEqual(127, tokens.Count); // Adjusted based on the actual token count in the code
+            Assert.AreEqual(130, tokens.Count); // Adjusted based on the actual token count in the code
 
             // Validate specific tokens and their types
-            AssertToken(tokens[0], TokenType.FUNC, "func");
-            AssertToken(tokens[1], TokenType.IDENTIFIER, "add");
-            AssertToken(tokens[2], TokenType.LPAREN, "(");
-            AssertToken(tokens[3], TokenType.NUMBER, "number");
-            AssertToken(tokens[4], TokenType.IDENTIFIER, "a");
-            AssertToken(tokens[5], TokenType.COMMA, ",");
-            AssertToken(tokens[6], TokenType.NUMBER, "number");
-            AssertToken(tokens[7], TokenType.IDENTIFIER, "b");
-            AssertToken(tokens[8], TokenType.RPAREN, ")");
-            AssertToken(tokens[9], TokenType.ARROW, "->");
-            AssertToken(tokens[10], TokenType.NUMBER, "number");
-            AssertToken(tokens[11], TokenType.LBRACE, "{");
-            AssertToken(tokens[12], TokenType.RETURN, "return");
-            AssertToken(tokens[13], TokenType.IDENTIFIER, "a");
-            AssertToken(tokens[14], TokenType.PLUS, "+");
-            AssertToken(tokens[15], TokenType.IDENTIFIER, "b");
-            AssertToken(tokens[16], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[17], TokenType.RBRACE, "}");
+            AssertToken(tokens[IMPORT_OFFSET + 0], TokenType.FUNC, "func");
+            AssertToken(tokens[IMPORT_OFFSET + 1], TokenType.IDENTIFIER, "add");
+            AssertToken(tokens[IMPORT_OFFSET + 2], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 3], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 4], TokenType.IDENTIFIER, "a");
+            AssertToken(tokens[IMPORT_OFFSET + 5], TokenType.COMMA, ",");
+            AssertToken(tokens[IMPORT_OFFSET + 6], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 7], TokenType.IDENTIFIER, "b");
+            AssertToken(tokens[IMPORT_OFFSET + 8], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 9], TokenType.ARROW, "->");
+            AssertToken(tokens[IMPORT_OFFSET + 10], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 11], TokenType.LBRACE, "{");
+            AssertToken(tokens[IMPORT_OFFSET + 12], TokenType.RETURN, "return");
+            AssertToken(tokens[IMPORT_OFFSET + 13], TokenType.IDENTIFIER, "a");
+            AssertToken(tokens[IMPORT_OFFSET + 14], TokenType.PLUS, "+");
+            AssertToken(tokens[IMPORT_OFFSET + 15], TokenType.IDENTIFIER, "b");
+            AssertToken(tokens[IMPORT_OFFSET + 16], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 17], TokenType.RBRACE, "}");
 
-            AssertToken(tokens[18], TokenType.FUNC, "func");
-            AssertToken(tokens[19], TokenType.IDENTIFIER, "concatenate");
-            AssertToken(tokens[20], TokenType.LPAREN, "(");
-            AssertToken(tokens[21], TokenType.STRING, "string");
-            AssertToken(tokens[22], TokenType.IDENTIFIER, "a");
-            AssertToken(tokens[23], TokenType.COMMA, ",");
-            AssertToken(tokens[24], TokenType.STRING, "string");
-            AssertToken(tokens[25], TokenType.IDENTIFIER, "b");
-            AssertToken(tokens[26], TokenType.RPAREN, ")");
-            AssertToken(tokens[27], TokenType.ARROW, "->");
-            AssertToken(tokens[28], TokenType.STRING, "string");
-            AssertToken(tokens[29], TokenType.LBRACE, "{");
-            AssertToken(tokens[30], TokenType.RETURN, "return");
-            AssertToken(tokens[31], TokenType.IDENTIFIER, "a");
-            AssertToken(tokens[32], TokenType.PLUS, "+");
-            AssertToken(tokens[33], TokenType.IDENTIFIER, "b");
-            AssertToken(tokens[34], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[35], TokenType.RBRACE, "}");
+            AssertToken(tokens[IMPORT_OFFSET + 18], TokenType.FUNC, "func");
+            AssertToken(tokens[IMPORT_OFFSET + 19], TokenType.IDENTIFIER, "concatenate");
+            AssertToken(tokens[IMPORT_OFFSET + 20], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 21], TokenType.STRING, "string");
+            AssertToken(tokens[IMPORT_OFFSET + 22], TokenType.IDENTIFIER, "a");
+            AssertToken(tokens[IMPORT_OFFSET + 23], TokenType.COMMA, ",");
+            AssertToken(tokens[IMPORT_OFFSET + 24], TokenType.STRING, "string");
+            AssertToken(tokens[IMPORT_OFFSET + 25], TokenType.IDENTIFIER, "b");
+            AssertToken(tokens[IMPORT_OFFSET + 26], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 27], TokenType.ARROW, "->");
+            AssertToken(tokens[IMPORT_OFFSET + 28], TokenType.STRING, "string");
+            AssertToken(tokens[IMPORT_OFFSET + 29], TokenType.LBRACE, "{");
+            AssertToken(tokens[IMPORT_OFFSET + 30], TokenType.RETURN, "return");
+            AssertToken(tokens[IMPORT_OFFSET + 31], TokenType.IDENTIFIER, "a");
+            AssertToken(tokens[IMPORT_OFFSET + 32], TokenType.PLUS, "+");
+            AssertToken(tokens[IMPORT_OFFSET + 33], TokenType.IDENTIFIER, "b");
+            AssertToken(tokens[IMPORT_OFFSET + 34], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 35], TokenType.RBRACE, "}");
 
-            AssertToken(tokens[36], TokenType.FUNC, "func");
-            AssertToken(tokens[37], TokenType.IDENTIFIER, "is_even");
-            AssertToken(tokens[38], TokenType.LPAREN, "(");
-            AssertToken(tokens[39], TokenType.NUMBER, "number");
-            AssertToken(tokens[40], TokenType.IDENTIFIER, "a");
-            AssertToken(tokens[41], TokenType.RPAREN, ")");
-            AssertToken(tokens[42], TokenType.ARROW, "->");
-            AssertToken(tokens[43], TokenType.BOOL, "bool");
-            AssertToken(tokens[44], TokenType.LBRACE, "{");
-            AssertToken(tokens[45], TokenType.RETURN, "return");
-            AssertToken(tokens[46], TokenType.IDENTIFIER, "a");
-            AssertToken(tokens[47], TokenType.PERCENT, "%");
-            AssertToken(tokens[48], TokenType.NUMBER_LITERAL, "2");
-            AssertToken(tokens[49], TokenType.EQUAL_EQUAL, "==");
-            AssertToken(tokens[50], TokenType.NUMBER_LITERAL, "0");
-            AssertToken(tokens[51], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[52], TokenType.RBRACE, "}");
+            AssertToken(tokens[IMPORT_OFFSET + 36], TokenType.FUNC, "func");
+            AssertToken(tokens[IMPORT_OFFSET + 37], TokenType.IDENTIFIER, "is_even");
+            AssertToken(tokens[IMPORT_OFFSET + 38], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 39], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 40], TokenType.IDENTIFIER, "a");
+            AssertToken(tokens[IMPORT_OFFSET + 41], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 42], TokenType.ARROW, "->");
+            AssertToken(tokens[IMPORT_OFFSET + 43], TokenType.BOOL, "bool");
+            AssertToken(tokens[IMPORT_OFFSET + 44], TokenType.LBRACE, "{");
+            AssertToken(tokens[IMPORT_OFFSET + 45], TokenType.RETURN, "return");
+            AssertToken(tokens[IMPORT_OFFSET + 46], TokenType.IDENTIFIER, "a");
+            AssertToken(tokens[IMPORT_OFFSET + 47], TokenType.PERCENT, "%");
+            AssertToken(tokens[IMPORT_OFFSET + 48], TokenType.NUMBER_LITERAL, "2");
+            AssertToken(tokens[IMPORT_OFFSET + 49], TokenType.EQUAL_EQUAL, "==");
+            AssertToken(tokens[IMPORT_OFFSET + 50], TokenType.NUMBER_LITERAL, "0");
+            AssertToken(tokens[IMPORT_OFFSET + 51], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 52], TokenType.RBRACE, "}");
 
-            AssertToken(tokens[53], TokenType.MAIN, "_main_");
-            AssertToken(tokens[54], TokenType.LPAREN, "(");
-            AssertToken(tokens[55], TokenType.RPAREN, ")");
-            AssertToken(tokens[56], TokenType.LBRACE, "{");
+            AssertToken(tokens[IMPORT_OFFSET + 53], TokenType.MAIN, "_main_");
+            AssertToken(tokens[IMPORT_OFFSET + 54], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 55], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 56], TokenType.LBRACE, "{");
 
-            AssertToken(tokens[57], TokenType.NUMBER, "number");
-            AssertToken(tokens[58], TokenType.IDENTIFIER, "x");
-            AssertToken(tokens[59], TokenType.EQUAL, "=");
-            AssertToken(tokens[60], TokenType.NUMBER_LITERAL, "10");
-            AssertToken(tokens[61], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 57], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 58], TokenType.IDENTIFIER, "x");
+            AssertToken(tokens[IMPORT_OFFSET + 59], TokenType.EQUAL, "=");
+            AssertToken(tokens[IMPORT_OFFSET + 60], TokenType.NUMBER_LITERAL, "10");
+            AssertToken(tokens[IMPORT_OFFSET + 61], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[62], TokenType.NUMBER, "number");
-            AssertToken(tokens[63], TokenType.IDENTIFIER, "y");
-            AssertToken(tokens[64], TokenType.EQUAL, "=");
-            AssertToken(tokens[65], TokenType.NUMBER_LITERAL, "20");
-            AssertToken(tokens[66], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 62], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 63], TokenType.IDENTIFIER, "y");
+            AssertToken(tokens[IMPORT_OFFSET + 64], TokenType.EQUAL, "=");
+            AssertToken(tokens[IMPORT_OFFSET + 65], TokenType.NUMBER_LITERAL, "20");
+            AssertToken(tokens[IMPORT_OFFSET + 66], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[67], TokenType.NUMBER, "number");
-            AssertToken(tokens[68], TokenType.IDENTIFIER, "sum");
-            AssertToken(tokens[69], TokenType.EQUAL, "=");
-            AssertToken(tokens[70], TokenType.IDENTIFIER, "add");
-            AssertToken(tokens[71], TokenType.LPAREN, "(");
-            AssertToken(tokens[72], TokenType.IDENTIFIER, "x");
-            AssertToken(tokens[73], TokenType.COMMA, ",");
-            AssertToken(tokens[74], TokenType.IDENTIFIER, "y");
-            AssertToken(tokens[75], TokenType.RPAREN, ")");
-            AssertToken(tokens[76], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 67], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 68], TokenType.IDENTIFIER, "sum");
+            AssertToken(tokens[IMPORT_OFFSET + 69], TokenType.EQUAL, "=");
+            AssertToken(tokens[IMPORT_OFFSET + 70], TokenType.IDENTIFIER, "add");
+            AssertToken(tokens[IMPORT_OFFSET + 71], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 72], TokenType.IDENTIFIER, "x");
+            AssertToken(tokens[IMPORT_OFFSET + 73], TokenType.COMMA, ",");
+            AssertToken(tokens[IMPORT_OFFSET + 74], TokenType.IDENTIFIER, "y");
+            AssertToken(tokens[IMPORT_OFFSET + 75], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 76], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[77], TokenType.STRING, "string");
-            AssertToken(tokens[78], TokenType.IDENTIFIER, "hello");
-            AssertToken(tokens[79], TokenType.EQUAL, "=");
-            AssertToken(tokens[80], TokenType.STRING_LITERAL, "Hello, ");
-            AssertToken(tokens[81], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 77], TokenType.STRING, "string");
+            AssertToken(tokens[IMPORT_OFFSET + 78], TokenType.IDENTIFIER, "hello");
+            AssertToken(tokens[IMPORT_OFFSET + 79], TokenType.EQUAL, "=");
+            AssertToken(tokens[IMPORT_OFFSET + 80], TokenType.STRING_LITERAL, "Hello, ");
+            AssertToken(tokens[IMPORT_OFFSET + 81], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[82], TokenType.STRING, "string");
-            AssertToken(tokens[83], TokenType.IDENTIFIER, "world");
-            AssertToken(tokens[84], TokenType.EQUAL, "=");
-            AssertToken(tokens[85], TokenType.STRING_LITERAL, "world!");
-            AssertToken(tokens[86], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 82], TokenType.STRING, "string");
+            AssertToken(tokens[IMPORT_OFFSET + 83], TokenType.IDENTIFIER, "world");
+            AssertToken(tokens[IMPORT_OFFSET + 84], TokenType.EQUAL, "=");
+            AssertToken(tokens[IMPORT_OFFSET + 85], TokenType.STRING_LITERAL, "world!");
+            AssertToken(tokens[IMPORT_OFFSET + 86], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[87], TokenType.STRING, "string");
-            AssertToken(tokens[88], TokenType.IDENTIFIER, "message");
-            AssertToken(tokens[89], TokenType.EQUAL, "=");
-            AssertToken(tokens[90], TokenType.IDENTIFIER, "concatenate");
-            AssertToken(tokens[91], TokenType.LPAREN, "(");
-            AssertToken(tokens[92], TokenType.IDENTIFIER, "hello");
-            AssertToken(tokens[93], TokenType.COMMA, ",");
-            AssertToken(tokens[94], TokenType.IDENTIFIER, "world");
-            AssertToken(tokens[95], TokenType.RPAREN, ")");
-            AssertToken(tokens[96], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 87], TokenType.STRING, "string");
+            AssertToken(tokens[IMPORT_OFFSET + 88], TokenType.IDENTIFIER, "message");
+            AssertToken(tokens[IMPORT_OFFSET + 89], TokenType.EQUAL, "=");
+            AssertToken(tokens[IMPORT_OFFSET + 90], TokenType.IDENTIFIER, "concatenate");
+            AssertToken(tokens[IMPORT_OFFSET + 91], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 92], TokenType.IDENTIFIER, "hello");
+            AssertToken(tokens[IMPORT_OFFSET + 93], TokenType.COMMA, ",");
+            AssertToken(tokens[IMPORT_OFFSET + 94], TokenType.IDENTIFIER, "world");
+            AssertToken(tokens[IMPORT_OFFSET + 95], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 96], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[97], TokenType.IDENTIFIER, "Console");
-            AssertToken(tokens[98], TokenType.DOT, ".");
-            AssertToken(tokens[99], TokenType.IDENTIFIER, "print");
-            AssertToken(tokens[100], TokenType.LPAREN, "(");
-            AssertToken(tokens[101], TokenType.IDENTIFIER, "message");
-            AssertToken(tokens[102], TokenType.RPAREN, ")");
-            AssertToken(tokens[103], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 97], TokenType.IDENTIFIER, "Console");
+            AssertToken(tokens[IMPORT_OFFSET + 98], TokenType.DOT, ".");
+            AssertToken(tokens[IMPORT_OFFSET + 99], TokenType.IDENTIFIER, "print");
+            AssertToken(tokens[IMPORT_OFFSET + 100], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 101], TokenType.IDENTIFIER, "message");
+            AssertToken(tokens[IMPORT_OFFSET + 102], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 103], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[104], TokenType.BOOL, "bool");
-            AssertToken(tokens[105], TokenType.IDENTIFIER, "check");
-            AssertToken(tokens[106], TokenType.EQUAL, "=");
-            AssertToken(tokens[107], TokenType.IDENTIFIER, "is_even");
-            AssertToken(tokens[108], TokenType.LPAREN, "(");
-            AssertToken(tokens[109], TokenType.IDENTIFIER, "sum");
-            AssertToken(tokens[110], TokenType.RPAREN, ")");
-            AssertToken(tokens[111], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 104], TokenType.BOOL, "bool");
+            AssertToken(tokens[IMPORT_OFFSET + 105], TokenType.IDENTIFIER, "check");
+            AssertToken(tokens[IMPORT_OFFSET + 106], TokenType.EQUAL, "=");
+            AssertToken(tokens[IMPORT_OFFSET + 107], TokenType.IDENTIFIER, "is_even");
+            AssertToken(tokens[IMPORT_OFFSET + 108], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 109], TokenType.IDENTIFIER, "sum");
+            AssertToken(tokens[IMPORT_OFFSET + 110], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 111], TokenType.SEMICOLON, ";");
 
-            AssertToken(tokens[112], TokenType.IF, "if");
-            AssertToken(tokens[113], TokenType.LPAREN, "(");
-            AssertToken(tokens[114], TokenType.IDENTIFIER, "check");
-            AssertToken(tokens[115], TokenType.RPAREN, ")");
-            AssertToken(tokens[116], TokenType.LBRACE, "{");
-            AssertToken(tokens[117], TokenType.IDENTIFIER, "Console");
-            AssertToken(tokens[118], TokenType.DOT, ".");
-            AssertToken(tokens[119], TokenType.IDENTIFIER, "print");
-            AssertToken(tokens[120], TokenType.LPAREN, "(");
-            AssertToken(tokens[121], TokenType.STRING_LITERAL, "Sum is even.");
-            AssertToken(tokens[122], TokenType.RPAREN, ")");
-            AssertToken(tokens[123], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[124], TokenType.RBRACE, "}");
+            AssertToken(tokens[IMPORT_OFFSET + 112], TokenType.IF, "if");
+            AssertToken(tokens[IMPORT_OFFSET + 113], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 114], TokenType.IDENTIFIER, "check");
+            AssertToken(tokens[IMPORT_OFFSET + 115], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 116], TokenType.LBRACE, "{");
+            AssertToken(tokens[IMPORT_OFFSET + 117], TokenType.IDENTIFIER, "Console");
+            AssertToken(tokens[IMPORT_OFFSET + 118], TokenType.DOT, ".");
+            AssertToken(tokens[IMPORT_OFFSET + 119], TokenType.IDENTIFIER, "print");
+            AssertToken(tokens[IMPORT_OFFSET + 120], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 121], TokenType.STRING_LITERAL, "Sum is even.");
+            AssertToken(tokens[IMPORT_OFFSET + 122], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 123], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 124], TokenType.RBRACE, "}");
 
             // Add more assertions as needed for the remaining tokens
 
@@ -328,7 +330,9 @@ namespace BenitaTestProject
         [TestMethod]
         public void Tokenize_FibonacciCode_ReturnsCorrectTokens()
         {
-            string code = @"
+            const int IMPORT_OFFSET = 3;
+            string code = @"                import Console;
+
                 func fib(number x) -> number 
                 {
                    number result; 
@@ -355,104 +359,104 @@ namespace BenitaTestProject
 
             List<Token> tokens = lexer.Tokenize();
 
-            Assert.AreEqual(92, tokens.Count); // Adjusted based on the actual token count in the code
+            Assert.AreEqual(95, tokens.Count); // Adjusted based on the actual token count in the code
 
             // Validate specific tokens and their types
-            AssertToken(tokens[0], TokenType.FUNC, "func");
-            AssertToken(tokens[1], TokenType.IDENTIFIER, "fib");
-            AssertToken(tokens[2], TokenType.LPAREN, "(");
-            AssertToken(tokens[3], TokenType.NUMBER, "number");
-            AssertToken(tokens[4], TokenType.IDENTIFIER, "x");
-            AssertToken(tokens[5], TokenType.RPAREN, ")");
-            AssertToken(tokens[6], TokenType.ARROW, "->");
-            AssertToken(tokens[7], TokenType.NUMBER, "number");
-            AssertToken(tokens[8], TokenType.LBRACE, "{");
+            AssertToken(tokens[IMPORT_OFFSET + 0], TokenType.FUNC, "func");
+            AssertToken(tokens[IMPORT_OFFSET + 1], TokenType.IDENTIFIER, "fib");
+            AssertToken(tokens[IMPORT_OFFSET + 2], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 3], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 4], TokenType.IDENTIFIER, "x");
+            AssertToken(tokens[IMPORT_OFFSET + 5], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 6], TokenType.ARROW, "->");
+            AssertToken(tokens[IMPORT_OFFSET + 7], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 8], TokenType.LBRACE, "{");
 
             // Tokens inside the function definition
-            AssertToken(tokens[9], TokenType.NUMBER, "number");
-            AssertToken(tokens[10], TokenType.IDENTIFIER, "result");
-            AssertToken(tokens[11], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[12], TokenType.IF, "if");
-            AssertToken(tokens[13], TokenType.LPAREN, "(");
-            AssertToken(tokens[14], TokenType.IDENTIFIER, "x");
-            AssertToken(tokens[15], TokenType.EQUAL_EQUAL, "==");
-            AssertToken(tokens[16], TokenType.NUMBER_LITERAL, "1");
-            AssertToken(tokens[17], TokenType.OR_OR, "||");
-            AssertToken(tokens[18], TokenType.IDENTIFIER, "x");
-            AssertToken(tokens[19], TokenType.EQUAL_EQUAL, "==");
-            AssertToken(tokens[20], TokenType.NUMBER_LITERAL, "0");
-            AssertToken(tokens[21], TokenType.RPAREN, ")");
-            AssertToken(tokens[22], TokenType.LBRACE, "{");
-            AssertToken(tokens[23], TokenType.IDENTIFIER, "result");
-            AssertToken(tokens[24], TokenType.EQUAL, "=");
-            AssertToken(tokens[25], TokenType.IDENTIFIER, "x");
-            AssertToken(tokens[26], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[27], TokenType.RBRACE, "}");
-            AssertToken(tokens[28], TokenType.ELSE, "else");
-            AssertToken(tokens[29], TokenType.LBRACE, "{");
-            AssertToken(tokens[30], TokenType.IDENTIFIER, "result");
-            AssertToken(tokens[31], TokenType.EQUAL, "=");
-            AssertToken(tokens[32], TokenType.IDENTIFIER, "fib");
-            AssertToken(tokens[33], TokenType.LPAREN, "(");
-            AssertToken(tokens[34], TokenType.IDENTIFIER, "x");
-            AssertToken(tokens[35], TokenType.MINUS, "-");
-            AssertToken(tokens[36], TokenType.NUMBER_LITERAL, "1");
-            AssertToken(tokens[37], TokenType.RPAREN, ")");
-            AssertToken(tokens[38], TokenType.PLUS, "+");
-            AssertToken(tokens[39], TokenType.IDENTIFIER, "fib");
-            AssertToken(tokens[40], TokenType.LPAREN, "(");
-            AssertToken(tokens[41], TokenType.IDENTIFIER, "x");
-            AssertToken(tokens[42], TokenType.MINUS, "-");
-            AssertToken(tokens[43], TokenType.NUMBER_LITERAL, "2");
-            AssertToken(tokens[44], TokenType.RPAREN, ")");
-            AssertToken(tokens[45], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[46], TokenType.RBRACE, "}");
-            AssertToken(tokens[47], TokenType.RETURN, "return");
-            AssertToken(tokens[48], TokenType.IDENTIFIER, "result");
-            AssertToken(tokens[49], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[50], TokenType.RBRACE, "}");
+            AssertToken(tokens[IMPORT_OFFSET + 9], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 10], TokenType.IDENTIFIER, "result");
+            AssertToken(tokens[IMPORT_OFFSET + 11], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 12], TokenType.IF, "if");
+            AssertToken(tokens[IMPORT_OFFSET + 13], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 14], TokenType.IDENTIFIER, "x");
+            AssertToken(tokens[IMPORT_OFFSET + 15], TokenType.EQUAL_EQUAL, "==");
+            AssertToken(tokens[IMPORT_OFFSET + 16], TokenType.NUMBER_LITERAL, "1");
+            AssertToken(tokens[IMPORT_OFFSET + 17], TokenType.OR_OR, "||");
+            AssertToken(tokens[IMPORT_OFFSET + 18], TokenType.IDENTIFIER, "x");
+            AssertToken(tokens[IMPORT_OFFSET + 19], TokenType.EQUAL_EQUAL, "==");
+            AssertToken(tokens[IMPORT_OFFSET + 20], TokenType.NUMBER_LITERAL, "0");
+            AssertToken(tokens[IMPORT_OFFSET + 21], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 22], TokenType.LBRACE, "{");
+            AssertToken(tokens[IMPORT_OFFSET + 23], TokenType.IDENTIFIER, "result");
+            AssertToken(tokens[IMPORT_OFFSET + 24], TokenType.EQUAL, "=");
+            AssertToken(tokens[IMPORT_OFFSET + 25], TokenType.IDENTIFIER, "x");
+            AssertToken(tokens[IMPORT_OFFSET + 26], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 27], TokenType.RBRACE, "}");
+            AssertToken(tokens[IMPORT_OFFSET + 28], TokenType.ELSE, "else");
+            AssertToken(tokens[IMPORT_OFFSET + 29], TokenType.LBRACE, "{");
+            AssertToken(tokens[IMPORT_OFFSET + 30], TokenType.IDENTIFIER, "result");
+            AssertToken(tokens[IMPORT_OFFSET + 31], TokenType.EQUAL, "=");
+            AssertToken(tokens[IMPORT_OFFSET + 32], TokenType.IDENTIFIER, "fib");
+            AssertToken(tokens[IMPORT_OFFSET + 33], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 34], TokenType.IDENTIFIER, "x");
+            AssertToken(tokens[IMPORT_OFFSET + 35], TokenType.MINUS, "-");
+            AssertToken(tokens[IMPORT_OFFSET + 36], TokenType.NUMBER_LITERAL, "1");
+            AssertToken(tokens[IMPORT_OFFSET + 37], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 38], TokenType.PLUS, "+");
+            AssertToken(tokens[IMPORT_OFFSET + 39], TokenType.IDENTIFIER, "fib");
+            AssertToken(tokens[IMPORT_OFFSET + 40], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 41], TokenType.IDENTIFIER, "x");
+            AssertToken(tokens[IMPORT_OFFSET + 42], TokenType.MINUS, "-");
+            AssertToken(tokens[IMPORT_OFFSET + 43], TokenType.NUMBER_LITERAL, "2");
+            AssertToken(tokens[IMPORT_OFFSET + 44], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 45], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 46], TokenType.RBRACE, "}");
+            AssertToken(tokens[IMPORT_OFFSET + 47], TokenType.RETURN, "return");
+            AssertToken(tokens[IMPORT_OFFSET + 48], TokenType.IDENTIFIER, "result");
+            AssertToken(tokens[IMPORT_OFFSET + 49], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 50], TokenType.RBRACE, "}");
 
             // Tokens inside the _main_ function
-            AssertToken(tokens[51], TokenType.MAIN, "_main_");
-            AssertToken(tokens[52], TokenType.LPAREN, "(");
-            AssertToken(tokens[53], TokenType.RPAREN, ")");
-            AssertToken(tokens[54], TokenType.LBRACE, "{");
-            AssertToken(tokens[55], TokenType.NUMBER, "number");
-            AssertToken(tokens[56], TokenType.IDENTIFIER, "x");
-            AssertToken(tokens[57], TokenType.EQUAL, "=");
-            AssertToken(tokens[58], TokenType.NUMBER_LITERAL, "20");
-            AssertToken(tokens[59], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[60], TokenType.NUMBER, "number");
-            AssertToken(tokens[61], TokenType.IDENTIFIER, "i");
-            AssertToken(tokens[62], TokenType.EQUAL, "=");
-            AssertToken(tokens[63], TokenType.NUMBER_LITERAL, "0");
-            AssertToken(tokens[64], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[65], TokenType.WHILE, "while");
-            AssertToken(tokens[66], TokenType.LPAREN, "(");
-            AssertToken(tokens[67], TokenType.IDENTIFIER, "i");
-            AssertToken(tokens[68], TokenType.LTE, "<=");
-            AssertToken(tokens[69], TokenType.IDENTIFIER, "x");
-            AssertToken(tokens[70], TokenType.RPAREN, ")");
-            AssertToken(tokens[71], TokenType.LBRACE, "{");
-            AssertToken(tokens[72], TokenType.IDENTIFIER, "Console");
-            AssertToken(tokens[73], TokenType.DOT, ".");
-            AssertToken(tokens[74], TokenType.IDENTIFIER, "print");
-            AssertToken(tokens[75], TokenType.LPAREN, "(");
-            AssertToken(tokens[76], TokenType.IDENTIFIER, "i");
-            AssertToken(tokens[77], TokenType.PLUS, "+");
-            AssertToken(tokens[78], TokenType.STRING_LITERAL, " => ");
-            AssertToken(tokens[79], TokenType.PLUS, "+");
-            AssertToken(tokens[80], TokenType.IDENTIFIER, "fib");
-            AssertToken(tokens[81], TokenType.LPAREN, "(");
-            AssertToken(tokens[82], TokenType.IDENTIFIER, "i");
-            AssertToken(tokens[83], TokenType.RPAREN, ")");
-            AssertToken(tokens[84], TokenType.RPAREN, ")");
-            AssertToken(tokens[85], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[86], TokenType.IDENTIFIER, "i");
-            AssertToken(tokens[87], TokenType.PLUS_PLUS, "++");
-            AssertToken(tokens[88], TokenType.SEMICOLON, ";");
-            AssertToken(tokens[89], TokenType.RBRACE, "}");
-            AssertToken(tokens[90], TokenType.RBRACE, "}");
+            AssertToken(tokens[IMPORT_OFFSET + 51], TokenType.MAIN, "_main_");
+            AssertToken(tokens[IMPORT_OFFSET + 52], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 53], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 54], TokenType.LBRACE, "{");
+            AssertToken(tokens[IMPORT_OFFSET + 55], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 56], TokenType.IDENTIFIER, "x");
+            AssertToken(tokens[IMPORT_OFFSET + 57], TokenType.EQUAL, "=");
+            AssertToken(tokens[IMPORT_OFFSET + 58], TokenType.NUMBER_LITERAL, "20");
+            AssertToken(tokens[IMPORT_OFFSET + 59], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 60], TokenType.NUMBER, "number");
+            AssertToken(tokens[IMPORT_OFFSET + 61], TokenType.IDENTIFIER, "i");
+            AssertToken(tokens[IMPORT_OFFSET + 62], TokenType.EQUAL, "=");
+            AssertToken(tokens[IMPORT_OFFSET + 63], TokenType.NUMBER_LITERAL, "0");
+            AssertToken(tokens[IMPORT_OFFSET + 64], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 65], TokenType.WHILE, "while");
+            AssertToken(tokens[IMPORT_OFFSET + 66], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 67], TokenType.IDENTIFIER, "i");
+            AssertToken(tokens[IMPORT_OFFSET + 68], TokenType.LTE, "<=");
+            AssertToken(tokens[IMPORT_OFFSET + 69], TokenType.IDENTIFIER, "x");
+            AssertToken(tokens[IMPORT_OFFSET + 70], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 71], TokenType.LBRACE, "{");
+            AssertToken(tokens[IMPORT_OFFSET + 72], TokenType.IDENTIFIER, "Console");
+            AssertToken(tokens[IMPORT_OFFSET + 73], TokenType.DOT, ".");
+            AssertToken(tokens[IMPORT_OFFSET + 74], TokenType.IDENTIFIER, "print");
+            AssertToken(tokens[IMPORT_OFFSET + 75], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 76], TokenType.IDENTIFIER, "i");
+            AssertToken(tokens[IMPORT_OFFSET + 77], TokenType.PLUS, "+");
+            AssertToken(tokens[IMPORT_OFFSET + 78], TokenType.STRING_LITERAL, " => ");
+            AssertToken(tokens[IMPORT_OFFSET + 79], TokenType.PLUS, "+");
+            AssertToken(tokens[IMPORT_OFFSET + 80], TokenType.IDENTIFIER, "fib");
+            AssertToken(tokens[IMPORT_OFFSET + 81], TokenType.LPAREN, "(");
+            AssertToken(tokens[IMPORT_OFFSET + 82], TokenType.IDENTIFIER, "i");
+            AssertToken(tokens[IMPORT_OFFSET + 83], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 84], TokenType.RPAREN, ")");
+            AssertToken(tokens[IMPORT_OFFSET + 85], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 86], TokenType.IDENTIFIER, "i");
+            AssertToken(tokens[IMPORT_OFFSET + 87], TokenType.PLUS_PLUS, "++");
+            AssertToken(tokens[IMPORT_OFFSET + 88], TokenType.SEMICOLON, ";");
+            AssertToken(tokens[IMPORT_OFFSET + 89], TokenType.RBRACE, "}");
+            AssertToken(tokens[IMPORT_OFFSET + 90], TokenType.RBRACE, "}");
         }
         [TestMethod]
         public void Tokenize_LargeMultilineSource_PreservesFinalTokenLocation()

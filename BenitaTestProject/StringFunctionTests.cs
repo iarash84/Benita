@@ -6,7 +6,9 @@ namespace BenitaTestProject;
 /// <summary>سازگاری معنایی و زمان اجرای توابع داخلی رشته را بررسی می‌کند.</summary>
 public class StringFunctionTests
 {
-    private const string Source = @"
+    private const string Source = @"import Console;
+import String;
+
 _main_() {
     string value = ""  Hello Benita  "";
     Console.print(String.length(value));
@@ -36,7 +38,8 @@ _main_() {
     [TestMethod]
     public void Check_WithWrongStringFunctionArgumentType_ThrowsSemanticException()
     {
-        const string invalidSource = @"
+        const string invalidSource = @"import String;
+
 _main_() {
     number length = String.length(42);
 }";

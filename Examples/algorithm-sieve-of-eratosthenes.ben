@@ -1,3 +1,5 @@
+import Console;
+import Array;
 // غربال اراتستن، آرایهٔ بولی اندازه‌دار و علامت‌گذاری مضرب‌های اعداد اول را آزمایش می‌کند.
 // Tests the Sieve of Eratosthenes, sized Boolean arrays, and marking prime multiples.
 // The sieve finds every prime up to the inclusive limit without testing each value separately.

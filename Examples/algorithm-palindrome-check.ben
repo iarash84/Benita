@@ -1,3 +1,5 @@
+import Console;
+import String;
 // تشخیص palindrome را با مقایسهٔ نویسه‌های متن از ابتدا و انتها آزمایش می‌کند.
 // Tests palindrome detection by comparing characters from both ends of a string.
 // A palindrome reads identically from left to right and from right to left.

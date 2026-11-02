@@ -1,3 +1,4 @@
+import Console;
 // الگوی Factory Method ساخت Document را به creatorهای concrete واگذار می‌کند.
 // Demonstrates Factory Method by delegating Document creation to concrete creators.
 interface Document { func describe() -> string; }

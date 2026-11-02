@@ -1,3 +1,4 @@
+import Console;
 // محاسبهٔ ب.م.م با الگوریتم تکرارشوندهٔ اقلیدس و عملگر باقی‌مانده را نمایش می‌دهد.
 // Demonstrates iterative Euclidean GCD calculation and the remainder operator.
 // Greatest common divisor using Euclid's iterative algorithm.

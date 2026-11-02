@@ -10,6 +10,7 @@ public class LanguageSyntaxRegressionTests
     public void Exec_ArrayReadAndWriteShareWholeNegativeIndexSemantics()
     {
         const string source = """
+            import Console;
             _main_() {
                 number[] values = [1, 2];
                 Console.print(values[-1]);
@@ -26,7 +27,7 @@ public class LanguageSyntaxRegressionTests
         }
 
         RuntimeException exception = Assert.ThrowsException<RuntimeException>(() =>
-            new CompilerClass().Exec("_main_() { number[] values = [1]; Console.print(values[0.5]); }"));
+            new CompilerClass().Exec("import Console; _main_() { number[] values = [1]; Console.print(values[0.5]); }"));
         StringAssert.Contains(exception.Message, "whole number");
     }
 
@@ -40,7 +41,8 @@ public class LanguageSyntaxRegressionTests
     [TestMethod]
     public void Check_NonVoidFunctionWithReturningIfElse_IsValid()
     {
-        const string source = @"
+        const string source = @"import Console;
+
 func sign(number value) -> number {
     if (value >= 0) { return 1; } else { return -1; }
 }
@@ -62,7 +64,7 @@ _main_() { Console.print(sign(2)); }";
     [DataRow("while (true) { while (true) { break; } return 1; }")]
     public void Check_NonVoidFunctionWithReturningUnconditionalLoop_IsValid(string loop)
     {
-        new CompilerClass().Check($"func value() -> number {{ {loop} }} _main_() {{ Console.print(value()); }}");
+        new CompilerClass().Check($"import Console; func value() -> number {{ {loop} }} _main_() {{ Console.print(value()); }}");
     }
 
     [TestMethod]
@@ -86,6 +88,7 @@ _main_() { Console.print(sign(2)); }";
     public void Check_UnreachableBreakDoesNotInvalidateReturningLoop()
     {
         const string source = """
+            import Console;
             func value() -> number {
                 while (true) {
                     if (false) { break; }
@@ -118,7 +121,7 @@ _main_() { Console.print(sign(2)); }";
     [TestMethod]
     public void Exec_ForWithEmptyClauses_CanExitWithBreak()
     {
-        const string source = "_main_() { for (;;) { Console.print(1); break; } }";
+        const string source = "import Console; _main_() { for (;;) { Console.print(1); break; } }";
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
         Assert.AreEqual("1\r\n", output.GetOutput());
@@ -128,6 +131,7 @@ _main_() { Console.print(sign(2)); }";
     public void Exec_ForIncrement_RunsAfterContinueButNotAfterBreak()
     {
         const string source = """
+            import Console;
             _main_() {
                 number continued = 0;
                 for (; continued < 2; continued++) { continue; }
@@ -148,6 +152,7 @@ _main_() { Console.print(sign(2)); }";
     public void Exec_ForIncrement_DoesNotRunAfterFunctionReturn()
     {
         const string source = """
+            import Console;
             number increments = 0;
             func value() -> number {
                 for (;; increments++) { return 7; }
@@ -168,6 +173,8 @@ _main_() { Console.print(sign(2)); }";
     public void Exec_ForIncrement_DoesNotRunAfterThrownError()
     {
         const string source = """
+            import Console;
+            import Error;
             _main_() {
                 number increments = 0;
                 try {
@@ -194,7 +201,7 @@ _main_() { Console.print(sign(2)); }";
     public void Check_MainWithoutClosingBrace_IsRejectedAtEndOfFile()
     {
         var exception = Assert.ThrowsException<ParserException>(() =>
-            new CompilerClass().Check("_main_() { Console.print(1);"));
+            new CompilerClass().Check("import Console; _main_() { Console.print(1);"));
 
         StringAssert.Contains(exception.Message, "Expected '}' after main function body");
     }
@@ -207,7 +214,7 @@ _main_() { Console.print(sign(2)); }";
     public void Check_DeclarationInsideConditionalControlFlow_DoesNotEscape(string controlFlow)
     {
         var exception = Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass().Check($"_main_() {{ {controlFlow} Console.print(value); }}"));
+            new CompilerClass().Check($"import Console; _main_() {{ {controlFlow} Console.print(value); }}"));
 
         StringAssert.Contains(exception.Message, "Undeclared variable 'value'");
     }
@@ -308,7 +315,7 @@ _main_() { Console.print(sign(2)); }";
     public void Check_ArrayOperationWithNonNumericIndex_IsRejected(string operation)
     {
         var exception = Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass().Check($"_main_() {{ number[] values = [1]; {operation} }}"));
+            new CompilerClass().Check($"import Console; _main_() {{ number[] values = [1]; {operation} }}"));
 
         StringAssert.Contains(exception.Message, "Array index must be of type 'number'.");
     }
@@ -337,7 +344,7 @@ _main_() { Console.print(sign(2)); }";
     [TestMethod]
     public void Exec_StringAndBooleanEquality_MatchesWithAndWithoutOptimization()
     {
-        const string source = "_main_() { Console.print(\"a\" == \"a\"); Console.print(true != false); }";
+        const string source = "import Console; _main_() { Console.print(\"a\" == \"a\"); Console.print(true != false); }";
         foreach (bool optimize in new[] { false, true })
         {
             using var output = new ConsoleOutput();
@@ -350,6 +357,9 @@ _main_() { Console.print(sign(2)); }";
     public void Exec_MatchNumericPatterns_UseLanguageEqualityAcrossRuntimeRepresentations()
     {
         const string source = """
+            import Console;
+            import Array;
+            import String;
             _main_() {
                 number value;
                 Console.print(match value { 0 => "default", _ => "missed" });
@@ -372,7 +382,7 @@ _main_() { Console.print(sign(2)); }";
     public void Exec_ParenthesizedExpression_PreservesGrouping()
     {
         using var output = new ConsoleOutput();
-        new CompilerClass().Exec("Console.print((2 + 3) * 4);");
+        new CompilerClass().Exec("import Console; Console.print((2 + 3) * 4);");
 
         Assert.AreEqual("20\r\n", output.GetOutput());
     }
@@ -387,6 +397,7 @@ _main_() { Console.print(sign(2)); }";
     public void Check_PackageMemberReadAndCall_AreAccepted()
     {
         const string source = """
+            import Console;
             pkg Counter {
                 public number value = 1;
                 public func get() -> number { return value; }
@@ -404,6 +415,7 @@ _main_() { Console.print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Console;
             number x = 7;
             if (x > 10) { Console.print("large"); }
             else if (x > 5) { Console.print("medium"); }
@@ -418,6 +430,7 @@ _main_() { Console.print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Console;
             number score = 4;
             let result = match score {
                 0 => "No score",
@@ -438,6 +451,7 @@ _main_() { Console.print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Console;
             number value = 2;
             match value {
                 1 => { Console.print("one"); }
@@ -479,6 +493,7 @@ _main_() { Console.print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Console;
             number value = 2;
             match value {
                 1, 2, 3 => Console.print("small");
@@ -494,6 +509,7 @@ _main_() { Console.print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Console;
             number value = 10;
             let result = match value {
                 0..10 => "low";
@@ -530,6 +546,7 @@ _main_() { Console.print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Console;
             number[] values = [1, 2, 3];
             for (item in values) {
                 Console.print(item);
@@ -544,6 +561,7 @@ _main_() { Console.print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Console;
             number[] values = [1, 2, 3, 4, 5];
             for (item in values) {
                 if (item == 2) { continue; }
@@ -559,7 +577,7 @@ _main_() { Console.print(sign(2)); }";
     public void Check_ForIn_RejectsNonArrayIterable()
     {
         var exception = Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass().Check("number value = 1; for (item in value) { Console.print(item); }"));
+            new CompilerClass().Check("import Console; number value = 1; for (item in value) { Console.print(item); }"));
 
         StringAssert.Contains(exception.Message, "must be an array");
     }
@@ -568,7 +586,7 @@ _main_() { Console.print(sign(2)); }";
     public void Check_ForIn_VariableDoesNotLeakOutsideLoop()
     {
         var exception = Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass().Check("number[] values = [1]; for (item in values) {} Console.print(item);"));
+            new CompilerClass().Check("import Console; number[] values = [1]; for (item in values) {} Console.print(item);"));
 
         StringAssert.Contains(exception.Message, "Undeclared variable 'item'");
     }

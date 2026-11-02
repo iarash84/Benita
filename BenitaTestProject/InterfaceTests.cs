@@ -10,6 +10,7 @@ public class InterfaceTests
     public void InterfaceTypedParameter_DispatchesToConcretePackage()
     {
         const string source = """
+            import Console;
             interface Operation {
                 func apply(number value) -> number;
             }
@@ -43,6 +44,7 @@ public class InterfaceTests
     public void Package_CanImplementMultipleInterfaces()
     {
         const string source = """
+            import Console;
             interface Reader { func read() -> string; }
             interface Writer { func write(string value) -> string; }
             pkg Channel : Reader, Writer {
@@ -65,6 +67,7 @@ public class InterfaceTests
     public void Interface_CanBeUsedAsFieldAndReturnType()
     {
         const string source = """
+            import Console;
             interface Message { func text() -> string; }
             pkg Email : Message { public func text() -> string { return "email"; } }
             pkg Factory { public func create() -> Message { return new Email(); } }

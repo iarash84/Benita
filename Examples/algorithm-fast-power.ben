@@ -1,3 +1,4 @@
+import Console;
 // توان‌رسانی سریع، باقی‌مانده و کاهش دودویی توان را برای محاسبه با تکرار کمتر آزمایش می‌کند.
 // Tests exponentiation by squaring, remainder operations, and binary exponent reduction.
 // Exponentiation by squaring computes a non-negative whole power in logarithmic iterations.

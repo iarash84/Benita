@@ -79,6 +79,7 @@ public class ReplTests
     public void Run_RuntimeFailureRollsBackScalarAndArrayMutations()
     {
         const string input = """
+            import Console;
             number value = 1;
             number[] items = [1];
             value = 2; items[0] = 9; Console.print(items[5]);
@@ -101,6 +102,7 @@ public class ReplTests
     public void Run_RuntimeFailureRollsBackPackageInstanceMutation()
     {
         const string input = """
+            import Console;
             pkg Counter {
             number value = 1;
             public func set(number next) -> void { value = next; }
@@ -125,6 +127,8 @@ public class ReplTests
     public void Run_RuntimeFailureRollsBackBuiltInClassMutation()
     {
         const string input = """
+            import Console;
+            import NativeCounter;
             NativeCounter counter = new NativeCounter(1);
             counter.value = counter.increment(8); number[] items = [1]; Console.print(items[5]);
             counter.value

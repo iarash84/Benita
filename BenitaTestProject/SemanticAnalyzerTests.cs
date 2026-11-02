@@ -10,6 +10,7 @@ namespace BenitaTestProject
         public void Analyze_WithGlobalVariables_CompletesSuccessfully()
         {
             const string source = """
+                import Console;
                 number answer = 42;
                 _main_() { Console.print(answer); }
                 """;

@@ -10,6 +10,8 @@ public class ArrayFunctionTests
     public void NumericLookupsAndSort_IgnoreClrNumberRepresentation()
     {
         const string source = """
+            import Console;
+            import Array;
             _main_() {
                 number[] seed = [10, 20];
                 number[] values = [1, Array.length(seed)];
@@ -43,6 +45,7 @@ public class ArrayFunctionTests
     public void Check_LetInfersConcreteArrayTypeFromArrayPreservingBuiltIn(string expression)
     {
         string source = $@"
+            import Array;
             _main_() {{
                 number[] source = [2, 1];
                 let result = {expression};
@@ -56,6 +59,8 @@ public class ArrayFunctionTests
     public void Exec_InferredArrayBuiltInResultSupportsIndexAccess()
     {
         const string source = """
+            import Console;
+            import Array;
             _main_() {
                 number[] source = [2, 1];
                 let result = Array.reverse(source);
@@ -72,7 +77,9 @@ public class ArrayFunctionTests
     [TestMethod]
     public void Exec_WithAllArrayFunctions_ProducesExpectedOutput()
     {
-        const string source = @"
+        const string source = @"import Console;
+import Array;
+
 _main_() {
     number[] values = [3, 1, 2];
     Console.print(Array.contains(values, 1));
@@ -98,7 +105,8 @@ _main_() {
     [TestMethod]
     public void Check_WithMismatchedArrayElementType_ThrowsSemanticException()
     {
-        const string source = @"
+        const string source = @"import Array;
+
 _main_() {
     number[] values = [1, 2];
     values = Array.insert(values, 1, ""wrong"");

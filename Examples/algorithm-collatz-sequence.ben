@@ -1,3 +1,5 @@
+import Console;
+import Array;
 // تولید دنبالهٔ Collatz را با شرط زوج و فرد و حلقه تا رسیدن به یک آزمایش می‌کند.
 // Tests Collatz sequence generation with even/odd branches and iteration until one.
 // Each step halves an even value or replaces an odd value with three times itself plus one.

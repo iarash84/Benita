@@ -9,6 +9,7 @@ public class IncludeOnceTests
     public void IncludeOnce_PrefixInIdentifier_IsTokenizedAsIdentifier()
     {
         const string source = """
+            import Console;
             func include_once_helper() -> number { return 1; }
             _main_() { Console.print(include_once_helper()); }
             """;
@@ -48,6 +49,7 @@ public class IncludeOnceTests
             File.WriteAllText(Path.Combine(libraryDirectory, "common.ben"),
                 "func value() -> number { return 1; }");
             const string source = """
+                import Console;
                 include_once "lib/common.ben";
                 include_once "lib/../lib/common.ben";
                 _main_() { Console.print(value()); }
@@ -75,6 +77,7 @@ public class IncludeOnceTests
             File.WriteAllText(Path.Combine(featureDirectory, "entry.ben"),
                 "include_once \"../common.ben\";");
             const string source = """
+                import Console;
                 include_once "feature/entry.ben";
                 _main_() { Console.print(value()); }
                 """;
@@ -96,6 +99,7 @@ public class IncludeOnceTests
             string featureDirectory = Directory.CreateDirectory(Path.Combine(directory, "feature")).FullName;
             string rootPath = Path.Combine(directory, "main.ben");
             const string source = """
+                import Console;
                 include_once "feature/entry.ben";
                 _main_() { Console.print("ok"); }
                 """;
@@ -128,6 +132,7 @@ public class IncludeOnceTests
     public void IncludeOnce_InsideBlockComment_IsIgnored()
     {
         const string source = """
+            import Console;
             /*
             include_once "definitely-missing.ben";
             */
@@ -146,6 +151,7 @@ public class IncludeOnceTests
             File.WriteAllText(Path.Combine(directory, "library.ben"),
                 "func value() -> number { return 3; }");
             const string source = """
+                import Console;
                 string marker = "/*";
                 include_once "library.ben";
                 _main_() { Console.print(value()); }

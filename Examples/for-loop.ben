@@ -1,3 +1,4 @@
+import Console;
 // حلقهٔ کلاسیک for و پیمایش مستقیم آرایه با for-in را نمایش می‌دهد.
 // Demonstrates a classic for loop and direct array iteration with for-in.
 

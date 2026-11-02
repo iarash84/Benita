@@ -11,6 +11,7 @@ public class AsyncAwaitTests
     public void AsyncPackageArgument_IsDeeplyIsolatedFromCaller()
     {
         const string source = """
+            import Console;
             pkg Box {
                 public number value = 0;
                 public func set(number next) -> void { value = next; }
@@ -41,6 +42,7 @@ public class AsyncAwaitTests
     public void AsyncCalls_CanBeAwaitedInAnyOrder()
     {
         const string source = """
+            import Console;
             func add(number left, number right) -> number { return left + right; }
             _main_() {
                 let first = async add(10, 20);
@@ -59,6 +61,7 @@ public class AsyncAwaitTests
     public void Await_CanReadCompletedTaskMoreThanOnce()
     {
         const string source = """
+            import Console;
             func value() -> number { return 42; }
             _main_() {
                 let operation = async value();
@@ -76,6 +79,8 @@ public class AsyncAwaitTests
     public void Await_PropagatesTaskErrorToCatch()
     {
         const string source = """
+            import Console;
+            import Error;
             func fail() -> number { throw Error.create("ASYNC100", "task failed"); }
             _main_() {
                 let operation = async fail();
@@ -96,6 +101,7 @@ public class AsyncAwaitTests
     public void Async_CapturesArgumentBeforeTaskStarts()
     {
         const string source = """
+            import Console;
             func identity(number value) -> number { return value; }
             _main_() {
                 number value = 7;

@@ -11,6 +11,8 @@ public class ErrorHandlingTests
     public void ThrowCatchFinally_ExposeErrorAndAlwaysRunCleanup()
     {
         const string source = """
+            import Console;
+            import Error;
             _main_() {
                 try {
                     throw Error.create("APP100", "operation failed");
@@ -33,6 +35,8 @@ public class ErrorHandlingTests
     public void Catch_ConvertsBuiltInRuntimeFailureToErrorValue()
     {
         const string source = """
+            import Console;
+            import Convert;
             _main_() {
                 try {
                     number value = Convert.to_number("not-a-number");
@@ -51,6 +55,7 @@ public class ErrorHandlingTests
     public void Finally_RunsBeforeFunctionReturn()
     {
         const string source = """
+            import Console;
             func value() -> number {
                 try { return 7; }
                 finally { Console.print("finally"); }
@@ -67,6 +72,8 @@ public class ErrorHandlingTests
     public void FinallyThatAlwaysThrows_SatisfiesNonVoidControlFlow()
     {
         const string source = """
+            import Console;
+            import Error;
             func value() -> number {
                 try { Console.print("work"); }
                 finally { throw Error.create("STOP", "stopped"); }
@@ -84,6 +91,8 @@ public class ErrorHandlingTests
     public void Finally_RunsWhenErrorContinuesToOuterCatch()
     {
         const string source = """
+            import Console;
+            import Error;
             _main_() {
                 try {
                     try { throw Error.create("INNER", "failed"); }
@@ -103,6 +112,8 @@ public class ErrorHandlingTests
     public void CatchVariable_ShadowsAndThenRestoresOuterVariable()
     {
         const string source = """
+            import Console;
+            import Error;
             _main_() {
                 string failure = "outer";
                 try { throw Error.create("INNER", "failed"); }
@@ -149,7 +160,7 @@ public class ErrorHandlingTests
     public void UncaughtError_PreservesUserCodeAtProgramBoundary()
     {
         UnhandledErrorException exception = Assert.ThrowsException<UnhandledErrorException>(() =>
-            new CompilerClass().Exec("_main_() { throw Error.create(\"APP900\", \"unhandled\"); }"));
+            new CompilerClass().Exec("import Error; _main_() { throw Error.create(\"APP900\", \"unhandled\"); }"));
 
         Assert.AreEqual("APP900", exception.Code);
         Assert.AreEqual("unhandled", exception.Description);

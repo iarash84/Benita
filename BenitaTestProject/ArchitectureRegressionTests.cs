@@ -25,7 +25,7 @@ public class ArchitectureRegressionTests
     [TestMethod]
     public void BuiltInFailure_UsesStableDiagnosticCode()
     {
-        const string source = "_main_() { number[] values = [1]; values = Array.remove(values, 9); }";
+        const string source = "import Array;\n_main_() { number[] values = [1]; values = Array.remove(values, 9); }";
 
         var exception = Assert.ThrowsException<BuiltInException>(() => new CompilerClass().Exec(source));
 
@@ -36,6 +36,7 @@ public class ArchitectureRegressionTests
     public void FunctionCall_WhenGlobalVariableIsAssigned_PreservesTheMutation()
     {
         const string source = """
+            import Console;
             number counter = 0;
             func set_counter() -> void {
                 counter = 7;
@@ -56,6 +57,7 @@ public class ArchitectureRegressionTests
     public void NestedFunctionCalls_WhenGlobalVariableIsAssigned_PreserveTheFinalMutation()
     {
         const string source = """
+            import Console;
             number counter = 0;
             func increment() -> void {
                 counter += 1;
@@ -92,7 +94,7 @@ public class ArchitectureRegressionTests
     [TestMethod]
     public void CompilerExec_WhenRuntimeThrowsBenitaException_PreservesItsSpecificTypeAndCode()
     {
-        const string source = "_main_() { number[] values = [1]; values = Array.remove(values, 9); }";
+        const string source = "import Array; _main_() { number[] values = [1]; values = Array.remove(values, 9); }";
 
         BuiltInException exception = Assert.ThrowsException<BuiltInException>(() =>
             new CompilerClass().Exec(source));

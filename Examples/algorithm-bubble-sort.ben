@@ -1,3 +1,5 @@
+import Console;
+import Array;
 // مرتب‌سازی حبابی، دسترسی آرایه و جابه‌جایی عناصر را آزمایش می‌کند.
 // Tests bubble sort, array access, and swapping array elements.
 // Bubble sort repeatedly swaps adjacent elements that are out of order.

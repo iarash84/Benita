@@ -1,3 +1,4 @@
+import Console;
 // تقدم عملگرهای منطقی AND و OR را در شرط if/else آزمایش می‌کند.
 // Tests AND/OR logical precedence in an if/else condition.
 _main_() {

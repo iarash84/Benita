@@ -1,3 +1,5 @@
+import Console;
+import Convert;
 // نسخهٔ جایگزین تولید تکرارشوندهٔ فیبوناچی با ورودی کاربر را آزمایش می‌کند.
 // Tests an alternate iterative Fibonacci implementation using user input.
 _main_() {

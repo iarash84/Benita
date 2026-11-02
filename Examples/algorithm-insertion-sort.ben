@@ -1,3 +1,5 @@
+import Console;
+import Array;
 // مرتب‌سازی درجی و جابه‌جایی عناصر آرایه را با حرکت دادن مقادیر بزرگ‌تر آزمایش می‌کند.
 // Tests insertion sort and array mutation by shifting larger values to the right.
 // Insertion sort grows a sorted prefix by inserting each value into its proper position.

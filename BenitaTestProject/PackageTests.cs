@@ -17,7 +17,8 @@ namespace BenitaTestProject
         [TestMethod]
         public void PackageConstructor_WithInitialValue_ExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Console;
+
 pkg myPackage {
 	public number var = 10;
 	init(number input1)
@@ -48,7 +49,8 @@ _main_(){
         [TestMethod]
         public void PackageMethods_WhenInvoked_ExecuteCorrectly()
         {
-            string source = @"
+            string source = @"import Console;
+
 pkg myPackage {
 	public number var = 10;
 	init(number input1) {
@@ -84,7 +86,8 @@ _main_(){
         [TestMethod]
         public void PackageMembers_WithMixedOperations_ExecuteCorrectly()
         {
-            string source = @"
+            string source = @"import Console;
+
 pkg myPackage {
 	public number var = 10;
 	init(number input1)

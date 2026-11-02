@@ -23,6 +23,8 @@ public class BuiltInClassTests
     public void BuiltInClass_CreatesInstancesAndSupportsMethodsAndProperties()
     {
         const string source = """
+            import Console;
+            import Probe;
             _main_() {
                 Probe probe = new Probe("start");
                 Console.print(probe.value);
@@ -45,6 +47,8 @@ public class BuiltInClassTests
     public void BuiltInClass_NativeCounterSupportsConstructionAndMutableMembers()
     {
         const string source = """
+            import Console;
+            import NativeCounter;
             _main_() {
                 NativeCounter counter = new NativeCounter(2);
                 Console.print(counter.value);
@@ -66,6 +70,8 @@ public class BuiltInClassTests
     public void BuiltInClass_DateTimeSupportsImmutableOperationsAndFormatting()
     {
         const string source = """
+            import Console;
+            import DateTime;
             _main_() {
                 DateTime initial = new DateTime(0);
                 DateTime later = initial.addHours(2.5);
@@ -99,6 +105,8 @@ public class BuiltInClassTests
         try
         {
             string source = $$"""
+                import Console;
+                import File;
                 _main_() {
                     File file = new File("{{path.Replace("\\", "\\\\")}}");
                     Console.print(file.exists());
@@ -157,13 +165,13 @@ public class BuiltInClassTests
         registry.Register(new ProbeClass());
 
         Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass(registry).Check("_main_() { let counter = new NativeCounter(\"bad\"); }"));
+            new CompilerClass(registry).Check("import NativeCounter; _main_() { let counter = new NativeCounter(\"bad\"); }"));
         Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass(registry).Check("_main_() { let probe = new Probe(\"x\"); probe.missing; }"));
+            new CompilerClass(registry).Check("import Probe; _main_() { let probe = new Probe(\"x\"); probe.missing; }"));
         Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass(registry).Check("_main_() { let probe = new Probe(\"x\"); probe.label = \"no\"; }"));
+            new CompilerClass(registry).Check("import Probe; _main_() { let probe = new Probe(\"x\"); probe.label = \"no\"; }"));
         Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass(registry).Check("pkg NativeCounter {} _main_() {}"));
+            new CompilerClass(registry).Check("import NativeCounter; pkg NativeCounter {} _main_() {}"));
     }
 
     [TestMethod]
@@ -194,6 +202,8 @@ public class BuiltInClassTests
     public void BuiltInClass_RuntimeValidationRejectsInvalidMethodAndPropertyResults()
     {
         const string source = """
+            import Console;
+            import BadResult;
             _main_() {
                 BadResult value = new BadResult();
                 Console.print(value.invalidMethod());
@@ -222,6 +232,8 @@ public class BuiltInClassTests
     public void BuiltInClass_TaskCaptureClonesMutableInstances()
     {
         const string source = """
+            import Console;
+            import NativeCounter;
             func mutate(NativeCounter counter) -> number {
                 return counter.increment(1);
             }

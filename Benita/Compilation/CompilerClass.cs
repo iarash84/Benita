@@ -40,8 +40,13 @@ public sealed class CompilerClass
             throw new InvalidOperationException("The compiler and REPL interpreter must use the same built-in class registry.");
 
         const string noOp = "if (false) {}";
-        AnalyzeProgram(Parse(Tokenize($"{sessionSource}{Environment.NewLine}{noOp}",
-            sourceName: "<repl>")), _builtInClasses);
+        ProgramNode sessionProgram = Parse(Tokenize($"{sessionSource}{Environment.NewLine}{noOp}",
+            sourceName: "<repl>"));
+        AnalyzeProgram(sessionProgram, CreateSessionBuiltIns(sessionProgram));
+        // The session analysis above owns the accumulated symbol table. Do not analyze the
+        // current submission as a standalone program: that would hide previously committed
+        // variables/functions and make valid REPL state appear undeclared. Runtime execution
+        // still validates and commits the current AST transactionally below.
         ProgramNode program = Parse(Tokenize($"{sourceCode}{Environment.NewLine}{noOp}",
             lexerPrint, sourcePrint, "<repl>"));
         program = OptimizeIfRequested(program, parserPrint, optimizeAst);
@@ -75,10 +80,15 @@ public sealed class CompilerClass
     }
 
     private BuiltInClassRegistry CreateActiveBuiltIns(ProgramNode program) =>
-        // Preserve source compatibility for existing programs until they opt into imports.
-        program.Imports.Count == 0
-            ? _builtInClasses
-            : _builtInClasses.CreateImported(program.Imports);
+        _builtInClasses.CreateImported(program.Imports);
+
+    private BuiltInClassRegistry CreateSessionBuiltIns(ProgramNode program)
+    {
+        // The REPL is a host environment: its persistent interpreter already owns the
+        // configured built-in registry. Keep that registry for session analysis rather than
+        // injecting import text or changing source line numbers.
+        return _builtInClasses;
+    }
 
     private static List<Token> Tokenize(string sourceCode, bool printTokens = false,
         bool printSource = false, string? sourceName = null)

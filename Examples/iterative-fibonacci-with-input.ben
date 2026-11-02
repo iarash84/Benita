@@ -1,3 +1,5 @@
+import Console;
+import Convert;
 // تعداد جمله‌ها را از ورودی می‌گیرد و دنبالهٔ فیبوناچی را با while تولید می‌کند.
 // Reads a term count and generates the Fibonacci sequence with while.
 _main_() {

@@ -1,3 +1,4 @@
+import Console;
 // نمونهٔ منفی برای تشخیص declaration تکراری متغیر سراسری است.
 // Negative example that tests detection of duplicate global variable declarations.
 /*

@@ -10,6 +10,7 @@ public class ObjectModelTests
     public void PackageFieldInitializer_CanReferenceOnlyPreviouslyInitializedFields()
     {
         const string validSource = """
+            import Console;
             pkg Values {
                 number first = 1;
                 public number second = first + 1;
@@ -40,6 +41,7 @@ public class ObjectModelTests
     public void PackageAndGlobalSymbols_AreVisibleAndSynchronizedAcrossRuntimeScopes()
     {
         const string source = """
+            import Console;
             number seed = 7;
             number value = 10;
             func initial() -> number { return seed; }
@@ -78,6 +80,7 @@ public class ObjectModelTests
     public void ExternalMemberInputs_AreEvaluatedInCallerScope()
     {
         const string source = """
+            import Console;
             pkg Box {
                 public number value = 0;
                 public func set(number next) -> void { value = next; }
@@ -105,6 +108,7 @@ public class ObjectModelTests
     public void PackageLetField_InfersCompositeInitializerType()
     {
         const string source = """
+            import Console;
             pkg Counter {
                 let value = 1 + 1;
                 public func next() -> number { return value + 1; }
@@ -124,6 +128,7 @@ public class ObjectModelTests
     public void InitAndThis_CreateInitializedInstance()
     {
         const string source = """
+            import Console;
             pkg Person {
                 string name = "";
 
@@ -151,6 +156,7 @@ public class ObjectModelTests
     public void NewExpression_CanBeReturnedAndStoredWithLet()
     {
         const string source = """
+            import Console;
             pkg Message {
                 public string text = "";
                 init(string value) { this.text = value; }
@@ -175,6 +181,7 @@ public class ObjectModelTests
     public void PackageFields_SupportComposition()
     {
         const string source = """
+            import Console;
             pkg Engine {
                 public string state = "ready";
                 init() { }
@@ -201,6 +208,7 @@ public class ObjectModelTests
     public void DefaultPrivateGlobalPackageVariable_IsVisibleToFunctionsAndMain()
     {
         const string source = """
+            import Console;
             pkg Value {
                 public number amount = 4;
             }
@@ -222,6 +230,7 @@ public class ObjectModelTests
     public void FieldInitializer_CanCallMethodDeclaredLater()
     {
         const string source = """
+            import Console;
             pkg Counter {
                 public number value = this.initial_value();
                 private func initial_value() -> number { return 7; }

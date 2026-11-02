@@ -9,7 +9,7 @@ public class CompilerCheckTests
     [TestMethod]
     public void Check_WithValidProgram_CompletesWithoutExecutingProgram()
     {
-        const string source = "_main_() { Console.print(\"must not be printed\"); }";
+        const string source = "import Console;\n_main_() { Console.print(\"must not be printed\"); }";
         using var consoleOutput = new ConsoleOutput();
 
         new CompilerClass().Check(source, sourceName: "valid.ben");
@@ -20,13 +20,13 @@ public class CompilerCheckTests
     [TestMethod]
     public void Check_WithInvalidSyntax_ThrowsParserException()
     {
-        const string source = "_main_() { Console.print(\"missing semicolon\") }";
+        const string source = "import Console;\n_main_() { Console.print(\"missing semicolon\") }";
 
         var exception = Assert.ThrowsException<ParserException>(() =>
             new CompilerClass().Check(source, sourceName: "syntax-error.ben"));
 
         Assert.AreEqual("BEN2001", exception.Code);
-        StringAssert.Contains(exception.Message, "syntax-error.ben:1:");
+        StringAssert.Contains(exception.Message, "syntax-error.ben:2:");
     }
 
     [TestMethod]

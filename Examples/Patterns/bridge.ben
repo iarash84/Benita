@@ -1,3 +1,4 @@
+import Console;
 // الگوی Bridge کنترل از راه دور را از پیاده‌سازی concrete دستگاه جدا می‌کند.
 // Demonstrates Bridge by separating remote-control abstraction from concrete devices.
 interface Device {
