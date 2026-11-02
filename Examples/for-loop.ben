@@ -1,13 +1,14 @@
+import Terminal;
 // حلقهٔ کلاسیک for و پیمایش مستقیم آرایه با for-in را نمایش می‌دهد.
 // Demonstrates a classic for loop and direct array iteration with for-in.
 
 _main_() {
     for (number i = 0; i < 5; i++) {
-        print(i);
+        Terminal.print(i);
     }
 
     number[] values = [10, 20, 30];
     for (item in values) {
-        print(item);
+        Terminal.print(item);
     }
 }

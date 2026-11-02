@@ -1,3 +1,4 @@
+import Terminal;
 // الگوی Facade سرویس‌های موجودی و پرداخت را پشت API سادهٔ checkout قرار می‌دهد.
 // Demonstrates Facade by placing inventory and payment services behind a simple checkout API.
 pkg InventoryService {
@@ -37,5 +38,5 @@ pkg ShopFacade {
 
 _main_() {
     ShopFacade shop = new ShopFacade();
-    print(shop.checkout(2, 150));
+    Terminal.print(shop.checkout(2, 150));
 }

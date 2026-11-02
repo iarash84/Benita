@@ -1,3 +1,4 @@
+import Terminal;
 // محاسبهٔ بازگشتی فیبوناچی و پیمایش خروجی با while را نمایش می‌دهد.
 // Demonstrates recursive Fibonacci calculation and output iteration with while.
 func fib(number x) -> number 
@@ -15,7 +16,7 @@ _main_() {
    number x = 20; 
    number i = 0;
    while(i <= x) {
-      print(fib(i));
+      Terminal.print(fib(i));
       i++;
    }
 }

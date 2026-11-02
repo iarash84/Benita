@@ -1,3 +1,4 @@
+import Terminal;
 // تشخیص عدد اول با تقسیم آزمایشی، شرط و حلقه را نمایش می‌دهد.
 // Demonstrates prime detection using trial division, conditions, and loops.
 // Prime-number test using trial division up to the square root of the value.
@@ -19,9 +20,9 @@ _main_() {
     number[] values = [2, 9, 17, 21, 29];
     for (value in values) {
         if (is_prime(value)) {
-            print(value + " is prime");
+            Terminal.print(value + " is prime");
         } else {
-            print(value + " is not prime");
+            Terminal.print(value + " is not prime");
         }
     }
 }

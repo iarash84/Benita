@@ -1,3 +1,4 @@
+import Terminal;
 // جمع متغیرهای عددی و تعریف یک تابع عددی ساده را نمایش می‌دهد.
 // Demonstrates numeric variable addition and a simple numeric function declaration.
 func myFunction(number a, number b) -> number {
@@ -7,5 +8,5 @@ func myFunction(number a, number b) -> number {
 _main_() {
     number x = 10;
     number y = 8;
-    print(x + y);
+    Terminal.print(x + y);
 }

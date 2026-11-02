@@ -1,8 +1,10 @@
+import Terminal;
+import Array;
 // مرتب‌سازی درجی و جابه‌جایی عناصر آرایه را با حرکت دادن مقادیر بزرگ‌تر آزمایش می‌کند.
 // Tests insertion sort and array mutation by shifting larger values to the right.
 // Insertion sort grows a sorted prefix by inserting each value into its proper position.
 func insertion_sort(number[] values) -> number[] {
-    for (number index = 1; index < array_len(values); index++) {
+    for (number index = 1; index < Array.length(values); index++) {
         number current = values[index];
         number position = index - 1;
 
@@ -21,6 +23,6 @@ _main_() {
     number[] values = [6, 3, 5, 1, 4, 2];
     number[] sorted = insertion_sort(values);
     for (value in sorted) {
-        print(value);
+        Terminal.print(value);
     }
 }

@@ -109,10 +109,11 @@ public class AstOptimizerTests
     [TestMethod]
     public void Exec_WithOptimizationEnabled_ExecutesFoldedConstant()
     {
-        const string source = @"
+        const string source = @"import Terminal;
+
 _main_() {
     number result = 2 + 3 * 4;
-    print(result);
+    Terminal.print(result);
 }";
 
         using var output = new ConsoleOutput();
@@ -136,7 +137,7 @@ _main_() {
             foreach (bool optimize in new[] { false, true })
             {
                 using var output = new ConsoleOutput();
-                new CompilerClass().Exec("_main_() { print(1.0 + 1.0); }", optimizeAst: optimize);
+                new CompilerClass().Exec("import Terminal;\n_main_() { Terminal.print(1.0 + 1.0); }", optimizeAst: optimize);
                 Assert.AreEqual($"2{Environment.NewLine}", output.GetOutput());
             }
         }

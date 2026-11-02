@@ -10,11 +10,12 @@ public class ObjectModelTests
     public void PackageFieldInitializer_CanReferenceOnlyPreviouslyInitializedFields()
     {
         const string validSource = """
+            import Terminal;
             pkg Values {
                 number first = 1;
                 public number second = first + 1;
             }
-            _main_() { Values values = new Values(); print(values.second); }
+            _main_() { Values values = new Values(); Terminal.print(values.second); }
             """;
         const string invalidSource = """
             pkg Values {
@@ -40,6 +41,7 @@ public class ObjectModelTests
     public void PackageAndGlobalSymbols_AreVisibleAndSynchronizedAcrossRuntimeScopes()
     {
         const string source = """
+            import Terminal;
             number seed = 7;
             number value = 10;
             func initial() -> number { return seed; }
@@ -54,13 +56,13 @@ public class ObjectModelTests
 
             Box globalBox = new Box();
             _main_() {
-                print(globalBox.value);
-                print(globalBox.readSeed());
+                Terminal.print(globalBox.value);
+                Terminal.print(globalBox.readSeed());
                 globalBox.incrementSeed();
                 globalBox.incrementField();
-                print(seed);
-                print(value);
-                print(globalBox.value);
+                Terminal.print(seed);
+                Terminal.print(value);
+                Terminal.print(globalBox.value);
             }
             """;
 
@@ -78,6 +80,7 @@ public class ObjectModelTests
     public void ExternalMemberInputs_AreEvaluatedInCallerScope()
     {
         const string source = """
+            import Terminal;
             pkg Box {
                 public number value = 0;
                 public func set(number next) -> void { value = next; }
@@ -86,10 +89,10 @@ public class ObjectModelTests
                 Box box = new Box();
                 number value = 9;
                 box.set(value);
-                print(box.value);
+                Terminal.print(box.value);
                 value = 12;
                 box.value = value;
-                print(box.value);
+                Terminal.print(box.value);
             }
             """;
 
@@ -105,11 +108,12 @@ public class ObjectModelTests
     public void PackageLetField_InfersCompositeInitializerType()
     {
         const string source = """
+            import Terminal;
             pkg Counter {
                 let value = 1 + 1;
                 public func next() -> number { return value + 1; }
             }
-            _main_() { Counter counter = new Counter(); print(counter.next()); }
+            _main_() { Counter counter = new Counter(); Terminal.print(counter.next()); }
             """;
 
         foreach (bool optimize in new[] { false, true })
@@ -124,6 +128,7 @@ public class ObjectModelTests
     public void InitAndThis_CreateInitializedInstance()
     {
         const string source = """
+            import Terminal;
             pkg Person {
                 string name = "";
 
@@ -138,7 +143,7 @@ public class ObjectModelTests
 
             _main_() {
                 Person person = new Person("Benita");
-                print(person.describe());
+                Terminal.print(person.describe());
             }
             """;
 
@@ -151,6 +156,7 @@ public class ObjectModelTests
     public void NewExpression_CanBeReturnedAndStoredWithLet()
     {
         const string source = """
+            import Terminal;
             pkg Message {
                 public string text = "";
                 init(string value) { this.text = value; }
@@ -162,7 +168,7 @@ public class ObjectModelTests
 
             _main_() {
                 let message = create_message();
-                print(message.text);
+                Terminal.print(message.text);
             }
             """;
 
@@ -175,6 +181,7 @@ public class ObjectModelTests
     public void PackageFields_SupportComposition()
     {
         const string source = """
+            import Terminal;
             pkg Engine {
                 public string state = "ready";
                 init() { }
@@ -188,7 +195,7 @@ public class ObjectModelTests
 
             _main_() {
                 Car car = new Car();
-                print(car.status());
+                Terminal.print(car.status());
             }
             """;
 
@@ -201,13 +208,14 @@ public class ObjectModelTests
     public void DefaultPrivateGlobalPackageVariable_IsVisibleToFunctionsAndMain()
     {
         const string source = """
+            import Terminal;
             pkg Value {
                 public number amount = 4;
             }
 
             Value value = new Value();
             func read() -> number { return value.amount; }
-            _main_() { print(read()); print(value.amount); }
+            _main_() { Terminal.print(read()); Terminal.print(value.amount); }
             """;
 
         foreach (bool optimize in new[] { false, true })
@@ -222,6 +230,7 @@ public class ObjectModelTests
     public void FieldInitializer_CanCallMethodDeclaredLater()
     {
         const string source = """
+            import Terminal;
             pkg Counter {
                 public number value = this.initial_value();
                 private func initial_value() -> number { return 7; }
@@ -229,7 +238,7 @@ public class ObjectModelTests
 
             _main_() {
                 Counter counter = new Counter();
-                print(counter.value);
+                Terminal.print(counter.value);
             }
             """;
 
@@ -244,7 +253,7 @@ public class ObjectModelTests
     [DataTestMethod]
     [DataRow("pkg A { init(number value) { } } _main_() { A a = new A(\"bad\"); }")]
     [DataRow("pkg A { func A(number value) -> void { } } _main_() { A a = new A(1); }")]
-    [DataRow("pkg A { init() { } } _main_() { A a = new A(); print(a.missing); }")]
+    [DataRow("pkg A { init() { } } _main_() { A a = new A(); Terminal.print(a.missing); }")]
     [DataRow("_main_() { let value = new Missing(); }")]
     [DataRow("_main_() { Missing value; }")]
     public void InvalidObjectOperations_AreRejected(string source)

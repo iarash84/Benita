@@ -6,20 +6,22 @@ namespace BenitaTestProject;
 /// <summary>سازگاری معنایی و زمان اجرای توابع داخلی رشته را بررسی می‌کند.</summary>
 public class StringFunctionTests
 {
-    private const string Source = @"
+    private const string Source = @"import Terminal;
+import Text;
+
 _main_() {
     string value = ""  Hello Benita  "";
-    print(string_len(value));
-    print(string_char_at(value, 2));
-    print(string_substring(value, 2, 5));
-    print(string_contains(value, ""Benita""));
-    print(string_index_of(value, ""Benita""));
-    print(string_replace(value, ""Benita"", ""World""));
-    string[] parts = string_split(""one,two,three"", "","");
-    print(parts[1]);
-    print(string_trim(value));
-    print(string_to_lower(""BENITA""));
-    print(string_to_upper(""benita""));
+    Terminal.print(Text.length(value));
+    Terminal.print(Text.char_at(value, 2));
+    Terminal.print(Text.substring(value, 2, 5));
+    Terminal.print(Text.contains(value, ""Benita""));
+    Terminal.print(Text.index_of(value, ""Benita""));
+    Terminal.print(Text.replace(value, ""Benita"", ""World""));
+    string[] parts = Text.split(""one,two,three"", "","");
+    Terminal.print(parts[1]);
+    Terminal.print(Text.trim(value));
+    Terminal.print(Text.to_lower(""BENITA""));
+    Terminal.print(Text.to_upper(""benita""));
 }";
 
     [TestMethod]
@@ -36,14 +38,15 @@ _main_() {
     [TestMethod]
     public void Check_WithWrongStringFunctionArgumentType_ThrowsSemanticException()
     {
-        const string invalidSource = @"
+        const string invalidSource = @"import Text;
+
 _main_() {
-    number length = string_len(42);
+    number length = Text.length(42);
 }";
 
         var exception = Assert.ThrowsException<SemanticException>(() =>
             new CompilerClass().Check(invalidSource));
 
-        StringAssert.Contains(exception.Message, "string_len");
+        StringAssert.Contains(exception.Message, "Text.length");
     }
 }

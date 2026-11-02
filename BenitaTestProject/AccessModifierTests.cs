@@ -18,7 +18,7 @@ public class AccessModifierTests
     [TestMethod]
     public void Parser_AcceptsAccessModifierOnNamedTypeVariable()
     {
-        const string source = "pkg Box {} public Box box = new Box(); print(1);";
+        const string source = "import Terminal;\npkg Box {} public Box box = new Box(); Terminal.print(1);";
         ProgramNode program = new Parser(new Lexer(source).Tokenize()).Parse();
 
         VariableDeclarationNode variable = program.GlobalVariables.Single();
@@ -29,14 +29,14 @@ public class AccessModifierTests
     [TestMethod]
     public void PublicPackageMembers_AreAccessibleFromOutside()
     {
-        const string source = "pkg Box { public number value = 1; public func read() -> number { return value; } } _main_() { Box box = new Box(); print(box.value); print(box.read()); }";
+        const string source = "import Terminal;\npkg Box { public number value = 1; public func read() -> number { return value; } } _main_() { Box box = new Box(); Terminal.print(box.value); Terminal.print(box.read()); }";
         new CompilerClass().Check(source);
     }
 
     [DataTestMethod]
-    [DataRow("pkg Box { number value = 1; } _main_() { Box box = new Box(); print(box.value); }")]
-    [DataRow("pkg Box { func read() -> number { return 1; } } _main_() { Box box = new Box(); print(box.read()); }")]
-    [DataRow("pkg Box { private number value = 1; } _main_() { Box box = new Box(); print(box.value); }")]
+    [DataRow("import Terminal;\npkg Box { number value = 1; } _main_() { Box box = new Box(); Terminal.print(box.value); }")]
+    [DataRow("import Terminal;\npkg Box { func read() -> number { return 1; } } _main_() { Box box = new Box(); Terminal.print(box.read()); }")]
+    [DataRow("import Terminal;\npkg Box { private number value = 1; } _main_() { Box box = new Box(); Terminal.print(box.value); }")]
     public void PrivatePackageMembers_AreRejectedOutsideTheirPackage(string source)
     {
         SemanticException exception = Assert.ThrowsException<SemanticException>(() => new CompilerClass().Check(source));
@@ -46,7 +46,7 @@ public class AccessModifierTests
     [TestMethod]
     public void PrivateMembers_AreAccessibleThroughThis()
     {
-        const string source = "pkg Box { number value = 1; private func hidden() -> number { return this.value; } public func read() -> number { return this.hidden(); } } _main_() { Box box = new Box(); print(box.read()); }";
+        const string source = "import Terminal;\npkg Box { number value = 1; private func hidden() -> number { return this.value; } public func read() -> number { return this.hidden(); } } _main_() { Box box = new Box(); Terminal.print(box.read()); }";
         new CompilerClass().Check(source);
     }
 

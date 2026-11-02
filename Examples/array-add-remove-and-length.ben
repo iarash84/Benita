@@ -1,13 +1,15 @@
+import Terminal;
+import Array;
 // حذف و افزودن عناصر آرایه، محاسبهٔ طول و پیمایش نتیجه را آزمایش می‌کند.
 // Tests removing and adding array elements, measuring length, and iterating the result.
 _main_() {                                        
     number[] arr = [10, 20, 30, 40, 50];
-    arr = array_remove(arr , 2);
-    arr = array_add(arr, 60);
-    arr = array_add(arr, 70);
+    arr = Array.remove(arr , 2);
+    arr = Array.add(arr, 60);
+    arr = Array.add(arr, 70);
     number i = 0;            
-    while (i < array_len(arr)) {
-        print("Element at index " + i + ": " + arr[i]);
+    while (i < Array.length(arr)) {
+        Terminal.print("Element at index " + i + ": " + arr[i]);
         i++;
     }                     
 }

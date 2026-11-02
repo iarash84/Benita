@@ -4,7 +4,7 @@
     public enum TokenType
     {
         // کلیدواژه‌های ساختار برنامه و کنترل جریان.
-        FUNC, MAIN, RETURN, IF, ELSE, WHILE, FOR, IN, PACKAGE, NEW, INIT, THIS, BREAK, CONTINUE, MATCH,
+        FUNC, MAIN, RETURN, IF, ELSE, WHILE, FOR, IN, PACKAGE, IMPORT, NEW, INIT, THIS, BREAK, CONTINUE, MATCH,
         PUBLIC, PRIVATE, INTERFACE, TRY, CATCH, FINALLY, THROW, ASYNC, AWAIT,
 
         // انواع داخلی و کلیدواژهٔ استنتاج نوع.

@@ -1,3 +1,4 @@
+import Terminal;
 // توابع عددی و رشته‌ای، return و الحاق رشته‌ها را با هم آزمایش می‌کند.
 // Tests numeric and string functions, returns, and string concatenation together.
 func add(number a, number b) -> number {
@@ -13,5 +14,5 @@ _main_() {
     number y = 20;
     number sum = add(x, y);              
     string message = concatenate("hello", " world");    
-    print(message);
+    Terminal.print(message);
 }

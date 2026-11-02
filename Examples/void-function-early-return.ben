@@ -1,13 +1,14 @@
+import Terminal;
 // خروج زودهنگام و return خالی در یک تابع void را آزمایش می‌کند.
 // Tests early exit and empty return statements in a void function.
 func test(number i) -> void
 {
-	print("yess");
+	Terminal.print("yess");
 	if(i == 5){
-		print("five");
+		Terminal.print("five");
 		return;
 	}
-	print("Nop");
+	Terminal.print("Nop");
 	return;
 }
 

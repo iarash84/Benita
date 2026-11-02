@@ -3,15 +3,23 @@ namespace Benita;
 /// <summary>خط لولهٔ کامپایل بنیتا را از توکن‌سازی تا تحلیل و اجرا هماهنگ می‌کند.</summary>
 public sealed class CompilerClass
 {
+    private readonly BuiltInClassRegistry _builtInClasses;
+
+    public CompilerClass(BuiltInClassRegistry? builtInClasses = null)
+    {
+        _builtInClasses = builtInClasses ?? BuiltInClassRegistry.CreateDefault();
+    }
+
     /// <summary>کد منبع را تحلیل و با مفسر اجرا می‌کند.</summary>
     public void Exec(string sourceCode, bool lexerPrint = false, bool parserPrint = false,
         bool sourcePrint = false, bool debugModeAvailable = false, string? sourceName = null,
         bool optimizeAst = false)
     {
         ProgramNode program = Compile(sourceCode, lexerPrint, parserPrint, sourcePrint, sourceName, optimizeAst);
+        BuiltInClassRegistry activeBuiltIns = CreateActiveBuiltIns(program);
         try
         {
-            new Interpreter(debugModeAvailable).Visit(program);
+            new Interpreter(debugModeAvailable, context: new RuntimeContext(activeBuiltIns)).Visit(program);
         }
         catch (BenitaException)
         {
@@ -28,9 +36,17 @@ public sealed class CompilerClass
         bool lexerPrint = false, bool parserPrint = false, bool sourcePrint = false,
         bool optimizeAst = false)
     {
+        if (!ReferenceEquals(interpreter.BuiltInClasses, _builtInClasses))
+            throw new InvalidOperationException("The compiler and REPL interpreter must use the same built-in class registry.");
+
         const string noOp = "if (false) {}";
-        AnalyzeProgram(Parse(Tokenize($"{sessionSource}{Environment.NewLine}{noOp}",
-            sourceName: "<repl>")));
+        ProgramNode sessionProgram = Parse(Tokenize($"{sessionSource}{Environment.NewLine}{noOp}",
+            sourceName: "<repl>"));
+        AnalyzeProgram(sessionProgram, CreateSessionBuiltIns(sessionProgram));
+        // The session analysis above owns the accumulated symbol table. Do not analyze the
+        // current submission as a standalone program: that would hide previously committed
+        // variables/functions and make valid REPL state appear undeclared. Runtime execution
+        // still validates and commits the current AST transactionally below.
         ProgramNode program = Parse(Tokenize($"{sourceCode}{Environment.NewLine}{noOp}",
             lexerPrint, sourcePrint, "<repl>"));
         program = OptimizeIfRequested(program, parserPrint, optimizeAst);
@@ -52,15 +68,26 @@ public sealed class CompilerClass
     {
         ProgramNode program = Parse(Tokenize(sourceCode, lexerPrint, sourcePrint, sourceName));
         if (parserPrint) AstPrinter.Print(program);
-        AnalyzeProgram(program);
+        AnalyzeProgram(program, CreateActiveBuiltIns(program));
     }
 
-    private static ProgramNode Compile(string sourceCode, bool lexerPrint, bool parserPrint,
+    private ProgramNode Compile(string sourceCode, bool lexerPrint, bool parserPrint,
         bool sourcePrint, string? sourceName, bool optimizeAst)
     {
         ProgramNode program = Parse(Tokenize(sourceCode, lexerPrint, sourcePrint, sourceName));
-        AnalyzeProgram(program);
+        AnalyzeProgram(program, CreateActiveBuiltIns(program));
         return OptimizeIfRequested(program, parserPrint, optimizeAst);
+    }
+
+    private BuiltInClassRegistry CreateActiveBuiltIns(ProgramNode program) =>
+        _builtInClasses.CreateImported(program.Imports);
+
+    private BuiltInClassRegistry CreateSessionBuiltIns(ProgramNode program)
+    {
+        // The REPL is a host environment: its persistent interpreter already owns the
+        // configured built-in registry. Keep that registry for session analysis rather than
+        // injecting import text or changing source line numbers.
+        return _builtInClasses;
     }
 
     private static List<Token> Tokenize(string sourceCode, bool printTokens = false,
@@ -72,7 +99,11 @@ public sealed class CompilerClass
         return tokens;
     }
 
-    private static ProgramNode Parse(List<Token> tokens) => new Parser(tokens).Parse();
+    private static ProgramNode Parse(List<Token> tokens)
+    {
+        ParseResult result = new Parser(tokens).ParseResultOrThrow();
+        return result.Program!;
+    }
 
     private static ProgramNode OptimizeIfRequested(ProgramNode program, bool printAst, bool optimizeAst)
     {
@@ -81,11 +112,19 @@ public sealed class CompilerClass
         return program;
     }
 
-    private static void AnalyzeProgram(ProgramNode program)
+    private static void AnalyzeProgram(ProgramNode program, BuiltInClassRegistry builtInClasses)
     {
-        var analyzer = new SemanticAnalyzer();
-        try { analyzer.Analyze(program); }
-        catch (BenitaException) { throw; }
-        catch (Exception exception) { throw new SemanticException(exception.Message, analyzer.CurrentSpan, exception); }
+        // Binder supplies successful resolutions as an auxiliary semantic context.
+        // SemanticAnalyzer remains the owner of final diagnostics and language-specific
+        // rules such as package visibility, built-ins and inferred declarations.
+        BindingResult bindingResult = new Binder().Bind(program);
+        var analyzer = new SemanticAnalyzer(builtInClasses, bindingResult);
+        SemanticAnalysisResult result = analyzer.AnalyzeResultOrThrow(program);
+        if (result.IsSuccess)
+            return;
+
+        CompilationDiagnostic diagnostic = result.Diagnostics.First(diagnostic =>
+            diagnostic.Severity == CompilationDiagnosticSeverity.Error);
+        throw new SemanticException(diagnostic.Description, diagnostic.Span);
     }
 }

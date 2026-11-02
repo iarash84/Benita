@@ -1,3 +1,5 @@
+import Terminal;
+import Array;
 // تولید دنبالهٔ Collatz را با شرط زوج و فرد و حلقه تا رسیدن به یک آزمایش می‌کند.
 // Tests Collatz sequence generation with even/odd branches and iteration until one.
 // Each step halves an even value or replaces an odd value with three times itself plus one.
@@ -12,7 +14,7 @@ func collatz(number start) -> number[] {
             current = current * 3 + 1;
         }
 
-        sequence = array_add(sequence, current);
+        sequence = Array.add(sequence, current);
     }
 
     return sequence;
@@ -21,6 +23,6 @@ func collatz(number start) -> number[] {
 _main_() {
     number[] sequence = collatz(6);
     for (value in sequence) {
-        print(value);
+        Terminal.print(value);
     }
 }

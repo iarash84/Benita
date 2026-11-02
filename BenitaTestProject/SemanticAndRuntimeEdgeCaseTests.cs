@@ -24,9 +24,10 @@ public class SemanticAndRuntimeEdgeCaseTests
     public void Analyze_WithForwardFunctionCall_CompletesSuccessfully()
     {
         const string source = """
+            import Terminal;
             func first() -> number { return second(); }
             func second() -> number { return 2; }
-            _main_() { print(first()); }
+            _main_() { Terminal.print(first()); }
             """;
 
         var program = new Parser(new Lexer(source).Tokenize()).Parse();

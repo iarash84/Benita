@@ -1,4 +1,4 @@
-﻿using Benita;
+using Benita;
 
 namespace BenitaTestProject
 {

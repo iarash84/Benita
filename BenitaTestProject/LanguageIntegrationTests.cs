@@ -17,7 +17,8 @@ namespace BenitaTestProject
         [TestMethod]
         public void NumericAdditionExpressionExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func myFunction(number a, number b) -> number {
     return a + b;
 }
@@ -25,7 +26,7 @@ func myFunction(number a, number b) -> number {
 _main_() {
     number x = 10;
     number y = 8;
-    print(x + y);
+    Terminal.print(x + y);
 }";
 
             _compiler.Check(source);
@@ -45,7 +46,7 @@ _main_() {
         [DataRow("bool[]")]
         public void UninitializedArray_UsesAnEmptyRuntimeArray(string arrayType)
         {
-            string source = $"_main_() {{ {arrayType} values; print(array_len(values)); }}";
+            string source = $"import Terminal;\nimport Array;\n_main_() {{ {arrayType} values; Terminal.print(Array.length(values)); }}";
             using var consoleOutput = new ConsoleOutput();
 
             _compiler.Exec(source);
@@ -59,7 +60,7 @@ _main_() {
         [DataRow("bool", "False")]
         public void SizedArray_UsesTheElementTypeDefaultValue(string elementType, string expectedValue)
         {
-            string source = $"_main_() {{ number size = 2; {elementType}[] values = {elementType}[size]; print(array_len(values)); print(values[0]); }}";
+            string source = $"import Terminal;\nimport Array;\n_main_() {{ number size = 2; {elementType}[] values = {elementType}[size]; Terminal.print(Array.length(values)); Terminal.print(values[0]); }}";
             using var consoleOutput = new ConsoleOutput();
 
             _compiler.Exec(source, optimizeAst: true);
@@ -83,10 +84,12 @@ _main_() {
         public void ToString_AcceptsEveryScalarTypeDeclaredByTheLanguage()
         {
             const string source = """
+                import Terminal;
+                import Convert;
                 _main_() {
-                    print(to_string(12));
-                    print(to_string(true));
-                    print(to_string("Benita"));
+                    Terminal.print(Convert.to_string(12));
+                    Terminal.print(Convert.to_string(true));
+                    Terminal.print(Convert.to_string("Benita"));
                 }
                 """;
             using var consoleOutput = new ConsoleOutput();
@@ -102,9 +105,10 @@ _main_() {
         public void GlobalInitializer_CanCallFunctionDeclaredLater()
         {
             const string source = """
+                import Terminal;
                 number initial = value();
                 func value() -> number { return 7; }
-                _main_() { print(initial); }
+                _main_() { Terminal.print(initial); }
                 """;
 
             foreach (bool optimize in new[] { false, true })
@@ -119,7 +123,8 @@ _main_() {
         [TestMethod]
         public void WhileLoopWithIncrementExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func myFunction(number a, number b) -> number {
     return a + b;
 }
@@ -127,13 +132,13 @@ func myFunction(number a, number b) -> number {
 _main_() {
     number x = 10;
     number y = 20;
-    print(x + y);
+    Terminal.print(x + y);
     number i = 0;
     while ( i < 5 ) {
         x++;
         i++;
     }
-    print(x);
+    Terminal.print(x);
 }";
             _compiler.Check(source);
 
@@ -149,14 +154,15 @@ _main_() {
         [TestMethod]
         public void NumericFunctionCallExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func add(number a, number b) -> number {
     return a + b;
 }
 
 _main_() {
     number result = add(2, 3);
-    print(result);
+    Terminal.print(result);
 }";
             _compiler.Check(source);
 
@@ -171,10 +177,11 @@ _main_() {
         [TestMethod]
         public void NumericExpressionAssignmentExecutesCorrectly()
         {
-            string source = @" 
+            string source = @"import Terminal;
+
 _main_()  {
     number result = 2 + 3;
-    print(result);
+    Terminal.print(result);
 }";
 
             _compiler.Check(source);
@@ -190,7 +197,8 @@ _main_()  {
         [TestMethod]
         public void NumericAndStringFunctionsExecuteCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func add(number a, number b) -> number {
     return a + b;
 }
@@ -204,7 +212,7 @@ _main_() {
     number y = 20;
     number sum = add(x, y);              
     string message = concatenate(""hello"", "" world"");    
-    print(message);
+    Terminal.print(message);
 }";
 
             _compiler.Check(source);
@@ -220,12 +228,13 @@ _main_() {
         [TestMethod]
         public void InputFunctionReadsAndPrintsUserInput()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 _main_() {
-    print(""Enter your name "");
-    string message = input();
-    print(""your name is "");
-    print(message);
+    Terminal.print(""Enter your name "");
+    string message = Terminal.input();
+    Terminal.print(""your name is "");
+    Terminal.print(message);
 }";
 
             _compiler.Check(source);
@@ -245,7 +254,8 @@ _main_() {
         [TestMethod]
         public void CombinedFunctionsConditionLoopAndInputExecuteCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func add(number a, number b) -> number {
     return a + b;
 }
@@ -266,13 +276,13 @@ _main_() {
     string world = ""world!"";
     string message = concatenate(hello, world);
 
-    print(message);
+    Terminal.print(message);
 
     bool check = is_even(sum);
     if (check) {
-        print(""Sum is even."");
+        Terminal.print(""Sum is even."");
     } else {
-        print(""Sum is odd."");
+        Terminal.print(""Sum is odd."");
     }
     number i = 0;
     while ( i < 5 ) {
@@ -280,8 +290,8 @@ _main_() {
         i++;
     }
 
-    string userInput = input();
-    print(""You entered: "" + userInput);    
+    string userInput = Terminal.input();
+    Terminal.print(""You entered: "" + userInput);    
 }";
             _compiler.Check(source);
 
@@ -300,9 +310,10 @@ _main_() {
         [TestMethod]
         public void InfiniteWhileLoopPassesValidation()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func is_even() -> void {
-    print(""Sum is even."");
+    Terminal.print(""Sum is even."");
 }
 
 _main_() {
@@ -317,12 +328,13 @@ _main_() {
         [TestMethod]
         public void WhileLoopRunsExpectedNumberOfTimes()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 _main_() {
     number i = 0;
     while ( i < 5 ) {
          i++;
-         print(""While Test"");    
+         Terminal.print(""While Test"");    
     }  
 }";
             _compiler.Check(source);
@@ -338,7 +350,8 @@ _main_() {
         [TestMethod]
         public void IfElseWithFunctionConditionSelectsEvenBranch()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func is_even(number a) -> bool {
     return a % 2 == 0;
 }
@@ -346,9 +359,9 @@ func is_even(number a) -> bool {
 _main_() {
     number num = 12;           
     if (is_even(num)) {
-        print(""Sum is even."");
+        Terminal.print(""Sum is even."");
     } else {
-        print(""Sum is odd."");
+        Terminal.print(""Sum is odd."");
     }   
 }";
 
@@ -365,13 +378,14 @@ _main_() {
         [TestMethod]
         public void IfElseWithLogicalOperatorsSelectsExpectedBranch()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 _main_() {
     number num = 12;           
     if (num == 12 || num > 15 && num == 10) {
-        print(""YES"");
+        Terminal.print(""YES"");
     } else {
-        print(""NO"");
+        Terminal.print(""NO"");
     }   
 }";
 
@@ -386,54 +400,75 @@ _main_() {
         }
 
         [TestMethod]
-        public void FileExistReadAndWriteFunctionsPassesValidation()
+        public void FileReadWriteAndExistencePassesValidation()
         {
-            string source = @"
-number myVar;
-string fileContent;
+            string path = Path.Combine(Path.GetTempPath(), $"benita-integration-{Guid.NewGuid():N}.txt");
+            string escapedPath = path.Replace("\\", "\\\\");
+            string source = $$"""
+                import Terminal;
+                import File;
+                _main_() {
+                    File file = new File("{{escapedPath}}");
+                    if (file.exists()) {
+                        Terminal.print(file.readText());
+                    } else {
+                        Terminal.print("File does not exist, creating new file with content.");
+                        file.writeText("Hello, world!");
+                    }
+                }
+                """;
 
-_main_() {
-    if (file_exist(""test.txt"")) {
-        fileContent = file_read(""test.txt"");
-        print(fileContent);
-    } else {
-        print(""File does not exist, creating new file with content."");
-        file_write(""test.txt"", ""Hello, world!"");
-    }
-}";
-
-            _compiler.Check(source);
+            try
+            {
+                _compiler.Check(source);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
         }
 
         [TestMethod]
-        public void FileDeleteFunctionPassesValidation()
+        public void FileDeletePassesValidation()
         {
-            string source = @"
-_main_() {
-    string file_path = ""test.txt"";
-    if (file_exist(file_path)) {
-        file_delete(file_path);
-        print(""file deleted sucessfully"");
-    } else {
-        print(""File does not exist."");
-    }
-}";
+            string path = Path.Combine(Path.GetTempPath(), $"benita-integration-{Guid.NewGuid():N}.txt");
+            string escapedPath = path.Replace("\\", "\\\\");
+            string source = $$"""
+                import Terminal;
+                import File;
+                _main_() {
+                    File file = new File("{{escapedPath}}");
+                    if (file.exists()) {
+                        file.delete();
+                        Terminal.print("file deleted successfully");
+                    } else {
+                        Terminal.print("File does not exist.");
+                    }
+                }
+                """;
 
-            _compiler.Check(source);
-            _compiler.Exec(source);
-
+            try
+            {
+                _compiler.Check(source);
+                _compiler.Exec(source);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
         }
 
         [TestMethod]
         public void ArrayDeclarationsPassesValidation()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 number[] arr = [10, 20, 30];  // Example array declaration with initializer
 
 _main_() {
     number[] anotherArr;  // Example array declaration without initializer
     anotherArr = [5, 10, 15];
-    print(anotherArr[1]);
+    Terminal.print(anotherArr[1]);
 }";
 
             _compiler.Check(source);
@@ -451,14 +486,16 @@ _main_() {
         public void ArrayIterationWithLengthExecutesCorrectly()
         {
 
-            string source = @"
+            string source = @"import Terminal;
+import Array;
+
 _main_() {
     // Declare an array of numbers
     number[] arr = [10, 20, 30, 40, 50];
     number i = 0;
     arr[2] = 5;
-    while (i < array_len(arr)) {
-        print(""Element at index "" + i + "": "" + arr[i]);
+    while (i < Array.length(arr)) {
+        Terminal.print(""Element at index "" + i + "": "" + arr[i]);
         i++;
     }                     
 }";
@@ -477,15 +514,17 @@ _main_() {
         [TestMethod]
         public void ArrayAddRemoveAndLengthFunctionsExecuteCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+import Array;
+
 _main_() {                                        
     number[] arr = [10, 20, 30, 40, 50];
-    arr = array_remove(arr , 2);
-    arr = array_add(arr, 60);
-    arr = array_add(arr, 70);
+    arr = Array.remove(arr , 2);
+    arr = Array.add(arr, 60);
+    arr = Array.add(arr, 70);
     number i = 0;            
-    while (i < array_len(arr)) {
-        print(""Element at index "" + i + "": "" + arr[i]);
+    while (i < Array.length(arr)) {
+        Terminal.print(""Element at index "" + i + "": "" + arr[i]);
         i++;
     }                     
 }";
@@ -504,20 +543,22 @@ _main_() {
         [TestMethod]
         public void IterativeFibonacciExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+import Convert;
+
 _main_() {
-    print(""Enter The Number Of Terms:"");
-    number n = to_number(input());
+    Terminal.print(""Enter The Number Of Terms:"");
+    number n = Convert.to_number(Terminal.input());
     number f = 0; 
     number f1=-1; 
     number f2=1;
-    print(""The Fibonacci Series is:"");
+    Terminal.print(""The Fibonacci Series is:"");
     while(n>0)
     {
         f=f1+f2;
         f1=f2;
         f2=f;
-        print(f);
+        Terminal.print(f);
         n--;
     }                
 }";
@@ -540,7 +581,8 @@ _main_() {
         [TestMethod]
         public void RecursiveFibonacciExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func fib(number x) -> number 
 {
    number result; 
@@ -556,7 +598,7 @@ _main_() {
    number x = 20; 
    number i = 0;
    while(i <= x) {
-      print(i + "" => "" + fib(i));
+      Terminal.print(i + "" => "" + fib(i));
       i++;
    }
 }";
@@ -574,7 +616,8 @@ _main_() {
         [TestMethod]
         public void FactorialFunctionExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func Factorial(number n) -> number
 {
 	number result = 1;
@@ -588,7 +631,7 @@ func Factorial(number n) -> number
 _main_()
 {
 	number a = 5;
-	print(Factorial(a));
+	Terminal.print(Factorial(a));
 }
 ";
             _compiler.Check(source);
@@ -605,7 +648,8 @@ _main_()
         [TestMethod]
         public void CheckNumberFunctionReturnsExpectedClassification()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func CheckNumber(number n) -> string
 {
 string result = """";
@@ -622,7 +666,7 @@ return result;
 
  _main_()
 {
-print(CheckNumber(5));
+Terminal.print(CheckNumber(5));
 }
 ";
             _compiler.Check(source);
@@ -639,11 +683,12 @@ print(CheckNumber(5));
         [TestMethod]
         public void ForLoopExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 _main_() {
 	number i;
 	for( i =0; i < 5; i++){
-		print(""run count"");
+		Terminal.print(""run count"");
 	}	
 }
 ";
@@ -661,7 +706,8 @@ _main_() {
         [TestMethod]
         public void FibonacciWithMultipleReturnsAndForLoopExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func fib(number x) -> number 
 {
 	//return x;
@@ -674,14 +720,14 @@ func fib(number x) -> number
 
 func chap(number content) -> void
 {
-	print(content);
+	Terminal.print(content);
 }
 
 
 _main_() {
    for(number i =0; i <= 20; i++) {
       chap(fib(i));
-	  //print(fib(i));
+	  //Terminal.print(fib(i));
    }
 }
 ";
@@ -700,15 +746,16 @@ _main_() {
         [TestMethod]
         public void VoidFunctionWithEmptyReturnExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func test(number i) -> void
 {
-	print(""yess"");
+	Terminal.print(""yess"");
 	if(i == 5){
-		print(""five"");
+		Terminal.print(""five"");
 		return;
 	}
-	print(""Nop"");
+	Terminal.print(""Nop"");
 	return;
 }
 
@@ -729,14 +776,15 @@ _main_(){
         [TestMethod]
         public void ImplicitlyTypedLocalVariablesExecuteCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func myFunction(number a, number b) -> number {
     return a + b;
 }
 
 _main_() {
 	let z = myFunction(2, 7);
-	print(z);
+	Terminal.print(z);
     let x = 10;
 	let i = 0;
     while ( i < 5 ) {
@@ -744,10 +792,10 @@ _main_() {
 		i++;
     }
 	z = 40;
-    print(x);
+    Terminal.print(x);
 	let string_var1 = ""hassan"";
 	let string_var = ""this is a test"" + "" => "" + string_var1 + "" -> "" + x;
-	print(string_var);
+	Terminal.print(string_var);
 
 }";
             _compiler.Check(source);
@@ -764,7 +812,8 @@ _main_() {
         [TestMethod]
         public void ImplicitlyTypedPackageInstanceExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 pkg myPackage {
 	number var = 10;
 	
@@ -780,7 +829,7 @@ pkg myPackage {
 
 _main_() {
 	let classInstance = new myPackage(5);
-	print(classInstance.Second(2));
+	Terminal.print(classInstance.Second(2));
 }";
             _compiler.Check(source);
 
@@ -796,10 +845,11 @@ _main_() {
         [TestMethod]
         public void ImplicitlyTypedForLoopVariableExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 _main_() {
 	for(let i =0; i < 5; i++){
-		print(i + "" this is a test"");
+		Terminal.print(i + "" this is a test"");
 	}
 }";
             _compiler.Check(source);
@@ -816,13 +866,14 @@ _main_() {
         [TestMethod]
         public void ImplicitlyTypedPackageFieldExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 pkg My{
     public let var = 1;
 }
 _main_(){
     let m = new My();
-    print(m.var);
+    Terminal.print(m.var);
 }";
             _compiler.Check(source);
 
@@ -838,9 +889,10 @@ _main_(){
         [TestMethod]
         public void TopLevelVariableAndPrintCreateImplicitMain()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 let text = ""hello world"";
-print(text);
+Terminal.print(text);
 ";
             _compiler.Check(source);
 
@@ -856,15 +908,16 @@ print(text);
         [TestMethod]
         public void TopLevelFunctionLoopAndPrintCreateImplicitMain()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func Add(number i, number j) -> number{
 	return i + j;
 }
 
 for(let i =0; i <5; i++){
-	print(""this is a test"");
+	Terminal.print(""this is a test"");
 }
-print(Add(4, 6));
+Terminal.print(Add(4, 6));
 ";
             _compiler.Check(source);
 
@@ -880,7 +933,8 @@ print(Add(4, 6));
         [TestMethod]
         public void TopLevelPackageUsageCreatesImplicitMain()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 pkg My{
 	let var = 22;
 	public func AddPrint(number i) -> number {
@@ -888,7 +942,7 @@ pkg My{
 	}
 }
 let m = new My();
-print(m.AddPrint(3));
+Terminal.print(m.AddPrint(3));
 ";
             _compiler.Check(source);
 
@@ -904,7 +958,8 @@ print(m.AddPrint(3));
         [TestMethod]
         public void ExplicitMainExcludesTopLevelExecutableStatements()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 pkg My{
 	let var = 22;
 	public func AddChap(number i) -> number {
@@ -917,17 +972,17 @@ func Add(number i, number j) -> number{
 }
 
 let text = ""hello world"";
-print(text);
+Terminal.print(text);
 for(let i =0; i <5; i++){
-	print(""this is a test"");
+	Terminal.print(""this is a test"");
 }
-print(Add(4, 6));
+Terminal.print(Add(4, 6));
 let m = new My();
-print(m.AddChap(3));
+Terminal.print(m.AddChap(3));
 
 
 _main_(){
-	print(""YES"");
+	Terminal.print(""YES"");
 }";
             _compiler.Check(source);
 
@@ -943,10 +998,12 @@ _main_(){
         [TestMethod]
         public void BubbleSortExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+import Array;
+
 func BubbleSort(number[] sort_array) -> number[]
 {
-	let n = array_len(sort_array);
+	let n = Array.length(sort_array);
 	for (number i = 0; i < n - 1; i++)
 	{
 		for (number j = 0; j < n - i - 1; j++)
@@ -965,18 +1022,18 @@ func BubbleSort(number[] sort_array) -> number[]
 
 func ArrayPrint(number[] print_array) -> void {
 	let i = 0;
-    while (i < array_len(print_array)) {
-        print(""Element at index "" + i + "": "" + print_array[i]);
+    while (i < Array.length(print_array)) {
+        Terminal.print(""Element at index "" + i + "": "" + print_array[i]);
         i++;
     }    
 }
 
 _main_()
 {
-	print(""befor Bubble sorting"");
+	Terminal.print(""befor Bubble sorting"");
 	number[] first_array = [64, 34, 25, 12, 22, 11, 90];
 	ArrayPrint(first_array);
-	print(""after Bubble sorting"");
+	Terminal.print(""after Bubble sorting"");
 	number[] second_array = BubbleSort(first_array);
 	ArrayPrint(second_array);
 }";
@@ -994,18 +1051,21 @@ _main_()
         [TestMethod]
         public void IterativeBinarySearchExecutesCorrectly()
         {
-            string source = @"
+            string source = @" import Terminal;
+ import Array;
+ import Math;
+
  func BinarySearchIterative(number[] bsi_array, number key) -> number
     {	
         let min = 0;
-        let max = array_len(bsi_array) - 1;
+        let max = Array.length(bsi_array) - 1;
 		
 		number mid;
 
         while (min <= max)
         {
 			mid = min + max;
-			mid = round_number(mid/2);
+			mid = Math.round(mid/2);
             if (bsi_array[mid] == key)
             {
                 return mid;
@@ -1030,11 +1090,11 @@ _main_()
 
 	if (result != -1)
 	{
-		print(""Element found at index "" + result);
+		Terminal.print(""Element found at index "" + result);
 	}
 	else
 	{
-		print(""Element not found in the array"");
+		Terminal.print(""Element not found in the array"");
 	}
 
 }";
@@ -1052,13 +1112,16 @@ _main_()
         [TestMethod]
         public void RecursiveBinarySearchExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+import Array;
+import Math;
+
 func BinarySearch(number[] arr, number target, number left, number right) -> number
 {
 	if (right >= left)
 	{
 		number distance = right - left;
-		number mid = round_number(left + distance / 2);
+		number mid = Math.round(left + distance / 2);
 
 		// Check if the target is present at the mid
 		if (arr[mid] == target)
@@ -1086,15 +1149,15 @@ _main_()
 	number[] array = [ 2, 3, 4, 10, 40 ];
 	number globalTarget = 10;
 
-	number result = BinarySearch(array, globalTarget, 0, array_len(array) - 1);
+	number result = BinarySearch(array, globalTarget, 0, Array.length(array) - 1);
 
 	if (result != -1)
 	{
-		print(""Element found at index => "" + result);
+		Terminal.print(""Element found at index => "" + result);
 	}
 	else
 	{
-		print(""Element not found in the array"");
+		Terminal.print(""Element not found in the array"");
 	}
 }
 ";
@@ -1112,7 +1175,9 @@ _main_()
         [TestMethod]
         public void QuickSortExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+import Array;
+
 func Swap(number[] array, number a, number b) -> void
 {
 	number temp = array[a];
@@ -1147,16 +1212,16 @@ func QuickSort(number[] array, number low, number high) -> void
 }
 func ArrayPrint(number[] print_array) -> void {
 	let i = 0;
-    while (i < array_len(print_array)) {
-        print(""Element at index "" + i + "": "" + print_array[i]);
+    while (i < Array.length(print_array)) {
+        Terminal.print(""Element at index "" + i + "": "" + print_array[i]);
         i++;
     }    
 }
 _main_()
 {
 	number[] array = [ 34, 7, 23, 32, 5, 62 ];
-	QuickSort(array, 0, array_len(array) - 1);
-	print(""Sorted array: "");
+	QuickSort(array, 0, Array.length(array) - 1);
+	Terminal.print(""Sorted array: "");
 	ArrayPrint(array);
 }";
             _compiler.Check(source);
@@ -1173,14 +1238,15 @@ _main_()
         [TestMethod]
         public void ContinueStatementSkipsExpectedIterations()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 for(let i= 0; i <= 10; i++)
 {	
 	if( i%2 == 0)
 	{
 		continue;
 	}
-	print(i);
+	Terminal.print(i);
 }";
             _compiler.Check(source);
 
@@ -1196,14 +1262,15 @@ for(let i= 0; i <= 10; i++)
         [TestMethod]
         public void BreakStatementStopsLoopAtExpectedIteration()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 for(let i= 0; i <= 10; i++)
 {	
 	if( i == 5)
 	{
 		break;
 	}
-	print(i);
+	Terminal.print(i);
 }";
             _compiler.Check(source);
 
@@ -1219,7 +1286,8 @@ for(let i= 0; i <= 10; i++)
         [TestMethod]
         public void PowerOfTwoDetectionExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 func PowerOfTwo(number n) -> bool  {
 	  if(n == 0) return false;
       if(n == 1) return true;
@@ -1233,9 +1301,9 @@ func PowerOfTwo(number n) -> bool  {
 
 for(let i = 0; i <= 100 ; i++)
 	if(PowerOfTwo(i))
-		print(i +"" is PowerOfTwo"");
+		Terminal.print(i +"" is PowerOfTwo"");
 	//else
-	//	print(i +"" is not PowerOfTwo"");";
+	//	Terminal.print(i +"" is not PowerOfTwo"");";
             _compiler.Check(source);
 
 
@@ -1250,20 +1318,21 @@ for(let i = 0; i <= 100 ; i++)
         [TestMethod]
         public void FizzBuzzExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 for (let i = 1; i <= 30; i++)
 	// Check if the number is a multiple of both 3 and 5
 	if (i % 3 == 0 && i % 5 == 0)	
-		print(""FizzBuzz"");	
+		Terminal.print(""FizzBuzz"");	
 	// Check if the number is a multiple of 3
 	else if (i % 3 == 0)	
-		print(""Fizz"");	
+		Terminal.print(""Fizz"");	
 	// Check if the number is a multiple of 5
 	else if (i % 5 == 0)	
-		print(""Buzz"");	
+		Terminal.print(""Buzz"");	
 	// If the number is not a multiple of 3 or 5, print the number
 	else
-		print(i);";
+		Terminal.print(i);";
             _compiler.Check(source);
 
 
@@ -1278,13 +1347,16 @@ for (let i = 1; i <= 30; i++)
         [TestMethod]
         public void PrimeNumberGenerationExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+import Array;
+import Math;
+
 // Function to check if a number is prime
 func isPrime(number num) -> bool {
     if (num <= 1) {
         return false;
     }
-    for (let i = 2; i <= sqrt_number(num); i++) {
+    for (let i = 2; i <= Math.sqrt(num); i++) {
         if (num % i == 0) {
             return false;
         }
@@ -1297,7 +1369,7 @@ func generatePrimesUpTo(number limit) -> number[]  {
     number[] primes = [];
     for (let i = 2; i <= limit; i++) {
         if (isPrime(i)) {
-            primes = array_add(primes, i);
+            primes = Array.add(primes, i);
         }
     }
     return primes;
@@ -1307,9 +1379,9 @@ _main_(){
     let limit = 100; // You can change this limit to any number
     number[] local_primes = generatePrimesUpTo(limit);
 
-    print(""Prime numbers up to "" + limit);
-    for (let i = 0; i < array_len(local_primes); i++ ) {
-        print(local_primes[i]);
+    Terminal.print(""Prime numbers up to "" + limit);
+    for (let i = 0; i < Array.length(local_primes); i++ ) {
+        Terminal.print(local_primes[i]);
     }
 }";
             _compiler.Check(source);
@@ -1326,10 +1398,12 @@ _main_(){
         [TestMethod]
         public void InsertionSortExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+import Array;
+
 func InsertionSort(number[] arr) -> number[]
 {
-	number n = array_len(arr);
+	number n = Array.length(arr);
 	for (let i = 1; i < n; i++)
 	{
 		let key = arr[i];
@@ -1348,17 +1422,17 @@ func InsertionSort(number[] arr) -> number[]
 
 func PrintArray(number[] printArray) -> void
 {
-	for (let i = 0; i < array_len(printArray); i++)
+	for (let i = 0; i < Array.length(printArray); i++)
 	{
-		print(printArray[i]);
+		Terminal.print(printArray[i]);
 	}
 }
 
 number[] array = [ 12, 11, 13, 5, 6 ];
-print(""Original array:"");
+Terminal.print(""Original array:"");
 PrintArray(array);
 array = InsertionSort(array);
-print(""Sorted array:"");
+Terminal.print(""Sorted array:"");
 PrintArray(array);";
             _compiler.Check(source);
 
@@ -1374,10 +1448,12 @@ PrintArray(array);";
         [TestMethod]
         public void SelectionSortExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+import Array;
+
 func SelectionSort(number[] array) -> number[]
 {
-	number n = array_len(array);
+	number n = Array.length(array);
 	for (number i = 0; i < n - 1; i++)
 	{
 		number minIndex = i;
@@ -1397,17 +1473,17 @@ func SelectionSort(number[] array) -> number[]
 
 func PrintArray(number[] printArray) -> void
 {
-	for (let i = 0; i < array_len(printArray); i++)
+	for (let i = 0; i < Array.length(printArray); i++)
 	{
-		print(printArray[i]);
+		Terminal.print(printArray[i]);
 	}
 }
 
 number[] localArray = [ 64, 25, 12, 22, 11 ];
-print(""Original array:"");
+Terminal.print(""Original array:"");
 PrintArray(localArray);
 localArray = SelectionSort(localArray);
-print(""Sorted array:"");
+Terminal.print(""Sorted array:"");
 PrintArray(localArray);";
 
             _compiler.Check(source);
@@ -1424,11 +1500,13 @@ PrintArray(localArray);";
         [TestMethod]
         public void CountingSortExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+import Array;
+
 func CountingSort(number[] array) -> number[]
 {
 	number max = GetMaxValue(array);
-	let arrayLen = array_len(array);	
+	let arrayLen = Array.length(array);	
 	
 	number[] count = number[max +1];	
 	number[] output = number[arrayLen];
@@ -1463,7 +1541,7 @@ func CountingSort(number[] array) -> number[]
 func GetMaxValue(number[] array) -> number
 {
 	let max = array[0];
-	for (let i = 1; i < array_len(array); i++)
+	for (let i = 1; i < Array.length(array); i++)
 	{
 		if (array[i] > max)
 		{
@@ -1475,18 +1553,18 @@ func GetMaxValue(number[] array) -> number
 
 func PrintArray(number[] printArray) -> void
 {
-	let n = array_len(printArray);
+	let n = Array.length(printArray);
 	for (let i = 0; i < n; i++)
 	{
-		print(printArray[i]);
+		Terminal.print(printArray[i]);
 	}
 }
 
 number[] localArray = [ 4, 2, 2, 8, 3, 3, 1, 7, 5, 6 ];
-print(""Original array:"");
+Terminal.print(""Original array:"");
 PrintArray(localArray);
 localArray = CountingSort(localArray);
-print(""Sorted array:"");
+Terminal.print(""Sorted array:"");
 PrintArray(localArray);";
             _compiler.Check(source);
 
@@ -1502,9 +1580,11 @@ PrintArray(localArray);";
         [TestMethod]
         public void BingoSortExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+import Array;
+
 func BingoSort(number[] arr) -> number[] {
-	number n = array_len(arr);
+	number n = Array.length(arr);
 	number min = GetMinValue(arr);
 	number max = GetMaxValue(arr);
 	number nextBingo = max;
@@ -1536,7 +1616,7 @@ func BingoSort(number[] arr) -> number[] {
 
 func GetMaxValue(number[] array) -> number {
 	let max = array[0];
-	for (let i = 1; i < array_len(array); i++)
+	for (let i = 1; i < Array.length(array); i++)
 	{
 		if (array[i] > max)
 		{
@@ -1548,7 +1628,7 @@ func GetMaxValue(number[] array) -> number {
 
 func GetMinValue(number[] array) -> number {
 	let min = array[0];
-	for (let i = 1; i < array_len(array); i++)
+	for (let i = 1; i < Array.length(array); i++)
 	{
 		if (array[i] < min)
 		{
@@ -1559,16 +1639,16 @@ func GetMinValue(number[] array) -> number {
 }
 
 func PrintArray(number[] printArray) -> void {
-	let n = array_len(printArray);
+	let n = Array.length(printArray);
 	for (let i = 0; i < n; i++)
 	{
-		print(printArray[i]);
+		Terminal.print(printArray[i]);
 	}
 }
 
 number[] localArray = [ 7, 15, 8, 5, 3, 11, 9, 4, 1, 6, 2];
 localArray = BingoSort(localArray);
-print(""Sorted array:"");
+Terminal.print(""Sorted array:"");
 PrintArray(localArray);";
             _compiler.Check(source);
 
@@ -1583,9 +1663,10 @@ PrintArray(localArray);";
         [TestMethod]
         public void FloatingPointAdditionExecutesCorrectly()
         {
-            string source = @"
+            string source = @"import Terminal;
+
 let num  = 5.2 + 8;
-print(num);
+Terminal.print(num);
 ";
             _compiler.Check(source);
 

@@ -1,3 +1,5 @@
+import Terminal;
+import Convert;
 // الگوی Strategy روش پرداخت Checkout را از طریق PaymentStrategy قابل تعویض می‌کند.
 // Demonstrates Strategy by making Checkout payment behavior replaceable through PaymentStrategy.
 interface PaymentStrategy {
@@ -5,11 +7,11 @@ interface PaymentStrategy {
 }
 
 pkg CardPayment : PaymentStrategy {
-    public func pay(number amount) -> string { return "Card: " + to_string(amount); }
+    public func pay(number amount) -> string { return "Card: " + Convert.to_string(amount); }
 }
 
 pkg CashPayment : PaymentStrategy {
-    public func pay(number amount) -> string { return "Cash: " + to_string(amount); }
+    public func pay(number amount) -> string { return "Cash: " + Convert.to_string(amount); }
 }
 
 pkg Checkout {
@@ -20,5 +22,5 @@ pkg Checkout {
 
 _main_() {
     Checkout checkout = new Checkout(new CardPayment());
-    print(checkout.complete(120));
+    Terminal.print(checkout.complete(120));
 }

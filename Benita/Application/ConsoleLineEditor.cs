@@ -6,15 +6,10 @@ namespace Benita;
 internal sealed class ConsoleLineEditor
 {
     private static readonly HashSet<string> Keywords =
-        ["include_once", "_main_", "pkg", "interface", "func", "public", "private", "if", "else", "while", "for", "in", "return", "new", "init", "this", "true", "false", "break", "continue", "match", "try", "catch", "finally", "throw"];
+        ["import", "import", "_main_", "pkg", "interface", "func", "public", "private", "if", "else", "while", "for", "in", "return", "new", "init", "this", "true", "false", "break", "continue", "match", "try", "catch", "finally", "throw"];
     private static readonly HashSet<string> Types = ["number", "string", "bool", "void", "let"];
     private static readonly HashSet<string> BuiltIns =
-        ["print", "input", "to_string", "to_number", "round_number", "sqrt_number",
-         "array_len", "array_add", "array_remove", "array_contains", "array_index_of",
-         "array_reverse", "array_clear", "array_insert", "array_slice", "array_concat", "array_sort",
-         "string_len", "string_char_at", "string_substring", "string_contains", "string_index_of",
-         "string_replace", "string_split", "string_trim", "string_to_lower", "string_to_upper",
-         "file_read", "file_write", "file_exist", "file_delete"];
+        ["Terminal", "Array", "Text", "Convert", "Math", "Error", "DateTime", "File", "NativeCounter"];
 
     private readonly List<string> _history;
 

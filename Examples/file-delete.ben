@@ -1,11 +1,13 @@
+import Terminal;
+import File;
 // وجود فایل را بررسی و در صورت موجود بودن آن را حذف می‌کند.
 // Checks whether a file exists and deletes it when present.
 _main_() {
-    string file_path = "test.txt";
-    if (file_exist(file_path)) {
-        file_delete(file_path);
-        print("file deleted sucessfully");
+    File file = new File("test.txt");
+    if (file.exists()) {
+        file.delete();
+        Terminal.print("file deleted successfully");
     } else {
-        print("File does not exist.");
+        Terminal.print("File does not exist.");
     }
 }

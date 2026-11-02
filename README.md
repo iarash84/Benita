@@ -25,7 +25,7 @@
 - مدیریت خطا با `error`، `throw` و ساختار `try/catch/finally`
 - ورودی و خروجی کنسول
 - عملیات خواندن، نوشتن، بررسی وجود و حذف فایل
-- دستور `include_once` برای استفاده از فایل‌های دیگر
+- دستور `import` برای استفاده از فایل‌های دیگر
 - اجرای مستقیم با مفسر و بهینه‌سازی اختیاری AST
 - فضای اجرای مستقل برای هر مفسر و یک فهرست مرکزی برای توابع داخلی
 - خطاهای مشخص برای توابع داخلی با کد `BEN4101`
@@ -65,8 +65,8 @@ __________              .__  __           .____
   Version 1.0.0
 Usage: Program [action] [filePath] [options]
 Actions:
-  exc        - Execute the code in the file.
-  dxc        - Execute the code in the file in debug mode.
+  run        - Execute the code in the file.
+  debug      - Execute the code in the file in debug mode.
   check      - Check syntax and semantics without executing the program.
   repl       - Start the interactive REPL.
   help       - Show this help message.
@@ -79,16 +79,16 @@ Options:
 
 #### فرمان‌ها
 
-- `exc`: فایل `.ben` را با مفسر اجرا می‌کند.
+- `run`: فایل `.ben` را با مفسر اجرا می‌کند.
 
   ```bash
-  dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+  dotnet run --project Benita -- run Examples/simple-addition-expression.ben
   ```
 
-- `dxc`: برنامه را در حالت debug اجرا می‌کند و وضعیت اجرای مفسر را نمایش می‌دهد.
+- `debug`: برنامه را در حالت debug اجرا می‌کند و وضعیت اجرای مفسر را نمایش می‌دهد.
 
   ```bash
-  dotnet run --project Benita -- dxc Examples/simple-addition-expression.ben
+  dotnet run --project Benita -- debug Examples/simple-addition-expression.ben
   ```
 
 - `check`: مراحل Lexer، Parser و SemanticAnalyzer را بدون اجرای برنامه انجام می‌دهد.
@@ -112,7 +112,7 @@ Options:
 
 - `-a`: درخت نحوی انتزاعی یا AST را نمایش می‌دهد.
 - `-t`: توکن‌های تولیدشده توسط Lexer را نمایش می‌دهد.
-- `-s`: کد منبع پردازش‌شده، از جمله نتیجه `include_once`، را نمایش می‌دهد.
+- `-s`: کد منبع پردازش‌شده، از جمله نتیجه `import`، را نمایش می‌دهد.
 - `--optimize`: پیش از اجرا، عبارت‌های ثابت و شاخه‌های غیرقابل‌دسترسی AST را بهینه می‌کند.
 
 گزینه‌ها را می‌توان همراه فرمان‌های پردازش فایل استفاده کرد؛ برای مثال:
@@ -168,11 +168,11 @@ dotnet test Benita.sln
   - [ ] مدیریت وابستگی بین Objectها
   - [ ] تشخیص وابستگی‌های نامعتبر یا چرخه‌ای
 - [ ] **بهبود معماری Compiler**
-  - [ ] افزودن Binder
+  - [x] افزودن Binder
   - [ ] تعریف Bound Tree مستقل از Syntax Tree
-  - [ ] طراحی Symbol System یکپارچه
-  - [ ] مدیریت دقیق Scopeها
-  - [ ] جداسازی کامل مسئولیت Parser و Semantic Analyzer
+  - [x] طراحی Symbol System یکپارچه
+  - [x] مدیریت دقیق Scopeها
+  - [x] جداسازی کامل مسئولیت Parser و Semantic Analyzer
 - [ ] **تست سه‌لایه**
   - [ ] Parser Tests
   - [ ] Semantic Tests
@@ -220,7 +220,7 @@ Benita is a small educational programming language I am building with C# and .NE
 - Error handling with `error`, `throw`, and `try/catch/finally`
 - Console input and output
 - File read, write, existence, and deletion operations
-- `include_once` support for reusable source files
+- `import` support for reusable source files
 - Direct interpretation with optional AST optimization
 - Isolated runtime contexts and a single built-in function registry
 - Structured built-in diagnostics with the stable `BEN4101` error code
@@ -260,8 +260,8 @@ __________              .__  __           .____
   Version 1.0.0
 Usage: Program [action] [filePath] [options]
 Actions:
-  exc        - Execute the code in the file.
-  dxc        - Execute the code in the file in debug mode.
+  run        - Execute the code in the file.
+  debug      - Execute the code in the file in debug mode.
   check      - Check syntax and semantics without executing the program.
   repl       - Start the interactive REPL.
   help       - Show this help message.
@@ -274,16 +274,16 @@ Options:
 
 #### Actions
 
-- `exc`: executes a `.ben` file with the interpreter.
+- `run`: executes a `.ben` file with the interpreter.
 
   ```bash
-  dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+  dotnet run --project Benita -- run Examples/simple-addition-expression.ben
   ```
 
-- `dxc`: executes the program in debug mode and displays interpreter state.
+- `debug`: executes the program in debug mode and displays interpreter state.
 
   ```bash
-  dotnet run --project Benita -- dxc Examples/simple-addition-expression.ben
+  dotnet run --project Benita -- debug Examples/simple-addition-expression.ben
   ```
 
 - `check`: runs the Lexer, Parser, and SemanticAnalyzer without executing the program.
@@ -307,7 +307,7 @@ Options:
 
 - `-a`: prints the Abstract Syntax Tree (AST).
 - `-t`: prints tokens produced by the Lexer.
-- `-s`: prints the processed source, including the result of `include_once`.
+- `-s`: prints the processed source, including the result of `import`.
 - `--optimize`: folds constant expressions and removes unreachable constant branches before execution.
 
 Options can be combined with file-processing actions. For example:
@@ -371,11 +371,11 @@ The following items describe the general direction of future development; their 
   - [ ] Dependency management between objects
   - [ ] Detect invalid or circular dependencies
 - [ ] **Improve compiler architecture**
-  - [ ] Add a binder
+  - [x] Add a binder
   - [ ] Introduce a bound tree independent of the syntax tree
-  - [ ] Design a unified symbol system
-  - [ ] Implement precise scope management
-  - [ ] Fully separate parser and semantic analyzer responsibilities
+  - [x] Design a unified symbol system
+  - [x] Implement precise scope management
+  - [x] Fully separate parser and semantic analyzer responsibilities
 - [ ] **Three-layer testing strategy**
   - [ ] Parser tests
   - [ ] Semantic tests

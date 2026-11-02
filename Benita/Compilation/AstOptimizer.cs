@@ -18,7 +18,8 @@ namespace Benita
                 program.Functions.Select(OptimizeFunction).ToList(),
                 program.MainFunction is null ? null : OptimizeFunction(program.MainFunction),
                 program.Statements?.Select(OptimizeStatement).ToList(),
-                program.Interfaces);
+                program.Interfaces,
+                program.Imports);
         }
 
         private VariableDeclarationNode OptimizeVariable(VariableDeclarationNode node) =>

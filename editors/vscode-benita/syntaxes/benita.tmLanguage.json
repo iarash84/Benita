@@ -34,7 +34,7 @@
     },
     "include-directive": {
       "name": "meta.preprocessor.include.benita",
-      "begin": "\\b(include_once)\\b",
+      "begin": "\\b(import)\\b",
       "beginCaptures": {
         "1": { "name": "keyword.control.directive.include.benita" }
       },
@@ -101,7 +101,7 @@
     },
     "control-keywords": {
       "name": "keyword.control.benita",
-      "match": "\\b(if|else|while|for|in|match|return|break|continue|try|catch|finally|throw|async|await)\\b"
+      "match": "\\b(if|else|while|for|in|match|return|break|continue|try|catch|finally|throw|async|await|import)\\b"
     },
     "storage-keywords": {
       "name": "storage.modifier.benita",
@@ -113,7 +113,7 @@
     },
     "built-ins": {
       "name": "support.function.builtin.benita",
-      "match": "\\b(print|input|file_read|file_write|file_exist|file_delete|array_len|array_add|array_remove|array_contains|array_index_of|array_reverse|array_clear|array_insert|array_slice|array_concat|array_sort|to_string|to_number|round_number|sqrt_number|error|string_len|string_char_at|string_substring|string_contains|string_index_of|string_replace|string_split|string_trim|string_to_lower|string_to_upper)(?=\\s*\\()"
+      "match": "\\b(Console|Array|String|Convert|Math|Error|DateTime|File|NativeCounter)(?=\\s*(?:\\.|\\())"
     },
     "special-variables": {
       "name": "variable.language.this.benita",

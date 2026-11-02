@@ -11,14 +11,16 @@ public class ErrorHandlingTests
     public void ThrowCatchFinally_ExposeErrorAndAlwaysRunCleanup()
     {
         const string source = """
+            import Terminal;
+            import Error;
             _main_() {
                 try {
-                    throw error("APP100", "operation failed");
+                    throw Error.create("APP100", "operation failed");
                 } catch (failure) {
-                    print(failure.code);
-                    print(failure.message);
+                    Terminal.print(failure.code);
+                    Terminal.print(failure.message);
                 } finally {
-                    print("cleanup");
+                    Terminal.print("cleanup");
                 }
             }
             """;
@@ -33,11 +35,13 @@ public class ErrorHandlingTests
     public void Catch_ConvertsBuiltInRuntimeFailureToErrorValue()
     {
         const string source = """
+            import Terminal;
+            import Convert;
             _main_() {
                 try {
-                    number value = to_number("not-a-number");
+                    number value = Convert.to_number("not-a-number");
                 } catch (failure) {
-                    print(failure.code);
+                    Terminal.print(failure.code);
                 }
             }
             """;
@@ -51,11 +55,12 @@ public class ErrorHandlingTests
     public void Finally_RunsBeforeFunctionReturn()
     {
         const string source = """
+            import Terminal;
             func value() -> number {
                 try { return 7; }
-                finally { print("finally"); }
+                finally { Terminal.print("finally"); }
             }
-            _main_() { print(value()); }
+            _main_() { Terminal.print(value()); }
             """;
 
         using var output = new ConsoleOutput();
@@ -67,9 +72,11 @@ public class ErrorHandlingTests
     public void FinallyThatAlwaysThrows_SatisfiesNonVoidControlFlow()
     {
         const string source = """
+            import Terminal;
+            import Error;
             func value() -> number {
-                try { print("work"); }
-                finally { throw error("STOP", "stopped"); }
+                try { Terminal.print("work"); }
+                finally { throw Error.create("STOP", "stopped"); }
             }
             _main_() { value(); }
             """;
@@ -84,12 +91,14 @@ public class ErrorHandlingTests
     public void Finally_RunsWhenErrorContinuesToOuterCatch()
     {
         const string source = """
+            import Terminal;
+            import Error;
             _main_() {
                 try {
-                    try { throw error("INNER", "failed"); }
-                    finally { print("inner cleanup"); }
+                    try { throw Error.create("INNER", "failed"); }
+                    finally { Terminal.print("inner cleanup"); }
                 } catch (failure) {
-                    print(failure.code);
+                    Terminal.print(failure.code);
                 }
             }
             """;
@@ -103,11 +112,13 @@ public class ErrorHandlingTests
     public void CatchVariable_ShadowsAndThenRestoresOuterVariable()
     {
         const string source = """
+            import Terminal;
+            import Error;
             _main_() {
                 string failure = "outer";
-                try { throw error("INNER", "failed"); }
-                catch (failure) { print(failure.code); }
-                print(failure);
+                try { throw Error.create("INNER", "failed"); }
+                catch (failure) { Terminal.print(failure.code); }
+                Terminal.print(failure);
             }
             """;
 
@@ -118,13 +129,13 @@ public class ErrorHandlingTests
 
     [DataTestMethod]
     [DataRow("_main_() { throw \"bad\"; }", "requires an error value")]
-    [DataRow("_main_() { try { print(1); } }", "requires a catch or finally")]
-    [DataRow("_main_() { try {} catch (failure) {} print(failure.message); }", "Member access requires")]
+    [DataRow("_main_() { try { Terminal.print(1); } }", "requires a catch or finally")]
+    [DataRow("_main_() { try {} catch (failure) {} Terminal.print(failure.message); }", "Member access requires")]
     [DataRow("func value() -> number { try { return 1; } finally { return 2; } } _main_() {}", "return")]
     [DataRow("_main_() { while (true) { try {} finally { break; } } }", "break")]
     [DataRow("pkg error {} _main_() {}", "reserved")]
     [DataRow("interface error {} _main_() {}", "reserved")]
-    [DataRow("func error(string code, string message) -> error { return error(code, message); } _main_() {}", "reserved")]
+    [DataRow("func error(string code, string message) -> error { return Error.create(code, message); } _main_() {}", "reserved")]
     public void InvalidErrorHandling_IsRejected(string source, string expectedMessage)
     {
         try
@@ -149,7 +160,7 @@ public class ErrorHandlingTests
     public void UncaughtError_PreservesUserCodeAtProgramBoundary()
     {
         UnhandledErrorException exception = Assert.ThrowsException<UnhandledErrorException>(() =>
-            new CompilerClass().Exec("_main_() { throw error(\"APP900\", \"unhandled\"); }"));
+            new CompilerClass().Exec("import Error; _main_() { throw Error.create(\"APP900\", \"unhandled\"); }"));
 
         Assert.AreEqual("APP900", exception.Code);
         Assert.AreEqual("unhandled", exception.Description);

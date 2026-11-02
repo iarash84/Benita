@@ -1,3 +1,4 @@
+import Terminal;
 // الگوی Decorator با wrap کردن Message رفتار رمزگذاری و timestamp را ترکیب می‌کند.
 // Demonstrates Decorator by wrapping Message objects with encryption and timestamp behavior.
 interface Message { func content() -> string; }
@@ -20,5 +21,5 @@ pkg TimestampedMessage : Message {
 
 _main_() {
     Message message = new EncryptedMessage(new TimestampedMessage(new PlainMessage()));
-    print(message.content());
+    Terminal.print(message.content());
 }

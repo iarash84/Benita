@@ -10,11 +10,12 @@ public class LanguageSyntaxRegressionTests
     public void Exec_ArrayReadAndWriteShareWholeNegativeIndexSemantics()
     {
         const string source = """
+            import Terminal;
             _main_() {
                 number[] values = [1, 2];
-                print(values[-1]);
+                Terminal.print(values[-1]);
                 values[-1] = 9;
-                print(values[-1]);
+                Terminal.print(values[-1]);
             }
             """;
 
@@ -26,7 +27,7 @@ public class LanguageSyntaxRegressionTests
         }
 
         RuntimeException exception = Assert.ThrowsException<RuntimeException>(() =>
-            new CompilerClass().Exec("_main_() { number[] values = [1]; print(values[0.5]); }"));
+            new CompilerClass().Exec("import Terminal; _main_() { number[] values = [1]; Terminal.print(values[0.5]); }"));
         StringAssert.Contains(exception.Message, "whole number");
     }
 
@@ -40,11 +41,12 @@ public class LanguageSyntaxRegressionTests
     [TestMethod]
     public void Check_NonVoidFunctionWithReturningIfElse_IsValid()
     {
-        const string source = @"
+        const string source = @"import Terminal;
+
 func sign(number value) -> number {
     if (value >= 0) { return 1; } else { return -1; }
 }
-_main_() { print(sign(2)); }";
+_main_() { Terminal.print(sign(2)); }";
         new CompilerClass().Check(source);
     }
 
@@ -62,7 +64,7 @@ _main_() { print(sign(2)); }";
     [DataRow("while (true) { while (true) { break; } return 1; }")]
     public void Check_NonVoidFunctionWithReturningUnconditionalLoop_IsValid(string loop)
     {
-        new CompilerClass().Check($"func value() -> number {{ {loop} }} _main_() {{ print(value()); }}");
+        new CompilerClass().Check($"import Terminal; func value() -> number {{ {loop} }} _main_() {{ Terminal.print(value()); }}");
     }
 
     [TestMethod]
@@ -86,13 +88,14 @@ _main_() { print(sign(2)); }";
     public void Check_UnreachableBreakDoesNotInvalidateReturningLoop()
     {
         const string source = """
+            import Terminal;
             func value() -> number {
                 while (true) {
                     if (false) { break; }
                     return 1;
                 }
             }
-            _main_() { print(value()); }
+            _main_() { Terminal.print(value()); }
             """;
 
         new CompilerClass().Check(source);
@@ -118,7 +121,7 @@ _main_() { print(sign(2)); }";
     [TestMethod]
     public void Exec_ForWithEmptyClauses_CanExitWithBreak()
     {
-        const string source = "_main_() { for (;;) { print(1); break; } }";
+        const string source = "import Terminal; _main_() { for (;;) { Terminal.print(1); break; } }";
         using var output = new ConsoleOutput();
         new CompilerClass().Exec(source);
         Assert.AreEqual("1\r\n", output.GetOutput());
@@ -128,13 +131,14 @@ _main_() { print(sign(2)); }";
     public void Exec_ForIncrement_RunsAfterContinueButNotAfterBreak()
     {
         const string source = """
+            import Terminal;
             _main_() {
                 number continued = 0;
                 for (; continued < 2; continued++) { continue; }
                 number broken = 0;
                 for (;; broken++) { break; }
-                print(continued);
-                print(broken);
+                Terminal.print(continued);
+                Terminal.print(broken);
             }
             """;
         using var output = new ConsoleOutput();
@@ -148,13 +152,14 @@ _main_() { print(sign(2)); }";
     public void Exec_ForIncrement_DoesNotRunAfterFunctionReturn()
     {
         const string source = """
+            import Terminal;
             number increments = 0;
             func value() -> number {
                 for (;; increments++) { return 7; }
             }
             _main_() {
-                print(value());
-                print(increments);
+                Terminal.print(value());
+                Terminal.print(increments);
             }
             """;
         using var output = new ConsoleOutput();
@@ -168,12 +173,14 @@ _main_() { print(sign(2)); }";
     public void Exec_ForIncrement_DoesNotRunAfterThrownError()
     {
         const string source = """
+            import Terminal;
+            import Error;
             _main_() {
                 number increments = 0;
                 try {
-                    for (;; increments++) { throw error("STOP", "stop"); }
+                    for (;; increments++) { throw Error.create("STOP", "stop"); }
                 } catch (failure) {}
-                print(increments);
+                Terminal.print(increments);
             }
             """;
         using var output = new ConsoleOutput();
@@ -194,7 +201,7 @@ _main_() { print(sign(2)); }";
     public void Check_MainWithoutClosingBrace_IsRejectedAtEndOfFile()
     {
         var exception = Assert.ThrowsException<ParserException>(() =>
-            new CompilerClass().Check("_main_() { print(1);"));
+            new CompilerClass().Check("import Terminal; _main_() { Terminal.print(1);"));
 
         StringAssert.Contains(exception.Message, "Expected '}' after main function body");
     }
@@ -207,7 +214,7 @@ _main_() { print(sign(2)); }";
     public void Check_DeclarationInsideConditionalControlFlow_DoesNotEscape(string controlFlow)
     {
         var exception = Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass().Check($"_main_() {{ {controlFlow} print(value); }}"));
+            new CompilerClass().Check($"import Terminal; _main_() {{ {controlFlow} Terminal.print(value); }}"));
 
         StringAssert.Contains(exception.Message, "Undeclared variable 'value'");
     }
@@ -301,14 +308,14 @@ _main_() { print(sign(2)); }";
     }
 
     [DataTestMethod]
-    [DataRow("print(values[\"bad\"]);")]
-    [DataRow("print(values[true]);")]
+    [DataRow("Terminal.print(values[\"bad\"]);")]
+    [DataRow("Terminal.print(values[true]);")]
     [DataRow("values[\"bad\"] = 2;")]
     [DataRow("values[false] = 2;")]
     public void Check_ArrayOperationWithNonNumericIndex_IsRejected(string operation)
     {
         var exception = Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass().Check($"_main_() {{ number[] values = [1]; {operation} }}"));
+            new CompilerClass().Check($"import Terminal; _main_() {{ number[] values = [1]; {operation} }}"));
 
         StringAssert.Contains(exception.Message, "Array index must be of type 'number'.");
     }
@@ -337,7 +344,7 @@ _main_() { print(sign(2)); }";
     [TestMethod]
     public void Exec_StringAndBooleanEquality_MatchesWithAndWithoutOptimization()
     {
-        const string source = "_main_() { print(\"a\" == \"a\"); print(true != false); }";
+        const string source = "import Terminal; _main_() { Terminal.print(\"a\" == \"a\"); Terminal.print(true != false); }";
         foreach (bool optimize in new[] { false, true })
         {
             using var output = new ConsoleOutput();
@@ -350,11 +357,14 @@ _main_() { print(sign(2)); }";
     public void Exec_MatchNumericPatterns_UseLanguageEqualityAcrossRuntimeRepresentations()
     {
         const string source = """
+            import Terminal;
+            import Array;
+            import Text;
             _main_() {
                 number value;
-                print(match value { 0 => "default", _ => "missed" });
-                print(match array_len([1]) { 1 => "length", _ => "missed" });
-                print(match string_len("a") { 1 => "length", _ => "missed" });
+                Terminal.print(match value { 0 => "default", _ => "missed" });
+                Terminal.print(match Array.length([1]) { 1 => "length", _ => "missed" });
+                Terminal.print(match Text.length("a") { 1 => "length", _ => "missed" });
             }
             """;
 
@@ -372,7 +382,7 @@ _main_() { print(sign(2)); }";
     public void Exec_ParenthesizedExpression_PreservesGrouping()
     {
         using var output = new ConsoleOutput();
-        new CompilerClass().Exec("print((2 + 3) * 4);");
+        new CompilerClass().Exec("import Terminal; Terminal.print((2 + 3) * 4);");
 
         Assert.AreEqual("20\r\n", output.GetOutput());
     }
@@ -387,13 +397,14 @@ _main_() { print(sign(2)); }";
     public void Check_PackageMemberReadAndCall_AreAccepted()
     {
         const string source = """
+            import Terminal;
             pkg Counter {
                 public number value = 1;
                 public func get() -> number { return value; }
             }
             Counter counter = new Counter();
-            print(counter.value);
-            print(counter.get());
+            Terminal.print(counter.value);
+            Terminal.print(counter.get());
             """;
 
         new CompilerClass().Check(source);
@@ -404,10 +415,11 @@ _main_() { print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Terminal;
             number x = 7;
-            if (x > 10) { print("large"); }
-            else if (x > 5) { print("medium"); }
-            else { print("small"); }
+            if (x > 10) { Terminal.print("large"); }
+            else if (x > 5) { Terminal.print("medium"); }
+            else { Terminal.print("small"); }
             """);
 
         Assert.AreEqual("medium\r\n", output.GetOutput());
@@ -418,6 +430,7 @@ _main_() { print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Terminal;
             number score = 4;
             let result = match score {
                 0 => "No score",
@@ -427,7 +440,7 @@ _main_() { print(sign(2)); }";
                 4 => "Excellent",
                 _ => "Invalid"
             };
-            print(result);
+            Terminal.print(result);
             """);
 
         Assert.AreEqual("Excellent\r\n", output.GetOutput());
@@ -438,11 +451,12 @@ _main_() { print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Terminal;
             number value = 2;
             match value {
-                1 => { print("one"); }
-                2 => { print("two"); }
-                _ => { print("other"); }
+                1 => { Terminal.print("one"); }
+                2 => { Terminal.print("two"); }
+                _ => { Terminal.print("other"); }
             }
             """);
 
@@ -460,7 +474,7 @@ _main_() { print(sign(2)); }";
     public void Check_MatchExpressionWithMixedResultTypes_IsRejected()
     {
         var exception = Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass().Check("let x = match 1 { 1 => 2, _ => \"two\" }; print(x);"));
+            new CompilerClass().Check("let x = match 1 { 1 => 2, _ => \"two\" }; Terminal.print(x);"));
 
         StringAssert.Contains(exception.Message, "same type");
     }
@@ -469,7 +483,7 @@ _main_() { print(sign(2)); }";
     public void Check_MatchPatternTypeMustMatchInputType()
     {
         var exception = Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass().Check("let x = match 1 { \"one\" => 1, _ => 0 }; print(x);"));
+            new CompilerClass().Check("let x = match 1 { \"one\" => 1, _ => 0 }; Terminal.print(x);"));
 
         StringAssert.Contains(exception.Message, "pattern type mismatch");
     }
@@ -479,10 +493,11 @@ _main_() { print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Terminal;
             number value = 2;
             match value {
-                1, 2, 3 => print("small");
-                _ => print("other");
+                1, 2, 3 => Terminal.print("small");
+                _ => Terminal.print("other");
             }
             """);
 
@@ -494,13 +509,14 @@ _main_() { print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Terminal;
             number value = 10;
             let result = match value {
                 0..10 => "low";
                 11..20 => "medium";
                 _ => "high"
             };
-            print(result);
+            Terminal.print(result);
             """, optimizeAst: true);
 
         Assert.AreEqual("low\r\n", output.GetOutput());
@@ -520,7 +536,7 @@ _main_() { print(sign(2)); }";
     public void Check_RangePatternRequiresNumbers()
     {
         var exception = Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass().Check("let x = match \"b\" { \"a\"..\"z\" => 1, _ => 0 }; print(x);"));
+            new CompilerClass().Check("let x = match \"b\" { \"a\"..\"z\" => 1, _ => 0 }; Terminal.print(x);"));
 
         StringAssert.Contains(exception.Message, "require a number");
     }
@@ -530,9 +546,10 @@ _main_() { print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Terminal;
             number[] values = [1, 2, 3];
             for (item in values) {
-                print(item);
+                Terminal.print(item);
             }
             """, optimizeAst: true);
 
@@ -544,11 +561,12 @@ _main_() { print(sign(2)); }";
     {
         using var output = new ConsoleOutput();
         new CompilerClass().Exec("""
+            import Terminal;
             number[] values = [1, 2, 3, 4, 5];
             for (item in values) {
                 if (item == 2) { continue; }
                 if (item == 4) { break; }
-                print(item);
+                Terminal.print(item);
             }
             """);
 
@@ -559,7 +577,7 @@ _main_() { print(sign(2)); }";
     public void Check_ForIn_RejectsNonArrayIterable()
     {
         var exception = Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass().Check("number value = 1; for (item in value) { print(item); }"));
+            new CompilerClass().Check("import Terminal; number value = 1; for (item in value) { Terminal.print(item); }"));
 
         StringAssert.Contains(exception.Message, "must be an array");
     }
@@ -568,7 +586,7 @@ _main_() { print(sign(2)); }";
     public void Check_ForIn_VariableDoesNotLeakOutsideLoop()
     {
         var exception = Assert.ThrowsException<SemanticException>(() =>
-            new CompilerClass().Check("number[] values = [1]; for (item in values) {} print(item);"));
+            new CompilerClass().Check("import Terminal; number[] values = [1]; for (item in values) {} Terminal.print(item);"));
 
         StringAssert.Contains(exception.Message, "Undeclared variable 'item'");
     }

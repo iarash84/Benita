@@ -25,13 +25,13 @@ public class DiagnosticTests
     [TestMethod]
     public void Parse_WithMissingSemicolon_ReportsTokenLocationAndExpectedSyntax()
     {
-        const string source = "_main_() { print(\"hello\") }";
+        const string source = "import Terminal;\n_main_() { Terminal.print(\"hello\") }";
         var tokens = new Lexer(source, sourceName: "main.ben").Tokenize();
 
         var exception = Assert.ThrowsException<ParserException>(() => new Parser(tokens).Parse());
 
         Assert.AreEqual("BEN2001", exception.Code);
-        StringAssert.Contains(exception.Message, "main.ben:1:");
+        StringAssert.Contains(exception.Message, "main.ben:2:");
         StringAssert.Contains(exception.Message, "Expected ';'");
         StringAssert.Contains(exception.Message, "^");
     }
@@ -60,5 +60,33 @@ public class DiagnosticTests
         Assert.AreEqual(24, exception.Span.Column);
         StringAssert.Contains(exception.Message, "nested.ben:2:24");
         StringAssert.Contains(exception.Message, "                       ^^^^^^^");
+    }
+
+    [TestMethod]
+    public void ParseResult_ReportsProgramLevelDuplicateMainDiagnostic()
+    {
+        const string source = "_main_() {} _main_() {}";
+        ParseResult result = new Parser(new Lexer(source).Tokenize()).ParseResultOrThrow();
+
+        Assert.IsNotNull(result.Program);
+        Assert.IsFalse(result.IsSuccess);
+        Assert.AreEqual(1, result.Diagnostics.Count);
+        CompilationDiagnostic diagnostic = result.Diagnostics[0];
+        Assert.AreEqual("BEN2002", diagnostic.Code);
+    }
+
+    [TestMethod]
+    public void SemanticAnalysisResult_ReportsDiagnosticWithoutThrowing()
+    {
+        const string source = "_main_() { missing = 1; }";
+        ProgramNode program = new Parser(new Lexer(source).Tokenize()).Parse();
+
+        SemanticAnalysisResult result = new SemanticAnalyzer().AnalyzeResultOrThrow(program);
+
+        Assert.IsFalse(result.IsSuccess);
+        Assert.AreEqual(1, result.Diagnostics.Count);
+        CompilationDiagnostic diagnostic = result.Diagnostics[0];
+        Assert.AreEqual("BEN3001", diagnostic.Code);
+        StringAssert.Contains(diagnostic.Description, "Undeclared variable 'missing'");
     }
 }

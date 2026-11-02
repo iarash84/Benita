@@ -48,7 +48,7 @@ public class ExampleProgramTests
             yield return Case("for-loop.ben", null, "0", "1", "2", "3", "4", "10", "20", "30");
             // استفاده از متغیر سراسری داخل تابع در کنار متغیرهای محلی و رشته‌ها را بررسی می‌کند.
             yield return Case("global-variable-and-function.ben", null, "30", "Hello, World!");
-            // بررسی می‌کند که include_once حتی با دو بار درخواست، کتابخانه توابع را فقط یک بار بارگذاری کند.
+            // بررسی می‌کند که import حتی با دو بار درخواست، کتابخانه توابع را فقط یک بار بارگذاری کند.
             yield return Case("include-once-function.ben", null, "5");
             // تبدیل ورودی کنسول و تولید تکرارشونده دنباله فیبوناچی با حلقه while را بررسی می‌کند.
             yield return Case("iterative-fibonacci-with-input.ben", "5", "Enter The Number Of Terms:", "The Fibonacci Series is:", "0", "1", "1", "2", "3");
@@ -143,7 +143,7 @@ public class ExampleProgramTests
 
             var output = ExecuteExample("file-delete.ben");
             Assert.IsFalse(File.Exists(Path.Combine(temporaryDirectory, "test.txt")));
-            StringAssert.Contains(output, "file deleted sucessfully");
+            StringAssert.Contains(output, "file deleted successfully");
         }
         finally
         {

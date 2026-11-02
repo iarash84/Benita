@@ -1,8 +1,9 @@
+import Terminal;
 // دریافت یک رشته از ورودی استاندارد و چاپ دوبارهٔ آن را نمایش می‌دهد.
 // Demonstrates reading a string from standard input and printing it back.
 _main_() {
-    print("Enter your name ");
-    string message = input();
-    print("your name is ");
-    print(message);
+    Terminal.print("Enter your name ");
+    string message = Terminal.input();
+    Terminal.print("your name is ");
+    Terminal.print(message);
 }

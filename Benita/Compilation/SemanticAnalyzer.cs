@@ -12,6 +12,10 @@
         /// Dictionary to store packages names and their associated PackageNode.
         /// </summary>
         private readonly Dictionary<string, PackageNode> _packages;
+        private readonly BindingResult? _bindingResult;
+        private readonly Scope _typeSymbols;
+        private readonly Scope _functionSymbols;
+        private readonly BuiltInClassRegistry _builtInClasses;
         /// <summary>قراردادهای interface ثبت‌شده را برای تحلیل نوع و member access نگه می‌دارد.</summary>
         private readonly Dictionary<string, InterfaceNode> _interfaces;
 
@@ -19,7 +23,7 @@
         /// <summary>
         /// Dictionary to store global variables and their types.
         /// </summary>
-        private readonly Dictionary<string, string?> _globalVariables;
+        private readonly Scope _globalVariables;
 
         /// <summary>
         /// Dictionary to store function names and their associated FunctionNode.
@@ -27,24 +31,19 @@
         private readonly Dictionary<string, FunctionNode> _functions;
 
         /// <summary>
-        /// Dictionary to store default functions with their return types and parameter types.
-        /// </summary>
-        private readonly Dictionary<string, (TypeSymbol ReturnType, List<TypeSymbol> ParameterTypes)> _defaultFunctions;
-
-
-        /// <summary>
         /// Initializes a new instance of the SemanticAnalyzer class.
         /// </summary>
-        public SemanticAnalyzer()
+        public SemanticAnalyzer(BuiltInClassRegistry? builtInClasses = null,
+            BindingResult? bindingResult = null)
         {
-            _globalVariables = new Dictionary<string, string?>();
+            _bindingResult = bindingResult;
+            _globalVariables = new Scope(name: "global");
+            _typeSymbols = new Scope(name: "types");
+            _functionSymbols = new Scope(name: "functions");
             _functions = new Dictionary<string, FunctionNode>();
             _packages = new Dictionary<string, PackageNode>();
             _interfaces = new Dictionary<string, InterfaceNode>();
-            _defaultFunctions = BuiltInRegistry.Descriptors.Values.ToDictionary(
-                descriptor => descriptor.Name,
-                descriptor => (descriptor.ReturnType, descriptor.ParameterTypes.ToList()),
-                StringComparer.Ordinal);
+            _builtInClasses = builtInClasses ?? BuiltInClassRegistry.CreateDefault();
         }
 
         /// <summary>
@@ -53,15 +52,41 @@
         /// <param name="program">The ProgramNode to analyze.</param>
         public void Analyze(ProgramNode program)
         {
+            SemanticAnalysisResult result = AnalyzeResultOrThrow(program);
+            if (!result.IsSuccess)
+            {
+                CompilationDiagnostic diagnostic = result.Diagnostics.First(diagnostic =>
+                    diagnostic.Severity == CompilationDiagnosticSeverity.Error);
+                throw new Exception(diagnostic.Description);
+            }
+        }
+
+        /// <summary>
+        /// Runs the semantic phase through an explicit result contract. The method captures
+        /// one semantic failure as a diagnostic; callers that need the legacy throwing
+        /// behavior should use <see cref="Analyze"/>.
+        /// </summary>
+        public SemanticAnalysisResult AnalyzeResultOrThrow(ProgramNode program)
+        {
+            ArgumentNullException.ThrowIfNull(program);
             _packages.Clear();
             _interfaces.Clear();
+            _typeSymbols.Clear();
+            _functionSymbols.Clear();
             _globalVariables.Clear();
             _functions.Clear();
+
+            try
+            {
+            if (program.MainFunction is null && program.Statements.Count == 0)
+                throw new SemanticException("No main function or top-level executable statement was found.",
+                    program.Span);
 
             foreach (InterfaceNode interfaceNode in program.Interfaces)
                 DeclareInterface(interfaceNode);
             foreach (var packageNode in program.Packages)
                 DeclarePackage(packageNode);
+            ValidateBuiltInClassTypes();
             // امضاها پیش از تحلیل هر call site ثبت می‌شوند تا forward call در initializer نیز معتبر باشد.
             foreach (var function in program.Functions)
                 DeclareFunction(function);
@@ -83,6 +108,7 @@
                         declaredType = initializerType;
                         RequireConcreteInferredType(declaredType, globalVar.Name);
                     }
+
                     else if (!CheckType(declaredType!, initializerType))
                     {
                         throw new Exception(
@@ -107,7 +133,7 @@
 
             if (program.Statements != null)
             {
-                var topLevelVariables = new Dictionary<string, string?>(_globalVariables);
+                var topLevelVariables = new Scope(_globalVariables, "top-level");
                 foreach (var statement in program.Statements)
                 {
                     if (statement != null)
@@ -118,6 +144,42 @@
             // Analyze the main function
             if (program.MainFunction != null)
                 AnalyzeFunction(program.MainFunction);
+
+            return new SemanticAnalysisResult(program, Array.Empty<CompilationDiagnostic>());
+            }
+            catch (BenitaException exception)
+            {
+                return new SemanticAnalysisResult(program, new[]
+                {
+                    new CompilationDiagnostic(exception.Code, exception.Description, exception.Span)
+                });
+            }
+            catch (Exception exception)
+            {
+                return new SemanticAnalysisResult(program, new[]
+                {
+                    new CompilationDiagnostic("BEN3001", exception.Message, CurrentSpan)
+                });
+            }
+        }
+
+        private void ValidateBuiltInClassTypes()
+        {
+            foreach (BuiltInClassDefinition builtInClass in _builtInClasses.Classes.Values)
+            {
+                foreach (BuiltInParameter parameter in builtInClass.ConstructorParameters)
+                    EnsureKnownType(parameter.Type.Name);
+
+                foreach (BuiltInMethodDescriptor method in builtInClass.Methods.Values)
+                {
+                    EnsureKnownType(method.ReturnType.Name, allowVoid: true);
+                    foreach (TypeSymbol parameterType in method.ParameterTypes)
+                        EnsureKnownType(parameterType.Name);
+                }
+
+                foreach (BuiltInPropertyDescriptor property in builtInClass.Properties.Values)
+                    EnsureKnownType(property.Type.Name);
+            }
         }
 
         /// <summary>نام package را ثبت و از برخورد نام آن با سایر نوع‌ها جلوگیری می‌کند.</summary>
@@ -125,11 +187,15 @@
         {
             if (packageNode.Name == Types.Error.Name)
                 throw new Exception("The name 'error' is reserved by the language error type.");
+            if (_builtInClasses.TryGet(packageNode.Name, out _))
+                throw new Exception($"The name '{packageNode.Name}' is reserved by a built-in class.");
             if (_packages.ContainsKey(packageNode.Name) || _interfaces.ContainsKey(packageNode.Name))
             {
                 throw new Exception($"Package '{packageNode.Name}' is already declared.");
             }
             _packages[packageNode.Name] = packageNode;
+            _typeSymbols.Declare(new TypeDeclarationSymbol(packageNode.Name, SymbolKind.Package,
+                new NamedTypeSymbol(packageNode.Name), packageNode));
         }
 
         /// <summary>نام interface را پیش از تحلیل بدنه‌ها ثبت و تکراری‌بودن نوع را بررسی می‌کند.</summary>
@@ -137,9 +203,13 @@
         {
             if (interfaceNode.Name == Types.Error.Name)
                 throw new Exception("The name 'error' is reserved by the language error type.");
+            if (_builtInClasses.TryGet(interfaceNode.Name, out _))
+                throw new Exception($"The name '{interfaceNode.Name}' is reserved by a built-in class.");
             if (_interfaces.ContainsKey(interfaceNode.Name) || _packages.ContainsKey(interfaceNode.Name))
                 throw new Exception($"Type '{interfaceNode.Name}' is already declared.");
             _interfaces[interfaceNode.Name] = interfaceNode;
+            _typeSymbols.Declare(new TypeDeclarationSymbol(interfaceNode.Name, SymbolKind.Interface,
+                new NamedTypeSymbol(interfaceNode.Name), interfaceNode));
         }
 
         /// <summary>نوع‌های امضا و یکتایی متدها و پارامترهای یک interface را اعتبارسنجی می‌کند.</summary>
@@ -165,10 +235,8 @@
         private void AnalyzePackage(PackageNode packageNode)
         {
             ValidateImplementedInterfaces(packageNode);
-            Dictionary<string, string?> allFieldScope = new(_globalVariables)
-            {
-                ["this"] = packageNode.Name
-            };
+            Scope allFieldScope = new(_globalVariables, $"package:{packageNode.Name}");
+            allFieldScope.Declare(new VariableSymbol("this", TypeFacts.FromName(packageNode.Name), false));
             Dictionary<string, PackageFunctionNode> packageFunctions = new Dictionary<string, PackageFunctionNode>();
             HashSet<string> fieldNames = [];
 
@@ -182,20 +250,18 @@
                     EnsureKnownType(fieldType.Name, allowLet: true);
                     RequireInitializerForNamedType(fieldType.Name, variableDeclaration.Initializer,
                         variableDeclaration.Name);
-                    allFieldScope[variableDeclaration.Name] = fieldType.Name;
+                    allFieldScope.Declare(new VariableSymbol(variableDeclaration.Name, fieldType));
                 }
             }
 
-            Dictionary<string, string?> initializedFieldScope = new(_globalVariables)
-            {
-                ["this"] = packageNode.Name
-            };
+            Scope initializedFieldScope = new(_globalVariables, $"package-init:{packageNode.Name}");
+            initializedFieldScope.Declare(new VariableSymbol("this", TypeFacts.FromName(packageNode.Name), false));
             foreach (var field in packageNode.Members.OfType<PackageVariableDeclarationNode>())
             {
                 if (field.Initializer is null)
                 {
                     if (field.Type == "let") RequireConcreteInferredType(field.Type, field.Name);
-                    initializedFieldScope[field.Name] = field.Type;
+                    initializedFieldScope.Declare(new VariableSymbol(field.Name, TypeFacts.FromName(field.Type)));
                     continue;
                 }
                 string? initializerType = AnalyzeExpression(field.Initializer, initializedFieldScope);
@@ -203,11 +269,11 @@
                 {
                     RequireConcreteInferredType(initializerType, field.Name);
                     field.Type = initializerType;
-                    allFieldScope[field.Name] = initializerType;
+                    allFieldScope.ReplaceLocal(new VariableSymbol(field.Name, TypeFacts.FromName(initializerType)));
                 }
                 else if (!CheckType(field.Type, initializerType))
                     throw new Exception($"Type mismatch in field '{field.Name}'. Expected '{field.Type}' but got '{initializerType}'.");
-                initializedFieldScope[field.Name] = field.Type;
+                initializedFieldScope.Declare(new VariableSymbol(field.Name, TypeFacts.FromName(field.Type)));
             }
 
             foreach (var packageMember in packageNode.Members)
@@ -246,11 +312,11 @@
             }
         }
 
-        private void AnalyzePackageFunction(PackageFunctionNode function, Dictionary<string, string?> variableScope)
+        private void AnalyzePackageFunction(PackageFunctionNode function, Scope variableScope)
         {
             EnsureKnownType(function.ReturnType, allowVoid: true);
             // Create a new scope for local variables
-            var localVariables = new Dictionary<string, string?>(variableScope);
+            Scope localVariables = new(variableScope, $"function:{function.Name}");
 
             // Declare function parameters in the local scope
             foreach (var param in function.Parameters)
@@ -282,6 +348,11 @@
             }
 
             _functions[function.Name] = function;
+            _functionSymbols.Declare(new FunctionSymbol(
+                function.Name,
+                TypeFacts.FromName(function.ReturnType),
+                function.Parameters.Select(parameter => TypeFacts.FromName(parameter.Type)).ToArray(),
+                function));
         }
 
         /// <summary>
@@ -292,7 +363,7 @@
         {
             EnsureKnownType(function.ReturnType, allowVoid: true);
             // Create a new scope for local variables
-            var localVariables = new Dictionary<string, string?>(_globalVariables);
+            Scope localVariables = new(_globalVariables, $"function:{function.Name}");
 
             // Declare function parameters in the local scope
             foreach (var param in function.Parameters)
@@ -315,7 +386,7 @@
         /// <param name="block">The block of statements to analyze.</param>
         /// <param name="localVariables">The local variables available in the block.</param>
         /// <param name="functionReturnType">The return type of the function (if any).</param>
-        private void AnalyzeBlock(BlockNode block, Dictionary<string, string?> localVariables,
+        private void AnalyzeBlock(BlockNode block, Scope localVariables,
             string? functionReturnType = null, int loopDepth = 0)
         {
             foreach (var statement in block.Statements)
@@ -330,7 +401,7 @@
         /// <param name="statement">The statement to analyze.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <param name="functionReturnType">The return type of the function (if any).</param>
-        private void AnalyzeStatement(StatementNode statement, Dictionary<string, string?> localVariables,
+        private void AnalyzeStatement(StatementNode statement, Scope localVariables,
             string? functionReturnType = null, int loopDepth = 0)
         {
             if (statement.Span.Line > 0) CurrentSpan = statement.Span;
@@ -420,7 +491,7 @@
                     break;
 
                 case ForStatementNode forStmt:
-                    var forScope = new Dictionary<string, string?>(localVariables);
+                    var forScope = new Scope(localVariables);
                     if (forStmt.Initializer != null)
                         AnalyzeStatement(forStmt.Initializer, forScope, functionReturnType, loopDepth);
                     if (forStmt.Condition != null && AnalyzeExpression(forStmt.Condition, forScope) != "bool")
@@ -435,7 +506,7 @@
                     string? iterableType = AnalyzeExpression(forEach.Iterable, localVariables);
                     if (iterableType?.EndsWith("[]", StringComparison.Ordinal) != true)
                         throw new Exception($"The expression after 'in' must be an array, but got '{iterableType}'.");
-                    var iterationScope = new Dictionary<string, string?>(localVariables);
+                    var iterationScope = new Scope(localVariables);
                     DeclareVariable(forEach.VariableName, iterableType[..^2], iterationScope);
                     AnalyzeStatement(forEach.Body, iterationScope, functionReturnType, loopDepth + 1);
                     break;
@@ -454,7 +525,7 @@
                     AnalyzeStatement(tryStatement.TryBlock, new(localVariables), functionReturnType, loopDepth);
                     if (tryStatement.CatchBlock is not null)
                     {
-                        var catchScope = new Dictionary<string, string?>(localVariables);
+                        var catchScope = new Scope(localVariables);
                         catchScope[tryStatement.CatchVariable!] = Types.Error.Name;
                         AnalyzeStatement(tryStatement.CatchBlock, catchScope, functionReturnType, loopDepth);
                     }
@@ -481,12 +552,13 @@
                         throw new Exception(
                             $"A package with this name : {objectInstantiationNode.PackageName} has not been implemented ");
                     }
-                    if (localVariables.ContainsKey(objectInstantiationNode.Name))
+                    if (localVariables.TryLookupLocal(objectInstantiationNode.Name, out _))
                     {
                         throw new Exception($"Variable '{objectInstantiationNode.Name}' is already declared.");
                     }
 
-                    localVariables[objectInstantiationNode.Name] = objectInstantiationNode.PackageName;
+                    localVariables.Declare(new VariableSymbol(objectInstantiationNode.Name,
+                        TypeFacts.FromName(objectInstantiationNode.PackageName)));
                     break;
                 case BreakStatementNode:
                 case ContinueStatementNode:
@@ -549,7 +621,7 @@
         };
 
         private void AnalyzeMatchStatement(MatchStatementNode match,
-            Dictionary<string, string?> localVariables, string? functionReturnType, int loopDepth)
+            Scope localVariables, string? functionReturnType, int loopDepth)
         {
             string? valueType = AnalyzeExpression(match.Value, localVariables);
             foreach (MatchArm arm in match.Arms)
@@ -561,7 +633,7 @@
         }
 
         private void AnalyzeMatchPatterns(MatchArm arm, string? valueType,
-            Dictionary<string, string?> localVariables)
+            Scope localVariables)
         {
             foreach (MatchPatternNode pattern in arm.Patterns)
             {
@@ -587,7 +659,7 @@
         /// </summary>
         /// <param name="arrayAssignment">The array assignment statement to analyze.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
-        private void AnalyzeArrayAssignment(ArrayAssignmentNode arrayAssignment, Dictionary<string, string?> localVariables)
+        private void AnalyzeArrayAssignment(ArrayAssignmentNode arrayAssignment, Scope localVariables)
         {
             // Check if the array variable is declared
             if (!localVariables.TryGetValue(arrayAssignment.Name, out var arrayType))
@@ -629,7 +701,7 @@
         /// <param name="expression">The expression to analyze.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the expression.</returns>
-        private string? AnalyzeExpression(ExpressionNode expression, Dictionary<string, string?> localVariables)
+        private string? AnalyzeExpression(ExpressionNode expression, Scope localVariables)
         {
             if (expression.Span.Line > 0) CurrentSpan = expression.Span;
             switch (expression)
@@ -671,10 +743,18 @@
         }
 
         private string AnalyzeNewExpression(NewExpressionNode creation,
-            Dictionary<string, string?> localVariables)
+            Scope localVariables)
         {
+            if (_builtInClasses.TryGet(creation.PackageName, out BuiltInClassDefinition? builtInClass))
+            {
+                ValidateArguments(creation.PackageName, creation.Arguments,
+                    builtInClass.ConstructorParameters.Select(parameter =>
+                        new ParameterNode(parameter.Type.Name, parameter.Name)).ToList(), localVariables);
+                return builtInClass.Name;
+            }
+
             if (!_packages.TryGetValue(creation.PackageName, out PackageNode? package))
-                throw new Exception($"Unknown package '{creation.PackageName}'.");
+                throw new Exception($"Unknown package or built-in class '{creation.PackageName}'.");
 
             PackageFunctionNode? initializer = package.Members.OfType<PackageFunctionNode>()
                 .FirstOrDefault(member => member.Name == "init");
@@ -690,7 +770,7 @@
         }
 
         private string? AnalyzeMatchExpression(MatchExpressionNode match,
-            Dictionary<string, string?> localVariables)
+            Scope localVariables)
         {
             string? valueType = AnalyzeExpression(match.Value, localVariables);
             string? resultType = null;
@@ -706,8 +786,13 @@
             return resultType;
         }
 
-        private string? HandleMemberAccessNode(MemberAccessNode memberAccess, Dictionary<string, string?> localVariables)
+        private string? HandleMemberAccessNode(MemberAccessNode memberAccess, Scope localVariables)
         {
+            if (_builtInClasses.TryGet(memberAccess.ObjectName, out BuiltInClassDefinition? staticClass) &&
+                memberAccess.Expression is FunctionCallNode staticCall &&
+                staticClass.StaticMethods.ContainsKey(staticCall.FunctionName))
+                return AnalyzeBuiltInStaticClassMemberAccess(staticClass, staticCall, localVariables);
+
             if (!localVariables.TryGetValue(memberAccess.ObjectName, out string? packageName) || packageName is null)
                 throw new Exception($"Member access requires a package instance, but '{memberAccess.ObjectName}' is not one.");
 
@@ -731,6 +816,9 @@
                     contractMethod.Parameters, localVariables);
                 return contractMethod.ReturnType;
             }
+
+            if (_builtInClasses.TryGet(packageName, out BuiltInClassDefinition? builtInClass))
+                return AnalyzeBuiltInClassMemberAccess(memberAccess, localVariables, builtInClass);
 
             if (!_packages.TryGetValue(packageName, out PackageNode? outPackage))
                 throw new Exception($"Member access requires a package instance, but '{memberAccess.ObjectName}' is not one.");
@@ -775,7 +863,127 @@
                 default:
                     throw new Exception($"Unsupported expression type: {memberAccess.GetType().Name}");
             }
+        }
 
+        private string AnalyzeBuiltInStaticClassMemberAccess(
+            BuiltInClassDefinition builtInClass,
+            FunctionCallNode call,
+            Scope localVariables)
+        {
+            BuiltInMethodDescriptor method = builtInClass.StaticMethods[call.FunctionName];
+            if (call.Arguments.Count != method.ParameterTypes.Count)
+                throw new SemanticException(
+                    $"'{builtInClass.Name}.{call.FunctionName}' expects {method.ParameterTypes.Count} argument(s), but got {call.Arguments.Count}.");
+
+            TypeSymbol? arrayElementType = null;
+            for (int index = 0; index < call.Arguments.Count; index++)
+            {
+                string? actualType = AnalyzeExpression(call.Arguments[index], localVariables);
+                string expectedType = method.ParameterTypes[index].Name;
+                if (!CheckType(expectedType, actualType))
+                    throw new SemanticException(
+                        $"Type mismatch in argument {index + 1} of '{builtInClass.Name}.{call.FunctionName}'. Expected '{expectedType}' but got '{actualType}'.");
+
+                if (builtInClass.Name == "Array" && index == 0 &&
+                    TypeFacts.FromName(actualType) is ArrayTypeSymbol arrayType)
+                    arrayElementType = arrayType.ElementType;
+            }
+
+            if (builtInClass.Name == "Array" && arrayElementType is not null)
+            {
+                bool elementArgument = call.FunctionName is "add" or "contains" or "index_of" && call.Arguments.Count > 1
+                    ? call.FunctionName is "add" or "contains" or "index_of"
+                    : call.FunctionName == "insert";
+                int elementIndex = call.FunctionName == "insert" ? 2 : 1;
+                if (elementArgument && call.Arguments.Count > elementIndex)
+                {
+                    TypeSymbol elementType = TypeFacts.FromName(AnalyzeExpression(call.Arguments[elementIndex], localVariables));
+                    if (!TypeFacts.IsAssignableTo(elementType, arrayElementType))
+                        throw new SemanticException(
+                            $"Type mismatch in argument {elementIndex + 1} of '{builtInClass.Name}.{call.FunctionName}'. Expected '{arrayElementType}' but got '{elementType}'.");
+                }
+
+                if (call.FunctionName == "concat" && call.Arguments.Count > 1 &&
+                    TypeFacts.FromName(AnalyzeExpression(call.Arguments[1], localVariables)) is ArrayTypeSymbol secondArray &&
+                    !TypeFacts.IsAssignableTo(secondArray.ElementType, arrayElementType))
+                    throw new SemanticException(
+                        $"Type mismatch in argument 2 of '{builtInClass.Name}.{call.FunctionName}'. Expected '{arrayElementType}[]' but got '{secondArray}'.");
+            }
+
+            if (builtInClass.Name == "Array" &&
+                method.ReturnType == Types.AnyArray &&
+                call.Arguments.Count > 0)
+            {
+                TypeSymbol firstType = TypeFacts.FromName(AnalyzeExpression(call.Arguments[0], localVariables));
+                if (firstType is ArrayTypeSymbol arrayType)
+                    return Types.ArrayOf(arrayType.ElementType).Name;
+            }
+
+            return method.ReturnType.Name;
+        }
+
+        private string AnalyzeBuiltInClassMemberAccess(
+            MemberAccessNode memberAccess,
+            Scope localVariables,
+            BuiltInClassDefinition builtInClass)
+        {
+            switch (memberAccess.Expression)
+            {
+                case FunctionCallNode call:
+                    if (!builtInClass.Methods.TryGetValue(call.FunctionName, out BuiltInMethodDescriptor? method))
+                        throw new SemanticException($"Class '{builtInClass.Name}' has no method named '{call.FunctionName}'.");
+                    if (call.Arguments.Count != method.ParameterTypes.Count)
+                        throw new SemanticException(
+                            $"'{builtInClass.Name}.{call.FunctionName}' expects {method.ParameterTypes.Count} argument(s), but got {call.Arguments.Count}.");
+                    for (int index = 0; index < call.Arguments.Count; index++)
+                    {
+                        string? actualType = AnalyzeExpression(call.Arguments[index], localVariables);
+                        string expectedType = method.ParameterTypes[index].Name;
+                        if (!CheckType(expectedType, actualType))
+                            throw new SemanticException(
+                                $"Type mismatch in argument {index + 1} of '{builtInClass.Name}.{call.FunctionName}'. Expected '{expectedType}' but got '{actualType}'.");
+                    }
+                    return method.ReturnType.Name;
+
+                case IdentifierNode identifier:
+                    if (!builtInClass.Properties.TryGetValue(identifier.Name, out BuiltInPropertyDescriptor? property))
+                        throw new SemanticException($"Class '{builtInClass.Name}' has no property named '{identifier.Name}'.");
+                    if (!property.CanRead)
+                        throw new SemanticException($"Property '{builtInClass.Name}.{identifier.Name}' is not readable.");
+                    return property.Type.Name;
+
+                case AssignmentNode assignment:
+                    if (!builtInClass.Properties.TryGetValue(assignment.Name, out BuiltInPropertyDescriptor? assignedProperty))
+                        throw new SemanticException($"Class '{builtInClass.Name}' has no property named '{assignment.Name}'.");
+                    if (!assignedProperty.CanWrite)
+                        throw new SemanticException($"Property '{builtInClass.Name}.{assignment.Name}' is read-only.");
+                    string? assignedType = AnalyzeExpression(assignment.Expression, localVariables);
+                    if (!CheckType(assignedProperty.Type.Name, assignedType))
+                        throw new SemanticException(
+                            $"Type mismatch in assignment to property '{assignment.Name}'. Expected '{assignedProperty.Type}' but got '{assignedType}'.");
+                    return assignedProperty.Type.Name;
+
+                case CompoundAssignmentNode compound:
+                    if (!builtInClass.Properties.TryGetValue(compound.Name, out BuiltInPropertyDescriptor? compoundProperty))
+                        throw new SemanticException($"Class '{builtInClass.Name}' has no property named '{compound.Name}'.");
+                    if (!compoundProperty.CanRead || !compoundProperty.CanWrite)
+                        throw new SemanticException($"Property '{builtInClass.Name}.{compound.Name}' must be readable and writable.");
+                    string? compoundType = AnalyzeExpression(compound.Expression, localVariables);
+                    if (compoundProperty.Type != Types.Number || compoundType != Types.Number.Name)
+                        throw new SemanticException($"Compound assignment requires numeric operands for property '{compound.Name}'.");
+                    return compoundProperty.Type.Name;
+
+                case IncrementDecrementNode increment:
+                    if (!builtInClass.Properties.TryGetValue(increment.Name, out BuiltInPropertyDescriptor? incrementProperty))
+                        throw new SemanticException($"Class '{builtInClass.Name}' has no property named '{increment.Name}'.");
+                    if (!incrementProperty.CanRead || !incrementProperty.CanWrite ||
+                        incrementProperty.Type != Types.Number)
+                        throw new SemanticException($"Increment and decrement require a readable, writable numeric property '{increment.Name}'.");
+                    return incrementProperty.Type.Name;
+
+                default:
+                    throw new SemanticException($"Unsupported member access for built-in class '{builtInClass.Name}'.");
+            }
         }
 
         private static string FindPackageFieldType(PackageNode package, string fieldName, bool requirePublic = false)
@@ -796,7 +1004,7 @@
         }
 
         private void ValidateArguments(string callableName, IReadOnlyList<ExpressionNode> arguments,
-            IReadOnlyList<ParameterNode> parameters, Dictionary<string, string?> localVariables)
+            IReadOnlyList<ParameterNode> parameters, Scope localVariables)
         {
             if (arguments.Count != parameters.Count)
                 throw new Exception($"'{callableName}' expects {parameters.Count} argument(s), but got {arguments.Count}.");
@@ -815,8 +1023,15 @@
         /// <param name="identifier">The identifier node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the identifier.</returns>
-        private string? HandleIdentifierNode(IdentifierNode identifier, Dictionary<string, string?> localVariables)
+        private string? HandleIdentifierNode(IdentifierNode identifier, Scope localVariables)
         {
+            if (_bindingResult is not null &&
+                _bindingResult.TryGetSymbol(identifier, out Symbol? boundSymbol) &&
+                boundSymbol!.Type is not null &&
+                boundSymbol.Type != Types.Unknown &&
+                boundSymbol.Type != Types.Inferred)
+                return boundSymbol.Type.Name;
+
             if (!localVariables.TryGetValue(identifier.Name, out var node))
             {
                 throw new Exception($"Undeclared variable '{identifier.Name}'.");
@@ -830,7 +1045,7 @@
         /// <param name="binary">The binary expression node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the binary expression result.</returns>
-        private string? HandleBinaryExpressionNode(BinaryExpressionNode binary, Dictionary<string, string?> localVariables)
+        private string? HandleBinaryExpressionNode(BinaryExpressionNode binary, Scope localVariables)
         {
             var leftType = AnalyzeExpression(binary.Left, localVariables);
             var rightType = AnalyzeExpression(binary.Right, localVariables);
@@ -911,7 +1126,7 @@
         /// <param name="unary">The unary expression node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the unary expression result.</returns>
-        private string? HandleUnaryExpressionNode(UnaryExpressionNode unary, Dictionary<string, string?> localVariables)
+        private string? HandleUnaryExpressionNode(UnaryExpressionNode unary, Scope localVariables)
         {
             string? operandType = AnalyzeExpression(unary.Operand, localVariables);
             return unary.Operator switch
@@ -930,57 +1145,39 @@
         /// <param name="functionCall">The function call node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The return type of the function call.</returns>
-        private string? HandleFunctionCallNode(FunctionCallNode functionCall, Dictionary<string, string?> localVariables)
+        private string? HandleFunctionCallNode(FunctionCallNode functionCall, Scope localVariables)
         {
-            if (!_functions.ContainsKey(functionCall.FunctionName) && !_defaultFunctions.ContainsKey(functionCall.FunctionName))
-            {
-                throw new Exception($"Undeclared function '{functionCall.FunctionName}'.");
-            }
-            (TypeSymbol ReturnType, List<TypeSymbol> ParameterTypes) functionInfo = _functions.ContainsKey(functionCall.FunctionName)
-                ? (TypeFacts.FromName(_functions[functionCall.FunctionName].ReturnType),
-                    _functions[functionCall.FunctionName].Parameters
-                        .Select(parameter => TypeFacts.FromName(parameter.Type)).ToList())
-                : _defaultFunctions[functionCall.FunctionName];
+            Symbol? functionSymbol = null;
+            bool hasBoundFunction = _bindingResult is not null &&
+                _bindingResult.TryGetSymbol(functionCall, out functionSymbol);
+            if (!hasBoundFunction)
+                _functionSymbols.TryLookup(functionCall.FunctionName, out functionSymbol);
 
-            if (functionCall.Arguments.Count != functionInfo.ParameterTypes.Count)
+            if (functionSymbol is not FunctionSymbol resolvedFunction ||
+                resolvedFunction.Declaration is null)
+                throw new Exception($"Undeclared function '{functionCall.FunctionName}'.");
+            FunctionNode function = resolvedFunction.Declaration;
+
+            List<TypeSymbol> parameterTypes = function.Parameters
+                .Select(parameter => TypeFacts.FromName(parameter.Type))
+                .ToList();
+            if (functionCall.Arguments.Count != parameterTypes.Count)
             {
-                throw new Exception($"Argument count mismatch in function call to '{functionCall.FunctionName}'. Expected {functionInfo.ParameterTypes.Count} but got {functionCall.Arguments.Count}.");
+                throw new Exception($"Argument count mismatch in function call to '{functionCall.FunctionName}'. Expected {parameterTypes.Count} but got {functionCall.Arguments.Count}.");
             }
-            TypeSymbol? arrayElementType = null;
+
             for (int i = 0; i < functionCall.Arguments.Count; i++)
             {
                 TypeSymbol argType = TypeFacts.FromName(
                     AnalyzeExpression(functionCall.Arguments[i], localVariables));
-
-                bool isArrayFunction = functionCall.FunctionName.StartsWith("array_", StringComparison.Ordinal);
-                if (isArrayFunction && i == 0 && argType is ArrayTypeSymbol arrayType)
-                    arrayElementType = arrayType.ElementType;
-
-                bool isElementArgument =
-                    functionCall.FunctionName is "array_add" or "array_contains" or "array_index_of" && i == 1 ||
-                    functionCall.FunctionName == "array_insert" && i == 2;
-                if (isElementArgument && arrayElementType is not null && arrayElementType != Types.Unknown &&
-                    !TypeFacts.IsAssignableTo(argType, arrayElementType))
-                    throw new Exception($"Type mismatch in argument {i + 1} of function call to '{functionCall.FunctionName}'. Expected '{arrayElementType}' but got '{argType}'.");
-
-                if (functionCall.FunctionName == "array_concat" && i == 1 &&
-                    arrayElementType is not null && arrayElementType != Types.Unknown &&
-                    !TypeFacts.IsAssignableTo(argType, Types.ArrayOf(arrayElementType)))
-                    throw new Exception($"Type mismatch in argument 2 of function call to 'array_concat'. Expected '{arrayElementType}[]' but got '{argType}'.");
-
-                TypeSymbol expectedType = functionInfo.ParameterTypes[i];
+                TypeSymbol expectedType = parameterTypes[i];
                 if (!CheckType(expectedType.Name, argType.Name))
                 {
                     throw new Exception($"Type mismatch in argument {i + 1} of function call to '{functionCall.FunctionName}'. Expected '{expectedType}' but got '{argType}'.");
                 }
             }
-            bool preservesArrayType = functionCall.FunctionName is
-                "array_add" or "array_remove" or "array_reverse" or "array_clear" or
-                "array_insert" or "array_slice" or "array_concat" or "array_sort";
-            if (preservesArrayType && arrayElementType is not null)
-                return Types.ArrayOf(arrayElementType).Name;
 
-            return functionInfo.ReturnType.Name;
+            return TypeFacts.FromName(function.ReturnType).Name;
         }
 
         /// <summary>
@@ -989,7 +1186,7 @@
         /// <param name="arrayInit">The array initializer node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the array.</returns>
-        private string? HandleArrayInitializerNode(ArrayInitializerNode arrayInit, Dictionary<string, string?> localVariables)
+        private string? HandleArrayInitializerNode(ArrayInitializerNode arrayInit, Scope localVariables)
         {
             if (arrayInit.ElementType is not null)
             {
@@ -1021,7 +1218,7 @@
         /// <param name="arrayAccess">The array access node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the array element.</returns>
-        private string? HandleArrayAccessNode(ArrayAccessNode arrayAccess, Dictionary<string, string?> localVariables)
+        private string? HandleArrayAccessNode(ArrayAccessNode arrayAccess, Scope localVariables)
         {
             if (!localVariables.TryGetValue(arrayAccess.Name, out var arrayType))
             {
@@ -1047,7 +1244,7 @@
         /// <param name="logical">The logical expression node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the result of the logical operation.</returns>
-        private string? HandleLogicalExpressionNode(LogicalExpressionNode logical, Dictionary<string, string?> localVariables)
+        private string? HandleLogicalExpressionNode(LogicalExpressionNode logical, Scope localVariables)
         {
             var leftType = AnalyzeExpression(logical.Left, localVariables);
             var rightType = AnalyzeExpression(logical.Right, localVariables);
@@ -1093,7 +1290,10 @@
             TypeSymbol target = TypeFacts.FromName(firstType);
             TypeSymbol source = TypeFacts.FromName(secondType);
             if (target is NamedTypeSymbol targetNamed && source is NamedTypeSymbol sourceNamed &&
-                _interfaces.ContainsKey(targetNamed.Name) &&
+                _typeSymbols.TryLookup(targetNamed.Name, out Symbol? targetSymbol) &&
+                targetSymbol.Kind == SymbolKind.Interface &&
+                _typeSymbols.TryLookup(sourceNamed.Name, out Symbol? sourceSymbol) &&
+                sourceSymbol.Kind == SymbolKind.Package &&
                 _packages.TryGetValue(sourceNamed.Name, out PackageNode? sourcePackage))
                 return sourcePackage.Interfaces.Contains(targetNamed.Name);
             return TypeFacts.IsAssignableTo(source, target);
@@ -1105,8 +1305,9 @@
             if (allowVoid && typeName == "void" || allowLet && typeName == "let") return;
             TypeSymbol type = TypeFacts.FromName(typeName);
             if (type is NamedTypeSymbol named &&
-                !_packages.ContainsKey(named.Name) && !_interfaces.ContainsKey(named.Name))
-                throw new Exception($"Unknown package or interface type '{named.Name}'.");
+                !_typeSymbols.TryLookup(named.Name, out _) &&
+                !_builtInClasses.TryGet(named.Name, out _))
+                throw new Exception($"Unknown package, interface, or built-in class type '{named.Name}'.");
         }
 
         /// <summary>Benita مقدار null ندارد؛ بنابراین reference نام‌دار باید هنگام declaration مقدار بگیرد.</summary>
@@ -1151,13 +1352,16 @@
         /// <param name="name">The name of the variable.</param>
         /// <param name="type">The type of the variable.</param>
         /// <param name="variableScope">The scope in which to declare the variable.</param>
-        private void DeclareVariable(string name, string? type, Dictionary<string, string?> variableScope)
+        private void DeclareVariable(string name, string? type, Scope variableScope)
         {
-            if (variableScope.ContainsKey(name))
+            if (variableScope.TryLookupLocal(name, out _))
             {
                 throw new Exception($"Variable '{name}' is already declared.");
             }
-            variableScope[name] = type;
+            variableScope.Declare(new VariableSymbol(name, TypeFacts.FromName(type)));
         }
     }
 }
+
+
+

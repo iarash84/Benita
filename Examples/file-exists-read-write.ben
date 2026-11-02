@@ -1,14 +1,16 @@
+import Terminal;
+import File;
 // عملیات بررسی وجود، خواندن و ساخت فایل با محتوای اولیه را آزمایش می‌کند.
 // Tests file existence checks, reading, and creating a file with initial content.
 number myVar;
 string fileContent;
 
 _main_() {
-    if (file_exist("test.txt")) {
-        fileContent = file_read("test.txt");
-        print(fileContent);
+    File file = new File("test.txt");
+    if (file.exists()) {
+        Terminal.print(file.readText());
     } else {
-        print("File does not exist, creating new file with content.");
-        file_write("test.txt", "Hello, world!");
+        Terminal.print("File does not exist, creating new file with content.");
+        file.writeText("Hello, world!");
     }
 }

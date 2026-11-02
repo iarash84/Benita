@@ -11,6 +11,7 @@ public class AsyncAwaitTests
     public void AsyncPackageArgument_IsDeeplyIsolatedFromCaller()
     {
         const string source = """
+            import Terminal;
             pkg Box {
                 public number value = 0;
                 public func set(number next) -> void { value = next; }
@@ -24,8 +25,8 @@ public class AsyncAwaitTests
             _main_() {
                 Box box = new Box();
                 let operation = async mutate(box);
-                print(await operation);
-                print(box.value);
+                Terminal.print(await operation);
+                Terminal.print(box.value);
             }
             """;
 
@@ -41,12 +42,13 @@ public class AsyncAwaitTests
     public void AsyncCalls_CanBeAwaitedInAnyOrder()
     {
         const string source = """
+            import Terminal;
             func add(number left, number right) -> number { return left + right; }
             _main_() {
                 let first = async add(10, 20);
                 let second = async add(1, 2);
-                print(await second);
-                print(await first);
+                Terminal.print(await second);
+                Terminal.print(await first);
             }
             """;
 
@@ -59,11 +61,12 @@ public class AsyncAwaitTests
     public void Await_CanReadCompletedTaskMoreThanOnce()
     {
         const string source = """
+            import Terminal;
             func value() -> number { return 42; }
             _main_() {
                 let operation = async value();
-                print(await operation);
-                print(await operation);
+                Terminal.print(await operation);
+                Terminal.print(await operation);
             }
             """;
 
@@ -76,13 +79,15 @@ public class AsyncAwaitTests
     public void Await_PropagatesTaskErrorToCatch()
     {
         const string source = """
-            func fail() -> number { throw error("ASYNC100", "task failed"); }
+            import Terminal;
+            import Error;
+            func fail() -> number { throw Error.create("ASYNC100", "task failed"); }
             _main_() {
                 let operation = async fail();
                 try { number result = await operation; }
                 catch (failure) {
-                    print(failure.code);
-                    print(failure.message);
+                    Terminal.print(failure.code);
+                    Terminal.print(failure.message);
                 }
             }
             """;
@@ -96,12 +101,13 @@ public class AsyncAwaitTests
     public void Async_CapturesArgumentBeforeTaskStarts()
     {
         const string source = """
+            import Terminal;
             func identity(number value) -> number { return value; }
             _main_() {
                 number value = 7;
                 let operation = async identity(value);
                 value = 9;
-                print(await operation);
+                Terminal.print(await operation);
             }
             """;
 

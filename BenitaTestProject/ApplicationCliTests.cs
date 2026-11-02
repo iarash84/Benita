@@ -19,7 +19,7 @@ public class ApplicationCliTests
             Console.SetOut(output);
             Console.SetError(error);
 
-            int exitCode = Program.Main(["exc", Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.ben")]);
+            int exitCode = Program.Main(["run", Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.ben")]);
 
             Assert.AreEqual(1, exitCode);
             StringAssert.Contains(error.ToString(), "BEN0002");

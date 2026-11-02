@@ -1,3 +1,4 @@
+import Terminal;
 // نمونهٔ منفی برای تشخیص declaration تکراری متغیر سراسری است.
 // Negative example that tests detection of duplicate global variable declarations.
 /*
@@ -15,11 +16,11 @@ _main_() {
     number y = 20;
     number sum = add(x, y);              
     string message = concatenate("hello", " world");    
-    print(message);
+    Terminal.print(message);
 }
 */
 _main_() {
-    print("YES");
+    Terminal.print("YES");
 }
 
 string a = "20";
@@ -27,6 +28,6 @@ string a = "20";
 number a = 50;
 /*
 _main_() {
-    print("No");
+    Terminal.print("No");
 }
 */

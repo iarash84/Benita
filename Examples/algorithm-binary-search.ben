@@ -1,12 +1,15 @@
+import Terminal;
+import Array;
+import Math;
 // جست‌وجوی دودویی روی آرایهٔ مرتب و حالت‌های پیدا شدن و نشدن مقدار را نمایش می‌دهد.
 // Demonstrates binary search on a sorted array for both found and missing values.
 // Binary search requires a sorted array and repeatedly halves the search range.
 func binary_search(number[] values, number target) -> number {
     number left = 0;
-    number right = array_len(values) - 1;
+    number right = Array.length(values) - 1;
 
     while (left <= right) {
-        number middle = round_number((left + right) / 2);
+        number middle = Math.round((left + right) / 2);
         if (values[middle] == target) {
             return middle;
         }
@@ -23,6 +26,6 @@ func binary_search(number[] values, number target) -> number {
 
 _main_() {
     number[] values = [2, 5, 8, 12, 16, 23, 38];
-    print(binary_search(values, 16));
-    print(binary_search(values, 7));
+    Terminal.print(binary_search(values, 16));
+    Terminal.print(binary_search(values, 7));
 }

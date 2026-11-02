@@ -1,3 +1,4 @@
+import Terminal;
 // الگوی Adapter رابط LegacyPrinter را به قرارداد جدید Printer تبدیل می‌کند.
 // Demonstrates Adapter by translating the LegacyPrinter API into the Printer contract.
 interface Printer { func print_text(string text) -> string; }
@@ -15,4 +16,4 @@ func print_document(Printer printer, string text) -> string {
     return printer.print_text(text);
 }
 
-_main_() { print(print_document(new PrinterAdapter(), "adapted")); }
+_main_() { Terminal.print(print_document(new PrinterAdapter(), "adapted")); }

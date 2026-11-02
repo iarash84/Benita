@@ -1,3 +1,4 @@
+import Terminal;
 // محاسبهٔ ب.م.م با الگوریتم تکرارشوندهٔ اقلیدس و عملگر باقی‌مانده را نمایش می‌دهد.
 // Demonstrates iterative Euclidean GCD calculation and the remainder operator.
 // Greatest common divisor using Euclid's iterative algorithm.
@@ -12,5 +13,5 @@ func gcd(number first, number second) -> number {
 }
 
 _main_() {
-    print(gcd(48, 18));
+    Terminal.print(gcd(48, 18));
 }

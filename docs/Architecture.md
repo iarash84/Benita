@@ -36,32 +36,116 @@ Benita/
 اجرا `RuntimeContext` خودش را دارد. همان context به `Interpreter`، `PackageInstance` و
 debugger داده می‌شود تا چند مفسر اطلاعاتشان را ناخواسته با هم به اشتراک نگذارند.
 
-### ۲. تکرار registry توابع داخلی
+### ۲. registry کلاس‌های داخلی
 
-قبلاً مشخصات توابع داخلی در چند محل تکرار شده بود. حالا `BuiltInRegistry` نام، نوع خروجی،
-پارامترها و سازندهٔ هر تابع را نگه می‌دارد و هم تحلیل معنایی و هم مفسر از همین اطلاعات
-استفاده می‌کنند.
+تعریف هر built-in class فقط در `BuiltInClassRegistry` ثبت می‌شود. این registry metadata کلاس،
+سازنده، متدهای static و instance و propertyهای آن را در اختیار semantic analyzer و interpreter
+قرار می‌دهد. `BuiltInClassDefinition` خطاهای قرارداد و اجرای built-in را به
+`BuiltInException` با کد پایدار `BEN4101` تبدیل می‌کند.
 
-### ۳. خطاهای عمومی built-inها
+### ۳. فعال‌سازی کلاس‌های داخلی
 
-تمام handlerهای داخلی از `BuiltInHandler` مشتق می‌شوند. این کلاس خطاهای داخلی .NET را به
-`BuiltInException` با کد پایدار `BEN4101` تبدیل می‌کند؛ بنابراین CLI، REPL و استفاده مستقیم
-از runtime قرارداد خطای یکسان دارند.
+برنامه می‌تواند با declaration سطح بالای `import ClassName;` کلاس‌های built-in را فعال کند.
+پس از parse، compiler یک registry محدود از همان importها می‌سازد و همان scope را به semantic
+analyzer و runtime می‌دهد. کلاس‌های static بدون ساخت instance فعال می‌شوند؛ کلاس‌های instance
+پس از import برای type resolution و `new` در دسترس هستند. `import` فقط فایل source را
+ترکیب می‌کند و جایگزین import نیست.
 
-### ۴. نسخه برنامه
+### ۴. کلاس‌های داخلی
+
+`BuiltInClassRegistry` تعریف کلاس‌های داخلی را بر اساس نام نگه می‌دارد و ثبت نام تکراری را رد
+می‌کند. تعریف هر کلاس از `BuiltInClassDefinition` مشتق می‌شود و نوع سازنده، امضای متدها و
+قابلیت خواندن/نوشتن ویژگی‌ها را با descriptorهای زبان اعلام می‌کند. نمونه‌ها
+`IBuiltInClassInstance` را پیاده می‌کنند؛ برای جداسازی taskها و rollback نشست، `Clone` باید
+یک کپی مستقل از state قابل تغییر بسازد.
+
+مرز مقدارهای runtime از طریق `RuntimeValue` و `RuntimeTypeDescriptor` تعریف شده است. این
+قرارداد نام type و مقدار را به‌عنوان مفاهیم زبان منتقل می‌کند و به `System.Type` یا
+Reflection وابسته نیست. پیاده‌سازی فعلی برای سازگاری با interpreter قدیمی از `object?` به‌عنوان
+bridge استفاده می‌کند؛ adapter آینده می‌تواند همین قرارداد را با representation دیگری
+پیاده‌سازی کند.
+
+#### راهنمای افزودن یک کلاس داخلی
+
+برای افزودن کلاس جدید، مراحل زیر کافی است:
+
+1. یک کلاس مشتق‌شده از `BuiltInClassDefinition` در فایل مستقل زیر `Runtime/BuiltIns` بسازید.
+2. نام کلاس، پارامترهای سازنده، `BuiltInMethodDescriptor`ها و
+   `BuiltInPropertyDescriptor`ها را با typeهای زبان تعریف کنید.
+3. یک instance از `IBuiltInClassInstance` پیاده کنید. متدهای `InvokeMethod`، `GetProperty`
+   و `SetProperty` فقط state و رفتار کلاس را اجرا کنند؛ اعتبارسنجی عمومی توسط definition
+   انجام می‌شود.
+4. در `Clone()` یک نمونهٔ مستقل از تمام state قابل تغییر برگردانید. این شرط برای `async`،
+   task capture و rollback ضروری است.
+5. کلاس را در bootstrap رجیستری، یعنی `BuiltInClassRegistry.CreateDefault()`، ثبت کنید.
+   برای تست یا پیکربندی اختصاصی می‌توانید یک registry جدید بسازید و با `Register()` ثبت کنید.
+6. اگر کلاس باید در برنامه‌ای با import صریح استفاده شود، `import ClassName;` را در ابتدای
+   source قرار دهید؛ compiler همان definition را در scope فعال semantic و runtime قرار می‌دهد.
+   syntax موجود `new Type(...)` و `instance.member` برای کلاس‌های instance استفاده می‌شود.
+7. حداقل تست‌های ثبت/lookup، ساخت نمونه، متد، property قابل خواندن/نوشتن، property فقط‌خواندنی،
+   آرگومان نامعتبر، member نامعتبر، type نتیجهٔ نامعتبر و clone را اضافه کنید.
+
+خطای semantic کلاس‌های داخلی با `SemanticException` و کد `BEN3001` گزارش می‌شود. خطای
+اعتبارسنجی یا اجرای runtime با `BuiltInException` و کد `BEN4101` گزارش می‌شود. implementation
+نمونهٔ `NativeCounter` در فایل مستقل خود قرار دارد تا registry فقط مسئول bootstrap و lookup
+باشد.
+
+`CompilerClass`، تحلیل‌گر معنایی و `RuntimeContext` باید همان رجیستری را دریافت کنند. این
+قرارداد از Reflection و `System.Type` استفاده نمی‌کند؛ جزئیات اجرای یک adapter در آینده
+می‌تواند مستقل از metadata زبان باقی بماند. رجیستری باید پس از bootstrap به‌عنوان configuration
+پایدار در نظر گرفته شود و از register کردن هم‌زمان در زمان اجرای برنامه پرهیز شود.
+
+## راهنمای توسعه‌دهنده کلاس‌های داخلی
+
+راهنمای کامل و مرحله‌به‌مرحلهٔ افزودن کلاس داخلی جدید، شامل ساختار فایل‌ها، قراردادها، نمونهٔ کد، ثبت در registry، مدیریت state، خطاها، تست‌ها و checklist، در [`docs/BuiltInClasses.md`](BuiltInClasses.md) قرار دارد.
+
+### ۵. نسخه برنامه
 
 `AppVersion` نسخه را از assembly metadata می‌خواند. Help و REPL دیگر شماره نسخهٔ hard-coded
 ندارند و مقدار `<Version>` در فایل پروژه تنها منبع نسخهٔ برنامه است.
 
-## تفکیک تدریجی visitorها
+## مرز Parser و Semantic Analyzer
 
-`Interpreter` از قرارداد `IAstVisitor<TResult>` استفاده می‌کند. `Parser` و
-`SemanticAnalyzer` هنوز بزرگ‌اند، اما شکستنشان فقط برای کم‌شدن تعداد خط‌ها فایده‌ای ندارد.
-اگر این دو کلاس تقسیم شوند، هر بخش جدید باید مسئولیت مشخص و تست مستقل داشته باشد.
+`Interpreter` از قرارداد `IAstVisitor<TResult>` استفاده می‌کند. در pipeline کامپایل، مرز
+بین syntax و semantics اکنون صریح است:
 
-اگر بعداً بخواهم این بخش را کوچک‌تر کنم، قدم منطقی بعدی تعریف visitorهای جدا برای
-expressionها و statementها است. این جابه‌جایی باید مرحله‌ای باشد و برای هر گروه تست
-رگرسیون جدا داشته باشد.
+```text
+Lexer.Tokenize() -> List<Token>
+Parser.ParseResultOrThrow(tokens) -> ParseResult
+SemanticAnalyzer.AnalyzeResultOrThrow(program) -> SemanticAnalysisResult
+```
+
+### Parser
+
+Parser فقط token stream را به AST نحوی تبدیل می‌کند. ورودی آن `List<Token>` است و خروجی
+`ParseResult` شامل `ProgramNode` و فهرست `CompilationDiagnostic`هاست. خطاهای grammar، مانند
+توکن نامنتظر، نبودن delimiterها و ترتیب مجاز declarationهای `import`، در همین مرحله بررسی
+می‌شوند. Parser به symbol table، type registry یا built-inهای فعال وابسته نیست.
+
+`Parse()` برای سازگاری با مصرف‌کننده‌های قدیمی باقی مانده و در صورت diagnostic آن را به
+`ParserException` تبدیل می‌کند. validationهایی که به کل برنامه وابسته‌اند، مانند duplicate
+entry point، از طریق result قابل مشاهده‌اند و دیگر بخشی از ساخت AST نیستند.
+
+### Semantic Analyzer
+
+Semantic Analyzer ورودی مستقل `ProgramNode` و configuration معنایی، مانند
+`BuiltInClassRegistry`، دریافت می‌کند. خروجی `SemanticAnalysisResult` شامل همان AST و
+diagnosticهای معنایی است. declaration و lookup نمادها، type checking، اعتبارسنجی package و
+interface، importهای شناخته‌شده، access modifierها و وجود entry point در این مرحله انجام
+می‌شوند. این لایه به token stream دسترسی ندارد.
+
+`Analyze()` به‌عنوان compatibility API حفظ شده است؛ مصرف‌کننده‌های جدید باید از
+`AnalyzeResultOrThrow()` استفاده کنند تا diagnostics را بدون وابستگی به متن exception
+مصرف کنند. `CompilerClass` نیز از قراردادهای result محور استفاده می‌کند و فقط در مرز
+public فعلی، diagnostic را به exception مناسب CLI تبدیل می‌کند.
+
+هر دو result، `IsSuccess` و فهرست diagnostic دارند. در حال حاضر برای حفظ رفتار زبان فقط
+اولین خطای semantic ثبت می‌شود؛ مدل result از چند diagnostic پشتیبانی می‌کند تا در آینده
+validation چندمرحله‌ای بدون تغییر قرارداد عمومی اضافه شود.
+
+شکستن داخلی Parser و SemanticAnalyzer به visitorها یا componentهای کوچک‌تر باید بعد از این
+مرز انجام شود و هر component مسئولیت و تست مستقل داشته باشد؛ تقسیم صرف فایل‌ها بدون
+قرارداد جدید انجام نمی‌شود.
 
 ## سیستم نوع
 
@@ -77,9 +161,21 @@ expressionها و statementها است. این جابه‌جایی باید مر
 امضای توابع داخلی و بررسی آرگومان‌های آن‌ها به این مدل منتقل شده‌اند. نام نوع در AST
 هنوز رشته باقی می‌ماند، چون AST باید همان چیزی را که Parser از source خوانده نگه دارد.
 
-قدم بعدی این مهاجرت، جایگزین‌کردن جدول متغیرهای رشته‌ای `SemanticAnalyzer` با symbol table
-است. بعد از آن می‌توان `PackageTypeSymbol` و `InterfaceTypeSymbol` را بدون اضافه‌کردن شرط‌های
-رشته‌ای به تحلیل‌گر وارد کرد.
+### Symbol و Scope
+
+نمادهای typed در [`Benita/Semantics/Symbols/Symbol.cs`](../Benita/Semantics/Symbols/Symbol.cs) قرار
+دارند. [`Symbol`](../Benita/Semantics/Symbols/Symbol.cs:15) قرارداد پایه،
+[`VariableSymbol`](../Benita/Semantics/Symbols/Symbol.cs:21) و [`ParameterSymbol`](../Benita/Semantics/Symbols/Symbol.cs:28)
+مدل declarationهای مقداری را فراهم می‌کنند. [`Scope`](../Benita/Semantics/Symbols/Symbol.cs:35)
+یک زنجیرهٔ parent-based دارد: `Declare` فقط scope فعلی را بررسی می‌کند، `TryLookup` از
+scope فعلی به parentها می‌رود و در نتیجه shadowing در child scope مجاز است، اما declaration
+تکراری در همان scope رد می‌شود. `ReplaceLocal` فقط برای تکمیل declarationهایی مانند inference
+فیلدهای `let` استفاده می‌شود.
+
+`SemanticAnalyzer` اکنون global، package، function، block، loop و catch scope را با همین
+زنجیره تحلیل می‌کند و به‌جای کپی‌کردن dictionary، name resolution را از child scope به parent
+انجام می‌دهد. AST برای حفظ متن source همچنان type name را به‌صورت رشته نگه می‌دارد؛ تبدیل آن
+به `TypeSymbol` در مرز تحلیل معنایی انجام می‌شود.
 
 ## مدل شیء و چرخهٔ ساخت نمونه
 
@@ -145,4 +241,4 @@ synchronization یا channel به زبان افزوده شوند.
 Lexer شمارهٔ خط و offset آغاز خط را هم‌زمان با scan به‌روز می‌کند. موقعیت آغاز هر token
 پیش از خواندن آن snapshot می‌شود؛ بنابراین ساخت `SourceSpan` نیازمند پیمایش دوباره از ابتدای
 source نیست و هزینهٔ tokenization با اندازهٔ ورودی رشد خطی دارد. جدول origin تولیدشده توسط
-`include_once` همچنان نام فایل و شمارهٔ خط اصلی هر token را تأمین می‌کند.
+`import` همچنان نام فایل و شمارهٔ خط اصلی هر token را تأمین می‌کند.

@@ -11,6 +11,8 @@ namespace Benita
         private readonly Dictionary<string, FunctionNode> _functions = [];
         private Dictionary<string, object> _variables = [];
         private readonly Dictionary<string, object> _outerScopeVariables;
+        private readonly RuntimeEnvironment _outerEnvironment;
+        private RuntimeEnvironment _environment;
         private readonly HashSet<string> _persistentVariableNames = [];
 
         private bool _functionReturnFlag;
@@ -39,6 +41,8 @@ namespace Benita
             _packageScope = packageScope;
             _isPackageInterpreter = packageInstanceScope;
             _outerScopeVariables = new Dictionary<string, object>();
+            _outerEnvironment = new RuntimeEnvironment(name: "outer");
+            _environment = new RuntimeEnvironment(_outerEnvironment, packageScope);
         }
 
         /// <summary>از state قابل مشاهدهٔ مفسر snapshot می‌گیرد تا اجرای REPL قابل rollback باشد.</summary>
@@ -72,6 +76,10 @@ namespace Benita
                 state.Variables[item.Key] = CloneCheckpointValue(item.Value, checkpoint, true);
             foreach (var item in _outerScopeVariables)
                 state.OuterScopeVariables[item.Key] = CloneCheckpointValue(item.Value, checkpoint, true);
+            foreach (var item in _environment.Values)
+                state.EnvironmentValues[item.Key] = CloneCheckpointValue(item.Value, checkpoint, true);
+            foreach (var item in _outerEnvironment.Values)
+                state.OuterEnvironmentValues[item.Key] = CloneCheckpointValue(item.Value, checkpoint, true);
             foreach (var item in _functions)
                 state.Functions[item.Key] = item.Value;
             state.PersistentVariableNames.UnionWith(_persistentVariableNames);
@@ -83,11 +91,19 @@ namespace Benita
             _variables = state.Variables.ToDictionary(item => item.Key,
                 item => CloneCheckpointValue(item.Value, checkpoint, false));
             ReplaceValues(_outerScopeVariables, state.OuterScopeVariables, checkpoint);
+            _outerEnvironment.Clear();
+            foreach (var item in state.OuterEnvironmentValues)
+                _outerEnvironment.SetLocal(item.Key, CloneCheckpointValue(item.Value, checkpoint, false));
+            _environment.Clear();
+            foreach (var item in state.EnvironmentValues)
+                _environment.SetLocal(item.Key, CloneCheckpointValue(item.Value, checkpoint, false));
             ReplaceItems(_functions, state.Functions);
             _persistentVariableNames.Clear();
             _persistentVariableNames.UnionWith(state.PersistentVariableNames);
             _functionReturnFlag = state.FunctionReturnFlag;
         }
+
+        internal BuiltInClassRegistry BuiltInClasses => _context.BuiltInClasses;
 
         private static object CloneCheckpointValue(object value, TransactionCheckpoint checkpoint,
             bool capturePackages)
@@ -96,6 +112,16 @@ namespace Benita
             {
                 if (capturePackages) checkpoint.CapturePackage(package);
                 return package;
+            }
+            if (value is IBuiltInClassInstance builtInInstance)
+            {
+                Dictionary<object, object> builtInClones = capturePackages
+                    ? checkpoint.CapturedValues
+                    : checkpoint.RestoredValues;
+                if (builtInClones.TryGetValue(builtInInstance, out object? existingClone)) return existingClone;
+                IBuiltInClassInstance clone = CloneBuiltInClassInstance(builtInInstance);
+                builtInClones.Add(builtInInstance, clone);
+                return clone;
             }
             if (value is not Array array) return value;
 
@@ -154,6 +180,8 @@ namespace Benita
         {
             internal Dictionary<string, object> Variables { get; } = [];
             internal Dictionary<string, object> OuterScopeVariables { get; } = [];
+            internal Dictionary<string, object> EnvironmentValues { get; } = [];
+            internal Dictionary<string, object> OuterEnvironmentValues { get; } = [];
             internal Dictionary<string, FunctionNode> Functions { get; } = [];
             internal HashSet<string> PersistentVariableNames { get; } = [];
             internal bool FunctionReturnFlag { get; set; }
@@ -175,8 +203,12 @@ namespace Benita
         {
             DebugLog($"SetOuterScopeVariables: {string.Join(", ", outerScopeVariables.Select(kvp => $"{kvp.Key} = {kvp.Value}"))}");
             _outerScopeVariables.Clear();
+            _outerEnvironment.Clear();
             foreach (var kvp in outerScopeVariables)
+            {
                 _outerScopeVariables.Add(kvp.Key, kvp.Value);
+                _outerEnvironment.SetLocal(kvp.Key, kvp.Value);
+            }
         }
 
         /// <summary>
@@ -195,7 +227,10 @@ namespace Benita
             {
                 bool isPackageField = _isPackageInterpreter && _persistentVariableNames.Contains(item.Key);
                 if (!isPackageField)
+                {
                     _variables[item.Key] = item.Value;
+                    _environment.SetLocal(item.Key, item.Value);
+                }
             }
         }
 
@@ -298,6 +333,15 @@ namespace Benita
         private object VisitObjectInstantiationNode(ObjectInstantiationNode node)
         {
             DebugLog($"Instantiating object {node.Name} from package {node.PackageName}", false);
+            if (_context.BuiltInClasses.TryGet(node.PackageName, out BuiltInClassDefinition? builtInClass))
+            {
+                List<object?> builtInArguments = node.Arguments.Select(Visit).ToList();
+                IBuiltInClassInstance builtInInstance = builtInClass.Create(builtInArguments);
+                _variables[node.Name] = builtInInstance;
+                _environment.SetLocal(node.Name, builtInInstance);
+                return builtInInstance;
+            }
+
             // Get the package definition from the list of packages
             if (!_context.Packages.TryGetValue(node.PackageName, out var packageNode))
             {
@@ -311,8 +355,9 @@ namespace Benita
             // Optionally, you might handle constructor arguments here
             // For simplicity, we assume no arguments or default constructor logic.
 
-            // Store the new instance in the variables dictionary
+            // Store the new instance in both compatibility storage and the current environment.
             _variables[node.Name] = packageInstance;
+            _environment.SetLocal(node.Name, packageInstance);
 
             DebugLog($"Object {node.Name} instantiated.");
             return packageInstance;
@@ -323,6 +368,12 @@ namespace Benita
         /// </summary>
         private object VisitNewExpressionNode(NewExpressionNode node)
         {
+            if (_context.BuiltInClasses.TryGet(node.PackageName, out BuiltInClassDefinition? builtInClass))
+            {
+                List<object?> builtInArguments = node.Arguments.Select(Visit).ToList();
+                return builtInClass.Create(builtInArguments);
+            }
+
             if (!_context.Packages.TryGetValue(node.PackageName, out PackageNode? packageNode))
                 throw new Exception($"Package '{node.PackageName}' not found.");
 
@@ -513,12 +564,15 @@ namespace Benita
                 }
 
                 var newScope = new Dictionary<string, object>(_variables);
+                var originalEnvironment = _environment;
+                var newEnvironment = new RuntimeEnvironment(originalEnvironment, $"function:{function.Name}");
 
                 for (int i = 0; i < function.Parameters.Count; i++)
                 {
                     var paramName = function.Parameters[i].Name;
                     var argValue = Visit(node.Arguments[i]);
                     newScope[paramName] = argValue;
+                    newEnvironment.Declare(paramName, argValue);
                     DebugLog($"Parameter: {paramName} = {argValue}");
                 }
 
@@ -526,6 +580,7 @@ namespace Benita
                 var originalFunctionReturnFlag = _functionReturnFlag;
                 _functionReturnFlag = false;
                 _variables = newScope;
+                _environment = newEnvironment;
 
                 try
                 {
@@ -548,14 +603,9 @@ namespace Benita
                     _functionReturnFlag = false;
                     SynchronizeFunctionScope(_variables, originalVariables);
                     _variables = originalVariables;
+                    _environment = originalEnvironment;
                     _functionReturnFlag = originalFunctionReturnFlag;
                 }
-            }
-
-            if (BuiltInRegistry.TryGet(node.FunctionName, out BuiltInDescriptor descriptor))
-            {
-                List<object> arguments = (from argument in node.Arguments select Visit(argument)).ToList();
-                return descriptor.HandlerFactory().HandleFunctionCall(node.FunctionName, arguments);
             }
 
             throw new($"Unknown function '{node.FunctionName}'");
@@ -612,6 +662,10 @@ namespace Benita
             DebugLog($"VisitVariableDeclarationNode: Name = {node.Name}, Type = {node.Type}");
 
             object value = node.Initializer != null ? Visit(node.Initializer) : GetDefaultValue(node.Type);
+            // The existing runtime permits a declaration to be re-evaluated in a loop or
+            // during package initialization. SetLocal preserves that behavior while the
+            // semantic analyzer remains responsible for duplicate declarations.
+            _environment.SetLocal(node.Name, value);
             _variables[node.Name] = value;
             return null;
         }
@@ -626,6 +680,8 @@ namespace Benita
             DebugLog($"VisitAssignmentNode: Name = {node.Name}");
 
             var value = Visit(node.Expression);
+            if (!_environment.TryAssign(node.Name, value))
+                _environment.SetLocal(node.Name, value);
             _variables[node.Name] = value;
             return value;
         }
@@ -647,7 +703,7 @@ namespace Benita
             var oldValue = Convert.ToDouble(variable);
             var newValue = Convert.ToDouble(Visit(node.Expression));
 
-            _variables[node.Name] = node.Operator switch
+            object result = node.Operator switch
             {
                 "+=" => oldValue + newValue,
                 "-=" => oldValue - newValue,
@@ -655,8 +711,11 @@ namespace Benita
                 "/=" => oldValue / newValue,
                 _ => throw new($"Unknown compound assignment operator '{node.Operator}'")
             };
-            DebugLog($"VisitCompoundAssignmentNode: oldValue = {oldValue}, Operator = {node.Operator} ,newValue = {newValue}, result = {_variables[node.Name]}");
-            return _variables[node.Name];
+            if (!_environment.TryAssign(node.Name, result))
+                _environment.SetLocal(node.Name, result);
+            _variables[node.Name] = result;
+            DebugLog($"VisitCompoundAssignmentNode: oldValue = {oldValue}, Operator = {node.Operator} ,newValue = {newValue}, result = {result}");
+            return result;
         }
 
         /// <summary>
@@ -674,14 +733,17 @@ namespace Benita
             }
 
             var oldValue = Convert.ToDouble(variable);
-            _variables[node.Name] = node.Operator switch
+            object result = node.Operator switch
             {
                 "++" => oldValue + 1,
                 "--" => oldValue - 1,
                 _ => throw new($"Unknown increment/decrement operator '{node.Operator}'")
             };
-            DebugLog($"VisitIncrementDecrementNode: result = {_variables[node.Name]}");
-            return _variables[node.Name];
+            if (!_environment.TryAssign(node.Name, result))
+                _environment.SetLocal(node.Name, result);
+            _variables[node.Name] = result;
+            DebugLog($"VisitIncrementDecrementNode: result = {result}");
+            return result;
         }
 
         /// <summary>
@@ -703,23 +765,48 @@ namespace Benita
         private object VisitBlockNode(BlockNode node)
         {
             DebugLog($"VisitBlockNode");
-            foreach (var statement in node.Statements)
+
+            // Semantic analysis gives every block its own child scope. Mirror that
+            // boundary at runtime so a declaration shadows the parent only until the
+            // block ends, while assignments still flow through RuntimeEnvironment.TryAssign.
+            RuntimeEnvironment originalEnvironment = _environment;
+            Dictionary<string, object> originalVariables = _variables;
+            _environment = new RuntimeEnvironment(originalEnvironment, "block");
+            _variables = new Dictionary<string, object>(originalVariables);
+
+            try
             {
-                if (statement == null)
-                    continue;
+                foreach (var statement in node.Statements)
+                {
+                    if (statement == null)
+                        continue;
 
-                var result = Visit(statement);
-                if (_functionReturnFlag)
-                    return result;
+                    var result = Visit(statement);
+                    if (_functionReturnFlag)
+                        return result;
+                }
+
+                return null;
             }
+            finally
+            {
+                // Keep mutations to names that existed before the block (including
+                // outer-scope assignments), but discard block-local declarations.
+                foreach (string key in originalVariables.Keys.ToList())
+                {
+                    if (_variables.TryGetValue(key, out object? value))
+                        originalVariables[key] = value;
+                }
 
-            return null;
+                _variables = originalVariables;
+                _environment = originalEnvironment;
+            }
         }
 
         /// <summary>آرگومان‌ها و scope فعلی را snapshot می‌گیرد و فراخوانی را روی thread pool اجرا می‌کند.</summary>
         private object VisitAsyncExpressionNode(AsyncExpressionNode node)
         {
-            var context = new RuntimeContext();
+            var context = new RuntimeContext(_context.BuiltInClasses);
             foreach (var item in _context.GlobalFunctions)
                 context.GlobalFunctions[item.Key] = item.Value;
             foreach (var item in _functions)
@@ -762,6 +849,13 @@ namespace Benita
         {
             if (value is PackageInstance package)
                 return package.CloneForTask(context);
+            if (value is IBuiltInClassInstance builtInInstance)
+            {
+                if (context.Values.TryGetValue(builtInInstance, out object? existingClone)) return existingClone;
+                IBuiltInClassInstance clone = CloneBuiltInClassInstance(builtInInstance);
+                context.Values.Add(builtInInstance, clone);
+                return clone;
+            }
             if (value is not Array array) return value;
             if (context.Values.TryGetValue(array, out object? existing)) return existing;
 
@@ -773,6 +867,26 @@ namespace Benita
                 copy[index] = item is null ? null! : CloneTaskValue(item, context);
             }
             return copy;
+        }
+
+        private static IBuiltInClassInstance CloneBuiltInClassInstance(IBuiltInClassInstance instance)
+        {
+            try
+            {
+                IBuiltInClassInstance clone = instance.Clone();
+                if (clone is null || ReferenceEquals(clone, instance) || clone.ClassName != instance.ClassName)
+                    throw new BuiltInException(
+                        $"Cloning '{instance.ClassName}' must return an independent instance of the same class.");
+                return clone;
+            }
+            catch (BuiltInException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                throw new BuiltInException(exception.Message, exception);
+            }
         }
 
         /// <summary>یک shell خالی با تنظیمات همین مفسر برای clone داخلی package می‌سازد.</summary>
@@ -832,6 +946,9 @@ namespace Benita
                     };
 
                     bool hadPrevious = _variables.TryGetValue(node.CatchVariable!, out object? previous);
+                    RuntimeEnvironment originalEnvironment = _environment;
+                    _environment = new RuntimeEnvironment(originalEnvironment, "catch");
+                    _environment.Declare(node.CatchVariable!, error);
                     _variables[node.CatchVariable!] = error;
                     try
                     {
@@ -839,6 +956,7 @@ namespace Benita
                     }
                     finally
                     {
+                        _environment = originalEnvironment;
                         if (hadPrevious)
                             _variables[node.CatchVariable!] = previous!;
                         else
@@ -1055,11 +1173,12 @@ namespace Benita
             if (iterable is not Array values)
                 throw new Exception("The expression after 'in' must evaluate to an array.");
 
-            bool hadPreviousValue = _variables.TryGetValue(node.VariableName, out object previousValue);
+            bool hadPreviousValue = TryGetVariableValue(node.VariableName, out object previousValue);
             try
             {
                 foreach (object? value in values)
                 {
+                    _environment.SetLocal(node.VariableName, value);
                     _variables[node.VariableName] = value;
                     try
                     {
@@ -1080,9 +1199,15 @@ namespace Benita
             finally
             {
                 if (hadPreviousValue)
+                {
+                    _environment.SetLocal(node.VariableName, previousValue);
                     _variables[node.VariableName] = previousValue;
+                }
                 else
+                {
+                    _environment.RemoveLocal(node.VariableName);
                     _variables.Remove(node.VariableName);
+                }
             }
 
             return null;
@@ -1172,6 +1297,12 @@ namespace Benita
         {
             DebugLog($"VisitMemberAccessNode: ObjectName = {node.ObjectName}");
 
+            if (_context.BuiltInClasses.TryGet(node.ObjectName, out BuiltInClassDefinition? staticClass) &&
+                node.Expression is FunctionCallNode staticCall &&
+                staticClass.StaticMethods.ContainsKey(staticCall.FunctionName))
+                return staticClass.InvokeStatic(staticCall.FunctionName,
+                    staticCall.Arguments.Select(argument => Visit(argument)).ToList())!;
+
             if (node.ObjectName == "this" || node.ObjectName == _packageScope)
                 return Visit(node.Expression);
 
@@ -1195,7 +1326,73 @@ namespace Benita
                 return result;
             }
 
-            throw new Exception($"Member access on non-package instance '{instance}'");
+            if (TryGetVariableValue(node.ObjectName, out instance) &&
+                instance is IBuiltInClassInstance builtInInstance &&
+                _context.BuiltInClasses.TryGet(builtInInstance.ClassName, out BuiltInClassDefinition? builtInClass))
+            {
+                AstNode expression = EvaluateExternalMemberInputs(node.Expression);
+                return VisitBuiltInClassMemberAccess(builtInClass, builtInInstance, expression);
+            }
+
+            throw new RuntimeException($"Member access on non-package or non-built-in instance '{instance}'");
+        }
+
+        private object VisitBuiltInClassMemberAccess(
+            BuiltInClassDefinition builtInClass,
+            IBuiltInClassInstance instance,
+            AstNode expression)
+        {
+            try
+            {
+                switch (expression)
+                {
+                    case FunctionCallNode call:
+                        return builtInClass.Invoke(instance, call.FunctionName,
+                            call.Arguments.Select(argument => Visit(argument)).ToList())!;
+                    case IdentifierNode identifier:
+                        return builtInClass.GetProperty(instance, identifier.Name)!;
+                    case AssignmentNode assignment:
+                        object? assignedValue = Visit(assignment.Expression);
+                        builtInClass.SetProperty(instance, assignment.Name, assignedValue);
+                        return assignedValue!;
+                    case CompoundAssignmentNode compound:
+                        double oldValue = Convert.ToDouble(builtInClass.GetProperty(instance, compound.Name));
+                        double operand = Convert.ToDouble(Visit(compound.Expression));
+                        double compoundValue = compound.Operator switch
+                        {
+                            "+=" => oldValue + operand,
+                            "-=" => oldValue - operand,
+                            "*=" => oldValue * operand,
+                            "/=" => oldValue / operand,
+                            _ => throw new BuiltInException(
+                                $"Unknown compound assignment operator '{compound.Operator}'.")
+                        };
+                        builtInClass.SetProperty(instance, compound.Name, compoundValue);
+                        return compoundValue;
+                    case IncrementDecrementNode increment:
+                        double currentValue = Convert.ToDouble(builtInClass.GetProperty(instance, increment.Name));
+                        double incrementedValue = increment.Operator switch
+                        {
+                            "++" => currentValue + 1,
+                            "--" => currentValue - 1,
+                            _ => throw new BuiltInException(
+                                $"Unknown increment/decrement operator '{increment.Operator}'.")
+                        };
+                        builtInClass.SetProperty(instance, increment.Name, incrementedValue);
+                        return incrementedValue;
+                    default:
+                        throw new BuiltInException(
+                            $"Unsupported member operation for built-in class '{builtInClass.Name}'.");
+                }
+            }
+            catch (BuiltInException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                throw new BuiltInException(exception.Message, exception);
+            }
         }
 
         /// <summary>
@@ -1223,6 +1420,12 @@ namespace Benita
         public bool TryGetVariableValue(string name, out object value)
         {
             DebugLog($"TryGetVariableValue: Name = {name}", false);
+
+            if (_environment.TryGet(name, out object? environmentValue))
+            {
+                value = environmentValue!;
+                return true;
+            }
 
             if (_variables.TryGetValue(name, out value))
                 return true;
@@ -1293,18 +1496,18 @@ namespace Benita
 
             var arrayName = node.Name;
             var newValue = Visit(node.Value);
-            if (!_variables.ContainsKey(arrayName))
+            if (!TryGetVariableValue(arrayName, out object arrayObj))
             {
                 throw new($"Array '{arrayName}' not found in variables.");
             }
-
-            object arrayObj = _variables[arrayName];
             if (arrayObj is object[] array)
             {
                 int index = RuntimeIndex.Normalize(Visit(node.Index), array.Length,
                     $"Index for array '{arrayName}'", allowNegative: true);
                 DebugLog($"VisitArrayAssignmentNode: index = {index}, newValue = {newValue}");
                 array[index] = newValue;
+                if (!_environment.TryAssign(arrayName, array))
+                    _environment.SetLocal(arrayName, array);
                 _variables[arrayName] = array;
                 return newValue;
             }

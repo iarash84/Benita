@@ -12,7 +12,7 @@
 
 ```benita
 _main_() {
-    print("Hello, Benita!");
+    Terminal.print("Hello, Benita!");
 }
 ```
 
@@ -20,7 +20,7 @@ _main_() {
 
 ```benita
 number x = 2;
-print(x + 3);
+Terminal.print(x + 3);
 ```
 
 ### ۲. انواع و متغیرها
@@ -49,12 +49,12 @@ initializer یک فیلد package می‌تواند متدی را که پایی�
 می‌شود و اجرای task، `init` نمونه را دوباره اجرا نمی‌کند.
 در تحلیل بازگشت تابع، `break` داخل شاخهٔ literal غیرقابل‌دسترسی مانند `if (false)` مسیر
 خروج محسوب نمی‌شود؛ اما هر `break` قابل‌دسترسی همچنان باید در مسیرهای بازگشت لحاظ شود.
-بعد از `include_once` باید فاصله باشد؛ پیشوندی مانند `include_once_helper` یک شناسهٔ عادی
-است و به‌عنوان دستور include تفسیر نمی‌شود.
+بعد از `import` باید فاصله باشد؛ پیشوندی مانند `include_once_helper` یک شناسهٔ عادی
+است و به‌عنوان file import تفسیر نمی‌شود.
 خطاهای REPL با نام مجازی `<repl>` و شماره‌خط متن پذیرفته‌شدهٔ نشست گزارش می‌شوند؛ یک
 submission ناموفق به تاریخچهٔ source افزوده نمی‌شود.
 خطاهای semantic نیز نام فایل، خط و ستون node مربوط را حفظ می‌کنند؛ اگر خطا در فایل
-`include_once`شده باشد، diagnostic به همان فایل اشاره می‌کند.
+`import`شده باشد، diagnostic به همان فایل اشاره می‌کند.
 فیلد package نیز می‌تواند با `let` تعریف شود؛ نوع آن از هر initializer دارای نوع مشخص،
 از جمله عبارت مرکب، در مرحلهٔ semantic استنتاج می‌شود.
 آرگومان متد و سمت راست assignment روی یک نمونهٔ package ابتدا در scope فراخواننده
@@ -98,9 +98,9 @@ sum++;
 number value = 12;
 
 if (value % 2 == 0) {
-    print("even");
+    Terminal.print("even");
 } else {
-    print("odd");
+    Terminal.print("odd");
 }
 ```
 
@@ -108,11 +108,11 @@ if (value % 2 == 0) {
 
 ```benita
 if (value > 10) {
-    print("large");
+    Terminal.print("large");
 } else if (value > 5) {
-    print("medium");
+    Terminal.print("medium");
 } else {
-    print("small");
+    Terminal.print("small");
 }
 ```
 
@@ -133,9 +133,9 @@ let result = match score {
 
 ```benita
 match value {
-    1 => { print("one"); }
-    2 => { print("two"); }
-    _ => { print("other"); }
+    1 => { Terminal.print("one"); }
+    2 => { Terminal.print("two"); }
+    _ => { Terminal.print("other"); }
 }
 ```
 
@@ -147,8 +147,8 @@ match value {
 
 ```benita
 match value {
-    1, 2, 3 => print("small");
-    _ => print("other");
+    1, 2, 3 => Terminal.print("small");
+    _ => Terminal.print("other");
 }
 ```
 
@@ -171,7 +171,7 @@ let level = match value {
 ```benita
 number i = 0;
 while (i < 3) {
-    print(i);
+    Terminal.print(i);
     i++;
 }
 ```
@@ -180,7 +180,7 @@ while (i < 3) {
 
 ```benita
 for (number i = 0; i < 3; i++) {
-    print(i);
+    Terminal.print(i);
 }
 ```
 
@@ -190,7 +190,7 @@ for (number i = 0; i < 3; i++) {
 ```benita
 number[] values = [10, 20, 30];
 for (item in values) {
-    print(item);
+    Terminal.print(item);
 }
 ```
 
@@ -207,12 +207,12 @@ func add(number a, number b) -> number {
 }
 
 func show(string message) -> void {
-    print(message);
+    Terminal.print(message);
     return;
 }
 
 _main_() {
-    print(add(2, 3));
+    Terminal.print(add(2, 3));
     show("done");
 }
 ```
@@ -235,56 +235,56 @@ func factorial(number n) -> number {
 ```benita
 number[] values = [10, 20, 30];
 values[1] = 25;
-print(values[1]);
+Terminal.print(values[1]);
 
-values = array_add(values, 40);
-values = array_remove(values, 0);
-print(array_len(values));
+values = Array.add(values, 40);
+values = Array.remove(values, 0);
+Terminal.print(Array.length(values));
 ```
 
 تمام عناصر یک آرایه باید نوع یکسان داشته باشند و اندیس آرایه عددی است.
-توابع جست‌وجو و مرتب‌سازی آرایه همهٔ مقادیر `number` را مستقل از representation داخلی
-آن‌ها مقایسه می‌کنند؛ برای نمونه خروجی `array_len` با literal عددی برابر است.
+متدهای جست‌وجو و مرتب‌سازی کلاس `Array` همهٔ مقادیر `number` را مستقل از representation داخلی
+آن‌ها مقایسه می‌کنند؛ برای نمونه خروجی `Array.length` با literal عددی برابر است.
 آرایه‌ای که بدون مقدار اولیه تعریف شود، به‌صورت آرایه خالی از همان نوع ایجاد می‌شود.
 در آرایهٔ سایزدار مانند `bool[3]`، اندازه باید عدد صحیح نامنفی باشد. مقدار اولیهٔ
 عناصر برای `number` برابر `0`، برای `string` رشتهٔ خالی و برای `bool` برابر `false` است.
 
-#### توابع مدیریت آرایه
+#### متدهای مدیریت آرایه
 
-توابع مدیریت آرایه، آرایه ورودی را تغییر نمی‌دهند و نتیجه را به‌صورت یک آرایه جدید
-برمی‌گردانند. بنابراین نتیجه توابعی مانند `array_insert` و `array_sort` را در یک
+متدهای static کلاس `Array`، آرایهٔ ورودی را تغییر نمی‌دهند و نتیجه را به‌صورت یک آرایهٔ جدید
+برمی‌گردانند. بنابراین نتیجهٔ متدهایی مانند `Array.insert` و `Array.sort` را در یک
 متغیر ذخیره کنید.
 
 | تابع | کاربرد | مقدار بازگشتی |
 | --- | --- | --- |
-| `array_len(array)` | تعداد عناصر آرایه را محاسبه می‌کند. | `number` |
-| `array_add(array, value)` | مقدار را به انتهای آرایه اضافه می‌کند. | آرایه جدید |
-| `array_remove(array, index)` | عنصر موجود در اندیس مشخص را حذف می‌کند. | آرایه جدید |
-| `array_contains(array, value)` | وجود مقدار در آرایه را بررسی می‌کند. | `bool` |
-| `array_index_of(array, value)` | اندیس اولین مقدار مطابق را پیدا می‌کند؛ اگر مقدار وجود نداشته باشد `-1` برمی‌گرداند. | `number` |
-| `array_reverse(array)` | ترتیب عناصر را معکوس می‌کند. | آرایه جدید |
-| `array_clear(array)` | تمام عناصر را حذف می‌کند. | آرایه خالی هم‌نوع |
-| `array_insert(array, index, value)` | مقدار را در اندیس مشخص درج می‌کند. اندیس می‌تواند از صفر تا طول آرایه باشد. | آرایه جدید |
-| `array_slice(array, start, length)` | از اندیس `start` به تعداد `length` عنصر استخراج می‌کند. | آرایه جدید |
-| `array_concat(first, second)` | دو آرایه هم‌نوع را به هم متصل می‌کند. | آرایه جدید |
-| `array_sort(array)` | عناصر را به‌صورت صعودی مرتب می‌کند. | آرایه جدید |
+| `Array.length(array)` | تعداد عناصر آرایه را محاسبه می‌کند. | `number` |
+| `Array.add(array, value)` | مقدار را به انتهای آرایه اضافه می‌کند. | آرایه جدید |
+| `Array.remove(array, index)` | عنصر موجود در اندیس مشخص را حذف می‌کند. | آرایه جدید |
+| `Array.contains(array, value)` | وجود مقدار در آرایه را بررسی می‌کند. | `bool` |
+| `Array.index_of(array, value)` | اندیس اولین مقدار مطابق را پیدا می‌کند؛ اگر مقدار وجود نداشته باشد `-1` برمی‌گرداند. | `number` |
+| `Array.reverse(array)` | ترتیب عناصر را معکوس می‌کند. | آرایه جدید |
+| `Array.clear(array)` | تمام عناصر را حذف می‌کند. | آرایه خالی هم‌نوع |
+| `Array.insert(array, index, value)` | مقدار را در اندیس مشخص درج می‌کند. اندیس می‌تواند از صفر تا طول آرایه باشد. | آرایه جدید |
+| `Array.slice(array, start, length)` | از اندیس `start` به تعداد `length` عنصر استخراج می‌کند. | آرایه جدید |
+| `Array.concat(first, second)` | دو آرایه هم‌نوع را به هم متصل می‌کند. | آرایه جدید |
+| `Array.sort(array)` | عناصر را به‌صورت صعودی مرتب می‌کند. | آرایه جدید |
 
-نوع مقداری که به `array_add` یا `array_insert` داده می‌شود باید با نوع عناصر آرایه
-یکسان باشد. همچنین دو ورودی `array_concat` باید آرایه‌های هم‌نوع باشند. اندیس یا
-بازه نامعتبر در `array_remove`، `array_insert` و `array_slice` باعث ایجاد خطا می‌شود.
+نوع مقداری که به `Array.add` یا `Array.insert` داده می‌شود باید با نوع عناصر آرایه
+یکسان باشد. همچنین دو ورودی `Array.concat` باید آرایه‌های هم‌نوع باشند. اندیس یا
+بازه نامعتبر در `Array.remove`، `Array.insert` و `Array.slice` باعث ایجاد خطا می‌شود.
 
 ```benita
 number[] values = [30, 10, 20];
 
-print(array_contains(values, 10)); // True
-print(array_index_of(values, 20)); // 2
+Terminal.print(Array.contains(values, 10)); // True
+Terminal.print(Array.index_of(values, 20)); // 2
 
-values = array_insert(values, 1, 40);       // [30, 40, 10, 20]
-number[] middle = array_slice(values, 1, 2); // [40, 10]
-values = array_concat(middle, [50, 5]);      // [40, 10, 50, 5]
-values = array_reverse(values);              // [5, 50, 10, 40]
-values = array_sort(values);                 // [5, 10, 40, 50]
-values = array_clear(values);                // []
+values = Array.insert(values, 1, 40);       // [30, 40, 10, 20]
+number[] middle = Array.slice(values, 1, 2); // [40, 10]
+values = Array.concat(middle, [50, 5]);      // [40, 10, 50, 5]
+values = Array.reverse(values);              // [5, 50, 10, 40]
+values = Array.sort(values);                 // [5, 10, 40, 50]
+values = Array.clear(values);                // []
 ```
 
 ### ۸. بسته‌ها
@@ -308,7 +308,7 @@ pkg Counter {
 _main_() {
     Counter counter = new Counter(5);
     counter.increment();
-    print(counter.value);
+    Terminal.print(counter.value);
 }
 ```
 
@@ -322,7 +322,7 @@ func create_counter(number initial) -> Counter {
 
 _main_() {
     let counter = create_counter(10);
-    print(counter.value);
+    Terminal.print(counter.value);
 }
 ```
 
@@ -353,7 +353,7 @@ pkg Counter {
 
 _main_() {
     Counter counter = new Counter();
-    print(counter.current());
+    Terminal.print(counter.current());
 }
 ```
 
@@ -375,7 +375,7 @@ pkg JsonFormatter : Formatter {
 }
 
 func show(Formatter formatter, string value) -> void {
-    print(formatter.format(value));
+    Terminal.print(formatter.format(value));
 }
 
 _main_() {
@@ -391,16 +391,16 @@ _main_() {
 
 ### مدیریت خطا
 
-تابع داخلی `error(code, message)` یک مقدار استاندارد خطا می‌سازد و `throw` آن را به
+تابع داخلی `Error.create(code, message)` یک مقدار استاندارد خطا می‌سازد و `throw` آن را به
 نزدیک‌ترین `catch` منتقل می‌کند. متغیر catch دو عضو فقط‌خواندنی `code` و `message` دارد:
 
 ```benita
 try {
-    throw error("APP100", "Operation failed");
+    throw Error.create("APP100", "Operation failed");
 } catch (failure) {
-    print(failure.code + ": " + failure.message);
+    Terminal.print(failure.code + ": " + failure.message);
 } finally {
-    print("Cleanup always runs");
+    Terminal.print("Cleanup always runs");
 }
 ```
 
@@ -428,75 +428,106 @@ code و message اصلی در مرز اجرای برنامه گزارش می‌�
 
 ```benita
 _main_() {
-    print("Enter a number:");
-    number value = to_number(input());
-    print(to_string(value));
-    print(round_number(value));
-    print(sqrt_number(value));
+    Terminal.print("Enter a number:");
+    number value = Convert.to_number(Terminal.input());
+    Terminal.print(Convert.to_string(value));
+    Terminal.print(Math.round(value));
+    Terminal.print(Math.sqrt(value));
 }
 ```
 
-توابع داخلی این بخش:
+کلاس‌ها و متدهای داخلی این بخش:
 
-- `print(value)` چاپ مقدار
-- `input()` خواندن یک خط رشته‌ای
-- `to_string(value)` تبدیل مقدار به رشته
-- `to_number(value)` تبدیل مقدار به عدد
-- `round_number(value)` گرد کردن عدد
-- `sqrt_number(value)` محاسبه ریشه دوم
+- `Terminal.print(value)` چاپ مقدار
+- `Terminal.input()` خواندن یک خط رشته‌ای
+- `Convert.to_string(value)` تبدیل مقدار به رشته
+- `Convert.to_number(value)` تبدیل مقدار به عدد
+- `Math.round(value)` گرد کردن عدد
+- `Math.sqrt(value)` محاسبه ریشه دوم
 
 #### توابع رشته‌ای
 
 ```benita
 _main_() {
     string value = "  Hello Benita  ";
-    print(string_len(value));
-    print(string_char_at(value, 2));
-    print(string_substring(value, 2, 5));
-    print(string_contains(value, "Benita"));
-    print(string_index_of(value, "Benita"));
-    print(string_replace(value, "Benita", "World"));
-    string[] parts = string_split("one,two,three", ",");
-    print(parts[1]);
-    print(string_trim(value));
-    print(string_to_lower("BENITA"));
-    print(string_to_upper("benita"));
+    Terminal.print(Text.length(value));
+    Terminal.print(Text.char_at(value, 2));
+    Terminal.print(Text.substring(value, 2, 5));
+    Terminal.print(Text.contains(value, "Benita"));
+    Terminal.print(Text.index_of(value, "Benita"));
+    Terminal.print(Text.replace(value, "Benita", "World"));
+    string[] parts = Text.split("one,two,three", ",");
+    Terminal.print(parts[1]);
+    Terminal.print(Text.trim(value));
+    Terminal.print(Text.to_lower("BENITA"));
+    Terminal.print(Text.to_upper("benita"));
 }
 ```
 
-اندیس‌های رشته از صفر شروع می‌شوند. `string_index_of` در صورت پیدا نشدن عبارت، مقدار `-1` برمی‌گرداند و `string_split` یک `string[]` تولید می‌کند.
+اندیس‌های رشته از صفر شروع می‌شوند. `String.index_of` در صورت پیدا نشدن عبارت، مقدار `-1` برمی‌گرداند و `String.split` یک `string[]` تولید می‌کند.
 
 ### ۱۰. عملیات فایل
 
+عملیات فایل از طریق کلاس داخلی `File` انجام می‌شوند:
+
 ```benita
 _main_() {
-    if (!file_exist("message.txt")) {
-        file_write("message.txt", "Hello");
+    File file = new File("message.txt");
+
+    if (!file.exists()) {
+        file.writeText("Hello");
     }
 
-    print(file_read("message.txt"));
-    file_delete("message.txt");
+    Terminal.print(file.readText());
+    file.delete();
 }
 ```
 
-توابع موجود: `file_read`، `file_write`، `file_exist` و `file_delete`.
+`File` متدهای `readText`، `writeText`، `appendText`، `exists`، `delete`، `copyTo` و `moveTo` و propertyهای فقط‌خواندنی `path` و `length` را ارائه می‌کند. توابع قدیمی `file_read`، `file_write`، `file_exist` و `file_delete` دیگر بخشی از زبان نیستند.
 
 ### ۱۱. استفاده از فایل‌های دیگر
 
+برای واردکردن فایل منبع از فرم `import "path";` استفاده کنید. مسیر نسبی همیشه نسبت به
+**پوشهٔ همان فایلی** محاسبه می‌شود که دستور `import` داخل آن نوشته شده است؛ مسیر نسبت به
+فایل دارای `_main_` یا نسبت به پوشهٔ ریشهٔ پروژه محاسبه نمی‌شود.
+
+ساختار نمونه:
+
+```text
+project/
+├── main.ben
+├── lib/
+│   └── math.ben
+└── features/
+    └── reports.ben
+```
+
+محتوای فایل‌ها:
+
 ```benita
-include_once "add-function-library.ben";
+// main.ben — این فایل _main_ دارد.
+import "lib/math.ben";       // project/lib/math.ben
+import "features/reports.ben"; // project/features/reports.ben
 
 _main_() {
-    print(add(2, 3));
+    Terminal.print(add(2, 3));
 }
 ```
 
-`include_once` هر فایل را در هر بار کامپایل حداکثر یک بار وارد می‌کند. مسیر نسبی نسبت به پوشهٔ
-فایلی که directive داخل آن نوشته شده محاسبه می‌شود؛ برای source بدون نام، پوشهٔ کاری مبنا است.
-مسیرهای معادل canonical می‌شوند. وابستگی چرخه‌ای مجاز نیست و با خطای `BEN1005` همراه
-زنجیرهٔ فایل‌ها گزارش می‌شود.
-متن `include_once` داخل کامنت یک‌خطی یا چندخطی نادیده گرفته می‌شود.
-خطاهای فایل‌های واردشده نام همان فایل و شمارهٔ خط اصلی آن را گزارش می‌کنند.
+```benita
+// features/reports.ben — مسیرهای این فایل از project/features محاسبه می‌شوند.
+import "../lib/math.ben";    // project/lib/math.ben
+```
+
+در این مثال، `"../lib/math.ben"` نسبت به `features/reports.ben` محاسبه می‌شود، نه نسبت
+به `main.ben`. بنابراین اگر همین دستور داخل `main.ben` نوشته شود، مسیر آن به
+`project/../lib/math.ben` اشاره خواهد کرد و معنای متفاوتی خواهد داشت.
+
+برای مسیر مطلق نیز می‌توان از مسیر کامل سیستم‌عامل استفاده کرد. اگر source نام فایل نداشته
+باشد، مسیرهای نسبی نسبت به پوشهٔ کاری فعلی برنامه محاسبه می‌شوند. هر فایل در هر بار کامپایل
+حداکثر یک بار وارد می‌شود؛ مسیرهای معادل canonical می‌شوند. وابستگی چرخه‌ای مجاز نیست و
+با خطای `BEN1005` همراه زنجیرهٔ فایل‌ها گزارش می‌شود. `import` داخل کامنت نادیده گرفته
+می‌شود و diagnosticهای فایل واردشده نام همان فایل و شمارهٔ خط اصلی آن را گزارش می‌کنند.
 
 ### ۱۲. کامنت‌ها
 
@@ -513,7 +544,7 @@ _main_() {
 از ریشه مخزن:
 
 ```bash
-dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+dotnet run --project Benita -- run Examples/simple-addition-expression.ben
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben
 dotnet run --project Benita -- repl
 ```
@@ -545,7 +576,7 @@ benita> value
 
 ```text
 benita> for (number i = 0; i < 3; i++) {
-   ...>     print(i);
+   ...>     Terminal.print(i);
    ...> }
 0
 1
@@ -615,7 +646,7 @@ func sign(number value) -> string {
 
 ```benita
 for (;;) {
-    print("running");
+    Terminal.print("running");
     break;
 }
 ```
@@ -633,7 +664,7 @@ The simplest Benita program starts with `_main_`:
 
 ```benita
 _main_() {
-    print("Hello, Benita!");
+    Terminal.print("Hello, Benita!");
 }
 ```
 
@@ -641,7 +672,7 @@ You can also place executable statements directly at the top level:
 
 ```benita
 number x = 2;
-print(x + 3);
+Terminal.print(x + 3);
 ```
 
 ### 2. Types and variables
@@ -670,12 +701,12 @@ Isolation also covers arrays and package instances. Their aliases are preserved 
 task clone, and cloning does not execute package `init` again.
 Definite-return analysis ignores a `break` in an unreachable literal branch such as
 `if (false)`. Any reachable `break` still counts as a possible exit from the loop.
-`include_once` must be followed by whitespace. A name such as `include_once_helper` is an
-ordinary identifier and is not interpreted as an include directive.
+`import` must be followed by whitespace. A name such as `include_once_helper` is an
+ordinary identifier and is not interpreted as a file import.
 REPL diagnostics use the virtual source name `<repl>` and accepted-session line numbers. A
 rejected submission is not appended to the session source.
 Semantic diagnostics also retain the related node's file, line, and column. An error in an
-`include_once` file therefore points to that included file.
+`import` file therefore points to that included file.
 A package field may also use `let`; semantic analysis infers it from any concretely typed
 initializer, including a composite expression.
 Method arguments and assignment right-hand sides on a package instance are evaluated in the
@@ -719,9 +750,9 @@ Ordered comparisons (`<`, `>`, `<=`, and `>=`) accept only numbers.
 number value = 12;
 
 if (value % 2 == 0) {
-    print("even");
+    Terminal.print("even");
 } else {
-    print("odd");
+    Terminal.print("odd");
 }
 ```
 
@@ -729,11 +760,11 @@ A condition must evaluate to `bool`. Multiple conditions can be chained with `el
 
 ```benita
 if (value > 10) {
-    print("large");
+    Terminal.print("large");
 } else if (value > 5) {
-    print("medium");
+    Terminal.print("medium");
 } else {
-    print("small");
+    Terminal.print("small");
 }
 ```
 
@@ -754,9 +785,9 @@ It can also execute statement blocks:
 
 ```benita
 match value {
-    1 => { print("one"); }
-    2 => { print("two"); }
-    _ => { print("other"); }
+    1 => { Terminal.print("one"); }
+    2 => { Terminal.print("two"); }
+    _ => { Terminal.print("other"); }
 }
 ```
 
@@ -768,8 +799,8 @@ body does not require braces:
 
 ```benita
 match value {
-    1, 2, 3 => print("small");
-    _ => print("other");
+    1, 2, 3 => Terminal.print("small");
+    _ => Terminal.print("other");
 }
 ```
 
@@ -792,7 +823,7 @@ A `while` loop:
 ```benita
 number i = 0;
 while (i < 3) {
-    print(i);
+    Terminal.print(i);
     i++;
 }
 ```
@@ -801,7 +832,7 @@ A `for` loop:
 
 ```benita
 for (number i = 0; i < 3; i++) {
-    print(i);
+    Terminal.print(i);
 }
 ```
 
@@ -811,7 +842,7 @@ inferred and exists only inside the loop body:
 ```benita
 number[] values = [10, 20, 30];
 for (item in values) {
-    print(item);
+    Terminal.print(item);
 }
 ```
 
@@ -828,12 +859,12 @@ func add(number a, number b) -> number {
 }
 
 func show(string message) -> void {
-    print(message);
+    Terminal.print(message);
     return;
 }
 
 _main_() {
-    print(add(2, 3));
+    Terminal.print(add(2, 3));
     show("done");
 }
 ```
@@ -856,55 +887,55 @@ func factorial(number n) -> number {
 ```benita
 number[] values = [10, 20, 30];
 values[1] = 25;
-print(values[1]);
+Terminal.print(values[1]);
 
-values = array_add(values, 40);
-values = array_remove(values, 0);
-print(array_len(values));
+values = Array.add(values, 40);
+values = Array.remove(values, 0);
+Terminal.print(Array.length(values));
 ```
 
 All elements in an array must have the same type, and an array index must be numeric.
 Array lookup and sorting compare every `number` by its Benita value regardless of its
-internal CLR representation; for example, an `array_len` result equals a numeric literal.
+internal CLR representation; for example, an `Array.length` result equals a numeric literal.
 An array declared without an initializer starts as an empty array of its declared type.
 For a sized array such as `bool[3]`, the size must be a non-negative whole number.
 The defaults are `0` for `number`, an empty string for `string`, and `false` for `bool`.
 
 #### Array management functions
 
-Array management functions do not modify their input. They return a new array, so
-store the result of functions such as `array_insert` and `array_sort` in a variable.
+`Array` static methods do not modify their input. They return a new array, so
+store the result of methods such as `Array.insert` and `Array.sort` in a variable.
 
 | Function | Description | Return value |
 | --- | --- | --- |
-| `array_len(array)` | Gets the number of elements. | `number` |
-| `array_add(array, value)` | Appends a value to the array. | New array |
-| `array_remove(array, index)` | Removes the element at the given index. | New array |
-| `array_contains(array, value)` | Checks whether the array contains a value. | `bool` |
-| `array_index_of(array, value)` | Gets the first matching index, or `-1` when the value is absent. | `number` |
-| `array_reverse(array)` | Reverses the element order. | New array |
-| `array_clear(array)` | Removes every element. | New empty array of the same type |
-| `array_insert(array, index, value)` | Inserts a value at an index from zero through the array length. | New array |
-| `array_slice(array, start, length)` | Copies `length` elements beginning at `start`. | New array |
-| `array_concat(first, second)` | Joins two arrays of the same type. | New array |
-| `array_sort(array)` | Sorts the elements in ascending order. | New array |
+| `Array.length(array)` | Gets the number of elements. | `number` |
+| `Array.add(array, value)` | Appends a value to the array. | New array |
+| `Array.remove(array, index)` | Removes the element at the given index. | New array |
+| `Array.contains(array, value)` | Checks whether the array contains a value. | `bool` |
+| `Array.index_of(array, value)` | Gets the first matching index, or `-1` when the value is absent. | `number` |
+| `Array.reverse(array)` | Reverses the element order. | New array |
+| `Array.clear(array)` | Removes every element. | New empty array of the same type |
+| `Array.insert(array, index, value)` | Inserts a value at an index from zero through the array length. | New array |
+| `Array.slice(array, start, length)` | Copies `length` elements beginning at `start`. | New array |
+| `Array.concat(first, second)` | Joins two arrays of the same type. | New array |
+| `Array.sort(array)` | Sorts the elements in ascending order. | New array |
 
-Values passed to `array_add` and `array_insert` must match the array element type.
-Both inputs to `array_concat` must also have the same element type. Invalid indices
-or ranges passed to `array_remove`, `array_insert`, or `array_slice` produce an error.
+Values passed to `Array.add` and `Array.insert` must match the array element type.
+Both inputs to `Array.concat` must also have the same element type. Invalid indices
+or ranges passed to `Array.remove`, `Array.insert`, or `Array.slice` produce an error.
 
 ```benita
 number[] values = [30, 10, 20];
 
-print(array_contains(values, 10)); // True
-print(array_index_of(values, 20)); // 2
+Terminal.print(Array.contains(values, 10)); // True
+Terminal.print(Array.index_of(values, 20)); // 2
 
-values = array_insert(values, 1, 40);       // [30, 40, 10, 20]
-number[] middle = array_slice(values, 1, 2); // [40, 10]
-values = array_concat(middle, [50, 5]);      // [40, 10, 50, 5]
-values = array_reverse(values);              // [5, 50, 10, 40]
-values = array_sort(values);                 // [5, 10, 40, 50]
-values = array_clear(values);                // []
+values = Array.insert(values, 1, 40);       // [30, 40, 10, 20]
+number[] middle = Array.slice(values, 1, 2); // [40, 10]
+values = Array.concat(middle, [50, 5]);      // [40, 10, 50, 5]
+values = Array.reverse(values);              // [5, 50, 10, 40]
+values = Array.sort(values);                 // [5, 10, 40, 50]
+values = Array.clear(values);                // []
 ```
 
 ### 8. Packages
@@ -928,7 +959,7 @@ pkg Counter {
 _main_() {
     Counter counter = new Counter(5);
     counter.increment();
-    print(counter.value);
+    Terminal.print(counter.value);
 }
 ```
 
@@ -942,7 +973,7 @@ func create_counter(number initial) -> Counter {
 
 _main_() {
     let counter = create_counter(10);
-    print(counter.value);
+    Terminal.print(counter.value);
 }
 ```
 
@@ -981,7 +1012,7 @@ pkg JsonFormatter : Formatter {
 }
 
 func show(Formatter formatter, string value) -> void {
-    print(formatter.format(value));
+    Terminal.print(formatter.format(value));
 }
 
 _main_() {
@@ -997,16 +1028,16 @@ Multiple contracts use commas: `pkg Channel : Reader, Writer`.
 
 #### Error handling
 
-The built-in `error(code, message)` creates a standard error value, and `throw` transfers
+The built-in `Error.create(code, message)` creates a standard error value, and `throw` transfers
 it to the nearest catch. A catch variable exposes read-only `code` and `message` members:
 
 ```benita
 try {
-    throw error("APP100", "Operation failed");
+    throw Error.create("APP100", "Operation failed");
 } catch (failure) {
-    print(failure.code + ": " + failure.message);
+    Terminal.print(failure.code + ": " + failure.message);
 } finally {
-    print("Cleanup always runs");
+    Terminal.print("Cleanup always runs");
 }
 ```
 
@@ -1044,7 +1075,7 @@ pkg Counter {
 
 _main_() {                            // never public/private
     Counter counter = new Counter();
-    print(counter.current());
+    Terminal.print(counter.current());
 }
 ```
 
@@ -1052,75 +1083,104 @@ _main_() {                            // never public/private
 
 ```benita
 _main_() {
-    print("Enter a number:");
-    number value = to_number(input());
-    print(to_string(value));
-    print(round_number(value));
-    print(sqrt_number(value));
+    Terminal.print("Enter a number:");
+    number value = Convert.to_number(Terminal.input());
+    Terminal.print(Convert.to_string(value));
+    Terminal.print(Math.round(value));
+    Terminal.print(Math.sqrt(value));
 }
 ```
 
 Built-in functions in this group:
 
-- `print(value)` prints a value
-- `input()` reads one line of text
-- `to_string(value)` converts a value to a string
-- `to_number(value)` converts a value to a number
-- `round_number(value)` rounds a number
-- `sqrt_number(value)` returns a square root
+- `Terminal.print(value)` prints a value
+- `Terminal.input()` reads one line of text
+- `Convert.to_string(value)` converts a value to a string
+- `Convert.to_number(value)` converts a value to a number
+- `Math.round(value)` rounds a number
+- `Math.sqrt(value)` returns a square root
 
 #### String functions
 
 ```benita
 _main_() {
     string value = "  Hello Benita  ";
-    print(string_len(value));
-    print(string_char_at(value, 2));
-    print(string_substring(value, 2, 5));
-    print(string_contains(value, "Benita"));
-    print(string_index_of(value, "Benita"));
-    print(string_replace(value, "Benita", "World"));
-    string[] parts = string_split("one,two,three", ",");
-    print(parts[1]);
-    print(string_trim(value));
-    print(string_to_lower("BENITA"));
-    print(string_to_upper("benita"));
+    Terminal.print(Text.length(value));
+    Terminal.print(Text.char_at(value, 2));
+    Terminal.print(Text.substring(value, 2, 5));
+    Terminal.print(Text.contains(value, "Benita"));
+    Terminal.print(Text.index_of(value, "Benita"));
+    Terminal.print(Text.replace(value, "Benita", "World"));
+    string[] parts = Text.split("one,two,three", ",");
+    Terminal.print(parts[1]);
+    Terminal.print(Text.trim(value));
+    Terminal.print(Text.to_lower("BENITA"));
+    Terminal.print(Text.to_upper("benita"));
 }
 ```
 
-String indexes are zero-based. `string_index_of` returns `-1` when no match is found, and `string_split` returns a `string[]`.
+String indexes are zero-based. `String.index_of` returns `-1` when no match is found, and `String.split` returns a `string[]`.
 
 ### 10. File operations
 
+File operations use the `File` built-in class:
+
 ```benita
 _main_() {
-    if (!file_exist("message.txt")) {
-        file_write("message.txt", "Hello");
+    File file = new File("message.txt");
+
+    if (!file.exists()) {
+        file.writeText("Hello");
     }
 
-    print(file_read("message.txt"));
-    file_delete("message.txt");
+    Terminal.print(file.readText());
+    file.delete();
 }
 ```
 
-Available functions are `file_read`, `file_write`, `file_exist`, and `file_delete`.
+`File` provides `readText`, `writeText`, `appendText`, `exists`, `delete`, `copyTo`, and `moveTo`, plus read-only `path` and `length` properties. The old `file_read`, `file_write`, `file_exist`, and `file_delete` functions are no longer part of the language.
 
-### 11. Including other files
+### 11. Importing other files
+
+Use `import "path";` to import a source file. A relative path is always resolved from the
+**directory of the file that contains that `import` statement**. It is not resolved from the
+file containing `_main_` and not from the project root.
+
+Example layout:
+
+```text
+project/
+├── main.ben
+├── lib/
+│   └── math.ben
+└── features/
+    └── reports.ben
+```
 
 ```benita
-include_once "add-function-library.ben";
+// main.ben — contains _main_.
+import "lib/math.ben";          // project/lib/math.ben
+import "features/reports.ben"; // project/features/reports.ben
 
 _main_() {
-    print(add(2, 3));
+    Terminal.print(add(2, 3));
 }
 ```
 
-`include_once` imports each file at most once per compilation. Relative paths are resolved from
-the directory of the file containing each directive; the working directory is used for unnamed source.
-Equivalent path spellings are normalized. Circular dependencies are rejected with `BEN1005`
-and the complete include chain.
-An `include_once` inside a line or block comment is ignored.
-Diagnostics from included files report that file and its original line number.
+```benita
+// features/reports.ben — paths here are resolved from project/features.
+import "../lib/math.ben";       // project/lib/math.ben
+```
+
+Here, `"../lib/math.ben"` is resolved relative to `features/reports.ben`, not relative to
+`main.ben`. If the same statement were written in `main.ben`, it would refer to
+`project/../lib/math.ben` and would have a different meaning.
+
+Absolute paths are also accepted. If the source has no file name, relative paths are resolved
+from the process working directory. Each file is imported at most once per compilation;
+equivalent paths are canonicalized. Circular dependencies are rejected with `BEN1005` and
+the complete dependency chain. Imports inside comments are ignored, and diagnostics from an
+imported file report that file's original name and line number.
 
 ### 12. Comments
 
@@ -1137,7 +1197,7 @@ Diagnostics from included files report that file and its original line number.
 From the repository root:
 
 ```bash
-dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+dotnet run --project Benita -- run Examples/simple-addition-expression.ben
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben
 dotnet run --project Benita -- repl
 ```
@@ -1166,7 +1226,7 @@ Multiline constructs remain at the `...>` prompt until all braces are closed:
 
 ```text
 benita> for (number i = 0; i < 3; i++) {
-   ...>     print(i);
+   ...>     Terminal.print(i);
    ...> }
 0
 1

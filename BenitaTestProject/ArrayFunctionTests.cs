@@ -10,14 +10,16 @@ public class ArrayFunctionTests
     public void NumericLookupsAndSort_IgnoreClrNumberRepresentation()
     {
         const string source = """
+            import Terminal;
+            import Array;
             _main_() {
                 number[] seed = [10, 20];
-                number[] values = [1, array_len(seed)];
-                print(array_contains(values, 2));
-                print(array_index_of(values, 2));
-                values = array_sort(values);
-                print(values[0]);
-                print(values[1]);
+                number[] values = [1, Array.length(seed)];
+                Terminal.print(Array.contains(values, 2));
+                Terminal.print(Array.index_of(values, 2));
+                values = Array.sort(values);
+                Terminal.print(values[0]);
+                Terminal.print(values[1]);
             }
             """;
 
@@ -32,17 +34,18 @@ public class ArrayFunctionTests
     }
 
     [DataTestMethod]
-    [DataRow("array_add(source, 3)")]
-    [DataRow("array_remove(source, 0)")]
-    [DataRow("array_reverse(source)")]
-    [DataRow("array_clear(source)")]
-    [DataRow("array_insert(source, 0, 3)")]
-    [DataRow("array_slice(source, 0, 1)")]
-    [DataRow("array_concat(source, [3])")]
-    [DataRow("array_sort(source)")]
+    [DataRow("Array.add(source, 3)")]
+    [DataRow("Array.remove(source, 0)")]
+    [DataRow("Array.reverse(source)")]
+    [DataRow("Array.clear(source)")]
+    [DataRow("Array.insert(source, 0, 3)")]
+    [DataRow("Array.slice(source, 0, 1)")]
+    [DataRow("Array.concat(source, [3])")]
+    [DataRow("Array.sort(source)")]
     public void Check_LetInfersConcreteArrayTypeFromArrayPreservingBuiltIn(string expression)
     {
         string source = $@"
+            import Array;
             _main_() {{
                 number[] source = [2, 1];
                 let result = {expression};
@@ -56,10 +59,12 @@ public class ArrayFunctionTests
     public void Exec_InferredArrayBuiltInResultSupportsIndexAccess()
     {
         const string source = """
+            import Terminal;
+            import Array;
             _main_() {
                 number[] source = [2, 1];
-                let result = array_reverse(source);
-                print(result[0]);
+                let result = Array.reverse(source);
+                Terminal.print(result[0]);
             }
             """;
         using var output = new ConsoleOutput();
@@ -72,20 +77,22 @@ public class ArrayFunctionTests
     [TestMethod]
     public void Exec_WithAllArrayFunctions_ProducesExpectedOutput()
     {
-        const string source = @"
+        const string source = @"import Terminal;
+import Array;
+
 _main_() {
     number[] values = [3, 1, 2];
-    print(array_contains(values, 1));
-    print(array_index_of(values, 2));
-    values = array_insert(values, 1, 4);
-    values = array_reverse(values);
-    number[] part = array_slice(values, 1, 2);
-    values = array_concat(part, [5, 0]);
-    values = array_sort(values);
-    print(values[0]);
-    print(values[3]);
-    values = array_clear(values);
-    print(array_len(values));
+    Terminal.print(Array.contains(values, 1));
+    Terminal.print(Array.index_of(values, 2));
+    values = Array.insert(values, 1, 4);
+    values = Array.reverse(values);
+    number[] part = Array.slice(values, 1, 2);
+    values = Array.concat(part, [5, 0]);
+    values = Array.sort(values);
+    Terminal.print(values[0]);
+    Terminal.print(values[3]);
+    values = Array.clear(values);
+    Terminal.print(Array.length(values));
 }";
         const string expected = "True\r\n2\r\n0\r\n5\r\n0\r\n";
         using var output = new ConsoleOutput();
@@ -98,13 +105,14 @@ _main_() {
     [TestMethod]
     public void Check_WithMismatchedArrayElementType_ThrowsSemanticException()
     {
-        const string source = @"
+        const string source = @"import Array;
+
 _main_() {
     number[] values = [1, 2];
-    values = array_insert(values, 1, ""wrong"");
+    values = Array.insert(values, 1, ""wrong"");
 }";
 
         var exception = Assert.ThrowsException<SemanticException>(() => new CompilerClass().Check(source));
-        StringAssert.Contains(exception.Message, "array_insert");
+        StringAssert.Contains(exception.Message, "Array.insert");
     }
 }

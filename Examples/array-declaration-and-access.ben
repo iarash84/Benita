@@ -1,3 +1,4 @@
+import Terminal;
 // تعریف آرایه با و بدون initializer، انتساب و دسترسی با index را نمایش می‌دهد.
 // Demonstrates arrays with and without initializers, assignment, and indexed access.
 number[] arr = [10, 20, 30];  // Example array declaration with initializer
@@ -5,5 +6,5 @@ number[] arr = [10, 20, 30];  // Example array declaration with initializer
 _main_() {
     number[] anotherArr;  // Example array declaration without initializer
     anotherArr = [5, 10, 15];
-    print(anotherArr[1]);
+    Terminal.print(anotherArr[1]);
 }

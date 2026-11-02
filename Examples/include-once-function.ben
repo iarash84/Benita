@@ -1,9 +1,10 @@
-// تضمین می‌کند include_once یک کتابخانهٔ تکراری را فقط یک بار وارد کند.
-// Verifies that include_once imports the same function library only once.
-include_once "add-function-library.ben";
-include_once "add-function-library.ben";
+import Terminal;
+// تضمین می‌کند import یک کتابخانهٔ تکراری را فقط یک بار وارد کند.
+// Verifies that import imports the same function library only once.
+import "add-function-library.ben";
+import "add-function-library.ben";
 
 _main_() {
     number result = add(2, 3);
-    print(result);
+    Terminal.print(result);
 }

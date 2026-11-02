@@ -1,3 +1,4 @@
+import Terminal;
 // الگوی Proxy دسترسی به سرویس راه‌دور را کنترل و نتیجه را cache می‌کند.
 // Demonstrates Proxy by controlling remote-service access and caching its result.
 interface DataService { func fetch() -> string; }
@@ -22,4 +23,4 @@ pkg CachedDataProxy : DataService {
 
 func load(DataService service) -> string { return service.fetch(); }
 
-_main_() { print(load(new CachedDataProxy())); }
+_main_() { Terminal.print(load(new CachedDataProxy())); }

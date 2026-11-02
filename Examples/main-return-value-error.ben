@@ -1,7 +1,8 @@
+import Terminal;
 // نمونهٔ منفی است که بازگرداندن مقدار از تابع void یعنی _main_ را رد می‌کند.
 // Negative example rejecting a value returned from the void _main_ entry point.
 _main_()
 {
-	print("This is a test");
+	Terminal.print("This is a test");
 	return 1;
 }

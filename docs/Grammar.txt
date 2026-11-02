@@ -6,12 +6,17 @@ This document uses EBNF. Terminals are written in quotes, `?` means optional,
 
 program                 ::= top-level-item* EOF ;
 
-top-level-item          ::= package-declaration
+Top-level import declarations must appear before all other top-level items.
+
+ top-level-item          ::= import-declaration
+                           | package-declaration
                           | interface-declaration
                           | access-modifier? function-declaration
                           | access-modifier? variable-declaration
                           | main-function
                           | statement ;
+
+import-declaration      ::= "import" identifier ";" ;
 
 package-declaration     ::= "pkg" identifier implementation-list?
                             "{" package-member* "}" ;
@@ -197,7 +202,7 @@ Semantic constraints
 20. Interfaces contain method signatures only: fields, bodies, constructors,
     and access modifiers are not permitted. Class inheritance and overloads are
     not part of the language yet.
-21. `error(code, message)` creates the only value accepted by `throw`. Both
+21. `Error.create(code, message)` creates the only value accepted by `throw`. Both
     arguments are strings. An error exposes read-only string members `code` and
     `message` inside a catch block.
 22. A try statement requires at least one catch or finally clause. The catch
@@ -252,7 +257,7 @@ Semantic constraints
     an initializer because Benita does not define a `null` reference value.
 43. A `finally` block that always returns or throws determines the completion of
     its enclosing `try`, even when the `try` or `catch` block can fall through.
-44. Tokens expanded from `include_once` retain their original file name, line
+44. Tokens expanded from `import` retain their original file name, line
     number, and source line so lexer and parser diagnostics identify the included file.
 45. A REPL submission is atomic with respect to language runtime state. If execution
     fails, variable, array, function, package-instance, and global state is restored.
@@ -270,12 +275,12 @@ Semantic constraints
     cycles. Task mutation therefore cannot change mutable state visible to the caller.
 52. Definite-return analysis ignores a `break` in an unreachable literal branch such as
     `if (false)`, but a reachable `break` still prevents an infinite loop from proving return.
-53. `include_once` is recognized as a directive only at a complete token boundary followed
+53. `import` is recognized as a directive only at a complete token boundary followed
     by whitespace; names such as `include_once_helper` remain ordinary identifiers.
 54. REPL diagnostics use the virtual source name `<repl>` and line numbers relative to the
     accepted session source; rejected submissions do not advance that source.
 55. Semantic diagnostics retain the source file, line, and column of the analyzed AST node,
-    including nodes originating in a file expanded through `include_once`.
+    including nodes originating in a file expanded through `import`.
 56. A package field declared with `let` is inferred by semantic analysis from any concrete
     initializer expression; inference is not limited to literals or earlier function calls.
 57. Arguments and right-hand-side expressions in an external package member access are
@@ -341,7 +346,7 @@ Semantic constraints
     اینترفیس در زمان اجرا به نمونهٔ واقعی پکیج هدایت می‌شود.
 20. اینترفیس‌ها فقط شامل امضای متدها هستند؛ فیلد، بدنه، سازنده و اصلاح‌گر دسترسی در
     آن‌ها مجاز نیست. وراثت کلاسی و سربارگذاری هنوز بخشی از زبان نیستند.
-21. `error(code, message)` تنها مقداری را ایجاد می‌کند که `throw` می‌پذیرد. هر دو
+21. `Error.create(code, message)` تنها مقداری را ایجاد می‌کند که `throw` می‌پذیرد. هر دو
     آرگومان رشته هستند. یک خطا درون بلوک `catch` اعضای رشته‌ای و فقط‌خواندنی `code`
     و `message` را در اختیار می‌گذارد.
 22. دستور `try` باید دست‌کم یک بند `catch` یا `finally` داشته باشد. دامنهٔ متغیر
@@ -397,7 +402,7 @@ Semantic constraints
 43. بلوک `finally` که همیشه مقدار بازمی‌گرداند یا خطا پرتاب می‌کند، نحوهٔ پایان `try`
     دربرگیرندهٔ خود را تعیین می‌کند؛ حتی اگر بلوک `try` یا `catch` بتواند به انتهای
     خود برسد.
-44. توکن‌های گسترش‌یافته از `include_once` نام فایل، شمارهٔ خط و متن خط مبدأ خود را
+44. توکن‌های گسترش‌یافته از `import` نام فایل، شمارهٔ خط و متن خط مبدأ خود را
     حفظ می‌کنند تا عیب‌یابی Lexer و Parser فایل الحاق‌شده را مشخص کند.
 45. هر ورودی REPL نسبت به وضعیت زمان اجرای زبان اتمیک است. اگر اجرا شکست بخورد، وضعیت
     متغیرها، آرایه‌ها، توابع، نمونه‌های پکیج و داده‌های سراسری بازیابی می‌شود.
@@ -417,13 +422,13 @@ Semantic constraints
 52. تحلیل بازگشت قطعی، یک `break` در شاخهٔ لفظی غیرقابل دسترسی مانند `if (false)` را
     نادیده می‌گیرد؛ اما یک `break` قابل دسترسی همچنان مانع از آن می‌شود که حلقهٔ
     بی‌نهایت، بازگشت را اثبات کند.
-53. `include_once` فقط زمانی به‌عنوان دستورالعمل شناخته می‌شود که در مرز کامل توکن
+53. `import` فقط زمانی به‌عنوان دستورالعمل شناخته می‌شود که در مرز کامل توکن
     قرار داشته و پس از آن فاصلهٔ خالی باشد؛ نام‌هایی مانند `include_once_helper`
     شناسهٔ عادی باقی می‌مانند.
 54. عیب‌یابی‌های REPL از نام مجازی `<repl>` و شماره‌خط‌های وابسته به متن پذیرفته‌شدهٔ
     نشست استفاده می‌کنند؛ ورودی‌های ردشده این متن مبدأ را جلو نمی‌برند.
 55. عیب‌یابی‌های معنایی نام فایل، خط و ستون گره AST تحلیل‌شده را حفظ می‌کنند؛ این
-    قاعده گره‌های یک فایل گسترش‌یافته از طریق `include_once` را نیز شامل می‌شود.
+    قاعده گره‌های یک فایل گسترش‌یافته از طریق `import` را نیز شامل می‌شود.
 56. نوع فیلد `let` در پکیج توسط تحلیل معنایی و از هر عبارت مقداردهی اولیهٔ مشخص
     استنتاج می‌شود؛ استنتاج به مقادیر لفظی یا فراخوانی توابع قبلی محدود نیست.
 57. آرگومان‌ها و عبارت‌های سمت راست در دسترسی خارجی به عضو پکیج، پیش از هدایت فراخوانی
@@ -446,7 +451,7 @@ Semantic constraints
 Notes
 -----
 
-`include_once "path";` is a preprocessing directive rather than a tokenized
+`import "path";` is a preprocessing directive rather than a tokenized
 grammar production and may appear on its own source line. Directives are
 expanded recursively before parsing. Text inside line or block comments is never
 treated as an include directive. Relative paths are resolved from the directory of the
@@ -459,7 +464,7 @@ authoritative definitions live in `BuiltInRegistry`.
 یادداشت‌ها (فارسی)
 ------------------
 
-`include_once "path";` یک دستورالعمل پیش‌پردازشی است، نه یک قاعدهٔ تولید در
+`import "path";` یک دستورالعمل پیش‌پردازشی است، نه یک قاعدهٔ تولید در
 دستور زبان، و می‌تواند در خطی مستقل از کد مبدأ قرار گیرد. دستورالعمل‌ها پیش از
 تجزیه به‌صورت بازگشتی گسترش می‌یابند. متن درون توضیحات خطی یا بلوکی هرگز به‌عنوان
 دستورالعمل الحاق در نظر گرفته نمی‌شود. مسیرهای نسبی بر مبنای پوشهٔ فایل حاوی
