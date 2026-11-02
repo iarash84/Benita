@@ -15,18 +15,80 @@ internal sealed class TerminalClass : StaticBuiltInClassDefinition
 {
     internal TerminalClass() : base("Terminal", [
         new("print", Types.Void, [Types.Any]),
-        new("input", Types.String, [])]) { }
+        new("write", Types.Void, [Types.Any]),
+        new("write_line", Types.Void, [Types.Any]),
+        new("input", Types.String, []),
+        new("input_prompt", Types.String, [Types.String]),
+        new("read_number", Types.Number, [Types.String]),
+        new("read_boolean", Types.Bool, [Types.String]),
+        new("clear", Types.Void, []),
+        new("is_input_redirected", Types.Bool, []),
+        new("is_output_redirected", Types.Bool, [])]) { }
 
     protected override object? InvokeStaticMethod(string methodName, IReadOnlyList<object?> arguments) => methodName switch
     {
-        "print" => Print(arguments),
-        "input" => System.Console.ReadLine() ?? string.Empty,
+        "print" or "write_line" => WriteLine(arguments),
+        "write" => Write(arguments),
+        "input" => ReadLine(),
+        "input_prompt" => ReadLineWithPrompt(arguments),
+        "read_number" => ReadNumber(arguments),
+        "read_boolean" => ReadBoolean(arguments),
+        "clear" => Clear(),
+        "is_input_redirected" => System.Console.IsInputRedirected,
+        "is_output_redirected" => System.Console.IsOutputRedirected,
         _ => throw new BuiltInException($"Class '{Name}' has no static method named '{methodName}'.")
     };
 
-    private static object? Print(IReadOnlyList<object?> arguments)
+    private static object? Write(IReadOnlyList<object?> arguments)
+    {
+        System.Console.Write(arguments[0]);
+        return null;
+    }
+
+    private static object? WriteLine(IReadOnlyList<object?> arguments)
     {
         System.Console.WriteLine(arguments[0]);
+        return null;
+    }
+
+    private static string ReadLine() => System.Console.ReadLine() ?? string.Empty;
+
+    private static string ReadLineWithPrompt(IReadOnlyList<object?> arguments)
+    {
+        System.Console.Write(arguments[0]);
+        return ReadLine();
+    }
+
+    private static double ReadNumber(IReadOnlyList<object?> arguments)
+    {
+        string value = ReadLineWithPrompt(arguments);
+        if (double.TryParse(value, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out double result))
+            return result;
+
+        throw new BuiltInException($"Terminal.read_number could not parse '{value}' as a number.");
+    }
+
+    private static bool ReadBoolean(IReadOnlyList<object?> arguments)
+    {
+        string value = ReadLineWithPrompt(arguments);
+        if (bool.TryParse(value, out bool result))
+            return result;
+
+        throw new BuiltInException($"Terminal.read_boolean could not parse '{value}' as a boolean.");
+    }
+
+    private static object? Clear()
+    {
+        try
+        {
+            System.Console.Clear();
+        }
+        catch (IOException exception)
+        {
+            throw new BuiltInException($"Terminal.clear failed: {exception.Message}", exception);
+        }
+
         return null;
     }
 }

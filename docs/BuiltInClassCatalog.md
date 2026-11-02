@@ -1,5 +1,40 @@
 # کاتالوگ رسمی کلاس‌های داخلی Benita
 
+## `Terminal`
+
+کلاس static `Terminal` برای تعامل برنامه با ورودی و خروجی استاندارد استفاده می‌شود. همهٔ متدها باید با `import Terminal;` فعال شوند.
+
+| متد | خروجی | توضیح |
+|---|---|---|
+| `print(any value)` | `void` | چاپ مقدار و رفتن به خط بعد؛ معادل `write_line` |
+| `write(any value)` | `void` | چاپ مقدار بدون رفتن به خط بعد |
+| `write_line(any value)` | `void` | چاپ مقدار و رفتن به خط بعد |
+| `input()` | `string` | خواندن یک خط؛ در پایان ورودی رشتهٔ خالی برمی‌گرداند |
+| `input_prompt(string prompt)` | `string` | چاپ prompt بدون newline و سپس خواندن یک خط |
+| `read_number(string prompt)` | `number` | خواندن عدد با قالب invariant؛ ورودی نامعتبر خطای runtime ایجاد می‌کند |
+| `read_boolean(string prompt)` | `bool` | خواندن `true` یا `false`؛ ورودی نامعتبر خطای runtime ایجاد می‌کند |
+| `clear()` | `void` | پاک‌کردن صفحهٔ terminal |
+| `is_input_redirected()` | `bool` | مشخص می‌کند stdin از terminal جدا شده یا redirect شده است |
+| `is_output_redirected()` | `bool` | مشخص می‌کند stdout از terminal جدا شده یا redirect شده است |
+
+نمونه:
+
+```benita
+import Terminal;
+
+_main_() {
+    Terminal.write("Name: ");
+    string name = Terminal.input();
+    number age = Terminal.read_number("Age: ");
+    bool active = Terminal.read_boolean("Active (true/false): ");
+    Terminal.write_line("Hello " + name);
+    Terminal.print(age);
+    Terminal.print(active);
+}
+```
+
+---
+
 این سند مرجع API عمومی کلاس‌های داخلی موجود در Benita است. محتوای این فایل باید رفتار قابل مشاهدهٔ کلاس‌ها را ثبت کند؛ بنابراین توضیحات آن بر اساس قراردادهای ثبت‌شده، پیاده‌سازی runtime و تست‌های پروژه نوشته شده است.
 
 ---

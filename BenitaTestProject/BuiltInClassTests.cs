@@ -7,6 +7,47 @@ namespace BenitaTestProject;
 public class BuiltInClassTests
 {
     [TestMethod]
+    public void BuiltInClass_TerminalSupportsWritingPromptsAndTypedInput()
+    {
+        const string source = """
+            import Terminal;
+            _main_() {
+                Terminal.write("name: ");
+                string name = Terminal.input_prompt("");
+                Terminal.write_line("hello " + name);
+                number amount = Terminal.read_number("");
+                bool enabled = Terminal.read_boolean("");
+                Terminal.print(amount);
+                Terminal.print(enabled);
+            }
+            """;
+        using var output = new ConsoleOutput();
+        using var input = new ConsoleInput("Benita\n42.5\ntrue\n");
+
+        new CompilerClass().Exec(source);
+
+        Assert.AreEqual($"name: hello Benita{Environment.NewLine}42.5{Environment.NewLine}True{Environment.NewLine}",
+            output.GetOutput());
+    }
+
+    [TestMethod]
+    public void BuiltInClass_TerminalExposesRedirectionStatus()
+    {
+        const string source = """
+            import Terminal;
+            _main_() {
+                Terminal.print(Terminal.is_input_redirected());
+                Terminal.print(Terminal.is_output_redirected());
+            }
+            """;
+        using var output = new ConsoleOutput();
+
+        new CompilerClass().Exec(source);
+
+        Assert.IsFalse(string.IsNullOrWhiteSpace(output.GetOutput()));
+    }
+
+    [TestMethod]
     public void BuiltInClassRegistry_RegistersAndLooksUpDefinitions()
     {
         BuiltInClassRegistry registry = new();
