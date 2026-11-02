@@ -99,7 +99,11 @@ public sealed class CompilerClass
         return tokens;
     }
 
-    private static ProgramNode Parse(List<Token> tokens) => new Parser(tokens).Parse();
+    private static ProgramNode Parse(List<Token> tokens)
+    {
+        ParseResult result = new Parser(tokens).ParseResultOrThrow();
+        return result.Program!;
+    }
 
     private static ProgramNode OptimizeIfRequested(ProgramNode program, bool printAst, bool optimizeAst)
     {
@@ -111,8 +115,12 @@ public sealed class CompilerClass
     private static void AnalyzeProgram(ProgramNode program, BuiltInClassRegistry builtInClasses)
     {
         var analyzer = new SemanticAnalyzer(builtInClasses);
-        try { analyzer.Analyze(program); }
-        catch (BenitaException) { throw; }
-        catch (Exception exception) { throw new SemanticException(exception.Message, analyzer.CurrentSpan, exception); }
+        SemanticAnalysisResult result = analyzer.AnalyzeResultOrThrow(program);
+        if (result.IsSuccess)
+            return;
+
+        CompilationDiagnostic diagnostic = result.Diagnostics.First(diagnostic =>
+            diagnostic.Severity == CompilationDiagnosticSeverity.Error);
+        throw new SemanticException(diagnostic.Description, diagnostic.Span);
     }
 }

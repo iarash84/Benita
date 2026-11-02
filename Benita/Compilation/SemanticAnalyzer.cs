@@ -45,10 +45,33 @@
         /// <param name="program">The ProgramNode to analyze.</param>
         public void Analyze(ProgramNode program)
         {
+            SemanticAnalysisResult result = AnalyzeResultOrThrow(program);
+            if (!result.IsSuccess)
+            {
+                CompilationDiagnostic diagnostic = result.Diagnostics.First(diagnostic =>
+                    diagnostic.Severity == CompilationDiagnosticSeverity.Error);
+                throw new Exception(diagnostic.Description);
+            }
+        }
+
+        /// <summary>
+        /// Runs the semantic phase through an explicit result contract. The method captures
+        /// one semantic failure as a diagnostic; callers that need the legacy throwing
+        /// behavior should use <see cref="Analyze"/>.
+        /// </summary>
+        public SemanticAnalysisResult AnalyzeResultOrThrow(ProgramNode program)
+        {
+            ArgumentNullException.ThrowIfNull(program);
             _packages.Clear();
             _interfaces.Clear();
             _globalVariables.Clear();
             _functions.Clear();
+
+            try
+            {
+            if (program.MainFunction is null && program.Statements.Count == 0)
+                throw new SemanticException("No main function or top-level executable statement was found.",
+                    program.Span);
 
             foreach (InterfaceNode interfaceNode in program.Interfaces)
                 DeclareInterface(interfaceNode);
@@ -112,6 +135,23 @@
             // Analyze the main function
             if (program.MainFunction != null)
                 AnalyzeFunction(program.MainFunction);
+
+            return new SemanticAnalysisResult(program, Array.Empty<CompilationDiagnostic>());
+            }
+            catch (BenitaException exception)
+            {
+                return new SemanticAnalysisResult(program, new[]
+                {
+                    new CompilationDiagnostic(exception.Code, exception.Description, exception.Span)
+                });
+            }
+            catch (Exception exception)
+            {
+                return new SemanticAnalysisResult(program, new[]
+                {
+                    new CompilationDiagnostic("BEN3001", exception.Message, CurrentSpan)
+                });
+            }
         }
 
         private void ValidateBuiltInClassTypes()

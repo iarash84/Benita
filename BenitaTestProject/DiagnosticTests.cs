@@ -61,4 +61,32 @@ public class DiagnosticTests
         StringAssert.Contains(exception.Message, "nested.ben:2:24");
         StringAssert.Contains(exception.Message, "                       ^^^^^^^");
     }
+
+    [TestMethod]
+    public void ParseResult_ReportsProgramLevelDuplicateMainDiagnostic()
+    {
+        const string source = "_main_() {} _main_() {}";
+        ParseResult result = new Parser(new Lexer(source).Tokenize()).ParseResultOrThrow();
+
+        Assert.IsNotNull(result.Program);
+        Assert.IsFalse(result.IsSuccess);
+        Assert.AreEqual(1, result.Diagnostics.Count);
+        CompilationDiagnostic diagnostic = result.Diagnostics[0];
+        Assert.AreEqual("BEN2002", diagnostic.Code);
+    }
+
+    [TestMethod]
+    public void SemanticAnalysisResult_ReportsDiagnosticWithoutThrowing()
+    {
+        const string source = "_main_() { missing = 1; }";
+        ProgramNode program = new Parser(new Lexer(source).Tokenize()).Parse();
+
+        SemanticAnalysisResult result = new SemanticAnalyzer().AnalyzeResultOrThrow(program);
+
+        Assert.IsFalse(result.IsSuccess);
+        Assert.AreEqual(1, result.Diagnostics.Count);
+        CompilationDiagnostic diagnostic = result.Diagnostics[0];
+        Assert.AreEqual("BEN3001", diagnostic.Code);
+        StringAssert.Contains(diagnostic.Description, "Undeclared variable 'missing'");
+    }
 }

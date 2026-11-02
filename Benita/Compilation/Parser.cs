@@ -8,6 +8,7 @@
         private readonly List<Token> _tokens; ///< The list of tokens to be parsed.
         private int _current = 0; ///< The index of the current token being processed.
         readonly List<FunctionNode?> _functions;///< The list of functions to be parsed.
+        private int _mainFunctionCount;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Parser"/> class.
@@ -30,6 +31,25 @@
         /// <exception cref="Exception">Thrown if multiple main functions are defined or no main function is found.</exception>
         public ProgramNode Parse()
         {
+            ParseResult result = ParseResultOrThrow();
+            CompilationDiagnostic? diagnostic = result.Diagnostics.FirstOrDefault();
+            if (diagnostic is not null)
+                throw new ParserException(diagnostic.Code, diagnostic.Description, diagnostic.Span);
+            if (result.Program!.MainFunction is null && result.Program.Statements.Count == 0)
+                throw new ParserException("BEN2003", "No main function or top-level executable statement was found.",
+                    CurrentToken().Span);
+            return result.Program;
+        }
+
+        /// <summary>
+        /// Parses the token stream through the explicit syntax-phase contract.
+        /// The compatibility method <see cref="Parse"/> preserves the existing throwing behavior.
+        /// </summary>
+        public ParseResult ParseResultOrThrow()
+        {
+            _current = 0;
+            _functions.Clear();
+            _mainFunctionCount = 0;
             List<VariableDeclarationNode?> globalVariables = new List<VariableDeclarationNode?>();
             List<string> imports = [];
 
@@ -60,9 +80,7 @@
                 {
                     if (declaredAccess is not null)
                         throw Error("BEN2009", "The _main_ entry point cannot have an access modifier.");
-                    if (mainFunction != null)
-                        throw Error("BEN2002", "The main function is already defined.");
-
+                    _mainFunctionCount++;
                     mainFunction = ParseMainFunction();
                 }
                 else if (Match(TokenType.PACKAGE))
@@ -98,12 +116,13 @@
                 }
             }
 
-            if (mainFunction == null && statements.Count == 0)
-            {
-                throw Error("BEN2003", "No main function or top-level executable statement was found.");
-            }
-
-            return new ProgramNode(globalVariables, packages, _functions, mainFunction, statements, interfaces, imports);
+            CompilationDiagnostic[] diagnostics = _mainFunctionCount > 1
+                ? [new CompilationDiagnostic("BEN2002", "The main function is already defined.",
+                    mainFunction?.Span ?? CurrentToken().Span)]
+                : Array.Empty<CompilationDiagnostic>();
+            return new ParseResult(
+                new ProgramNode(globalVariables, packages, _functions, mainFunction, statements, interfaces, imports),
+                diagnostics);
         }
 
         /// <summary>modifier اختیاری ابتدای declaration را می‌خواند؛ نبود آن با null مشخص می‌شود.</summary>

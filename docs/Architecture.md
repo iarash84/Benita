@@ -104,15 +104,48 @@ bridge استفاده می‌کند؛ adapter آینده می‌تواند هم�
 `AppVersion` نسخه را از assembly metadata می‌خواند. Help و REPL دیگر شماره نسخهٔ hard-coded
 ندارند و مقدار `<Version>` در فایل پروژه تنها منبع نسخهٔ برنامه است.
 
-## تفکیک تدریجی visitorها
+## مرز Parser و Semantic Analyzer
 
-`Interpreter` از قرارداد `IAstVisitor<TResult>` استفاده می‌کند. `Parser` و
-`SemanticAnalyzer` هنوز بزرگ‌اند، اما شکستنشان فقط برای کم‌شدن تعداد خط‌ها فایده‌ای ندارد.
-اگر این دو کلاس تقسیم شوند، هر بخش جدید باید مسئولیت مشخص و تست مستقل داشته باشد.
+`Interpreter` از قرارداد `IAstVisitor<TResult>` استفاده می‌کند. در pipeline کامپایل، مرز
+بین syntax و semantics اکنون صریح است:
 
-اگر بعداً بخواهم این بخش را کوچک‌تر کنم، قدم منطقی بعدی تعریف visitorهای جدا برای
-expressionها و statementها است. این جابه‌جایی باید مرحله‌ای باشد و برای هر گروه تست
-رگرسیون جدا داشته باشد.
+```text
+Lexer.Tokenize() -> List<Token>
+Parser.ParseResultOrThrow(tokens) -> ParseResult
+SemanticAnalyzer.AnalyzeResultOrThrow(program) -> SemanticAnalysisResult
+```
+
+### Parser
+
+Parser فقط token stream را به AST نحوی تبدیل می‌کند. ورودی آن `List<Token>` است و خروجی
+`ParseResult` شامل `ProgramNode` و فهرست `CompilationDiagnostic`هاست. خطاهای grammar، مانند
+توکن نامنتظر، نبودن delimiterها و ترتیب مجاز declarationهای `import`، در همین مرحله بررسی
+می‌شوند. Parser به symbol table، type registry یا built-inهای فعال وابسته نیست.
+
+`Parse()` برای سازگاری با مصرف‌کننده‌های قدیمی باقی مانده و در صورت diagnostic آن را به
+`ParserException` تبدیل می‌کند. validationهایی که به کل برنامه وابسته‌اند، مانند duplicate
+entry point، از طریق result قابل مشاهده‌اند و دیگر بخشی از ساخت AST نیستند.
+
+### Semantic Analyzer
+
+Semantic Analyzer ورودی مستقل `ProgramNode` و configuration معنایی، مانند
+`BuiltInClassRegistry`، دریافت می‌کند. خروجی `SemanticAnalysisResult` شامل همان AST و
+diagnosticهای معنایی است. declaration و lookup نمادها، type checking، اعتبارسنجی package و
+interface، importهای شناخته‌شده، access modifierها و وجود entry point در این مرحله انجام
+می‌شوند. این لایه به token stream دسترسی ندارد.
+
+`Analyze()` به‌عنوان compatibility API حفظ شده است؛ مصرف‌کننده‌های جدید باید از
+`AnalyzeResultOrThrow()` استفاده کنند تا diagnostics را بدون وابستگی به متن exception
+مصرف کنند. `CompilerClass` نیز از قراردادهای result محور استفاده می‌کند و فقط در مرز
+public فعلی، diagnostic را به exception مناسب CLI تبدیل می‌کند.
+
+هر دو result، `IsSuccess` و فهرست diagnostic دارند. در حال حاضر برای حفظ رفتار زبان فقط
+اولین خطای semantic ثبت می‌شود؛ مدل result از چند diagnostic پشتیبانی می‌کند تا در آینده
+validation چندمرحله‌ای بدون تغییر قرارداد عمومی اضافه شود.
+
+شکستن داخلی Parser و SemanticAnalyzer به visitorها یا componentهای کوچک‌تر باید بعد از این
+مرز انجام شود و هر component مسئولیت و تست مستقل داشته باشد؛ تقسیم صرف فایل‌ها بدون
+قرارداد جدید انجام نمی‌شود.
 
 ## سیستم نوع
 
