@@ -12,6 +12,8 @@
         /// Dictionary to store packages names and their associated PackageNode.
         /// </summary>
         private readonly Dictionary<string, PackageNode> _packages;
+        private readonly Scope _typeSymbols;
+        private readonly Scope _functionSymbols;
         private readonly BuiltInClassRegistry _builtInClasses;
         /// <summary>قراردادهای interface ثبت‌شده را برای تحلیل نوع و member access نگه می‌دارد.</summary>
         private readonly Dictionary<string, InterfaceNode> _interfaces;
@@ -20,7 +22,7 @@
         /// <summary>
         /// Dictionary to store global variables and their types.
         /// </summary>
-        private readonly Dictionary<string, string?> _globalVariables;
+        private readonly Scope _globalVariables;
 
         /// <summary>
         /// Dictionary to store function names and their associated FunctionNode.
@@ -32,7 +34,9 @@
         /// </summary>
         public SemanticAnalyzer(BuiltInClassRegistry? builtInClasses = null)
         {
-            _globalVariables = new Dictionary<string, string?>();
+            _globalVariables = new Scope(name: "global");
+            _typeSymbols = new Scope(name: "types");
+            _functionSymbols = new Scope(name: "functions");
             _functions = new Dictionary<string, FunctionNode>();
             _packages = new Dictionary<string, PackageNode>();
             _interfaces = new Dictionary<string, InterfaceNode>();
@@ -64,6 +68,8 @@
             ArgumentNullException.ThrowIfNull(program);
             _packages.Clear();
             _interfaces.Clear();
+            _typeSymbols.Clear();
+            _functionSymbols.Clear();
             _globalVariables.Clear();
             _functions.Clear();
 
@@ -124,7 +130,7 @@
 
             if (program.Statements != null)
             {
-                var topLevelVariables = new Dictionary<string, string?>(_globalVariables);
+                var topLevelVariables = new Scope(_globalVariables, "top-level");
                 foreach (var statement in program.Statements)
                 {
                     if (statement != null)
@@ -185,6 +191,8 @@
                 throw new Exception($"Package '{packageNode.Name}' is already declared.");
             }
             _packages[packageNode.Name] = packageNode;
+            _typeSymbols.Declare(new TypeDeclarationSymbol(packageNode.Name, SymbolKind.Package,
+                new NamedTypeSymbol(packageNode.Name), packageNode));
         }
 
         /// <summary>نام interface را پیش از تحلیل بدنه‌ها ثبت و تکراری‌بودن نوع را بررسی می‌کند.</summary>
@@ -197,6 +205,8 @@
             if (_interfaces.ContainsKey(interfaceNode.Name) || _packages.ContainsKey(interfaceNode.Name))
                 throw new Exception($"Type '{interfaceNode.Name}' is already declared.");
             _interfaces[interfaceNode.Name] = interfaceNode;
+            _typeSymbols.Declare(new TypeDeclarationSymbol(interfaceNode.Name, SymbolKind.Interface,
+                new NamedTypeSymbol(interfaceNode.Name), interfaceNode));
         }
 
         /// <summary>نوع‌های امضا و یکتایی متدها و پارامترهای یک interface را اعتبارسنجی می‌کند.</summary>
@@ -222,10 +232,8 @@
         private void AnalyzePackage(PackageNode packageNode)
         {
             ValidateImplementedInterfaces(packageNode);
-            Dictionary<string, string?> allFieldScope = new(_globalVariables)
-            {
-                ["this"] = packageNode.Name
-            };
+            Scope allFieldScope = new(_globalVariables, $"package:{packageNode.Name}");
+            allFieldScope.Declare(new VariableSymbol("this", TypeFacts.FromName(packageNode.Name), false));
             Dictionary<string, PackageFunctionNode> packageFunctions = new Dictionary<string, PackageFunctionNode>();
             HashSet<string> fieldNames = [];
 
@@ -239,20 +247,18 @@
                     EnsureKnownType(fieldType.Name, allowLet: true);
                     RequireInitializerForNamedType(fieldType.Name, variableDeclaration.Initializer,
                         variableDeclaration.Name);
-                    allFieldScope[variableDeclaration.Name] = fieldType.Name;
+                    allFieldScope.Declare(new VariableSymbol(variableDeclaration.Name, fieldType));
                 }
             }
 
-            Dictionary<string, string?> initializedFieldScope = new(_globalVariables)
-            {
-                ["this"] = packageNode.Name
-            };
+            Scope initializedFieldScope = new(_globalVariables, $"package-init:{packageNode.Name}");
+            initializedFieldScope.Declare(new VariableSymbol("this", TypeFacts.FromName(packageNode.Name), false));
             foreach (var field in packageNode.Members.OfType<PackageVariableDeclarationNode>())
             {
                 if (field.Initializer is null)
                 {
                     if (field.Type == "let") RequireConcreteInferredType(field.Type, field.Name);
-                    initializedFieldScope[field.Name] = field.Type;
+                    initializedFieldScope.Declare(new VariableSymbol(field.Name, TypeFacts.FromName(field.Type)));
                     continue;
                 }
                 string? initializerType = AnalyzeExpression(field.Initializer, initializedFieldScope);
@@ -260,11 +266,11 @@
                 {
                     RequireConcreteInferredType(initializerType, field.Name);
                     field.Type = initializerType;
-                    allFieldScope[field.Name] = initializerType;
+                    allFieldScope.ReplaceLocal(new VariableSymbol(field.Name, TypeFacts.FromName(initializerType)));
                 }
                 else if (!CheckType(field.Type, initializerType))
                     throw new Exception($"Type mismatch in field '{field.Name}'. Expected '{field.Type}' but got '{initializerType}'.");
-                initializedFieldScope[field.Name] = field.Type;
+                initializedFieldScope.Declare(new VariableSymbol(field.Name, TypeFacts.FromName(field.Type)));
             }
 
             foreach (var packageMember in packageNode.Members)
@@ -303,11 +309,11 @@
             }
         }
 
-        private void AnalyzePackageFunction(PackageFunctionNode function, Dictionary<string, string?> variableScope)
+        private void AnalyzePackageFunction(PackageFunctionNode function, Scope variableScope)
         {
             EnsureKnownType(function.ReturnType, allowVoid: true);
             // Create a new scope for local variables
-            var localVariables = new Dictionary<string, string?>(variableScope);
+            Scope localVariables = new(variableScope, $"function:{function.Name}");
 
             // Declare function parameters in the local scope
             foreach (var param in function.Parameters)
@@ -339,6 +345,11 @@
             }
 
             _functions[function.Name] = function;
+            _functionSymbols.Declare(new FunctionSymbol(
+                function.Name,
+                TypeFacts.FromName(function.ReturnType),
+                function.Parameters.Select(parameter => TypeFacts.FromName(parameter.Type)).ToArray(),
+                function));
         }
 
         /// <summary>
@@ -349,7 +360,7 @@
         {
             EnsureKnownType(function.ReturnType, allowVoid: true);
             // Create a new scope for local variables
-            var localVariables = new Dictionary<string, string?>(_globalVariables);
+            Scope localVariables = new(_globalVariables, $"function:{function.Name}");
 
             // Declare function parameters in the local scope
             foreach (var param in function.Parameters)
@@ -372,7 +383,7 @@
         /// <param name="block">The block of statements to analyze.</param>
         /// <param name="localVariables">The local variables available in the block.</param>
         /// <param name="functionReturnType">The return type of the function (if any).</param>
-        private void AnalyzeBlock(BlockNode block, Dictionary<string, string?> localVariables,
+        private void AnalyzeBlock(BlockNode block, Scope localVariables,
             string? functionReturnType = null, int loopDepth = 0)
         {
             foreach (var statement in block.Statements)
@@ -387,7 +398,7 @@
         /// <param name="statement">The statement to analyze.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <param name="functionReturnType">The return type of the function (if any).</param>
-        private void AnalyzeStatement(StatementNode statement, Dictionary<string, string?> localVariables,
+        private void AnalyzeStatement(StatementNode statement, Scope localVariables,
             string? functionReturnType = null, int loopDepth = 0)
         {
             if (statement.Span.Line > 0) CurrentSpan = statement.Span;
@@ -477,7 +488,7 @@
                     break;
 
                 case ForStatementNode forStmt:
-                    var forScope = new Dictionary<string, string?>(localVariables);
+                    var forScope = new Scope(localVariables);
                     if (forStmt.Initializer != null)
                         AnalyzeStatement(forStmt.Initializer, forScope, functionReturnType, loopDepth);
                     if (forStmt.Condition != null && AnalyzeExpression(forStmt.Condition, forScope) != "bool")
@@ -492,7 +503,7 @@
                     string? iterableType = AnalyzeExpression(forEach.Iterable, localVariables);
                     if (iterableType?.EndsWith("[]", StringComparison.Ordinal) != true)
                         throw new Exception($"The expression after 'in' must be an array, but got '{iterableType}'.");
-                    var iterationScope = new Dictionary<string, string?>(localVariables);
+                    var iterationScope = new Scope(localVariables);
                     DeclareVariable(forEach.VariableName, iterableType[..^2], iterationScope);
                     AnalyzeStatement(forEach.Body, iterationScope, functionReturnType, loopDepth + 1);
                     break;
@@ -511,7 +522,7 @@
                     AnalyzeStatement(tryStatement.TryBlock, new(localVariables), functionReturnType, loopDepth);
                     if (tryStatement.CatchBlock is not null)
                     {
-                        var catchScope = new Dictionary<string, string?>(localVariables);
+                        var catchScope = new Scope(localVariables);
                         catchScope[tryStatement.CatchVariable!] = Types.Error.Name;
                         AnalyzeStatement(tryStatement.CatchBlock, catchScope, functionReturnType, loopDepth);
                     }
@@ -538,12 +549,13 @@
                         throw new Exception(
                             $"A package with this name : {objectInstantiationNode.PackageName} has not been implemented ");
                     }
-                    if (localVariables.ContainsKey(objectInstantiationNode.Name))
+                    if (localVariables.TryLookupLocal(objectInstantiationNode.Name, out _))
                     {
                         throw new Exception($"Variable '{objectInstantiationNode.Name}' is already declared.");
                     }
 
-                    localVariables[objectInstantiationNode.Name] = objectInstantiationNode.PackageName;
+                    localVariables.Declare(new VariableSymbol(objectInstantiationNode.Name,
+                        TypeFacts.FromName(objectInstantiationNode.PackageName)));
                     break;
                 case BreakStatementNode:
                 case ContinueStatementNode:
@@ -606,7 +618,7 @@
         };
 
         private void AnalyzeMatchStatement(MatchStatementNode match,
-            Dictionary<string, string?> localVariables, string? functionReturnType, int loopDepth)
+            Scope localVariables, string? functionReturnType, int loopDepth)
         {
             string? valueType = AnalyzeExpression(match.Value, localVariables);
             foreach (MatchArm arm in match.Arms)
@@ -618,7 +630,7 @@
         }
 
         private void AnalyzeMatchPatterns(MatchArm arm, string? valueType,
-            Dictionary<string, string?> localVariables)
+            Scope localVariables)
         {
             foreach (MatchPatternNode pattern in arm.Patterns)
             {
@@ -644,7 +656,7 @@
         /// </summary>
         /// <param name="arrayAssignment">The array assignment statement to analyze.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
-        private void AnalyzeArrayAssignment(ArrayAssignmentNode arrayAssignment, Dictionary<string, string?> localVariables)
+        private void AnalyzeArrayAssignment(ArrayAssignmentNode arrayAssignment, Scope localVariables)
         {
             // Check if the array variable is declared
             if (!localVariables.TryGetValue(arrayAssignment.Name, out var arrayType))
@@ -686,7 +698,7 @@
         /// <param name="expression">The expression to analyze.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the expression.</returns>
-        private string? AnalyzeExpression(ExpressionNode expression, Dictionary<string, string?> localVariables)
+        private string? AnalyzeExpression(ExpressionNode expression, Scope localVariables)
         {
             if (expression.Span.Line > 0) CurrentSpan = expression.Span;
             switch (expression)
@@ -728,7 +740,7 @@
         }
 
         private string AnalyzeNewExpression(NewExpressionNode creation,
-            Dictionary<string, string?> localVariables)
+            Scope localVariables)
         {
             if (_builtInClasses.TryGet(creation.PackageName, out BuiltInClassDefinition? builtInClass))
             {
@@ -755,7 +767,7 @@
         }
 
         private string? AnalyzeMatchExpression(MatchExpressionNode match,
-            Dictionary<string, string?> localVariables)
+            Scope localVariables)
         {
             string? valueType = AnalyzeExpression(match.Value, localVariables);
             string? resultType = null;
@@ -771,7 +783,7 @@
             return resultType;
         }
 
-        private string? HandleMemberAccessNode(MemberAccessNode memberAccess, Dictionary<string, string?> localVariables)
+        private string? HandleMemberAccessNode(MemberAccessNode memberAccess, Scope localVariables)
         {
             if (_builtInClasses.TryGet(memberAccess.ObjectName, out BuiltInClassDefinition? staticClass) &&
                 memberAccess.Expression is FunctionCallNode staticCall &&
@@ -853,7 +865,7 @@
         private string AnalyzeBuiltInStaticClassMemberAccess(
             BuiltInClassDefinition builtInClass,
             FunctionCallNode call,
-            Dictionary<string, string?> localVariables)
+            Scope localVariables)
         {
             BuiltInMethodDescriptor method = builtInClass.StaticMethods[call.FunctionName];
             if (call.Arguments.Count != method.ParameterTypes.Count)
@@ -909,7 +921,7 @@
 
         private string AnalyzeBuiltInClassMemberAccess(
             MemberAccessNode memberAccess,
-            Dictionary<string, string?> localVariables,
+            Scope localVariables,
             BuiltInClassDefinition builtInClass)
         {
             switch (memberAccess.Expression)
@@ -989,7 +1001,7 @@
         }
 
         private void ValidateArguments(string callableName, IReadOnlyList<ExpressionNode> arguments,
-            IReadOnlyList<ParameterNode> parameters, Dictionary<string, string?> localVariables)
+            IReadOnlyList<ParameterNode> parameters, Scope localVariables)
         {
             if (arguments.Count != parameters.Count)
                 throw new Exception($"'{callableName}' expects {parameters.Count} argument(s), but got {arguments.Count}.");
@@ -1008,7 +1020,7 @@
         /// <param name="identifier">The identifier node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the identifier.</returns>
-        private string? HandleIdentifierNode(IdentifierNode identifier, Dictionary<string, string?> localVariables)
+        private string? HandleIdentifierNode(IdentifierNode identifier, Scope localVariables)
         {
             if (!localVariables.TryGetValue(identifier.Name, out var node))
             {
@@ -1023,7 +1035,7 @@
         /// <param name="binary">The binary expression node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the binary expression result.</returns>
-        private string? HandleBinaryExpressionNode(BinaryExpressionNode binary, Dictionary<string, string?> localVariables)
+        private string? HandleBinaryExpressionNode(BinaryExpressionNode binary, Scope localVariables)
         {
             var leftType = AnalyzeExpression(binary.Left, localVariables);
             var rightType = AnalyzeExpression(binary.Right, localVariables);
@@ -1104,7 +1116,7 @@
         /// <param name="unary">The unary expression node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the unary expression result.</returns>
-        private string? HandleUnaryExpressionNode(UnaryExpressionNode unary, Dictionary<string, string?> localVariables)
+        private string? HandleUnaryExpressionNode(UnaryExpressionNode unary, Scope localVariables)
         {
             string? operandType = AnalyzeExpression(unary.Operand, localVariables);
             return unary.Operator switch
@@ -1123,10 +1135,13 @@
         /// <param name="functionCall">The function call node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The return type of the function call.</returns>
-        private string? HandleFunctionCallNode(FunctionCallNode functionCall, Dictionary<string, string?> localVariables)
+        private string? HandleFunctionCallNode(FunctionCallNode functionCall, Scope localVariables)
         {
-            if (!_functions.TryGetValue(functionCall.FunctionName, out FunctionNode? function))
+            if (!_functionSymbols.TryLookup(functionCall.FunctionName, out Symbol? functionSymbol) ||
+                functionSymbol is not FunctionSymbol resolvedFunction ||
+                resolvedFunction.Declaration is null)
                 throw new Exception($"Undeclared function '{functionCall.FunctionName}'.");
+            FunctionNode function = resolvedFunction.Declaration;
 
             List<TypeSymbol> parameterTypes = function.Parameters
                 .Select(parameter => TypeFacts.FromName(parameter.Type))
@@ -1156,7 +1171,7 @@
         /// <param name="arrayInit">The array initializer node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the array.</returns>
-        private string? HandleArrayInitializerNode(ArrayInitializerNode arrayInit, Dictionary<string, string?> localVariables)
+        private string? HandleArrayInitializerNode(ArrayInitializerNode arrayInit, Scope localVariables)
         {
             if (arrayInit.ElementType is not null)
             {
@@ -1188,7 +1203,7 @@
         /// <param name="arrayAccess">The array access node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the array element.</returns>
-        private string? HandleArrayAccessNode(ArrayAccessNode arrayAccess, Dictionary<string, string?> localVariables)
+        private string? HandleArrayAccessNode(ArrayAccessNode arrayAccess, Scope localVariables)
         {
             if (!localVariables.TryGetValue(arrayAccess.Name, out var arrayType))
             {
@@ -1214,7 +1229,7 @@
         /// <param name="logical">The logical expression node to handle.</param>
         /// <param name="localVariables">The local variables available in the current scope.</param>
         /// <returns>The type of the result of the logical operation.</returns>
-        private string? HandleLogicalExpressionNode(LogicalExpressionNode logical, Dictionary<string, string?> localVariables)
+        private string? HandleLogicalExpressionNode(LogicalExpressionNode logical, Scope localVariables)
         {
             var leftType = AnalyzeExpression(logical.Left, localVariables);
             var rightType = AnalyzeExpression(logical.Right, localVariables);
@@ -1260,7 +1275,10 @@
             TypeSymbol target = TypeFacts.FromName(firstType);
             TypeSymbol source = TypeFacts.FromName(secondType);
             if (target is NamedTypeSymbol targetNamed && source is NamedTypeSymbol sourceNamed &&
-                _interfaces.ContainsKey(targetNamed.Name) &&
+                _typeSymbols.TryLookup(targetNamed.Name, out Symbol? targetSymbol) &&
+                targetSymbol.Kind == SymbolKind.Interface &&
+                _typeSymbols.TryLookup(sourceNamed.Name, out Symbol? sourceSymbol) &&
+                sourceSymbol.Kind == SymbolKind.Package &&
                 _packages.TryGetValue(sourceNamed.Name, out PackageNode? sourcePackage))
                 return sourcePackage.Interfaces.Contains(targetNamed.Name);
             return TypeFacts.IsAssignableTo(source, target);
@@ -1272,7 +1290,7 @@
             if (allowVoid && typeName == "void" || allowLet && typeName == "let") return;
             TypeSymbol type = TypeFacts.FromName(typeName);
             if (type is NamedTypeSymbol named &&
-                !_packages.ContainsKey(named.Name) && !_interfaces.ContainsKey(named.Name) &&
+                !_typeSymbols.TryLookup(named.Name, out _) &&
                 !_builtInClasses.TryGet(named.Name, out _))
                 throw new Exception($"Unknown package, interface, or built-in class type '{named.Name}'.");
         }
@@ -1319,13 +1337,16 @@
         /// <param name="name">The name of the variable.</param>
         /// <param name="type">The type of the variable.</param>
         /// <param name="variableScope">The scope in which to declare the variable.</param>
-        private void DeclareVariable(string name, string? type, Dictionary<string, string?> variableScope)
+        private void DeclareVariable(string name, string? type, Scope variableScope)
         {
-            if (variableScope.ContainsKey(name))
+            if (variableScope.TryLookupLocal(name, out _))
             {
                 throw new Exception($"Variable '{name}' is already declared.");
             }
-            variableScope[name] = type;
+            variableScope.Declare(new VariableSymbol(name, TypeFacts.FromName(type)));
         }
     }
 }
+
+
+

@@ -161,9 +161,21 @@ validation چندمرحله‌ای بدون تغییر قرارداد عمومی
 امضای توابع داخلی و بررسی آرگومان‌های آن‌ها به این مدل منتقل شده‌اند. نام نوع در AST
 هنوز رشته باقی می‌ماند، چون AST باید همان چیزی را که Parser از source خوانده نگه دارد.
 
-قدم بعدی این مهاجرت، جایگزین‌کردن جدول متغیرهای رشته‌ای `SemanticAnalyzer` با symbol table
-است. بعد از آن می‌توان `PackageTypeSymbol` و `InterfaceTypeSymbol` را بدون اضافه‌کردن شرط‌های
-رشته‌ای به تحلیل‌گر وارد کرد.
+### Symbol و Scope
+
+نمادهای typed در [`Benita/Semantics/Symbols/Symbol.cs`](../Benita/Semantics/Symbols/Symbol.cs) قرار
+دارند. [`Symbol`](../Benita/Semantics/Symbols/Symbol.cs:15) قرارداد پایه،
+[`VariableSymbol`](../Benita/Semantics/Symbols/Symbol.cs:21) و [`ParameterSymbol`](../Benita/Semantics/Symbols/Symbol.cs:28)
+مدل declarationهای مقداری را فراهم می‌کنند. [`Scope`](../Benita/Semantics/Symbols/Symbol.cs:35)
+یک زنجیرهٔ parent-based دارد: `Declare` فقط scope فعلی را بررسی می‌کند، `TryLookup` از
+scope فعلی به parentها می‌رود و در نتیجه shadowing در child scope مجاز است، اما declaration
+تکراری در همان scope رد می‌شود. `ReplaceLocal` فقط برای تکمیل declarationهایی مانند inference
+فیلدهای `let` استفاده می‌شود.
+
+`SemanticAnalyzer` اکنون global، package، function، block، loop و catch scope را با همین
+زنجیره تحلیل می‌کند و به‌جای کپی‌کردن dictionary، name resolution را از child scope به parent
+انجام می‌دهد. AST برای حفظ متن source همچنان type name را به‌صورت رشته نگه می‌دارد؛ تبدیل آن
+به `TypeSymbol` در مرز تحلیل معنایی انجام می‌شود.
 
 ## مدل شیء و چرخهٔ ساخت نمونه
 
