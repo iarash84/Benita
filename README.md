@@ -65,8 +65,8 @@ __________              .__  __           .____
   Version 1.0.0
 Usage: Program [action] [filePath] [options]
 Actions:
-  exc        - Execute the code in the file.
-  dxc        - Execute the code in the file in debug mode.
+  run        - Execute the code in the file.
+  debug      - Execute the code in the file in debug mode.
   check      - Check syntax and semantics without executing the program.
   repl       - Start the interactive REPL.
   help       - Show this help message.
@@ -79,16 +79,16 @@ Options:
 
 #### فرمان‌ها
 
-- `exc`: فایل `.ben` را با مفسر اجرا می‌کند.
+- `run`: فایل `.ben` را با مفسر اجرا می‌کند.
 
   ```bash
-  dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+  dotnet run --project Benita -- run Examples/simple-addition-expression.ben
   ```
 
-- `dxc`: برنامه را در حالت debug اجرا می‌کند و وضعیت اجرای مفسر را نمایش می‌دهد.
+- `debug`: برنامه را در حالت debug اجرا می‌کند و وضعیت اجرای مفسر را نمایش می‌دهد.
 
   ```bash
-  dotnet run --project Benita -- dxc Examples/simple-addition-expression.ben
+  dotnet run --project Benita -- debug Examples/simple-addition-expression.ben
   ```
 
 - `check`: مراحل Lexer، Parser و SemanticAnalyzer را بدون اجرای برنامه انجام می‌دهد.
@@ -260,8 +260,8 @@ __________              .__  __           .____
   Version 1.0.0
 Usage: Program [action] [filePath] [options]
 Actions:
-  exc        - Execute the code in the file.
-  dxc        - Execute the code in the file in debug mode.
+  run        - Execute the code in the file.
+  debug      - Execute the code in the file in debug mode.
   check      - Check syntax and semantics without executing the program.
   repl       - Start the interactive REPL.
   help       - Show this help message.
@@ -274,16 +274,16 @@ Options:
 
 #### Actions
 
-- `exc`: executes a `.ben` file with the interpreter.
+- `run`: executes a `.ben` file with the interpreter.
 
   ```bash
-  dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+  dotnet run --project Benita -- run Examples/simple-addition-expression.ben
   ```
 
-- `dxc`: executes the program in debug mode and displays interpreter state.
+- `debug`: executes the program in debug mode and displays interpreter state.
 
   ```bash
-  dotnet run --project Benita -- dxc Examples/simple-addition-expression.ben
+  dotnet run --project Benita -- debug Examples/simple-addition-expression.ben
   ```
 
 - `check`: runs the Lexer, Parser, and SemanticAnalyzer without executing the program.

@@ -182,7 +182,7 @@ _main_() {
 1. `Lexer` کلمات `func`، `number`، شناسه‌ها، پرانتزها و سایر نشانه‌ها را به Token تبدیل می‌کند.
 2. `Parser` از Tokenها یک `FunctionNode` و یک Main Function می‌سازد.
 3. `SemanticAnalyzer` وجود تابع، تعداد آرگومان‌ها و نوع مقدار بازگشتی را کنترل می‌کند.
-4. در حالت `exc`، مفسر تابع `add` را اجرا کرده و مقدار `5` را چاپ می‌کند.
+4. در حالت `run`، مفسر تابع `add` را اجرا کرده و مقدار `5` را چاپ می‌کند.
 
 ## حالت‌های اجرای برنامه
 
@@ -204,7 +204,7 @@ dotnet build Benita.sln
 <div dir="ltr" align="left">
 
 ```bash
-dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+dotnet run --project Benita -- run Examples/simple-addition-expression.ben
 ```
 
 </div>
@@ -214,7 +214,7 @@ dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
 <div dir="ltr" align="left">
 
 ```bash
-dotnet run --project Benita -- dxc Examples/simple-addition-expression.ben
+dotnet run --project Benita -- debug Examples/simple-addition-expression.ben
 ```
 
 </div>
@@ -283,7 +283,7 @@ BuiltInClassDefinition
 | Runtime | خطای زمان اجرا یا عملیات نامعتبر فایل/آرایه |
 
 برای پیدا کردن خطا معمولاً از `check` همراه `-t` و `-a` شروع کنید. اگر مشکل هنگام
-اجرا رخ می‌دهد، `dxc` وضعیت مفسر را هم نشان می‌دهد.
+اجرا رخ می‌دهد، `debug` وضعیت مفسر را هم نشان می‌دهد.
 
 ## آزمایش پروژه
 

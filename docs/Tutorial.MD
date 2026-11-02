@@ -544,7 +544,7 @@ import "../lib/math.ben";    // project/lib/math.ben
 از ریشه مخزن:
 
 ```bash
-dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+dotnet run --project Benita -- run Examples/simple-addition-expression.ben
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben
 dotnet run --project Benita -- repl
 ```
@@ -1197,7 +1197,7 @@ imported file report that file's original name and line number.
 From the repository root:
 
 ```bash
-dotnet run --project Benita -- exc Examples/simple-addition-expression.ben
+dotnet run --project Benita -- run Examples/simple-addition-expression.ben
 dotnet run --project Benita -- check Examples/simple-addition-expression.ben
 dotnet run --project Benita -- repl
 ```

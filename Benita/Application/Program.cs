@@ -63,11 +63,13 @@
                 case "repl":
                     new Repl().Run(printTokens, printAst, printSource, optimizeAst);
                     return;
-                case "exc":
+                case "run":
+                case "exc": // Legacy alias.
                     ExecuteFile(args, printTokens, printAst, printSource, compiler, optimizeAst: optimizeAst);
                     Console.WriteLine("Program executed successfully.");
                     break;
-                case "dxc":
+                case "debug":
+                case "dxc": // Legacy alias.
                     ExecuteFile(args, printTokens, printAst, printSource, compiler, true, optimizeAst);
                     Console.WriteLine("Program executed successfully.");
                     break;
@@ -89,7 +91,7 @@
         {
             if (args.Length < 2)
             {
-                throw new ArgumentException("A .ben file path is required for the execute command.");
+                throw new ArgumentException("A .ben file path is required for the run command.");
             }
 
             string filePath = args[1];
@@ -136,8 +138,8 @@
             Console.WriteLine($"  Version {AppVersion.Current}");
             Console.WriteLine("Usage: Program [action] [filePath] [options]");
             Console.WriteLine("Actions:");
-            Console.WriteLine("  exc        - Execute the code in the file.");
-            Console.WriteLine("  dxc       - Execute the code in the file in debug mode.");
+            Console.WriteLine("  run        - Execute the code in the file.");
+            Console.WriteLine("  debug      - Execute the code in the file in debug mode.");
             Console.WriteLine("  check      - Check syntax and semantics without executing the program.");
             Console.WriteLine("  repl       - Start the interactive REPL.");
             Console.WriteLine("  help       - Show this help message.");

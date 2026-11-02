@@ -20,7 +20,7 @@
 برای اجرای یک مثال از ریشه‌ی مخزن:
 
 ```bash
-dotnet run --project Benita -- exc Examples/algorithm-bubble-sort.ben
+dotnet run --project Benita -- run Examples/algorithm-bubble-sort.ben
 ```
 
 مثال `error-handling.ben` ساخت error، پرتاب آن، مشاهدهٔ `code` و `message` در catch و
@@ -48,5 +48,5 @@ dotnet run --project Benita -- exc Examples/algorithm-bubble-sort.ben
 | Proxy | `Patterns/proxy.ben` | کنترل دسترسی و cache کردن سرویس اصلی |
 
 ```bash
-dotnet run --project Benita -- exc Examples/Patterns/builder.ben
+dotnet run --project Benita -- run Examples/Patterns/builder.ben
 ```
